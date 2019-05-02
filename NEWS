@@ -1,0 +1,239 @@
+Changes from FRESA.CAD 3.1.1 to FRESA.CAD version 3.1.1
+	Bugs:
+	-Try added to prediction, to avoid crashing errors.
+	Minor Changes:
+	-ENS changed to ensemble
+	-Removed par(mfrow = c(1,1)) from code, so user has the freedom to collate plots
+	
+Changes from FRESA.CAD 3.0.1 to FRESA.CAD version 3.1.1
+
+	Enhancements:
+		BSWiMS now can do ordinal regression 
+		New functions for cross-validation regression/ordinal and binary classification methods
+		 -randomCV 
+		 -RegresionBenchmark
+		 -BinaryBenchmark
+		 -OrdinalBenchmark
+		 -predictStats
+		Functions for filtering features
+		 -univariate_Logit
+		 -univariate_residual
+		 -univariate_tstudent
+		 -univariate_Wilcoxon
+		 -univariate_correlation
+		 -classic mRMR
+		Plots:
+		-barPlotCiError
+
+	 Interface Changes:
+		forward selections now requires that the user specify the original number of features for FDR adjustment.
+		FDR BH p-value correction added into the forward selection algorithms: ForwardSelection.Model.Bin.R and ForwardSelection.Model.Res.R
+		The adjusted p-value is used at each bootstrap to detect which features can be added to the forward models
+	Code Changes:
+		Forward selection now is faster for highly dimensional data sets (n>200 features) 
+			Before finding the optimal feature to add, it ranks features according to the correlation to the current residual.
+	Other:
+		Vignettes added
+		OPENMP removed from Makevars
+	
+
+Changes from FRESA.CAD 3.0.0 to FRESA.CAD version 3.0.1
+
+	outcheck.txt was removed from the package.
+	
+Changes from FRESA.CAD 2.2.1 to FRESA.CAD version 3.0.0
+
+	
+	FRESA.CAD now has the ability to create gene signatures and a simple interface for BSWiMS model generation.
+	The BSWiMS modeling returns a bagged model after finding a set of candidate models.
+	
+	Enhancements:
+		New functions:
+		 -BSWiMS function added
+		 -getSignature function added
+		 -eB:SWIMS functionality
+		 -nearestNeighborImpute for data imputation
+
+		Software improvements:
+  		 -c++ source code reviewed for efficiency
+		 -bootstrappValidation Variable elimination functions rewritten. Now they attempt to provide models at optimal performance. 
+		 -CrossValidation now is using a reduced data set.
+	Interface Changes:
+		medianPredict now is called ensemblePredict
+		Loop_threshold removed from FRESA.Model and cross-validation
+		fast=FALSE in modelFitting changed to fitFRESA=TRUE
+		
+	Bugs:
+		Several bugs corrected.
+		
+	CRAN:
+		Removed register from c++ code
+	
+
+Changes from FRESA.CAD 2.2.0 to FRESA.CAD version 2.2.1
+
+	Enhancements:
+		meatMaps(...) 
+			Class color bar next to categories 
+		UnivariateRankVariables()
+			Now has the option to include only tail analysis
+			Now it store the beta coefficient
+		rankInverseNormalDataFrame(...,strata=NA)
+			Now you can specify a conditional ranking by specifying the strata
+		Now we can predict results from LASSO by retuning the filtered features 
+		LASSO formulas now reported.
+	Bugs:
+		Univariate analysis of improved residuals fixed
+		several minors bug fixed.
+		
+
+Changes from FRESA.CAD 2.1.3 to FRESA.CAD version 2.2.0
+
+	FRESA.CAD expanded its capabilities.
+	Now it provided Bagged models and ensemble analysis from the list of formulas created by:
+		+ ForwardSelections.Models.Bin
+		+ ForwardSelections.Models.Res
+		+ crossValidationFeatureSelection.Bin
+		+ crossValidationFeatureSelection.Res
+	The baggedModel function bag the formula coefficients and creates a single model from the list of formulas.
+	The plotModels.ROC ensemble the model predictions and creates an unique test evaluation of the ensembled models.
+	
+	-Added function:
+		baggedModel.R function for coefficient bagging, and variable frequency analysis
+	-Enhanced function:
+		plotModels.ROC.R: This function provides ensemble predictions and confusion analysis table
+		heatMaps.R can accept a list of five colors for its display
+	-c++ code revised and minor bugs corrected.
+	-r code revised and bugs corrected. 
+
+	
+
+Changes from FRESA.CAD 2.0.1 to FRESA.CAD version 2.1.3
+
+	FRESA.CAD suffered mayor changes from the previous version.
+	The new version is more effective in handling memory, some functions and outputs
+	were renamed.
+
+	-Function Name Changes
+		+backVarElimination to backVarElimination_Bin
+		+backVarNeRiElimination to backVarElimination_Res
+		+bootstrapValidation to bootstrapValidation_Bin
+		+bootstrapNeRiValidation to bootstrapValidation_Res
+		+bootstrapVarElimination to bootstrapVarEliminiation_Bin
+		+bootstrapVarNeRiElimination to bootstrapVarEliminiation_Res
+		+crossValidationFeatureSelection to +crossValidationFeatureSelection_Bin
+		+crossValidationNeRiFeatureSelection to +crossValidationFeatureSelection_Res
+		+ReclassificationFRESA.Model to ForwardModel_Res
+		+NeRIBasedFRESA.Model to ForwardModel_Res
+		+getVarReclassification to getVar_Bin
+		+getVarNeRI to getVar_Res 
+		+plot.bootstrapValidation to plot.bootstrapValidation_Bin
+		+plot.bootstrapValidationNeRI to plot.bootstrapValidation_Res
+		+updateModel to updateModel_Bin
+		+updateNeRImodel to updateModel_Res
+
+	-Renamed Outputs
+		Model created form forward models followed by back elimination renamed BSWiMS models
+		enet renamed LASSO
+
+	-Enhancements 
+		+cross-validation now stores ID of sampled subject as well as training fits
+		+cross-validation now reports the ensemble estimations 
+		+Update model added model-size-based Benjamini–Hochberg procedure (BH)
+		+Timeseriesanalysis changed the presentation of p values to t values
+		+beforeFSC formulas produced before the BH correction
+
+	+Minor bugs:
+		+report equivalent variables for regression models
+		+removed first term of formula list of cross-validation process
+		+removed exact wilcoxon test 
+		+other minor bugs
+	-Code reviews 
+		+NAN were replaced by nan("") c++ function
+		+cpp code revision to remove abs and sign warnings
+		+median predict revised to work with the new structure of the formula list provided by cross-validation
+		+speedglm removed from dependencies
+
+Changes from FRESA.CAD 2.0.1 to FRESA.CAD version 2.0.2
+		+variable _X from code was renamed _xmat 
+
+Changes from FRESA.CAD 2.0 to FRESA.CAD version 2.0.1
+
+C++ code was reviewed to met section 1.6.4 "Portable C and C++ code" of "Writing R Extensions" manual.
+Dependencies to c-standard libraries removed and round(x) changed to R::fprec(x,0).
+
+Changes from FRESA.CAD 1.0 to FRESA.CAD version 2.0
+
+	+ Added c++ libraries to speed-up feature selection.
+		The c++ libraries functions were written using ARMADILLO and openMP.
+		+ FRESAcommons.cpp : Auxiliary functions with ARMADILLO implementations of COX, logit and linear fitting 
+		+ binaryFeatureSelectionCpp.cpp: Main functions for bootstrapping, selection and estimation of 
+							features confidence intervals for binary classification models.
+		+ regresionFeatureSelectionCpp.cpp: Main functions for bootstrapping, selection and estimation of 
+							linear models coefficients.
+		+ rankInverseNormalCpp.cpp: Function to standardize features based on their ranking
+
+    + Improvements and bug-fix across the FRESA.CAD package to deal with exceptions and zero size models.
+	+ Interface changes:
+		*in bootstrapValidation_Bin(...,dataframe,...) 
+			"dataframe" argument renamed "data"
+		*in bootstrapValidation_Res(...,dataframe,...) 
+			"dataframe" argument renamed "data"
+		*in bootVarNeRIElimination(...,bootLoops=64,bootFraction=1.0,...) 
+			"bootLoops" and "bootFraction" arguments renamed "loops" and "fraction" respectively.
+		*in crossValidationFeatureSelection_Bin(...,dataframe,...,backBootLoops,...,bootEstimations,...) 
+			"dataframe", "backBootLoops" and "bootEstimations" arguments renamed 
+			"data", "elimination.bootstrap.steps" and "bootstrap.steps" respectively
+		*in crossValidationFeatureSelection_Res(...,dataframe,...,backBootLoops,...) 
+			"dataframe" and "backBootLoops" arguments renamed 
+			"data" and "elimination.bootstrap.steps" respectively
+		*in featureAdjustment(...,dataframe,...) 
+			"dataframe" argument renamed "data"
+		*FRESA.Model(...,k,...) 
+			"k" argument renamed "nk"
+		*getKNNpredictionFromFormula(modelFormula,...,k,...) 
+			"modelFormula" and "k"  arguments renamed "model.formula" and "nk" respectively
+		*getVar.Res(...,dataframe,...) 
+			"dataframe" argument renamed "data"
+		*getVar.Bin(...,dataframe,...)
+			"dataframe" argument renamed "data"
+		*heatMaps(...,dataframe,...)
+			"dataframe" argument renamed "data"
+		*listTopCorrelatedVariables(...,dataframe,...)
+			"dataframe" argument renamed "data"
+		*ensemblePredict(...,newdata,...,k,...)
+			"newdata" and "k" arguments renamed "testdata" and "nk" respectively
+		*modelFitting(model,dataframe,...)
+			"model" and "dataframe" arguments renamed "mode.formula" and "data" respectively
+		*ForwardSelection.Model.Res(...,dataframe,...)
+			"dataframe" argument renamed "data"
+		*predictForFresa(...,newdata,type,...) -> 
+			"newdata"  and "type" arguments renamed "testdata" and "predictType" respectively
+		*rankInverseNormalDataFrame(varList, dataframe,..)
+			"varList" and "dataframe" arguments renamed "variableList" and "data" respectively
+		*ForwardSelection.Model.Bin(...,dataframe,...)
+			"dataframe" argument renamed "data"
+		*reportEquivalentVariables(...,dataframe,...)
+			"dataframe" argument renamed "data"
+		*residualForFRESA(...,newdata,...)
+			"newdata" argument renamed "testData"
+		*timeSerieAnalysis(...,dataframe,...)
+			"dataframe" argument renamed "data"
+		*uniRankVar(...,dataframe,...,FitType,..)
+			"dataframe" and "FitType" arguments renamed "data" and "type" respectively
+		*univariateRankVariables(...,dataframe,...,FitType,..)
+			"dataframe" and "FitType" arguments renamed "data" and "type" respectively
+		*updateModel.Bin(...,dataframe,...)
+			"dataframe" argument renamed "data"
+		*updateModel.Res(...,dataframe,...)
+			"dataframe" argument renamed "data"
+			
+		
+		
+
+
+    
+
+
+
+
