@@ -1,4 +1,6 @@
-Changes from FRESA.CAD 3.1.1 to FRESA.CAD version 3.1.1
+Changes from FRESA.CAD 3.1.1 to FRESA.CAD version 3.2.1
+	Enhancements:
+		Benchmarking Survival Models
 	Bugs:
 	-Try added to prediction, to avoid crashing errors.
 	Minor Changes:

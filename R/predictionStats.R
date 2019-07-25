@@ -1,3 +1,84 @@
+predictionStats_survival <-  function(predictions, plotname="", noNegativeRisk=FALSE,...)
+{
+  if (!requireNamespace("survminer", quietly = TRUE)) {
+    install.packages("survminer", dependencies = TRUE)
+  }
+
+  data <- data.frame(times=predictions[,1],preds=predictions[,5])
+  CIFollowUp <- concordance95ci(datatest = data, followUp = TRUE)
+  data <- data.frame(times=predictions[,1],preds=-predictions[,6])
+  CIRisk <- concordance95ci(datatest = data, followUp = FALSE)
+  newData <- data.frame(times=predictions[,1],status=predictions[,2],preds=predictions[,6]);
+  Curves <- survival::survfit(survival::Surv(times, status) ~ preds>=median(preds),newData)
+  
+  function (fit, scale, k = 2, ...) 
+  {
+    edf <- sum(!is.na(fit$coefficients))
+    loglik <- fit$loglik[length(fit$loglik)]
+    c(edf, -2 * loglik + k * edf)
+  }
+  
+  #Curves <- survival::survfitBSWiMS <- survival::survfit(Surv(predictions[,1], predictions[,2]) ~ predictions[,6]>=median(predictions[,6]))
+  if(plotname!="")
+  {
+    if(noNegativeRisk)
+    {
+      graph<- survminer::ggsurvplot(Curves, data=newData, conf.int = TRUE, legend.labs=c("High Risk","Low Risk"),
+                        palette = c("#ff0000", "#00bbff"),
+                        ggtheme = ggplot2::theme_bw() + ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5, face = "bold", size = 30)),
+                        title = plotname,
+                        risk.table = TRUE,
+                        tables.height = 0.2,
+                        tables.theme = survminer::theme_cleantable())
+      print(graph)
+    }
+    else
+    {
+      graph <- survminer::ggsurvplot(Curves, data=newData, conf.int = TRUE, legend.labs=c("Low Risk", "High Risk"),
+                        palette = c("#00bbff", "#ff0000"),
+                        ggtheme = ggplot2::theme_bw() + ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5, face = "bold", size = 30)),
+                        title = plotname,
+                        risk.table = TRUE,
+                        tables.height = 0.2,
+                        tables.theme = survminer::theme_cleantable())
+      print(graph)
+    }
+    #plot(Curves,main=plotname)
+   
+  }
+  
+  LogRank <- survival::survdiff(Surv(predictions[,1], predictions[,2]) ~ predictions[,6]>=median(predictions[,6]))
+  LogRank <- cbind(LogRank$chisq,  1 - pchisq(LogRank$chisq, length(LogRank$n) - 1));
+  colnames(LogRank) <- cbind("chisq","pvalue");
+  return( list(CIFollowUp=CIFollowUp, CIRisk = CIRisk, LogRank = LogRank, Curves = Curves) );
+}
+
+concordance95ci <- function(datatest,nss=4000,followUp=FALSE)
+{
+  sz <- nrow(datatest)
+  sesci <- c(0,0,0);
+  if (sz>2)
+  {
+    ses <- numeric(nss);
+    for (i in 1:nss)
+    {
+      bootsample <- datatest[sample(sz,sz,replace=TRUE),];
+      if(followUp)
+      {
+        ses[i] <- rcorr.cens(bootsample[,1], bootsample[,2], outx = TRUE)[1]
+      }
+      else
+      {
+        ses[i] <- rcorr.cens(bootsample[,1], bootsample[,2])[1]
+      }
+    }
+    sesci <- quantile(ses, probs = c(0.5,0.025,0.975),na.rm = TRUE);
+    sesci[1]<-mean(ses)
+    names(sesci)<-c("median","lower","upper");
+  }
+  return (sesci);
+}
+
 predictionStats_ordinal <-  function(predictions,plotname="",...)
 {
     cat(plotname,"\n")

@@ -128,31 +128,73 @@ if (!requireNamespace("glmnet", quietly = TRUE)) {
 	}
 	else
 	{
+		if (sum(str_count(baseformula,"Surv")) > 0)
+    {
+      featuresOnSurvival <- baseformula[2]
+      featuresOnSurvival <- gsub(" ", "", featuresOnSurvival)
+      featuresOnSurvival <- gsub("Surv\\(", "", featuresOnSurvival)
+      featuresOnSurvival <- gsub("\\)", "", featuresOnSurvival)
+      featuresOnSurvivalObject <- strsplit(featuresOnSurvival, ",")
+      
+      usedFeatures <- colnames(data)[!(colnames(data) %in%  featuresOnSurvivalObject[[1]])]
+      x <- as.numeric(unlist(data[featuresOnSurvivalObject[[1]][1]]))
+      y <- as.numeric(unlist(data[featuresOnSurvivalObject[[1]][2]]))
+      baseformula <- gsub(featuresOnSurvivalObject[[1]][1],"x",baseformula)
+      baseformula <- gsub(featuresOnSurvivalObject[[1]][2],"y",baseformula)
+      result <- list(fit = glmnet::cv.glmnet(as.matrix(data[,usedFeatures]),survival::Surv(x,y),family = "cox"),s = s,formula = formula,usedFeatures=usedFeatures);
+      class(result) <- "FRESA_LASSO"
+      
+      coef(result$fit,s)
+    }
+    else
+    {
 		result <- list(fit = glmnet::cv.glmnet(as.matrix(data[,usedFeatures]),as.vector(data[,baseformula[2]]),...),s = s,formula = formula,outcome = baseformula[2],usedFeatures = usedFeatures)
 		class(result) <- "FRESA_LASSO"
+		}
 	}
   return(result);
 }
 
 LASSO_1SE <- function(formula = formula, data=NULL, ...)
 {
-if (!requireNamespace("glmnet", quietly = TRUE)) {
-   install.packages("glmnet", dependencies = TRUE)
-} 
-	s <- "lambda.1se";
-	baseformula <- as.character(formula);
-	usedFeatures <- colnames(data)[!(colnames(data) %in% baseformula[2])]
-	if (length(usedFeatures)<5) #if less than 5 features, just use a lm fit.
-	{
-		warning("Less than five features. Returning a lm model");
-		result <- lm(formula,data);
-	}
-	else
-	{
-		result <- list(fit = glmnet::cv.glmnet(as.matrix(data[,usedFeatures]),as.vector(data[,baseformula[2]]),...),s = s,formula = formula,outcome = baseformula[2],usedFeatures = usedFeatures)
-		class(result) <- "FRESA_LASSO"
-	}
-    return(result);
+  if (!requireNamespace("glmnet", quietly = TRUE)) {
+    install.packages("glmnet", dependencies = TRUE)
+  } 
+  s <- "lambda.1se";
+  baseformula <- as.character(formula);
+  usedFeatures <- colnames(data)[!(colnames(data) %in% baseformula[2])]
+  if (length(usedFeatures)<5) #if less than 5 features, just use a lm fit.
+  {
+    warning("Less than five features. Returning a lm model");
+    result <- lm(formula,data);
+  }
+  else
+  {
+    if (sum(str_count(baseformula,"Surv")) > 0)
+    {
+      featuresOnSurvival <- baseformula[2]
+      featuresOnSurvival <- gsub(" ", "", featuresOnSurvival)
+      featuresOnSurvival <- gsub("Surv\\(", "", featuresOnSurvival)
+      featuresOnSurvival <- gsub("\\)", "", featuresOnSurvival)
+      featuresOnSurvivalObject <- strsplit(featuresOnSurvival, ",")
+      
+      usedFeatures <- colnames(data)[!(colnames(data) %in%  featuresOnSurvivalObject[[1]])]
+      x <- as.numeric(unlist(data[featuresOnSurvivalObject[[1]][1]]))
+      y <- as.numeric(unlist(data[featuresOnSurvivalObject[[1]][2]]))
+      baseformula <- gsub(featuresOnSurvivalObject[[1]][1],"x",baseformula)
+      baseformula <- gsub(featuresOnSurvivalObject[[1]][2],"y",baseformula)
+      result <- list(fit = glmnet::cv.glmnet(as.matrix(data[,usedFeatures]),survival::Surv(x,y),family = "cox"),s = s,formula = formula,usedFeatures=usedFeatures);
+      class(result) <- "FRESA_LASSO"
+      
+      coef(result$fit,s)
+    }
+    else
+    {
+      result <- list(fit = glmnet::cv.glmnet(as.matrix(data[,usedFeatures]),as.vector(data[,baseformula[2]]),...),s = s,formula = formula,outcome = baseformula[2],usedFeatures = usedFeatures)
+      class(result) <- "FRESA_LASSO"
+    }
+  }
+  return(result);
 }
 
 predict.FRESA_LASSO <- function(object,...) 
@@ -162,6 +204,31 @@ predict.FRESA_LASSO <- function(object,...)
     pLS <- predict(object$fit,as.matrix(testData[,object$usedFeatures]), s = object$s);
     return(pLS);
 }
+
+BESS <- function(formula = formula, data=NULL, ...)
+{
+  if (!requireNamespace("BeSS", quietly = TRUE)) {
+    install.packages("BeSS", dependencies = TRUE)
+  } 
+  
+  baseformula <- as.character(formula);
+  featuresOnSurvival <- baseformula[2]
+  featuresOnSurvival <- gsub(" ", "", featuresOnSurvival)
+  featuresOnSurvival <- gsub("Surv\\(", "", featuresOnSurvival)
+  featuresOnSurvival <- gsub("\\)", "", featuresOnSurvival)
+  featuresOnSurvivalObject <- strsplit(featuresOnSurvival, ",")
+  
+  usedFeatures <- colnames(data)[!(colnames(data) %in%  featuresOnSurvivalObject[[1]])]
+  x <- as.numeric(unlist(data[featuresOnSurvivalObject[[1]][1]]))
+  y <- as.numeric(unlist(data[featuresOnSurvivalObject[[1]][2]]))
+  baseformula <- gsub(featuresOnSurvivalObject[[1]][1],"x",baseformula)
+  baseformula <- gsub(featuresOnSurvivalObject[[1]][2],"y",baseformula)
+  result <- list(fit=BeSS::bess(as.matrix(data[,usedFeatures]), survival::Surv(x, y), s.min=1, family = "cox"),formula = formula,usedFeatures=usedFeatures);
+  class(result) <- "bess"
+  
+  return(result);
+}
+
 
 TUNED_SVM <- function(formula = formula, data=NULL,...)
 {

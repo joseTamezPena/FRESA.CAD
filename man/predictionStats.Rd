@@ -2,6 +2,7 @@
 \alias{predictionStats_binary}
 \alias{predictionStats_regression}
 \alias{predictionStats_ordinal}
+\alias{predictionStats_survival}
 \title{Prediction Evaluation}
 \description{
 	This function returns the statistical metrics describing the association between model predictions and the ground truth outcome 
@@ -11,6 +12,7 @@
       predictionStats_binary(predictions, plotname="", center=FALSE,...)
       predictionStats_regression(predictions, plotname="",...)
       predictionStats_ordinal(predictions,plotname="",...)
+      predictionStats_survival(predictions,plotname="",noNegativeRisk=FALSE,...)
 
 }
 \arguments{
@@ -23,13 +25,16 @@
 	\item{center}{
 		For binary predictions indicates if the prediction is around zero 
 	}
+	\item{NoNegativeRisk}{
+		For risk predictions indicates if the prediction is negative
+	}
 	\item{...}{
 		Extra parameters to be passed to the plot function.
 	}
 }
 \details{
 	These functions will analyze the prediction outputs and will compare to the ground truth.
-	The output will depend on the prediction task: Binary classification, Linear Regression or Ordinal regression.
+	The output will depend on the prediction task: Binary classification, Linear Regression, Ordinal regression or Cox regression.
 }
 
 \value{
@@ -90,7 +95,15 @@
   \item{Kappa.analysis}{
 		the output of the \code{irr::kappa2} function
 	}
-
+	\item{CIFollowUp}{
+	The follow-up concordance index with its95\% confidence intervals (95/%CI)
+	}
+  \item{CIRisk}{
+	The risks concordance index with its95\% confidence intervals (95/%CI)
+	}
+  \item{LogRank}{
+	The LogRank test with its95\% confidence intervals (95/%CI) 
+	}
 }
 
 \author{Jose G. Tamez-Pena}
