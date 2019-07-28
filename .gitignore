@@ -34,3 +34,7 @@ vignettes/*.pdf
 
 # Shiny token, see https://shiny.rstudio.com/articles/shinyapps.html
 rsconnect/
+src-i386/FRESA.CAD.dll
+src-i386/symbols.rds
+src-x64/FRESA.CAD.dll
+src-x64/symbols.rds
