@@ -368,9 +368,14 @@ OrdinalBenchmark <-  function(theData = NULL, theOutcome = "Class", reps = 100, 
   theOrdinalMethod <- c("Ordinal","KNN","Naive Bayes","RF","SVM")
   theFiltersets <- c(referenceFilterName,"LASSO","RPART","RF.ref","F.Test","Kendall","mRMR")
 
-  Nvar <- min(c(1000,length(ff)))
+#  Nvar <- min(c(1000,length(ff)))
+#	selFrequency <- matrix(0,nrow = Nvar,ncol = length(theFiltersets))
+#	rownames(selFrequency) <- names(rcvRF$featureFrequency)[1:Nvar]
+
+	Nvar <- length(ff);
 	selFrequency <- matrix(0,nrow = Nvar,ncol = length(theFiltersets))
-	rownames(selFrequency) <- names(rcvRF$featureFrequency)[1:Nvar]
+	rownames(selFrequency) <- ff
+
 	selnames <- rownames(selFrequency)
 	colnames(selFrequency) <- theFiltersets
 	ff <- referenceCV$featureFrequency

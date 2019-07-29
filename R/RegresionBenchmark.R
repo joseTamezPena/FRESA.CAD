@@ -393,9 +393,10 @@ RegresionBenchmark <-  function(theData = NULL, theOutcome = "Class", reps = 100
 	ff <- c(ff,names(fmeth$rcvFilter_mRMR$featureFrequency))
 	ff <- unique(ff)
 
-	Nvar <- min(c(1000,length(ff)))
+	Nvar <- length(ff);
 	selFrequency <- matrix(0,nrow = Nvar,ncol = length(theFiltersets))
-	rownames(selFrequency) <- names(rcvRF$featureFrequency)[1:Nvar]
+#	rownames(selFrequency) <- ff[1:Nvar]
+	rownames(selFrequency) <- ff
 	selnames <- rownames(selFrequency)
 	colnames(selFrequency) <- theFiltersets
 	ff <- referenceCV$featureFrequency

@@ -429,9 +429,15 @@ BinaryBenchmark <-  function(theData = NULL, theOutcome = "Class", reps = 100, t
 	ff <- c(ff,names(fmeth$rcvFilter_mRMR$featureFrequency))
 	ff <- unique(ff)
 
-	Nvar <- min(c(1000,length(ff)))
+#	Nvar <- min(c(1000,length(ff)))
+#	selFrequency <- matrix(0,nrow = Nvar,ncol = length(theFiltersets))
+#	rownames(selFrequency) <- ff[1:Nvar]
+
+	Nvar <- length(ff);
 	selFrequency <- matrix(0,nrow = Nvar,ncol = length(theFiltersets))
-	rownames(selFrequency) <- ff[1:Nvar]
+	rownames(selFrequency) <- ff
+
+
 	selnames <- rownames(selFrequency)
 	colnames(selFrequency) <- theFiltersets
 	ff <- referenceCV$featureFrequency
