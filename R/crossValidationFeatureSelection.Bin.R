@@ -449,9 +449,9 @@ if (!requireNamespace("glmnet", quietly = TRUE)) {
 				if (((sumca <- sum(BlindSet[,Outcome]>0)) > 1) && ((sumco <- sum(BlindSet[,Outcome]==0)) > 1))
 				{
 
-					atRoc <- pROC::roc(as.vector(BlindSet[,Outcome]), p,plot=FALSE,ci=TRUE,auc=TRUE,of='se',specificities=specificities,boot.n=100,smooth=FALSE,progress= 'none')
+					atRoc <- pROC::roc(as.vector(BlindSet[,Outcome]), p,plot=FALSE,ci=TRUE,auc=TRUE,of='se',specificities=specificities,boot.n=100,smooth=FALSE,progress= 'none',quiet = TRUE)
 					splitRoc <- atRoc$ci[,2];
-					FullRocBlindAUC <- pROC::roc(as.vector(BlindSet[,Outcome]), Full.p,plot=FALSE,auc=TRUE,ci=FALSE)$auc
+					FullRocBlindAUC <- pROC::roc(as.vector(BlindSet[,Outcome]), Full.p,plot=FALSE,auc=TRUE,ci=FALSE,quiet = TRUE)$auc
 					WholeFoldBlindAUC <- append(WholeFoldBlindAUC,FullRocBlindAUC);
 					if (rocadded == 0)
 					{
@@ -627,7 +627,7 @@ if (!requireNamespace("glmnet", quietly = TRUE)) {
 			nsamp <- nrow(cvcycle.predictions)
 			if (nsamp>0)
 			{
-				atRocAUC <- pROC::roc(as.vector(cvcycle.predictions[,1]), cvcycle.predictions[,2],plot=FALSE,auc=TRUE,smooth=FALSE)$auc;
+				atRocAUC <- pROC::roc(as.vector(cvcycle.predictions[,1]), cvcycle.predictions[,2],plot=FALSE,auc=TRUE,smooth=FALSE,quiet = TRUE)$auc;
 				testAccuracy <- append(testAccuracy,sum(cvcycle.predictions[,1] == 1.0*(cvcycle.predictions[,2]>=0.0))/nsamp);
 				testSensitivity <- append(testSensitivity,sum((cvcycle.predictions[,1] == 1) & (cvcycle.predictions[,2]>=0.0))/sum(cvcycle.predictions[,1] == 1));
 				testSpecificity <- append(testSpecificity,sum((cvcycle.predictions[,1] == 0) & (cvcycle.predictions[,2] <0.0))/sum(cvcycle.predictions[,1] == 0));
@@ -692,17 +692,17 @@ if (!requireNamespace("glmnet", quietly = TRUE)) {
 		plotModels.ROC(totSamples,theCVfolds=K,predictor="Prediction",main="B:SWiMS");
 		par(mfrow=c(1,1))
 		incBsen=0
-		aucBlindTest <- pROC::roc(as.vector(totSamples[,1]),totSamples[,2],col="red",auc=TRUE,plot=TRUE,smooth=FALSE,lty=3)$auc
+		aucBlindTest <- pROC::roc(as.vector(totSamples[,1]),totSamples[,2],col="red",auc=TRUE,plot=TRUE,smooth=FALSE,lty=3,quiet = TRUE)$auc
 		par(new=TRUE)
-		aucCVBlind <- pROC::roc(as.vector(Full.totSamples[,1]),Full.totSamples[,2],col="blue",auc=TRUE,plot=TRUE,ci=FALSE,smooth=FALSE)$auc
+		aucCVBlind <- pROC::roc(as.vector(Full.totSamples[,1]),Full.totSamples[,2],col="blue",auc=TRUE,plot=TRUE,ci=FALSE,smooth=FALSE,quiet = TRUE)$auc
 		aucBoot=0;
 		aucTrain=0;
 		if (!is.null(FullBootCross$testPrediction))
 		{
 			par(new=TRUE)
-			aucTrain <- pROC::roc( as.vector(FullBootCross$outcome), FullBootCross$boot.model$linear.predictors,col="green",plot=TRUE,auc=TRUE,smooth=FALSE)$auc;        
+			aucTrain <- pROC::roc( as.vector(FullBootCross$outcome), FullBootCross$boot.model$linear.predictors,col="green",plot=TRUE,auc=TRUE,smooth=FALSE,quiet = TRUE)$auc;        
 			par(new=TRUE)
-			aucBoot <- pROC::roc( as.vector(FullBootCross$testOutcome), FullBootCross$testPrediction,col="black",auc=TRUE,plot=TRUE,smooth=FALSE)$auc;
+			aucBoot <- pROC::roc( as.vector(FullBootCross$testOutcome), FullBootCross$testPrediction,col="black",auc=TRUE,plot=TRUE,smooth=FALSE,quiet = TRUE)$auc;
 		}
 		ley.names <- c(paste("Bootstrapped: Train Model ROC (",sprintf("%.3f",aucTrain),")"),paste("Bootstrapped: Blind ROC (",sprintf("%.3f",aucBoot),")"),
 		paste("CV: Blind ROC (",sprintf("%.3f",aucCVBlind),")"),paste("CV: Blind Fold Models Coherence (",sprintf("%.3f",aucBlindTest),")"))

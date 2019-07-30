@@ -106,11 +106,11 @@ function(fraction=1.00,loops=200,model.formula,Outcome,data,type=c("LM","LOGIT",
 		if (plots && (length(output$testoutcome)>0))
 		{
 			par(mfrow=c(2,2))
-			pROC::roc( as.vector(data[,Outcome]), basemodel$linear.predictors, col="blue",plot=TRUE,smooth=FALSE,progress= 'none');
+			pROC::roc( as.vector(data[,Outcome]), basemodel$linear.predictors, col="blue",plot=TRUE,smooth=FALSE,progress= 'none',quiet = TRUE);
 			par(new=TRUE)
-			blidRoc <- pROC::roc(as.vector(output$testoutcome),output$testprediction,col="red",auc=TRUE,print.auc=TRUE,plot=TRUE,smooth=FALSE,progress= 'none')
+			blidRoc <- pROC::roc(as.vector(output$testoutcome),output$testprediction,col="red",auc=TRUE,print.auc=TRUE,plot=TRUE,smooth=FALSE,progress= 'none',quiet = TRUE)
 			par(new=TRUE)
-			bootRoc <- pROC::roc( as.vector(data[,Outcome]), bootmodel$linear.predictors,plot=TRUE,ci=plots,auc=TRUE,of='se',specificities=c(0.95,0.90,0.80,0.70,0.60,0.50,0.40,0.30,0.20,0.10,0.05),boot.n=200,smooth=FALSE,progress= 'none');
+			bootRoc <- pROC::roc( as.vector(data[,Outcome]), bootmodel$linear.predictors,plot=TRUE,ci=plots,auc=TRUE,of='se',specificities=c(0.95,0.90,0.80,0.70,0.60,0.50,0.40,0.30,0.20,0.10,0.05),boot.n=200,smooth=FALSE,progress= 'none',quiet = TRUE);
 				plot(ecdf(output$taccuracy),main="Accuracy",xlim=c(0.5, 1.0),col="black",lwd = 2,verticals = TRUE, do.points = FALSE);
 				abline(v=output$BlindAccuracy,col = "red");
 				abline(v=acc,col = "blue");
@@ -136,12 +136,12 @@ function(fraction=1.00,loops=200,model.formula,Outcome,data,type=c("LM","LOGIT",
 					pr[is.na(pr)] <- 0;
 					pr[pr == -Inf] <- -100000.0;
 					pr[pr == Inf] <- 100000.0;
-					bootRoc <- pROC::roc( as.vector(data[,Outcome]), pr,plot=FALSE,auc=TRUE,smooth=FALSE,progress= 'none');
+					bootRoc <- pROC::roc( as.vector(data[,Outcome]), pr,plot=FALSE,auc=TRUE,smooth=FALSE,progress= 'none',quiet = TRUE);
 				}
 				else
 				{
 					warning ("No prediction");
-					bootRoc <- pROC::roc( as.vector(data[,Outcome]), numeric(nrow(data)),plot=FALSE,auc=TRUE,smooth=FALSE,progress= 'none');
+					bootRoc <- pROC::roc( as.vector(data[,Outcome]), numeric(nrow(data)),plot=FALSE,auc=TRUE,smooth=FALSE,progress= 'none',quiet = TRUE);
 				}
 			}
 		}

@@ -58,14 +58,14 @@ function(x,xlab = "Years", ylab="Survival",strata.levels=c(0),main="ROC",cex=1.0
 	par(mfrow=c(1,1))	
 	par(pty='s');
 
-	prp <- pROC::roc( as.vector(x$outcome), x$boot.model$linear.predictors,progress= 'none');
+	prp <- pROC::roc( as.vector(x$outcome), x$boot.model$linear.predictors,progress= 'none',quiet = TRUE);
 	thres=0;
 	if (min(x$boot.model$linear.predictors)>=0) thres=0.5;
 	dtable <- table(x$boot.model$linear.predictors<thres,1-x$outcome);
 	
 
-	ci.sp.obj <- ci.sp(prp , sensitivities=seq(0, 1, .05), boot.n=100,progress= 'none')
-	ci.se.obj <- ci.se(prp , specificities=seq(0, 1, .05), boot.n=100,progress= 'none')
+	ci.sp.obj <- ci.sp(prp , sensitivities=seq(0, 1, .05), boot.n=100,progress= 'none',quiet = TRUE)
+	ci.se.obj <- ci.se(prp , specificities=seq(0, 1, .05), boot.n=100,progress= 'none',quiet = TRUE)
 #	ci.sp.obj <- ci.sp(prp , sensitivities=seq(0, 1, .05), boot.n=100)
 #	ci.se.obj <- ci.se(prp , specificities=seq(0, 1, .05), boot.n=100)
 	plot(prp,grid=c(0.1, 0.1),grid.col=c("gray", "gray")) # restart a new plot
@@ -73,7 +73,7 @@ function(x,xlab = "Years", ylab="Survival",strata.levels=c(0),main="ROC",cex=1.0
 	plot(ci.se.obj, type="s", col="light gray")
 
 	par(new=TRUE)
-	pr <- pROC::roc(as.vector(x$testOutcome),x$testPrediction,col="red",auc=TRUE,print.auc=FALSE,plot=TRUE,smooth=FALSE,main=main,progress= 'none')
+	pr <- pROC::roc(as.vector(x$testOutcome),x$testPrediction,col="red",auc=TRUE,print.auc=FALSE,plot=TRUE,smooth=FALSE,main=main,progress= 'none',quiet = TRUE)
 #	legend("bottomright", legend=c("Predictor", "Bootstrap CV"),
  #      col=c("black", "red"), lwd=2)
 

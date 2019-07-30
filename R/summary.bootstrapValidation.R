@@ -17,7 +17,7 @@ function(object, ...)
 	citROC <- as.vector(quantile(object$train.ROCAUC, probs = c(cilow,0.5, cihig), na.rm = TRUE,names = FALSE, type = 7));
 	
 		
-	bootAuc <- pROC::roc( as.vector(object$outcome), object$boot.model$linear.predictors,plot=FALSE,ci=TRUE,boot.n=object$loops);
+	bootAuc <- pROC::roc( as.vector(object$outcome), object$boot.model$linear.predictors,plot=FALSE,ci=TRUE,boot.n=object$loops,quiet = TRUE);
 	
     cat("\nModel Cross-Validation with Improvement in Predicted Probability\n\n")
     cat("Number of Cases:", sum(object$outcome), "\t Number of Controls", sum(object$outcome==0), "\n\n")

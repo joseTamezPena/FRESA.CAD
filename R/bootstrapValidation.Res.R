@@ -120,7 +120,7 @@ function(fraction=1.00,loops=200,model.formula,Outcome,data,type=c("LM","LOGIT",
 			else
 			{
 				par(mfrow=c(2,2))
-				pROC::roc(as.vector(output$testOutcome), output$testPrediction,auc=TRUE,plot=TRUE,smooth=FALSE,print.auc=TRUE);
+				pROC::roc(as.vector(output$testOutcome), output$testPrediction,auc=TRUE,plot=TRUE,smooth=FALSE,print.auc=TRUE,quiet = TRUE);
 				boxplot(output$testPrediction ~ output$testOutcome,main="Prediction~Outcome");
 				boxplot(output$testResiduals ~ output$testOutcome,main="Residuals");
 			}

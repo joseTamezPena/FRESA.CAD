@@ -820,7 +820,7 @@ function(variableList,formula,Outcome,data,categorizationType=c("Raw","Categoric
 								zNRI[varinserted] <- iprob$z.nri;
 								if (length(dataoutcome)==length(spredict))
 								{
-									ROCAUC[varinserted] <- pROC::roc( dataoutcome, spredict,plot=FALSE,auc=TRUE)$auc[1];
+									ROCAUC[varinserted] <- pROC::roc( dataoutcome, spredict,plot=FALSE,auc=TRUE,quiet = TRUE)$auc[1];
 								}
 								else 
 								{

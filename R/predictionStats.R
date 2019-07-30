@@ -221,7 +221,7 @@ predictionStats_binary <-  function(predictions, plotname="", center=FALSE,...)
     }
     else
     {
-      pm <- pROC::roc(as.vector(predictions[,1]),predictions[,2]);
+      pm <- pROC::roc(as.vector(predictions[,1]),predictions[,2],quiet = TRUE);
       cis <- ci.auc(pm);
       pm$predictionTable <- table(predictions[,2] < 0,1 - predictions[,1]);
 		if (nrow(pm$predictionTable) == 1)
