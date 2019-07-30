@@ -21,7 +21,7 @@ OrdinalBenchmark(theData = NULL, theOutcome = "Class", reps = 100, trainFraction
 
 CoxBenchmark(theData = NULL, theOutcome = "Class", reps = 100, trainFraction = 0.5,
                 referenceCV = NULL,referenceName = "Reference"
-                ,referenceFilterName="Reference")
+                ,referenceFilterName="COX.BSWiMS")
 }
 
 \arguments{

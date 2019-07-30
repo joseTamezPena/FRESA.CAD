@@ -25,7 +25,7 @@
 	\item{center}{
 		For binary predictions indicates if the prediction is around zero 
 	}
-	\item{NoNegativeRisk}{
+	\item{noNegativeRisk}{
 		For risk predictions indicates if the prediction is negative
 	}
 	\item{...}{
