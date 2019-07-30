@@ -1,4 +1,4 @@
-CoxBenchmark <-  function(theData = NULL, theOutcome = "Class", reps = 100, trainFraction = 0.5,referenceCV = NULL,referenceName = "Reference",referenceFilterName="COX.BSWiMS",...)
+CoxBenchmark <-  function(theData = NULL, theOutcome = "Class", reps = 100, trainFraction = 0.5,referenceCV = NULL,referenceName = "Reference",referenceFilterName="COX.BSWiMS")
 {
     if (!requireNamespace("BeSS", quietly = TRUE)) {
       install.packages("BeSS", dependencies = TRUE)
@@ -44,7 +44,7 @@ CoxBenchmark <-  function(theData = NULL, theOutcome = "Class", reps = 100, trai
     FilterMethod <-  function(clasfun = survival::coxph, classname = "", center = FALSE, ...)
     {
       #rcvFilter_reference <- cpFinal$TheCVEvaluations$Reference$testPredictions
-      rcvFilter_reference <- randomCV(theData,theOutcome,clasfun,trainSampleSets = referenceCV$trainSamplesSets,featureSelectionFunction = referenceCV$selectedFeaturesSet,...);
+      rcvFilter_reference <- randomCV(theData,theOutcome,clasfun,trainSampleSets = referenceCV$trainSamplesSets,featureSelectionFunction = referenceCV$selectedFeaturesSet);
       cStats <- predictionStats_survival(rcvFilter_reference$survMedianTest,plotname="Cox with BSWiMS");
       CIFollowUPTable_filter <- rbind(CIFollowUPTable_filter,cStats$CIFollowUp);
       CIRisksTable_filter <- rbind(CIRisksTable_filter,cStats$CIRisk);
@@ -60,7 +60,7 @@ CoxBenchmark <-  function(theData = NULL, theOutcome = "Class", reps = 100, trai
       senTable_filter <- rbind(senTable_filter,binaryStats$sensitivity)
       speTable_filter <- rbind(speTable_filter,binaryStats$specificity)
       
-      rcvFilter_LASSO <- randomCV(theData,theOutcome,clasfun,trainSampleSets = referenceCV$trainSamplesSets,featureSelectionFunction = rcvLASSO$selectedFeaturesSet,...);
+      rcvFilter_LASSO <- randomCV(theData,theOutcome,clasfun,trainSampleSets = referenceCV$trainSamplesSets,featureSelectionFunction = rcvLASSO$selectedFeaturesSet);
       cStats <- predictionStats_survival(rcvFilter_LASSO$survMedianTest,plotname="Cox with LASSO");
       CIFollowUPTable_filter <- rbind(CIFollowUPTable_filter,cStats$CIFollowUp);
       CIRisksTable_filter <- rbind(CIRisksTable_filter,cStats$CIRisk);
@@ -75,7 +75,7 @@ CoxBenchmark <-  function(theData = NULL, theOutcome = "Class", reps = 100, trai
       speTable_filter <- rbind(speTable_filter,binaryStats$specificity)
       
       
-      rcvFilter_BESS <- randomCV(theData,theOutcome,clasfun,trainSampleSets = referenceCV$trainSamplesSets,featureSelectionFunction = rcvBESS$selectedFeaturesSet,...);
+      rcvFilter_BESS <- randomCV(theData,theOutcome,clasfun,trainSampleSets = referenceCV$trainSamplesSets,featureSelectionFunction = rcvBESS$selectedFeaturesSet);
       cStats <- predictionStats_survival(rcvFilter_BESS$survMedianTest,plotname="Cox with BESS");
       CIFollowUPTable_filter <- rbind(CIFollowUPTable_filter,cStats$CIFollowUp);
       CIRisksTable_filter <- rbind(CIRisksTable_filter,cStats$CIRisk);
@@ -90,7 +90,7 @@ CoxBenchmark <-  function(theData = NULL, theOutcome = "Class", reps = 100, trai
       speTable_filter <- rbind(speTable_filter,binaryStats$specificity)
       
       cat("Univariate cox Feature Selection: ");
-      rcvFilter_UniCox <- randomCV(theData,theOutcome,clasfun,trainSampleSets = referenceCV$trainSamplesSets,featureSelectionFunction = univariate_cox,...);
+      rcvFilter_UniCox <- randomCV(theData,theOutcome,clasfun,trainSampleSets = referenceCV$trainSamplesSets,featureSelectionFunction = univariate_cox);
       cStats <- predictionStats_survival(rcvFilter_UniCox$survMedianTest,"Cox with Univariate cox Feature Selection");
       CIFollowUPTable_filter <- rbind(CIFollowUPTable_filter,cStats$CIFollowUp);
       CIRisksTable_filter <- rbind(CIRisksTable_filter,cStats$CIRisk);
@@ -126,7 +126,7 @@ CoxBenchmark <-  function(theData = NULL, theOutcome = "Class", reps = 100, trai
     if (is.null(referenceCV))
     {
       cat("Modeling BSWiMS: + Model found, - No Model \n"); 
-      referenceCV <- randomCV(theData,theOutcome,BSWiMS.model,trainFraction = trainFraction,repetitions = reps,featureSelectionFunction = "Self",...);
+      referenceCV <- randomCV(theData,theOutcome,BSWiMS.model,trainFraction = trainFraction,repetitions = reps,featureSelectionFunction = "Self");
       referenceName = "BSWiMS";
       referenceFilterName = "COX.BSWiMS";
     }
@@ -147,7 +147,7 @@ CoxBenchmark <-  function(theData = NULL, theOutcome = "Class", reps = 100, trai
     
     # 1 - pchisq(cStats$LogRank$chisq, length(cStats$LogRank$n) - 1)
     ######################LASSO#################################### 
-    rcvLASSO <- randomCV(theData,theOutcome,LASSO_MIN,trainSampleSets = referenceCV$trainSamplesSets,featureSelectionFunction = "Self",...);
+    rcvLASSO <- randomCV(theData,theOutcome,LASSO_MIN,trainSampleSets = referenceCV$trainSamplesSets,featureSelectionFunction = "Self");
     cStats <- predictionStats_survival(rcvLASSO$survMedianTest,plotname = "LASSO");
     CIFollowUPTable <- rbind(CIFollowUPTable,cStats$CIFollowUp);
     CIRisksTable <- rbind(CIRisksTable,cStats$CIRisk);
@@ -163,7 +163,7 @@ CoxBenchmark <-  function(theData = NULL, theOutcome = "Class", reps = 100, trai
     speTable <- rbind(speTable,binaryStats$specificity)
     
     ######################BESS#################################### 
-    rcvBESS <- randomCV(theData,theOutcome,BESS,trainSampleSets = referenceCV$trainSamplesSets,featureSelectionFunction = "Self",...);
+    rcvBESS <- randomCV(theData,theOutcome,BESS,trainSampleSets = referenceCV$trainSamplesSets,featureSelectionFunction = "Self");
     cStats <- predictionStats_survival(rcvBESS$survMedianTest,plotname = "BeSS", noNegativeRisk = TRUE);
     CIFollowUPTable <- rbind(CIFollowUPTable,cStats$CIFollowUp);
     CIRisksTable <- rbind(CIRisksTable,cStats$CIRisk);
