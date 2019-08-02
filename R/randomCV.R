@@ -228,11 +228,13 @@ if (!requireNamespace("glmnet", quietly = TRUE)) {
 	}
 
 
-
-	theClasses <- as.numeric(names(table(theData[,theOutcome])));
+	dataTable <- table(theData[,theOutcome]);
+	theClasses <- as.numeric(names(dataTable));
 	classLen <- length(theClasses);
 	selectedFeaturesSet <- list();
-	if(classLen < 10)
+	testClases <- ((classLen < 10) && (min(dataTable) >= 5));
+	samplePerClass <- as.integer((nrow(theData)/classLen)*trainFraction);
+	if (testClases)
 	{
 		ssubsets <- list();
 		samplePerClass <- as.integer((nrow(theData)/classLen)*trainFraction);
@@ -267,7 +269,7 @@ if (!requireNamespace("glmnet", quietly = TRUE)) {
 		nfet <- TRUE;
 		selectedFeaturesSet[[rept]] <- character();
 #		cat(length(selectedFeaturesSet),"\n");
-		if(classLen < 10)
+		if (testClases)
 		{
 			jind <- 1;
 			trainSet <- NULL;
@@ -412,7 +414,7 @@ if (!requireNamespace("glmnet", quietly = TRUE)) {
 					trainSet[,fnames] <- trainSet[,fnames]+as.data.frame(matrix(noiselevel*rnorm(rows*cols),nrow=rows,ncol=cols));
 				}
 			}
-			if ((classLen < 10) && (asFactor))
+			if ((testClases) && (asFactor))
 			{
 					trainSet[,theOutcome] <- as.factor(trainSet[,theOutcome]); 
 #					print(selnames)
@@ -422,7 +424,7 @@ if (!requireNamespace("glmnet", quietly = TRUE)) {
 			theTimes <- append(theTimes,system.time(currentModel <- try(fittingFunction(theformula,trainSet,...))));
 			if ( inherits(currentModel, "try-error"))
 			{
-				if ((classLen < 10) && (!asFactor))
+				if ((testClases) && (!asFactor))
 				{
 					warning("Fit Error. I will try outcome as Factor");
 					trainSet[,theOutcome] <- as.factor(trainSet[,theOutcome]); 

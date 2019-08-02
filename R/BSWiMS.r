@@ -72,7 +72,8 @@ function(formula=formula,data=NULL,type=c("Auto","LM","LOGIT","COX"),testType=c(
 	else
 	{
 		Outcome = dependent[1];
-		theScores <- as.numeric(names(table(data[,Outcome])))
+		outcomeTable <- table(data[,Outcome]);
+		theScores <- as.numeric(names(outcomeTable))
 		totScores <- length(theScores);
 		univType = type;
 		if (type[1] == "Auto")
@@ -84,11 +85,12 @@ function(formula=formula,data=NULL,type=c("Auto","LM","LOGIT","COX"),testType=c(
 				if (testType[1]=="Auto") 
 				{
 					testType="Ftest";
-					if (totScores<=10) 
+					if ((totScores <= 10) && (min(outcomeTable) >= 10))
 					{
 						type = "LOGIT";
 						testType ="zIDI"
 						univType = "LM";
+						warning("Ordinal Model Fit\n")
 					}
 				}
 			}
@@ -108,6 +110,7 @@ function(formula=formula,data=NULL,type=c("Auto","LM","LOGIT","COX"),testType=c(
 					rankingTest="zIDI";
 				}
 			}
+#			cat(testType[1],"<-");
 		}
 		if (testType[1]=="Auto") testType="Ftest";
 	}

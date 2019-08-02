@@ -123,7 +123,8 @@ extern "C" SEXP bootstrapValidationResCpp(SEXP _fraction,SEXP _loops,SEXP _dataf
 			mat bestTrainingSample;
 			uvec ntestSample;
 			uvec samCases;
-			unsigned int mintestSample = 4;
+			unsigned int cycle = 0;
+			unsigned int mintestSample = 2;
 			do
 			{
 				samCases = randi<uvec>(totSamples, distr_param(0,sizecases-1));
@@ -133,6 +134,11 @@ extern "C" SEXP bootstrapValidationResCpp(SEXP _fraction,SEXP _loops,SEXP _dataf
 					auxcasesample[samCases[i]]=1;
 				}
 				ntestSample=find(auxcasesample==0);
+				++cycle;
+				if (cycle > 5) 
+				{
+					ntestSample=find(auxcasesample==1); //same as train if no enough data sample
+				}
 			} while (ntestSample.n_elem<mintestSample);	
 
 			trainingSample = tcasesample.rows(samCases);
@@ -274,6 +280,8 @@ std::string residualFowardSelection(const unsigned int size,const int totSamples
 	unsigned int sizecases = dataframe.n_rows;
 //	unsigned int featuresize=std::max((unsigned int)dataframe.n_cols-1,(unsigned int)ovnames.size());
 
+//	Rcout <<" Hello \n";	
+
 	arma::mat mysample = dataframe;
 	arma::mat myTestsample = dataframe;
 
@@ -304,14 +312,16 @@ std::string residualFowardSelection(const unsigned int size,const int totSamples
 	for(unsigned  int j=0;j<covari.size();j++)
 		for(unsigned int i=0;i<vnames.size();i++)
 			if (covari[j]==vnames[i]) vnames[i]=inname;
+	unsigned int cycle = 0;
 	if (loops > 1)
 	{
-		unsigned int mitestsize=4;
+		unsigned int mitestsize=2;
 		uvec notinserted;
 		uvec samCases;
 		vec auxcasesample;
 		double omin=min(randOutput);
 		double range=max(randOutput)-omin;
+		cycle = 0;
 		do
 		{
 			samCases= randi<uvec>(totSamples, distr_param(0,sizecases-1));
@@ -321,6 +331,8 @@ std::string residualFowardSelection(const unsigned int size,const int totSamples
 				auxcasesample[samCases(i)]=1;
 			}
 			notinserted = find(auxcasesample==0);
+			++cycle;
+			if (cycle > 5) return frm1;	 //exit no models
 		}	
 		while (notinserted.n_elem<mitestsize);
 		mysample = dataframe.rows(samCases);
@@ -413,7 +425,6 @@ std::string residualFowardSelection(const unsigned int size,const int totSamples
 	mat mysampleMat;
 	vec testResiduals;
 	vec trainResiduals;
-	int cycle=0;
 	double error=1.0;
 	double tol=1.0e-6;
 	unsigned int maximumNoselectedCount=25;
@@ -427,7 +438,8 @@ std::string residualFowardSelection(const unsigned int size,const int totSamples
 			nideex[j]=lockup[vnames[j]];
 		}
 	}
-	while ((changes>0)&&(error>tol))
+	cycle=0;
+	while ((changes>0)&&(error>tol)&&(cycle < 2*featuresize))
 	{
 		changes = 0;
 	  	minpiri = pthr2;

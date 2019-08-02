@@ -135,7 +135,7 @@ extern "C" SEXP bootstrapValidationBinCpp(SEXP _fraction,SEXP _loops,SEXP _dataf
 			mat bestTestControl;
 			uvec nsamCaseTest;
 			uvec nsamControlTest;
-			unsigned int minTest=2; // at least 25% of samples for test evaluation
+			unsigned int minTest=2; // at least 2 samples for test evaluation
 			uvec samCases;
 			uvec samControl;
 			do
