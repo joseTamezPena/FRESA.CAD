@@ -68,6 +68,8 @@ export(predictionStats_binary)
 export(predictionStats_ordinal)
 export(predictionStats_regression)
 export(predictionStats_survival)
+export(BOOST_BSWiMS)
+export(predict.FRESA_BOOST)
 
 useDynLib(FRESA.CAD,.registration = TRUE)
 
@@ -86,6 +88,7 @@ S3method(predict, FRESAsignature)
 S3method(predict, FRESA_NAIVEBAYES)
 S3method(predict, FRESA_RIDGE) 
 S3method(predict, FRESA_SVM) 
+S3method(predict, FRESA_BOOST) 
 
 importFrom(Rcpp, evalCpp)
 importFrom("graphics", "abline", "barplot", "boxplot", "legend","lines", "par", "plot", "title")

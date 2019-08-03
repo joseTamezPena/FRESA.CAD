@@ -1,5 +1,6 @@
 \name{BSWiMS.model}
 \alias{BSWiMS.model}
+\alias{BOOST_BSWiMS}
 \title{BSWiMS model selection}
 \description{
 	This function returns a set of models that best predict the outcome. Based on a Bootstrap Stage Wise Model Selection algorithm.

@@ -322,3 +322,69 @@ predict.FRESA_RIDGE <- function(object,...)
 	return(pr)
 }
 
+
+BOOST_BSWiMS <- function(formula = formula, data=NULL, ...)
+{
+	if (class(formula)=="character")
+	{
+		formula <- formula(formula);
+	}
+	else
+	{
+		baseformula <- as.character(formula);
+		baseformula[3] <- str_replace_all(baseformula[3],"[.]","1");
+		baseformula <- paste(baseformula[2],"~",baseformula[3]);
+		formula <- formula(baseformula);
+	}
+	varlist <- attr(terms(formula),"variables")
+	dependent <- as.character(varlist[[2]])
+	Outcome = dependent[1];
+	if (length(dependent)==3)
+	{
+		Outcome = dependent[3];
+	}
+	outcomedata <- data[,Outcome];
+	outcomeTable <- table(outcomedata);
+
+	thr <- 0.5
+	thr2 <- 1.0 - thr
+	orgModel <- BSWiMS.model(formula,data,...);
+	orgPredict <- predict(orgModel,data)
+	incorrectSet <- ((orgPredict >= thr) & outcomedata == 0) | ((orgPredict < thr2) & outcomedata == 1);
+	alternativeModel <- NULL;
+	classsModel <- NULL;
+	if (sum(incorrectSet) > 20)
+	{
+		if (min(table(data[incorrectSet,Outcome])) > 10)
+		{
+			alternativeModel <- BSWiMS.model(formula,data[incorrectSet,])
+			classData <- trainSet[,!(colnames(data) %in% Outcome) ]
+			classData$label <- 1*incorrectSet;
+			classsModel <- BSWiMS.model(label~1,classData);
+		}
+	}
+	result <- list(original = orgModel,alternativeModel = alternativeModel,classModel = classsModel )
+	class(result) <- "FRESA_BOOST"
+	return(result);
+}
+
+
+predict.FRESA_BOOST <- function(object,...) 
+{
+  	parameters <- list(...);
+  	testData <- parameters[[1]];
+	thr <- 0.55;
+	if (length(parameters) > 1)
+	{
+		thr <- parameters[[2]];
+	}
+    pLS <- predict(object$original,testData);
+	if (!is.null(object$alternativeModel))
+	{
+		palt <- predict(object$alternativeModel,testData);
+		classPred <- predict(object$classsModel,testData);
+		pLS[classPred > thr] <- palt[classPred > thr];
+	}
+    return(pLS);
+}
+
