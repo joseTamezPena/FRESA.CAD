@@ -352,7 +352,7 @@ BOOST_BSWiMS <- function(formula = formula, data=NULL, ...)
 	orgPredict <- predict(orgModel,data)
 	incorrectSet <- ((orgPredict >= thr) & outcomedata == 0) | ((orgPredict < thr2) & outcomedata == 1);
 	alternativeModel <- NULL;
-	classsModel <- NULL;
+	classModel <- NULL;
 	if (sum(incorrectSet) > 20)
 	{
 		if (min(table(data[incorrectSet,Outcome])) > 10)
@@ -360,10 +360,10 @@ BOOST_BSWiMS <- function(formula = formula, data=NULL, ...)
 			alternativeModel <- BSWiMS.model(formula,data[incorrectSet,])
 			classData <- trainSet[,!(colnames(data) %in% Outcome) ]
 			classData$label <- 1*incorrectSet;
-			classsModel <- BSWiMS.model(label~1,classData);
+			classModel <- BSWiMS.model(label~1,classData);
 		}
 	}
-	result <- list(original = orgModel,alternativeModel = alternativeModel,classModel = classsModel )
+	result <- list(original = orgModel,alternativeModel = alternativeModel,classModel = classModel )
 	class(result) <- "FRESA_BOOST"
 	return(result);
 }
@@ -382,7 +382,7 @@ predict.FRESA_BOOST <- function(object,...)
 	if (!is.null(object$alternativeModel))
 	{
 		palt <- predict(object$alternativeModel,testData);
-		classPred <- predict(object$classsModel,testData);
+		classPred <- predict(object$classModel,testData);
 		pLS[classPred > thr] <- palt[classPred > thr];
 	}
     return(pLS);

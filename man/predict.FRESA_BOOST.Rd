@@ -1,6 +1,6 @@
 \name{predict.FRESA_BOOST}
 \alias{predict.FRESA_BOOST}
-\title{Predicts \code{\link{FRESA_BOOST}} models}
+\title{Predicts BOOST_BSWiMS models}
 \description{
 	This function predicts the outcome from a BOOST_BSWiMS model
 }
