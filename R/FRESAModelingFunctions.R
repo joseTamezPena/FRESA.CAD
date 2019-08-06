@@ -326,121 +326,137 @@ predict.FRESA_RIDGE <- function(object,...)
 
 BOOST_BSWiMS <- function(formula = formula, data=NULL, falsePredTHR = 0.45, thrs = c(0.025,0.05,0.10,0.25,0.50), ...)
 {
-  if (class(formula) == "character")
-  {
-    formula <- formula(formula);
-  }
-  else
-  {
-    baseformula <- as.character(formula);
-    baseformula[3] <- str_replace_all(baseformula[3],"[.]","1");
-    baseformula <- paste(baseformula[2],"~",baseformula[3]);
-    formula <- formula(baseformula);
-  }
-  varlist <- attr(terms(formula),"variables")
-  dependent <- as.character(varlist[[2]])
-  Outcome = dependent[1];
-  if (length(dependent) == 3)
-  {
-    Outcome = dependent[3];
-  }
-  outcomedata <- data[,Outcome];
+	if (class(formula) == "character")
+	{
+		formula <- formula(formula);
+	}
+	else
+	{
+		baseformula <- as.character(formula);
+		baseformula[3] <- str_replace_all(baseformula[3],"[.]","1");
+		baseformula <- paste(baseformula[2],"~",baseformula[3]);
+		formula <- formula(baseformula);
+	}
+	varlist <- attr(terms(formula),"variables")
+	dependent <- as.character(varlist[[2]])
+	Outcome = dependent[1];
+	if (length(dependent) == 3)
+	{
+		Outcome = dependent[3];
+	}
+	outcomedata <- data[,Outcome];
 
-  thr2 <- 1.0 - falsePredTHR
-  modelData <- rep(TRUE,nrow(data));
-  alternativeModel <- NULL;
-  classModel <- NULL;
-  bclassModel <- NULL;
-  balternativeModel <- NULL;
-  classData <- data;
-  orgModel <- BSWiMS.model(formula,data,...);
-  orgPredict <- predict(orgModel,data)
-  maxAccuracy <- sum(((orgPredict >= 0.5) & (outcomedata == 1)) | ((orgPredict < 0.5) & (outcomedata == 0)))/nrow(data);
-  print(maxAccuracy)
-  posModel <- NULL;
-  improvement <- 1;
-  nmodelData <- modelData;
-  cat("{")
-  while (improvement > 0)
-  {
-    improvement <- 0;
-    cat("{")
-    for (incdatathr in thrs)
-    {
-      modelData <- nmodelData;
-      norgModel <- BSWiMS.model(formula,data[modelData,],...);
-      orgPredict <- predict(norgModel,data)
-      incorrectSet <- ((orgPredict >= falsePredTHR) & (outcomedata == 0)) | ((orgPredict < thr2) & (outcomedata == 1));
-      inthr2 <- 1.0 - incdatathr;
-      nmodelData <- ((orgPredict >= incdatathr) & (outcomedata == 1)) | ((orgPredict < inthr2) & (outcomedata == 0));
-      if (sum(1*incorrectSet) > 20)
-      {
-        tabledata <- table(data[incorrectSet,Outcome])
-        if (length(tabledata) > 1)
-        {
-          if (min(tabledata) > 10)
-          {
-            correctSet <- ((orgPredict >= falsePredTHR) & (outcomedata == 1)) | ((orgPredict < thr2) & (outcomedata == 0));
-            aposModel <- BSWiMS.model(formula,data[correctSet,],...);
-            posPredict <- predict(aposModel,data)
-            alternativeModel <- BSWiMS.model(formula,data[incorrectSet,],...)
-            altPredict <- predict(alternativeModel,data);
-            
-            classData[,Outcome] <- 1*(((orgPredict >= 0.5) & (outcomedata == 0)) | ((orgPredict < 0.5) & (outcomedata == 1)));
-            classModel <- BSWiMS.model(paste(Outcome,"~1"),classData,...);
-            classPredict <-	predict(classModel,classData)
-            
-            corAccuracy <- (((posPredict >= 0.5) == outcomedata) & (classPredict <= 0.5))	| 
-              (((altPredict >= 0.5) == outcomedata) & (classPredict > 0.5))
-            
-            corAccuracy <- sum(corAccuracy)/(nrow(data))
-            cat(corAccuracy,"}.{")
-            
-            
-            if (maxAccuracy < corAccuracy)
-            {
-              bdataModel <- modelData;
-              posModel <- aposModel;
-              bclassModel <- classModel;
-              balternativeModel <- alternativeModel;
-              maxAccuracy <- corAccuracy;
-              improvement <- improvement + 1;
-            }
-            
-          }
-        }
-      }
-    }
-    if (improvement > 0)
-    {
-      nmodelData <- bdataModel;
-      norgModel <- posModel;
-    }
-  }
-  cat("}")
-  result <- list(original = orgModel,posModel = posModel,alternativeModel = balternativeModel,classModel = bclassModel )
-  class(result) <- "FRESA_BOOST"
-  return(result);
+	thr2 <- 1.0 - falsePredTHR
+	modelData <- rep(TRUE,nrow(data));
+	alternativeModel <- NULL;
+	classModel <- NULL;
+	bclassModel <- NULL;
+	balternativeModel <- NULL;
+	classData <- data;
+	orgModel <- BSWiMS.model(formula,data,...);
+	orgPredict <- predict(orgModel,data)
+	maxAccuracy <- (0.01*nrow(data)+sum(((orgPredict >= 0.5) & (outcomedata == 1)) | ((orgPredict < 0.5) & (outcomedata == 0))))/nrow(data);
+	print(maxAccuracy)
+	posModel <- NULL;
+	improvement <- 1;
+	nmodelData <- modelData;
+	cat("{")
+	while (improvement > 0)
+	{
+		improvement <- 0;
+		cat("[")
+		for (incdatathr in thrs)
+		{
+			modelData <- nmodelData;
+			norgModel <- BSWiMS.model(formula,data[modelData,],...);
+			orgPredict <- predict(norgModel,data)
+			incorrectSet <- ((orgPredict >= falsePredTHR) & (outcomedata == 0)) | ((orgPredict < thr2) & (outcomedata == 1));
+			inthr2 <- 1.0 - incdatathr;
+			nmodelData <- ((orgPredict >= incdatathr) & (outcomedata == 1)) | ((orgPredict < inthr2) & (outcomedata == 0));
+			if (sum(1*incorrectSet) > 20)
+			{
+				tabledata <- table(data[incorrectSet,Outcome])
+				if (length(tabledata) > 1)
+				{
+					if (min(tabledata) > 10)
+					{
+						correctSet <- ((orgPredict >= falsePredTHR) & (outcomedata == 1)) | ((orgPredict < thr2) & (outcomedata == 0));
+						aposModel <- BSWiMS.model(formula,data[correctSet,],...);
+						posPredict <- predict(aposModel,data)
+
+						alternativeModel <- BSWiMS.model(formula,data[incorrectSet,],...)
+						altPredict <- predict(alternativeModel,data);
+						
+						classData[,Outcome] <- 1*(!((orgPredict >= 0.5) == outcomedata));
+						classModel <- BSWiMS.model(paste(Outcome,"~1"),classData,...);
+						classPredict <-	predict(classModel,classData)
+						
+						p1 <- (1.0-classPredict)*posPredict;
+						p2 <- (1.0-classPredict)*(1.0-posPredict);
+						p3 <- classPredict*altPredict;
+						p4 <- classPredict*(1.0-altPredict);
+						pval <- cbind(p1,p2,p3,p4);
+						mv <- apply(pval,1,which.max);
+						fpval <- apply(pval,1,max);
+						altv <- (mv == 2) | (mv == 4);
+						fpval[altv] <- 1.0 - fpval[altv];
+						corAccuracy <- sum((fpval >= 0.5) == outcomedata)/(nrow(data));
+						
+						if (maxAccuracy < corAccuracy)
+						{
+							cat("(",corAccuracy,")");
+							bdataModel <- modelData;
+							posModel <- aposModel;
+							bclassModel <- classModel;
+							balternativeModel <- alternativeModel;
+							maxAccuracy <- corAccuracy;
+							improvement <- improvement + 1;
+						}
+						cat("|");
+					}
+				}
+			}
+		}
+		cat("]")
+		if (improvement > 0)
+		{
+			nmodelData <- bdataModel;
+			norgModel <- posModel;
+		}
+	}
+	cat("}")
+	result <- list(original = orgModel,posModel = posModel,alternativeModel = balternativeModel,classModel = bclassModel )
+	class(result) <- "FRESA_BOOST"
+	return(result);
 }
 
 
 predict.FRESA_BOOST <- function(object,...) 
 {
-		parameters <- list(...);
-		testData <- parameters[[1]];
+	parameters <- list(...);
+	testData <- parameters[[1]];
 	thr <- 0.55;
 	if (length(parameters) > 1)
 	{
 		thr <- parameters[[2]];
 	}
-		pLS <- predict(object$original,testData);
+	pLS <- predict(object$original,testData);
 	if (!is.null(object$alternativeModel))
 	{
 		pLS <- predict(object$posModel,testData);
 		palt <- predict(object$alternativeModel,testData);
 		classPred <- predict(object$classModel,testData);
-		pLS[classPred > thr] <- palt[classPred > thr];
+		
+		p1 <- (1.0-classPred)*pLS;
+		p2 <- (1.0-classPred)*(1.0-pLS);
+		p3 <- classPred*palt;
+		p4 <- classPred*(1.0-palt);
+		pval <- cbind(p1,p2,p3,p4);
+		mv <- apply(pval,1,which.max);
+		pLS <- apply(pval,1,max);
+		altv <- (mv == 2) | (mv == 4);
+		pLS[altv] <- 1.0 - pLS[altv];
 	}
-		return(pLS);
+	return(pLS);
 }
 
