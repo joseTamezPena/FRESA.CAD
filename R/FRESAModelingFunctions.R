@@ -323,7 +323,8 @@ predict.FRESA_RIDGE <- function(object,...)
 }
 
 
-BOOST_BSWiMS <- function(formula = formula, data=NULL, falsePredTHR = 0.50, thrs = c(0.01,0.05,0.10,0.25,0.50), ...)
+
+BOOST_BSWiMS <- function(formula = formula, data=NULL, falsePredTHR = 0.45, thrs = c(0.025,0.05,0.10,0.25,0.50), ...)
 {
   if (class(formula) == "character")
   {
@@ -351,7 +352,7 @@ BOOST_BSWiMS <- function(formula = formula, data=NULL, falsePredTHR = 0.50, thrs
   classModel <- NULL;
   bclassModel <- NULL;
   balternativeModel <- NULL;
-  classData <- data[,!(colnames(data) %in% Outcome) ]
+  classData <- data;
   orgModel <- BSWiMS.model(formula,data,...);
   orgPredict <- predict(orgModel,data)
   maxAccuracy <- sum(((orgPredict >= 0.5) & (outcomedata == 1)) | ((orgPredict < 0.5) & (outcomedata == 0)))/nrow(data);
@@ -379,27 +380,33 @@ BOOST_BSWiMS <- function(formula = formula, data=NULL, falsePredTHR = 0.50, thrs
         {
           if (min(tabledata) > 10)
           {
+            correctSet <- ((orgPredict >= falsePredTHR) & (outcomedata == 1)) | ((orgPredict < thr2) & (outcomedata == 0));
+            aposModel <- BSWiMS.model(formula,data[correctSet,],...);
+            posPredict <- predict(aposModel,data)
             alternativeModel <- BSWiMS.model(formula,data[incorrectSet,],...)
             altPredict <- predict(alternativeModel,data);
             
-            classData$label <- 1*incorrectSet;
-            classModel <- BSWiMS.model(label~1,classData,...);
+            classData[,Outcome] <- 1*(((orgPredict >= 0.5) & (outcomedata == 0)) | ((orgPredict < 0.5) & (outcomedata == 1)));
+            classModel <- BSWiMS.model(paste(Outcome,"~1"),classData,...);
             classPredict <-	predict(classModel,classData)
             
-            corAccuracy <- (((orgPredict >= 0.5) == outcomedata) & (classPredict <= 0.5))	| 
+            corAccuracy <- (((posPredict >= 0.5) == outcomedata) & (classPredict <= 0.5))	| 
               (((altPredict >= 0.5) == outcomedata) & (classPredict > 0.5))
             
             corAccuracy <- sum(corAccuracy)/(nrow(data))
-            cat(corAccuracy,"}{")
+            cat(corAccuracy,"}.{")
+            
+            
             if (maxAccuracy < corAccuracy)
             {
               bdataModel <- modelData;
-              posModel <- norgModel;
+              posModel <- aposModel;
               bclassModel <- classModel;
               balternativeModel <- alternativeModel;
               maxAccuracy <- corAccuracy;
               improvement <- improvement + 1;
             }
+            
           }
         }
       }
