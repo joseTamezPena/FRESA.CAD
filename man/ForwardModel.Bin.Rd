@@ -22,7 +22,7 @@
 	                            type = c("LM", "LOGIT", "COX"),
 	                            timeOutcome = "Time",
 	                            selectionType=c("zIDI", "zNRI"),
-	                            cores = 4,
+	                            cores = 6,
 	                            randsize = 0,
 	                            featureSize=0)
 }

@@ -1,5 +1,5 @@
 ForwardSelection.Model.Res <-
-function(size=100,fraction=1.0,pvalue=0.05,loops=100,covariates="1",Outcome,variableList,data,maxTrainModelSize=20,type=c("LM","LOGIT","COX"),testType=c("Binomial","Wilcox","tStudent","Ftest"),timeOutcome="Time",cores = 4,randsize = 0,featureSize = 0)
+function(size=100,fraction=1.0,pvalue=0.05,loops=100,covariates="1",Outcome,variableList,data,maxTrainModelSize=20,type=c("LM","LOGIT","COX"),testType=c("Binomial","Wilcox","tStudent","Ftest"),timeOutcome="Time",cores = 6,randsize = 0,featureSize = 0)
 {
 #	R_CStackLimit = -1;
 

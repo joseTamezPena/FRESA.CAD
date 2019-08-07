@@ -18,7 +18,7 @@
 	                     type = c("LM", "LOGIT", "COX"), 
 	                     testType=c("Binomial", "Wilcox", "tStudent", "Ftest"),
 	                     timeOutcome = "Time",
-	                     cores = 4,
+	                     cores = 6,
 	                     randsize = 0,
 	                     featureSize=0)
 }

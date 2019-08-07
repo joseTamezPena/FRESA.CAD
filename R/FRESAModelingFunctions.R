@@ -355,7 +355,8 @@ BOOST_BSWiMS <- function(formula = formula, data=NULL, falsePredTHR = 0.45, thrs
 	classData <- data;
 	orgModel <- BSWiMS.model(formula,data,...);
 	orgPredict <- predict(orgModel,data)
-	maxAccuracy <- (0.01*nrow(data)+sum(((orgPredict >= 0.5) & (outcomedata == 1)) | ((orgPredict < 0.5) & (outcomedata == 0))))/nrow(data);
+	maxAccuracy <- (0.01*sum(outcomedata) + 0.99*sum((orgPredict >= 0.5) & (outcomedata == 1)))/sum(outcomedata);
+	maxAccuracy <- 0.5*(maxAccuracy + (0.01*sum(outcomedata == 0) + 0.99*sum((orgPredict < 0.5) & (outcomedata == 0)))/sum(outcomedata == 0));
 	print(maxAccuracy)
 	posModel <- NULL;
 	improvement <- 1;
@@ -376,6 +377,7 @@ BOOST_BSWiMS <- function(formula = formula, data=NULL, falsePredTHR = 0.45, thrs
 			if (sum(1*incorrectSet) > 20)
 			{
 				tabledata <- table(data[incorrectSet,Outcome])
+#				print(tabledata)
 				if (length(tabledata) > 1)
 				{
 					if (min(tabledata) > 10)
@@ -400,11 +402,15 @@ BOOST_BSWiMS <- function(formula = formula, data=NULL, falsePredTHR = 0.45, thrs
 						fpval <- apply(pval,1,max);
 						altv <- (mv == 2) | (mv == 4);
 						fpval[altv] <- 1.0 - fpval[altv];
-						corAccuracy <- sum((fpval >= 0.5) == outcomedata)/(nrow(data));
+
+#						corAccuracy <- sum((fpval >= 0.5) == outcomedata)/(nrow(data));
+						corAccuracy <- sum((fpval >= 0.5) & (outcomedata == 1))/sum(outcomedata);
+						corAccuracy <- 0.5*(corAccuracy + sum((fpval < 0.5) & (outcomedata == 0))/sum(outcomedata == 0));
+						cat("(",corAccuracy,")");
 						
 						if (maxAccuracy < corAccuracy)
 						{
-							cat("(",corAccuracy,")");
+							cat("*");
 							bdataModel <- modelData;
 							posModel <- aposModel;
 							bclassModel <- classModel;
