@@ -324,7 +324,7 @@ predict.FRESA_RIDGE <- function(object,...)
 
 
 
-BOOST_BSWiMS <- function(formula = formula, data=NULL, thrs = c(0.25,0.40,0.50), ...)
+BOOST_BSWiMS <- function(formula = formula, data=NULL, thrs = c(0.30,0.40,0.50), ...)
 {
 	if (class(formula) == "character")
 	{
