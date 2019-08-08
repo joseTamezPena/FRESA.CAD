@@ -352,7 +352,8 @@ BOOST_BSWiMS <- function(formula = formula, data=NULL, thrs = c(0.30,0.40,0.50),
 	bclassModel <- NULL;
 	balternativeModel <- NULL;
 	orgModel <- BSWiMS.model(formula,data,...);
-	orgPredict <- predict(orgModel,data)
+	orgPredict <- predict(orgModel,data);
+	fullPredict <- orgPredict;
 	nposPredict <- orgPredict;
 	maxAUC <- (0.025*sum(outcomedata) + 0.975*sum((orgPredict >= 0.5) & (outcomedata == 1)))/sum(outcomedata);
 	maxAUC <- 0.5*(maxAUC + (0.025*sum(outcomedata == 0) + 0.975*sum((orgPredict < 0.5) & (outcomedata == 0)))/sum(outcomedata == 0));
@@ -364,6 +365,8 @@ BOOST_BSWiMS <- function(formula = formula, data=NULL, thrs = c(0.30,0.40,0.50),
 	negFeatures <- colnames(data);
 	featureSize <- ncol(data)-1;
 	featurestoExplore <- c(Outcome,names(orgModel$bagging$frequencyTable));
+	pop <- orgPredict;
+	pon <- 1.0-orgPredict;
 	while (improvement > 0)
 	{
 		estimatedFeatures <- FALSE;
@@ -388,8 +391,8 @@ BOOST_BSWiMS <- function(formula = formula, data=NULL, thrs = c(0.30,0.40,0.50),
 				for (modeldatathr in thrs)
 				{
 					altTrain <- 1.0 - modeldatathr;
-					incorrectSet <- ((orgPredict >= modeldatathr) & (outcomedata == 0)) | ((orgPredict < altTrain) & (outcomedata == 1));
-					correctSet <- ((orgPredict >= modeldatathr) & (outcomedata == 1)) | ((orgPredict < altTrain) & (outcomedata == 0));
+					incorrectSet <- ((norgPredict >= modeldatathr) & (outcomedata == 0)) | ((norgPredict < altTrain) & (outcomedata == 1));
+					correctSet <- ((norgPredict >= modeldatathr) & (outcomedata == 1)) | ((norgPredict < altTrain) & (outcomedata == 0));
 					if ((sum(1*incorrectSet) > 10) && (sum(1*correctSet) > 10))
 					{
 						tabledata <- table(data[incorrectSet,Outcome])
