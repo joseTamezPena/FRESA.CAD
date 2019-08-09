@@ -357,6 +357,7 @@ BOOST_BSWiMS <- function(formula = formula, data=NULL, thrs = c(0.05,0.10,0.25,0
 	nposPredict <- orgPredict;
 	maxAUC <- (0.025*sum(outcomedata) + 0.975*sum((orgPredict >= 0.5) & (outcomedata == 1)))/sum(outcomedata);
 	maxAUC <- 0.5*(maxAUC + (0.025*sum(outcomedata == 0) + 0.975*sum((orgPredict < 0.5) & (outcomedata == 0)))/sum(outcomedata == 0));
+	baseAUC <- maxAUC;
 	posModel <- NULL;
 	improvement <- 1;
 	nmodelData <- modelData;
@@ -394,7 +395,7 @@ BOOST_BSWiMS <- function(formula = formula, data=NULL, thrs = c(0.05,0.10,0.25,0
 				classPredict <-	predict(classModel,classData)
 				AUCClass <- sum((classPredict < 0.5) & (classData[,Outcome] == 0))/sum(classData[,Outcome] == 0); 
 				AUCClass <- 0.5*(AUCClass + sum((classPredict >= 0.5) & (classData[,Outcome] == 1))/sum(classData[,Outcome] == 1)); 
-				if (AUCClass >= 0.5*(0.5+maxAUC))
+				if (AUCClass >= (0.35+0.30*baseAUC))
 				{
 					featurestoExplore <- unique(c(featurestoExplore,names(classModel$bagging$frequencyTable)));
 					for (modeldatathr in ithrs)
