@@ -501,3 +501,85 @@ predict.FRESA_BOOST <- function(object,...)
 	return(pLS);
 }
 
+ClustClass <- function(formula = formula, data=NULL, filtermethod=univariate_Wilcoxon, clustermethod=NULL, classmethod=LASSO_1SE,filtermethod.control=NULL,clustermethod.control=NULL,classmethod.control=NULL)
+{
+	if (class(formula) == "character")
+	{
+		formula <- formula(formula);
+	}
+	else
+	{
+		baseformula <- as.character(formula);
+		baseformula[3] <- str_replace_all(baseformula[3],"[.]","1");
+		baseformula <- paste(baseformula[2],"~",baseformula[3]);
+		formula <- formula(baseformula);
+	}
+	varlist <- attr(terms(formula),"variables")
+	dependent <- as.character(varlist[[2]])
+	Outcome = dependent[1];
+	if (length(dependent) == 3)
+	{
+		Outcome = dependent[3];
+	}
+	outcomedata <- data[,Outcome];
+	totsamples <- nrow(data);
+	minSamples <- max(5,0.05*totsamples);
+	
+	fm <- filtermethod(data,Outcome,filtermethod.control);
+	clus <- clustermethod(data[,names(fm)],clustermethod.control);
+	tb <- table(clus$classification);
+	classlabels <- as.numerci(names(tb));
+	models <- list();
+	if (nrow(tb) > 1)
+	{
+		if (min(tb) > minSamples)
+		{
+			tb <- table(clus$classification,outcomedata);
+			for (i  in 1:nrow(tb))
+			{
+				if (min(tb[i,]) > minSamples)
+				{
+					models[[i]] <- classmethod(formula,subset(data,clus$classification == classlabels[i]),classmethod.control);
+				}
+				else
+				{
+					models[[i]] <- NULL;
+				}
+			}
+		}
+	}
+	result <- list(features = fm,cluster = clus,models = models);
+	class(result) <- "CLUSTER_CLASS"
+	return(result);
+}
+
+
+predict.FRESA_BOOST <- function(object,...) 
+{
+	parameters <- list(...);
+	testData <- parameters[[1]];
+	thr <- 0.55;
+	if (length(parameters) > 1)
+	{
+		thr <- parameters[[2]];
+	}
+	pLS <- predict(object$original,testData);
+	if (!is.null(object$alternativeModel))
+	{
+		pLS <- predict(object$posModel,testData);
+		palt <- predict(object$alternativeModel,testData);
+		classPred <- predict(object$classModel,testData);
+		
+		p1 <- (1.0-classPred)*pLS;
+		p2 <- (1.0-classPred)*(1.0-pLS);
+		p3 <- classPred*palt;
+		p4 <- classPred*(1.0-palt);
+		pval <- cbind(p1,p2,p3,p4);
+		mv <- apply(pval,1,which.max);
+		pLS <- apply(pval,1,max);
+		altv <- (mv == 2) | (mv == 4);
+		pLS[altv] <- 1.0 - pLS[altv];
+	}
+	return(pLS);
+}
+
