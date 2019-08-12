@@ -500,86 +500,233 @@ predict.FRESA_BOOST <- function(object,...)
 	}
 	return(pLS);
 }
-
 ClustClass <- function(formula = formula, data=NULL, filtermethod=univariate_Wilcoxon, clustermethod=NULL, classmethod=LASSO_1SE,filtermethod.control=NULL,clustermethod.control=NULL,classmethod.control=NULL)
 {
-	if (class(formula) == "character")
-	{
-		formula <- formula(formula);
-	}
-	else
-	{
-		baseformula <- as.character(formula);
-		baseformula[3] <- str_replace_all(baseformula[3],"[.]","1");
-		baseformula <- paste(baseformula[2],"~",baseformula[3]);
-		formula <- formula(baseformula);
-	}
-	varlist <- attr(terms(formula),"variables")
-	dependent <- as.character(varlist[[2]])
-	Outcome = dependent[1];
-	if (length(dependent) == 3)
-	{
-		Outcome = dependent[3];
-	}
-	outcomedata <- data[,Outcome];
-	totsamples <- nrow(data);
-	minSamples <- max(5,0.05*totsamples);
-	
-	fm <- filtermethod(data,Outcome,filtermethod.control);
-	clus <- clustermethod(data[,names(fm)],clustermethod.control);
-	tb <- table(clus$classification);
-	classlabels <- as.numerci(names(tb));
-	models <- list();
-	if (nrow(tb) > 1)
-	{
-		if (min(tb) > minSamples)
-		{
-			tb <- table(clus$classification,outcomedata);
-			for (i  in 1:nrow(tb))
-			{
-				if (min(tb[i,]) > minSamples)
-				{
-					models[[i]] <- classmethod(formula,subset(data,clus$classification == classlabels[i]),classmethod.control);
-				}
-				else
-				{
-					models[[i]] <- NULL;
-				}
-			}
-		}
-	}
-	result <- list(features = fm,cluster = clus,models = models);
-	class(result) <- "CLUSTER_CLASS"
-	return(result);
+  if (class(formula) == "character")
+  {
+    formula <- formula(formula);
+  }
+  else
+  {
+    baseformula <- as.character(formula);
+    baseformula[3] <- str_replace_all(baseformula[3],"[.]","1");
+    baseformula <- paste(baseformula[2],"~",baseformula[3]);
+    formula <- formula(baseformula);
+  }
+  varlist <- attr(terms(formula),"variables")
+  dependent <- as.character(varlist[[2]])
+  Outcome = dependent[1];
+  if (length(dependent) == 3)
+  {
+    Outcome = dependent[3];
+  }
+  outcomedata <- data[,Outcome];
+  totsamples <- nrow(data);
+  minSamples <- max(5,0.05*totsamples);
+  clus <- NULL
+  fm <- NULL
+  
+  if (is.null(filtermethod.control))
+  {
+    fm <- filtermethod(data,Outcome);
+  }
+  else
+  {
+    fm <- do.call(filtermethod,c(list(data,Outcome),filtermethod.control));
+  }
+  if (is.null(clustermethod.control))
+  {
+    clus <- clustermethod(data[,names(fm)]);
+  }
+  else
+  {
+    clus <- do.call(clustermethod,c(list(data[,names(fm)]),clustermethod.control));
+  }
+  tb <- table(clus$classification);
+  classlabels <- as.numeric(names(tb));
+  models <- list();
+  if (nrow(tb) > 1)
+  {
+      tb <- table(clus$classification,outcomedata);
+      for (i  in 1:nrow(tb))
+      {
+        if (min(tb[i,]) > minSamples)
+        {
+          if (is.null(classmethod.control))
+          {
+            models[[i]] <- classmethod(formula,subset(data,clus$classification == classlabels[i]));
+          }
+          else
+          {
+            models[[i]] <- do.call(classmethod,c(list(formula,subset(data,clus$classification == classlabels[i])),classmethod.control));
+          }
+        }
+        else
+        {
+          models[[i]] <- as.numeric(colnames(tb)[which.max(tb[i,])]);
+        }
+      }
+  }
+  else
+  {
+    if (is.null(classmethod.control))
+    {
+      models[[1]] <- classmethod(formula,subset(data,clus$classification == classlabels[i]));
+    }
+    else
+    {
+      models[[1]] <- do.call(classmethod,c(list(formula,subset(data,clus$classification == classlabels[i])),classmethod.control));
+    }
+  }
+  result <- list(features = fm,cluster = clus,models = models);
+  class(result) <- "CLUSTER_CLASS"
+  return(result);
 }
 
-
-predict.FRESA_BOOST <- function(object,...) 
+predict.CLUSTER_CLASS <- function(object,...)
 {
-	parameters <- list(...);
-	testData <- parameters[[1]];
-	thr <- 0.55;
-	if (length(parameters) > 1)
-	{
-		thr <- parameters[[2]];
-	}
-	pLS <- predict(object$original,testData);
-	if (!is.null(object$alternativeModel))
-	{
-		pLS <- predict(object$posModel,testData);
-		palt <- predict(object$alternativeModel,testData);
-		classPred <- predict(object$classModel,testData);
-		
-		p1 <- (1.0-classPred)*pLS;
-		p2 <- (1.0-classPred)*(1.0-pLS);
-		p3 <- classPred*palt;
-		p4 <- classPred*(1.0-palt);
-		pval <- cbind(p1,p2,p3,p4);
-		mv <- apply(pval,1,which.max);
-		pLS <- apply(pval,1,max);
-		altv <- (mv == 2) | (mv == 4);
-		pLS[altv] <- 1.0 - pLS[altv];
-	}
-	return(pLS);
+  parameters <- list(...);
+  testData <- parameters[[1]];
+  pLS <- predict(object$cluster,testData[,names(object$features)])$classification;
+  tb <- table(pLS);
+  index <- as.numeric(names(tb));
+  for (i in 1:nrow(tb))
+  {
+    predeictset <- (pLS == index[i]);
+    if (class(object$models[[index[i]]]) == "numeric")
+    {
+      pLS[predeictset] <- object$models[[index[i]]];
+    }
+    else
+    {
+      pLS[predeictset] <- predict(object$models[[index[i]]],testData[predeictset,])
+    }
+  }
+  return (pLS);
 }
 
+GMVEBSWiMS <- function(formula = formula, data=NULL, GMVE.control = list(p.threshold = 0.80,p.samplingthreshold = 0.5), ...)
+{
+  if (class(formula) == "character")
+  {
+    formula <- formula(formula);
+  }
+  else
+  {
+    baseformula <- as.character(formula);
+    baseformula[3] <- str_replace_all(baseformula[3],"[.]","1");
+    baseformula <- paste(baseformula[2],"~",baseformula[3]);
+    formula <- formula(baseformula);
+  }
+  varlist <- attr(terms(formula),"variables")
+  dependent <- as.character(varlist[[2]])
+  Outcome = dependent[1];
+  if (length(dependent) == 3)
+  {
+    Outcome = dependent[3];
+  }
+  outcomedata <- data[,Outcome];
+  totsamples <- nrow(data);
+  minSamples <- max(5,0.05*totsamples);
+  clus <- NULL
+  fm <- NULL
+  baseClass <- BSWiMS.model(formula,data,...)
+#  barplot(baseClass$bagging$frequencyTable);
+  error <- sum(1*(baseClass$bagging$bagged.model$linear.predictors > 0.5) != outcomedata)/totsamples;
+
+  models <- list();
+  
+  if (length(baseClass$bagging$frequencyTable) > 1)
+  {
+    if (length(baseClass$BSWiMS.model$back.model$coefficients) > 2)
+    {
+      fm <- names(baseClass$BSWiMS.model$back.model$coefficients)[-1]
+    }
+    else
+    {
+      fthr <- max(baseClass$bagging$frequencyTable)/2;
+      fm <- names(baseClass$bagging$frequencyTable[baseClass$bagging$frequencyTable > fthr]);
+    }
+    
+    if (length(fm) > (totsamples/10)) # we will keep the number of selected features small
+    {
+      fm <- fm[1:(totsamples/10)];
+    }
+#    print(fm)
+    if (error > 0.05) # more than 5% of error
+    {
+      if (is.null(GMVE.control))
+      {
+        clus <- GMVECluster(as.data.frame(data[,fm]));
+      }
+      else
+      {
+        clus <- do.call(GMVECluster,c(list(as.data.frame(data[,fm])),GMVE.control));
+      }
+      tb <- table(clus$cluster);
+      classlabels <- as.numeric(names(tb));
+      if (nrow(tb) > 1)
+      {
+        tb <- table(clus$cluster,outcomedata);
+        for (i  in 1:nrow(tb))
+        {
+          if (min(tb[i,]) > minSamples)
+          {
+              models[[i]] <- BSWiMS.model(formula,subset(data,clus$cluster == classlabels[i]),...);
+          }
+          else
+          {
+            models[[i]] <- as.numeric(colnames(tb)[which.max(tb[i,])]);
+          }
+        }
+      }
+      else
+      {
+          models[[1]] <- baseClass;
+      }
+    }
+  }
+  else
+  {
+    models[[1]] <- baseClass;
+  }
+  result <- list(features = fm,cluster = clus,models = models);
+  class(result) <- "GMVE_BSWiMS"
+  return(result);
+}
+
+predict.GMVE_BSWiMS <- function(object,...)
+{
+  parameters <- list(...);
+  testData <- parameters[[1]];
+  if (!is.null(object$cluster))
+  {
+    if (length(object$models) > 1)
+    {
+      pLS <- nearestCentroid(testData[,object$features],object$cluster$centers,object$cluster$covariances,0)
+      tb <- table(pLS);
+      index <- as.numeric(names(tb));
+      for (i in 1:nrow(tb))
+      {
+        predeictset <- (pLS == index[i]);
+        if (class(object$models[[index[i]]])[1] == "numeric")
+        {
+          pLS[predeictset] <- object$models[[index[i]]];
+        }
+        else
+        {
+          pLS[predeictset] <- predict(object$models[[index[i]]],testData[predeictset,])
+        }
+      }
+    }
+    else
+    {
+      pLS <- predict(object$models[[1]],testData);
+    }
+  }
+  else
+  {
+    pLS <- predict(object$models[[1]],testData);
+  }
+  return(pLS);
+}
