@@ -351,6 +351,7 @@ BOOST_BSWiMS <- function(formula = formula, data=NULL, thrs = c(0.05,0.10,0.25,0
 	classModel <- NULL;
 	bclassModel <- NULL;
 	balternativeModel <- NULL;
+	posModel <- NULL;
 	orgModel <- BSWiMS.model(formula,data,...);
 	if (length(orgModel$bagging$frequencyTable) > 0)
 	{
@@ -361,7 +362,6 @@ BOOST_BSWiMS <- function(formula = formula, data=NULL, thrs = c(0.05,0.10,0.25,0
 		maxAUC <- (0.025*sum(outcomedata) + 0.975*sum((orgPredict >= 0.5) & (outcomedata == 1)))/sum(outcomedata);
 		maxAUC <- 0.5*(maxAUC + (0.025*sum(outcomedata == 0) + 0.975*sum((orgPredict < 0.5) & (outcomedata == 0)))/sum(outcomedata == 0));
 		baseAUC <- maxAUC;
-		posModel <- NULL;
 		improvement <- 1;
 		nmodelData <- modelData;
 		cat(maxAUC,":{");
@@ -610,7 +610,7 @@ predict.CLUSTER_CLASS <- function(object,...)
 	return (pLS);
 }
 
-GMVEBSWiMS <- function(formula = formula, data=NULL, GMVE.control = list(p.threshold = 0.80,p.samplingthreshold = 0.5), ...)
+GMVEBSWiMS <- function(formula = formula, data=NULL, GMVE.control = list(p.threshold = 0.85,p.samplingthreshold = 0.5), ...)
 {
 	if (class(formula) == "character")
 	{
