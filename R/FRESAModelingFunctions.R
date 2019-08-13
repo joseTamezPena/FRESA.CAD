@@ -637,7 +637,7 @@ GMVEBSWiMS <- function(formula = formula, data=NULL, GMVE.control = list(p.thres
 
 	models <- list();
 	
-	if (length(baseClass$bagging$frequencyTable) > 1)
+	if (length(baseClass$bagging$frequencyTable) > 0)
 	{
 		if (length(baseClass$BSWiMS.model$back.model$coefficients) > 2)
 		{
@@ -646,7 +646,7 @@ GMVEBSWiMS <- function(formula = formula, data=NULL, GMVE.control = list(p.thres
 		else
 		{
 			fthr <- max(baseClass$bagging$frequencyTable)/2;
-			fm <- names(baseClass$bagging$frequencyTable[baseClass$bagging$frequencyTable > fthr]);
+			fm <- unique(c(names(baseClass$bagging$frequencyTable[baseClass$bagging$frequencyTable > fthr]),as.character(baseClass$univariate$Name)[1:2]));
 		}
 		
 		if (length(fm) > (totsamples/10)) # we will keep the number of selected features small
@@ -654,7 +654,7 @@ GMVEBSWiMS <- function(formula = formula, data=NULL, GMVE.control = list(p.thres
 			fm <- fm[1:(totsamples/10)];
 		}
 #		print(fm)
-		if (error > 0.05) # more than 5% of error
+		if (error > 0.025) # more than 2.5% of error
 		{
 			if (is.null(GMVE.control))
 			{
@@ -686,12 +686,16 @@ GMVEBSWiMS <- function(formula = formula, data=NULL, GMVE.control = list(p.thres
 					models[[1]] <- baseClass;
 			}
 		}
+		else
+		{
+			models[[1]] <- baseClass;
+		}
 	}
 	else
 	{
 		models[[1]] <- baseClass;
 	}
-	result <- list(features = fm,cluster = clus,models = models);
+	result <- list(features = fm,cluster = clus,models = models, baseModel = baseClass);
 	class(result) <- "GMVE_BSWiMS"
 	return(result);
 }
