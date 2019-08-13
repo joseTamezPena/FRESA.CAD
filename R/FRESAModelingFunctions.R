@@ -212,17 +212,17 @@ BESS <- function(formula = formula, data=NULL, ...)
 	} 
 	
 	baseformula <- as.character(formula);
-	featuresOnSurvival <- baseformula[2]
-	featuresOnSurvival <- gsub(" ", "", featuresOnSurvival)
-	featuresOnSurvival <- gsub("Surv\\(", "", featuresOnSurvival)
-	featuresOnSurvival <- gsub("\\)", "", featuresOnSurvival)
-	featuresOnSurvivalObject <- strsplit(featuresOnSurvival, ",")
+	featuresOnSurvival <- baseformula[2];
+	featuresOnSurvival <- gsub(" ", "", featuresOnSurvival);
+	featuresOnSurvival <- gsub("Surv\\(", "", featuresOnSurvival);
+	featuresOnSurvival <- gsub("\\)", "", featuresOnSurvival);
+	featuresOnSurvivalObject <- strsplit(featuresOnSurvival, ",");
 	
-	usedFeatures <- colnames(data)[!(colnames(data) %in%	featuresOnSurvivalObject[[1]])]
-	x <- as.numeric(unlist(data[featuresOnSurvivalObject[[1]][1]]))
-	y <- as.numeric(unlist(data[featuresOnSurvivalObject[[1]][2]]))
-	baseformula <- gsub(featuresOnSurvivalObject[[1]][1],"x",baseformula)
-	baseformula <- gsub(featuresOnSurvivalObject[[1]][2],"y",baseformula)
+	usedFeatures <- colnames(data)[!(colnames(data) %in%	featuresOnSurvivalObject[[1]])];
+	x <- as.numeric(unlist(data[featuresOnSurvivalObject[[1]][1]]));
+	y <- as.numeric(unlist(data[featuresOnSurvivalObject[[1]][2]]));
+	baseformula <- gsub(featuresOnSurvivalObject[[1]][1],"x",baseformula);
+	baseformula <- gsub(featuresOnSurvivalObject[[1]][2],"y",baseformula);
 	result <- list(fit=BeSS::bess(as.matrix(data[,usedFeatures]), survival::Surv(x, y), s.min=1, family = "cox"),formula = formula,usedFeatures=usedFeatures);
 	class(result) <- "bess"
 	
@@ -256,8 +256,8 @@ if (!requireNamespace("naivebayes", quietly = TRUE)) {
 	 install.packages("naivebayes", dependencies = TRUE)
 } 
 	baseformula <- as.character(formula);
-	if (class(data[,baseformula[2]]) != "factor") data[,baseformula[2]] <- as.factor(data[,baseformula[2]])
-	result <- list(fit = naivebayes::naive_bayes(formula,data,...))
+	if (class(data[,baseformula[2]]) != "factor") data[,baseformula[2]] <- as.factor(data[,baseformula[2]]);
+	result <- list(fit = naivebayes::naive_bayes(formula,data,...));
 	class(result) <- "FRESA_NAIVEBAYES"
 	return(result);
 }
@@ -352,120 +352,124 @@ BOOST_BSWiMS <- function(formula = formula, data=NULL, thrs = c(0.05,0.10,0.25,0
 	bclassModel <- NULL;
 	balternativeModel <- NULL;
 	orgModel <- BSWiMS.model(formula,data,...);
-	orgPredict <- predict(orgModel,data);
-	fullPredict <- orgPredict;
-	nposPredict <- orgPredict;
-	maxAUC <- (0.025*sum(outcomedata) + 0.975*sum((orgPredict >= 0.5) & (outcomedata == 1)))/sum(outcomedata);
-	maxAUC <- 0.5*(maxAUC + (0.025*sum(outcomedata == 0) + 0.975*sum((orgPredict < 0.5) & (outcomedata == 0)))/sum(outcomedata == 0));
-	baseAUC <- maxAUC;
-	posModel <- NULL;
-	improvement <- 1;
-	nmodelData <- modelData;
-	cat(maxAUC,":{");
-	classData <- data;
-	negFeatures <- colnames(data);
-	featureSize <- ncol(data)-1;
-	featurestoExplore <- c(Outcome,names(orgModel$bagging$frequencyTable));
-	pop <- orgPredict;
-	pon <- 1.0-orgPredict;
-	ithrs <- thrs;
-	if (length(thrs) > 2)
+	if (length(orgModel$bagging$frequencyTable) > 0)
 	{
-		ithrs <- thrs[-c(1,2)];
-	}
-	while (improvement > 0)
-	{
-		estimatedFeatures <- FALSE;
-		improvement <- 0;
-		cat("[")
-		for (incdatathr in thrs)
+
+		orgPredict <- predict(orgModel,data);
+		fullPredict <- orgPredict;
+		nposPredict <- orgPredict;
+		maxAUC <- (0.025*sum(outcomedata) + 0.975*sum((orgPredict >= 0.5) & (outcomedata == 1)))/sum(outcomedata);
+		maxAUC <- 0.5*(maxAUC + (0.025*sum(outcomedata == 0) + 0.975*sum((orgPredict < 0.5) & (outcomedata == 0)))/sum(outcomedata == 0));
+		baseAUC <- maxAUC;
+		posModel <- NULL;
+		improvement <- 1;
+		nmodelData <- modelData;
+		cat(maxAUC,":{");
+		classData <- data;
+		negFeatures <- colnames(data);
+		featureSize <- ncol(data)-1;
+		featurestoExplore <- c(Outcome,names(orgModel$bagging$frequencyTable));
+		pop <- orgPredict;
+		pon <- 1.0-orgPredict;
+		ithrs <- thrs;
+		if (length(thrs) > 2)
 		{
-			modelData <- nmodelData;
-			norgModel <- BSWiMS.model(formula,data[modelData,],...);
-			featurestoExplore <- unique(c(featurestoExplore,names(norgModel$bagging$frequencyTable)));
-
-			norgPredict <- predict(norgModel,data);
-			inthr2 <- 1.0 - incdatathr;
-			nmodelData <- ((orgPredict >= incdatathr) & (outcomedata == 1)) | ((orgPredict < inthr2) & (outcomedata == 0));
-
-			classData[,Outcome] <- 1*(!((norgPredict >= 0.5) == outcomedata));
-			if (sum(classData[,Outcome]) > 10)
+			ithrs <- thrs[-c(1,2)];
+		}
+		while (improvement > 0)
+		{
+			estimatedFeatures <- FALSE;
+			improvement <- 0;
+			cat("[")
+			for (incdatathr in thrs)
 			{
-				classModel <- BSWiMS.model(paste(Outcome,"~1"),classData,...);
-				classPredict <-	predict(classModel,classData)
-				AUCClass <- sum((classPredict < 0.5) & (classData[,Outcome] == 0))/sum(classData[,Outcome] == 0); 
-				AUCClass <- 0.5*(AUCClass + sum((classPredict >= 0.5) & (classData[,Outcome] == 1))/sum(classData[,Outcome] == 1)); 
-				if (AUCClass >= (0.35+0.30*baseAUC))
+				modelData <- nmodelData;
+				norgModel <- BSWiMS.model(formula,data[modelData,],...);
+				featurestoExplore <- unique(c(featurestoExplore,names(norgModel$bagging$frequencyTable)));
+
+				norgPredict <- predict(norgModel,data);
+				inthr2 <- 1.0 - incdatathr;
+				nmodelData <- ((orgPredict >= incdatathr) & (outcomedata == 1)) | ((orgPredict < inthr2) & (outcomedata == 0));
+
+				classData[,Outcome] <- 1*(!((norgPredict >= 0.5) == outcomedata));
+				if (sum(classData[,Outcome]) > 10)
 				{
-					featurestoExplore <- unique(c(featurestoExplore,names(classModel$bagging$frequencyTable)));
-					for (modeldatathr in ithrs)
+					classModel <- BSWiMS.model(paste(Outcome,"~1"),classData,...);
+					classPredict <-	predict(classModel,classData)
+					AUCClass <- sum((classPredict < 0.5) & (classData[,Outcome] == 0))/sum(classData[,Outcome] == 0); 
+					AUCClass <- 0.5*(AUCClass + sum((classPredict >= 0.5) & (classData[,Outcome] == 1))/sum(classData[,Outcome] == 1)); 
+					if (AUCClass >= (0.35+0.30*baseAUC))
 					{
-						altTrain <- 1.0 - modeldatathr;
-						incorrectSet <- ((norgPredict >= modeldatathr) & (outcomedata == 0)) | ((norgPredict < altTrain) & (outcomedata == 1));
-						correctSet <- ((norgPredict >= modeldatathr) & (outcomedata == 1)) | ((norgPredict < altTrain) & (outcomedata == 0));
-						if ((sum(1*incorrectSet) > 10) && (sum(1*correctSet) > 10))
+						featurestoExplore <- unique(c(featurestoExplore,names(classModel$bagging$frequencyTable)));
+						for (modeldatathr in ithrs)
 						{
-							tabledata <- table(data[incorrectSet,Outcome])
-							tabledata2 <- table(data[correctSet,Outcome])
-			#				print(tabledata)
-							if ((length(tabledata) > 1) && (length(tabledata2) > 1))
+							altTrain <- 1.0 - modeldatathr;
+							incorrectSet <- ((norgPredict >= modeldatathr) & (outcomedata == 0)) | ((norgPredict < altTrain) & (outcomedata == 1));
+							correctSet <- ((norgPredict >= modeldatathr) & (outcomedata == 1)) | ((norgPredict < altTrain) & (outcomedata == 0));
+							if ((sum(1*incorrectSet) > 10) && (sum(1*correctSet) > 10))
 							{
-								if ((min(tabledata) > 5) && (min(tabledata2) > 5))
+								tabledata <- table(data[incorrectSet,Outcome])
+								tabledata2 <- table(data[correctSet,Outcome])
+				#				print(tabledata)
+								if ((length(tabledata) > 1) && (length(tabledata2) > 1))
 								{
-									aposModel <- BSWiMS.model(formula,data[correctSet,featurestoExplore],featureSize=featureSize,...);
-									posPredict <- predict(aposModel,data)
-									negFeatures <- unique(c(negFeatures,featurestoExplore));
-									
-									alternativeModel <- BSWiMS.model(formula,data[incorrectSet,negFeatures],featureSize=featureSize,...);
-									if (!estimatedFeatures)
+									if ((min(tabledata) > 5) && (min(tabledata2) > 5))
 									{
-										negFeatures <- unique(c(featurestoExplore,names(alternativeModel$bagging$frequencyTable)));
-										featurestoExplore <- negFeatures;
-										estimatedFeatures <- TRUE;
-									}
+										aposModel <- BSWiMS.model(formula,data[correctSet,featurestoExplore],featureSize=featureSize,...);
+										posPredict <- predict(aposModel,data)
+										negFeatures <- unique(c(negFeatures,featurestoExplore));
+										
+										alternativeModel <- BSWiMS.model(formula,data[incorrectSet,negFeatures],featureSize=featureSize,...);
+										if (!estimatedFeatures)
+										{
+											negFeatures <- unique(c(featurestoExplore,names(alternativeModel$bagging$frequencyTable)));
+											featurestoExplore <- negFeatures;
+											estimatedFeatures <- TRUE;
+										}
 
-									altPredict <- predict(alternativeModel,data);
-									p1 <- (1.0-classPredict)*posPredict;
-									p2 <- (1.0-classPredict)*(1.0-posPredict);
-									p3 <- classPredict*altPredict;
-									p4 <- classPredict*(1.0-altPredict);
-									pval <- cbind(p1,p2,p3,p4);
-									mv <- apply(pval,1,which.max);
-									fpval <- apply(pval,1,max);
-									altv <- (mv == 2) | (mv == 4);
-									fpval[altv] <- 1.0 - fpval[altv];
+										altPredict <- predict(alternativeModel,data);
+										p1 <- (1.0-classPredict)*posPredict;
+										p2 <- (1.0-classPredict)*(1.0-posPredict);
+										p3 <- classPredict*altPredict;
+										p4 <- classPredict*(1.0-altPredict);
+										pval <- cbind(p1,p2,p3,p4);
+										mv <- apply(pval,1,which.max);
+										fpval <- apply(pval,1,max);
+										altv <- (mv == 2) | (mv == 4);
+										fpval[altv] <- 1.0 - fpval[altv];
 
-									curAUC <- sum((fpval >= 0.5) & (outcomedata == 1))/sum(outcomedata);
-									curAUC <- 0.5*(curAUC + sum((fpval < 0.5) & (outcomedata == 0))/sum(outcomedata == 0));
-									cat("(",curAUC,")");
-									
-									if (maxAUC < curAUC)
-									{
-										cat("*");
-										bdataModel <- modelData;
-										nposPredict <- norgPredict;
-										posModel <- aposModel;
-										bclassModel <- classModel;
-										balternativeModel <- alternativeModel;
-										maxAUC <- curAUC;
-										improvement <- improvement + 1;
+										curAUC <- sum((fpval >= 0.5) & (outcomedata == 1))/sum(outcomedata);
+										curAUC <- 0.5*(curAUC + sum((fpval < 0.5) & (outcomedata == 0))/sum(outcomedata == 0));
+										cat("(",curAUC,")");
+										
+										if (maxAUC < curAUC)
+										{
+											cat("*");
+											bdataModel <- modelData;
+											nposPredict <- norgPredict;
+											posModel <- aposModel;
+											bclassModel <- classModel;
+											balternativeModel <- alternativeModel;
+											maxAUC <- curAUC;
+											improvement <- improvement + 1;
+										}
+										cat("|");
 									}
-									cat("|");
 								}
 							}
 						}
 					}
 				}
 			}
+			cat("]")
+			if (improvement > 0)
+			{
+				orgPredict <- nposPredict;
+				nmodelData <- bdataModel;
+			}
 		}
-		cat("]")
-		if (improvement > 0)
-		{
-			orgPredict <- nposPredict;
-			nmodelData <- bdataModel;
-		}
+		cat("}")
 	}
-	cat("}")
 	result <- list(original = orgModel,posModel = posModel,alternativeModel = balternativeModel,classModel = bclassModel )
 	class(result) <- "FRESA_BOOST"
 	return(result);
