@@ -691,7 +691,7 @@ GMVEBSWiMS <- function(formula = formula, data=NULL, GMVE.control = list(p.thres
 	{
 		models[[1]] <- baseClass;
 	}
-	result <- list(features = fm,cluster = clus,models = models);
+	result <- list(features = fm,cluster = clus,models = models, baseBSiMS = baseClass);
 	class(result) <- "GMVE_BSWiMS"
 	return(result);
 }
