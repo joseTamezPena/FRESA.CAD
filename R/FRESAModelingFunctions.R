@@ -625,16 +625,16 @@ GMVEBSWiMS <- function(formula = formula, data=NULL, GMVE.control = list(p.thres
 	varlist <- attr(terms(formula),"variables")
 	dependent <- as.character(varlist[[2]])
 	Outcome = dependent[1];
-	if (length(dependent) == 3)
+	if (length(dependent) == 3);
 	{
 		Outcome = dependent[3];
 	}
 	outcomedata <- data[,Outcome];
 	totsamples <- nrow(data);
 	minSamples <- max(5,0.05*totsamples);
-	clus <- NULL
-	fm <- NULL
-	baseClass <- BSWiMS.model(formula,data,...)
+	clus <- NULL;
+	fm <- NULL;
+	baseClass <- BSWiMS.model(formula,data,...);
 #	barplot(baseClass$bagging$frequencyTable);
 	error <- sum(1*(baseClass$bagging$bagged.model$linear.predictors > 0.5) != outcomedata)/totsamples;
 
@@ -644,7 +644,7 @@ GMVEBSWiMS <- function(formula = formula, data=NULL, GMVE.control = list(p.thres
 	{
 		if (length(baseClass$BSWiMS.model$back.model$coefficients) > 2)
 		{
-			fm <- names(baseClass$BSWiMS.model$back.model$coefficients)[-1]
+			fm <- names(baseClass$BSWiMS.model$back.model$coefficients)[-1];
 		}
 		else
 		{

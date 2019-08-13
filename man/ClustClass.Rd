@@ -53,10 +53,10 @@ Finally, the function will call the classification function on each cluster retu
 		The named vector of FDR adjusted p-values returned by the filtering function.
 	}
 	\item{cluster}{
-		The output of the forward selection step
+		The clustering function output
 	}
 	\item{models}{
-		The output of the forward selection step
+		The list of classification objects per data cluster
 	}
 }
 \references{}
