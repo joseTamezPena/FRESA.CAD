@@ -23,6 +23,8 @@ nearestCentroid <- function(dataset,clustermean=NULL,clustercov=NULL, p.threshol
 			clustermean[[j]] <- as.numeric(centers[j,]);
 		}	
 	}
+	distance <- numeric(nrow(dataset));
+	ClusterLabels <- numeric(nrow(dataset));
 	if (is.null(clustermean) && (class(clustercov) == "list"))
 	{
 		if (length(clustercov)>0)
@@ -43,7 +45,6 @@ nearestCentroid <- function(dataset,clustermean=NULL,clustercov=NULL, p.threshol
 	if (!is.null(clustermean))
 	{
 		k <- length(clustermean);
-		ClusterLabels <- numeric(nrow(dataset));
 		## assign clusters labels to all points
 		if (k > 0)
 		{
@@ -73,6 +74,7 @@ nearestCentroid <- function(dataset,clustermean=NULL,clustercov=NULL, p.threshol
 			for (i in 1:nrow(dataset))
 			{
 				ClusterLabels[i] <- which.min(distancemaha[,i])[1];
+				distance[i] <- distancemaha[ClusterLabels[i],i];
 				if (distancemaha[ClusterLabels[i],i] > chithreshold_out)
 				{
 					ClusterLabels[i] <- 0;
@@ -80,5 +82,6 @@ nearestCentroid <- function(dataset,clustermean=NULL,clustercov=NULL, p.threshol
 			}
 		}
 	}
+	attr(ClusterLabels,"distance") <- distance;
 	return (ClusterLabels)
 }

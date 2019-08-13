@@ -78,6 +78,7 @@ export(GMVECluster)
 export(clusterISODATA)
 export(jaccardMatrix)
 export(nearestCentroid)
+export(predict.GMVE)
 
 useDynLib(FRESA.CAD,.registration = TRUE)
 
@@ -99,6 +100,7 @@ S3method(predict, FRESA_SVM)
 S3method(predict, FRESA_BOOST) 
 S3method(predict, GMVE_BSWiMS) 
 S3method(predict, CLUSTER_CLASS) 
+S3method(predict, GMVE) 
 
 importFrom(Rcpp, evalCpp)
 importFrom("graphics", "abline", "barplot", "boxplot", "legend","lines", "par", "plot", "title")

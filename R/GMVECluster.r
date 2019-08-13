@@ -35,6 +35,7 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 	set.seed(a);
 
 	intdata <- dataset
+	features <- colnames(dataset);
 	ndata <- nrow(intdata);
 	ClusterLabels <- numeric(ndata);
 	p <- ncol(intdata);
@@ -335,12 +336,28 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 	
 	result <- list(
 		cluster = ClusterLabels,
+		classification = ClusterLabels,
 		centers = bestmean,
 		covariances = bestCov,
 		robCov = robCov,
 		pvals = pvals,
 		k = k,
+		features = features,
 		jitteredData = jitteredData
 	  )
+	 class(result) <- "GMVE"
 	 return (result);
+}
+
+predict.GMVE <- function(object,...)
+{
+	parameters <- list(...);
+	testData <- parameters[[1]];
+	thr <- 0;
+	if (length(parameters) > 1)
+	{
+		thr <- parameters[[2]];
+	}
+	pLS <- list(classification=nearestCentroid(testData[,object$features],object$centers,object$covariances,thr));
+	return (pLS);
 }

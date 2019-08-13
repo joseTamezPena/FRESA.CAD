@@ -355,7 +355,6 @@ BOOST_BSWiMS <- function(formula = formula, data=NULL, thrs = c(0.05,0.10,0.25,0
 	orgModel <- BSWiMS.model(formula,data,...);
 	if (length(orgModel$bagging$frequencyTable) > 0)
 	{
-
 		orgPredict <- predict(orgModel,data);
 		fullPredict <- orgPredict;
 		nposPredict <- orgPredict;
@@ -505,7 +504,7 @@ predict.FRESA_BOOST <- function(object,...)
 	return(pLS);
 }
 
-ClustClass <- function(formula = formula, data=NULL, filtermethod=univariate_Wilcoxon, clustermethod=NULL, classmethod=LASSO_1SE,filtermethod.control=NULL,clustermethod.control=NULL,classmethod.control=NULL)
+ClustClass <- function(formula = formula, data=NULL, filtermethod=univariate_Wilcoxon, clustermethod=NULL, classmethod=LASSO_1SE,filtermethod.control=list(pvalue=0.05,limit=0.1),clustermethod.control=NULL,classmethod.control=list(family = "binomial"))
 {
 	if (class(formula) == "character")
 	{
