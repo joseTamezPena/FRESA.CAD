@@ -153,7 +153,7 @@ clusterISODATA <- function(dataset,clusteringMethod=GMVECluster,trainFraction=0.
 			isoDataCov[[i]]$centroid <- sumDataCov[[i]]$centroid/totwts[i];
 			isoDataCov[[i]]$cov <- sumDataCov[[i]]$cov/totwts[i];
 			centers[[i]] <- isoDataCov[[i]]$centroid;
-			covariances[[i]] isoDataCov[[i]]$cov;
+			covariances[[i]] <- isoDataCov[[i]]$cov;
 		}
 		ClusterLabels <- nearestCentroid(dataset,clustercov=isoDataCov);
 	}
