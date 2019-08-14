@@ -27,7 +27,7 @@
    }
 }
 \details{
-First, the funtion calls the BSWiMS function that return the relevant features associated with the outcome. 
+First, the function calls the BSWiMS function that returns the relevant features associated with the outcome. 
 Then, it calls the GMVE clustering algorithm (GMVECluster) that returns a relevant data partition based on Gaussian clusters.
 Finally, the function will execute the BSWiMS.model classification function on each cluster returned by GMVECluster.
 }

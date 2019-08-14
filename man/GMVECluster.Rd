@@ -20,7 +20,7 @@
 		The data set to be clustered
 	}
 	\item{p.threshold}{
-		The p-value threshold of point aceptance into a set.
+		The p-value threshold of point acceptance into a set.
 	}
 	\item{samples}{
 		If the set is large, The number of random samples

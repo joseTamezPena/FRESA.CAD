@@ -25,8 +25,8 @@
       The minimum aceptance p.value
    }
 }
-\details{ The data set will be labeled based on the nearest cluster label. Points distance with membershiop probability
-lower tha the aceptance threshold will have the label "zero" 
+\details{ The data set will be labeled based on the nearest cluster label. Points distance with membership probability
+lower than the acceptance threshold will have the "0" label.
 }
 \value{
    \item{ClusterLabels}{
