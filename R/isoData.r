@@ -158,6 +158,7 @@ clusterISODATA <- function(dataset,clusteringMethod=GMVECluster,trainFraction=0.
 
 	result <- list(
 		cluster = ClusterLabels,
+		classification = ClusterLabels,
 		robustCovariance = isoDataCov,
 		pointjaccard = pointjaccard
 		)

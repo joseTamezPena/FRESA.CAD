@@ -2,7 +2,7 @@
 \alias{jaccardMatrix}
 \title{Jaccard Index of two labeled sets}
 \description{
-	The Jaccard Index analysis of two labeled point sets
+	The Jaccard Index analysis of two labeled sets
 }
 \usage{
 	jaccardMatrix(clustersA=NULL,clustersB=NULL)
