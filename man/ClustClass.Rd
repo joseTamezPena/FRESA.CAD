@@ -59,7 +59,6 @@ Finally, the function will call the classification function on each cluster retu
 		The list of classification objects per data cluster
 	}
 }
-\references{}
 
 \examples{
 	\dontrun{

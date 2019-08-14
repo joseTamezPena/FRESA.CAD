@@ -144,24 +144,31 @@ clusterISODATA <- function(dataset,clusteringMethod=GMVECluster,trainFraction=0.
 			}
 		}
 	}
+	centers <- list();
+	covariances <- list();
 	if (isoclusters > 0)
 	{
 		for (i in 1:isoclusters)
 		{
 			isoDataCov[[i]]$centroid <- sumDataCov[[i]]$centroid/totwts[i];
 			isoDataCov[[i]]$cov <- sumDataCov[[i]]$cov/totwts[i];
+			centers[[i]] <- isoDataCov[[i]]$centroid;
+			covariances[[i]] isoDataCov[[i]]$cov;
 		}
 		ClusterLabels <- nearestCentroid(dataset,clustercov=isoDataCov);
 	}
 
-
+	features <- colnames(dataset);
 
 	result <- list(
 		cluster = ClusterLabels,
 		classification = ClusterLabels,
 		robustCovariance = isoDataCov,
-		pointjaccard = pointjaccard
+		pointjaccard = pointjaccard,
+		centers = centers,
+		covariances = covariances,
+		features = features
 		)
-	
+	class(result) <- "GMVE"
 	return (result)
 }

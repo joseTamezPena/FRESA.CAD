@@ -30,12 +30,6 @@ This function will compute the Jaccard Index Matrix: ((A==i) and (B==j))/((A==i)
 		The average of all marginal Jaccards
 	}
 }
-\references{}
-
-\examples{
-	\dontrun{
-	}
-}
 \author{Jose G. Tamez-Pena}
 
 \keyword{Cluster_Evaluation}

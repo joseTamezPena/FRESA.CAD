@@ -625,7 +625,7 @@ GMVEBSWiMS <- function(formula = formula, data=NULL, GMVE.control = list(p.thres
 	varlist <- attr(terms(formula),"variables")
 	dependent <- as.character(varlist[[2]])
 	Outcome = dependent[1];
-	if (length(dependent) == 3);
+	if (length(dependent) == 3)
 	{
 		Outcome = dependent[3];
 	}

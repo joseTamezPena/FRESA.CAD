@@ -1,6 +1,6 @@
 \name{GMVECluster}
 \alias{GMVECluster}
-\title{Set Clustering using the Generaized Minimum Volume Ellipsoid (GMVE)}
+\title{Set Clustering using the Generalized Minimum Volume Ellipsoid (GMVE)}
 \description{
 	The Function will return the set of Gaussian Ellipsoids that best model the data
 }
@@ -72,10 +72,6 @@ Implementation of the GMVE clustering algorithm as proposed by Jolion et al. (19
 }
 \references{Jolion, Jean-Michel, Peter Meer, and Samira Bataouche. "Robust clustering with applications in computer vision." IEEE Transactions on Pattern Analysis & Machine Intelligence 8 (1991): 791-802.}
 
-\examples{
-	\dontrun{
-	}
-}
 \author{Jose G. Tamez-Pena}
 
 \keyword{Cluster_Generation}
