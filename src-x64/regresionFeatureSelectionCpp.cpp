@@ -126,7 +126,7 @@ extern "C" SEXP bootstrapValidationResCpp(SEXP _fraction,SEXP _loops,SEXP _dataf
 			unsigned int cycle = 0;
 			unsigned int mintestSample = 2;
 			do
-			{
+			{ 
 				samCases = randi<uvec>(totSamples, distr_param(0,sizecases-1));
 				vec auxcasesample=zeros<vec>(sizecases);
 				for (int i=0;i<totSamples;i++)
