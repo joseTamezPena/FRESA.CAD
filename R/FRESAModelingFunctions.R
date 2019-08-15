@@ -549,7 +549,7 @@ ClustClass <- function(formula = formula, data=NULL, filtermethod=univariate_Wil
 	tb <- table(clus$classification);
 	classlabels <- as.numeric(names(tb));
 	models <- list();
-	if (nrow(tb) > 1)
+	if (length(classlabels) > 1)
 	{
 			tb <- table(clus$classification,outcomedata);
 			for (i	in 1:nrow(tb))
@@ -575,11 +575,11 @@ ClustClass <- function(formula = formula, data=NULL, filtermethod=univariate_Wil
 	{
 		if (is.null(classmethod.control))
 		{
-			models[[1]] <- classmethod(formula,subset(data,clus$classification == classlabels[i]));
+			models[[1]] <- classmethod(formula,data);
 		}
 		else
 		{
-			models[[1]] <- do.call(classmethod,c(list(formula,subset(data,clus$classification == classlabels[i])),classmethod.control));
+			models[[1]] <- do.call(classmethod,c(list(formula,data),classmethod.control));
 		}
 	}
 	result <- list(features = fm,cluster = clus,models = models);
