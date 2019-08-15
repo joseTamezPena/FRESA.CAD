@@ -42,7 +42,7 @@
    }
 }
 \details{
-The data will be clustered N times as defined by a number of randomTests. Once clustered the Jaccard Index map
+The data will be clustered N times as defined by a number of randomTests. After clustering, the Jaccard Index map
 will be generated and ordered from high to low. The mean clusters parameters (Covariance sets) associated with the point with the highest Jaccard index
 will define the first cluster. A cluster will be added if the Mahalanobis distance between clusters is greater than the given acceptance p.value (isoDataThreshold)
 Only clusters associated with points with a Jaccard index greater than jaccardThreshold will be considered.
