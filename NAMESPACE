@@ -79,6 +79,7 @@ export(clusterISODATA)
 export(jaccardMatrix)
 export(nearestCentroid)
 export(predict.GMVE)
+export(trajectoriesPolyFeatures)
 
 useDynLib(FRESA.CAD,.registration = TRUE)
 

@@ -30,7 +30,6 @@ if (!requireNamespace("nlme", quietly = TRUE)) {
 	  contime=timevar;
 	}
 
-	t <- tapply(data[,contime], data[,timevar], mean,na.rm=TRUE)
 	
 	if (timesign=="-")
 	{
@@ -41,7 +40,9 @@ if (!requireNamespace("nlme", quietly = TRUE)) {
 		timeorder <- data[order(data[,contime]),];
 	}
 
-	farctionlowess <- 1.0/(length(table(data[,timevar])))
+	t <- tapply(timeorder[,contime], timeorder[,timevar], mean,na.rm=TRUE);
+
+	farctionlowess <- min(0.5,2.0/(length(table(data[,timevar]))));
 
 	if (Outcome != ".")
 	{
@@ -130,7 +131,7 @@ if (!requireNamespace("nlme", quietly = TRUE)) {
 					sdval <- tapply(timeorderCases[,vnames[j]], timeorderCases[,timevar], sd,na.rm=TRUE)
 					size <- tapply(timeorderCases[,vnames[j]], timeorderCases[,timevar], length)
 					delta <- sdval / sqrt( size)
-					errbar(-tCase,mval,mval-delta,mval+delta,col="red",ylab=vnames[j],xlab="time",type="b",ylim=c(miny,maxy))
+					errbar(-tCase,mval,mval-delta,mval+delta,col="red",ylab=vnames[j],xlab="time",type="b",ylim=c(miny,maxy),xlim=c(mintime,maxtime))
 					lines(lowess(-timeorderCases[,contime],predCases,f = farctionlowess),col="red",lty=3)
 		   
 					mval <- tapply(timeorderControl[,vnames[j]], timeorderControl[,timevar], mean,na.rm=TRUE)
@@ -140,7 +141,8 @@ if (!requireNamespace("nlme", quietly = TRUE)) {
 					errbar(-tControl,mval,mval-delta,mval+delta,add=TRUE,col="blue",type="b")
 		  
 					lines(lowess(-timeorderControl[,contime],predControl,f = farctionlowess),col="blue",lty=2)
-					legend(-maxtime+0.1*deltatime,miny + 0.2*(maxy-miny), catgo.names, col=c("blue","red"), lty = 2:3,bty="n")
+#					legend(-maxtime+0.1*deltatime,miny + 0.2*(maxy-miny), catgo.names, col=c("blue","red"), lty = 2:3,bty="n")
+					legend("bottomleft", catgo.names, col=c("blue","red"), lty = 2:3,bty="n")
 				
 					if (!is.null(reg))
 					{
@@ -182,7 +184,7 @@ if (!requireNamespace("nlme", quietly = TRUE)) {
 					size <- tapply(timeorderCases[,vnames[j]], timeorderCases[,timevar], length)
 					delta <- sdval / sqrt( size)
 
-					errbar(tCase,mval,mval-delta,mval+delta,col="red",ylab=vnames[j],xlab="time",type="b",ylim=c(miny,maxy))
+					errbar(tCase,mval,mval-delta,mval+delta,col="red",ylab=vnames[j],xlab="time",type="b",ylim=c(miny,maxy),xlim=c(mintime,maxtime))
 					lines(lowess(timeorderCases[,contime],predCases,f = farctionlowess),col="red",lty=3)
 
 					mval <- tapply(timeorderControl[,vnames[j]], timeorderControl[,timevar], mean,na.rm=TRUE)
@@ -193,7 +195,8 @@ if (!requireNamespace("nlme", quietly = TRUE)) {
 					errbar(tControl,mval,mval-delta,mval+delta,add=TRUE,col="blue",type="b")
 		  
 					lines(lowess(timeorderControl[,contime],predControl,f = farctionlowess),col="blue",lty=2)
-					legend(maxtime-0.9*deltatime,miny + 0.2*(maxy-miny), catgo.names, col=c("blue","red"), lty = 2:3,bty="n")
+#					legend(maxtime-0.9*deltatime,miny + 0.2*(maxy-miny), catgo.names, col=c("blue","red"), lty = 2:3,bty="n")
+					legend("bottomleft", catgo.names, col=c("blue","red"), lty = 2:3,bty="n")
 			
 					if (!is.null(reg))
 					{
@@ -235,7 +238,7 @@ if (!requireNamespace("nlme", quietly = TRUE)) {
 			{
 				if (timesign=="-")
 				{			
-				  errbar(-t,mval,mval-delta,mval+delta,ylab=vnames[j],xlab="time",type="b",ylim=c(miny,maxy))
+				  errbar(-t,mval,mval-delta,mval+delta,ylab=vnames[j],xlab="time",type="b",ylim=c(miny,maxy),xlim=c(mintime,maxtime))
 				  lines(lowess(-timeorder[,contime],predict(obj_s,timeorder,na.action=na.exclude),f = farctionlowess),col="blue",lty=2)      
 				  for (lg in 1:length(Ptoshow))
 					{
@@ -269,7 +272,7 @@ if (!requireNamespace("nlme", quietly = TRUE)) {
 				}
 				else
 				{
-					errbar(t,mval,mval-delta,mval+delta,ylab=vnames[j],xlab="time",type="b",ylim=c(miny,maxy))
+					errbar(t,mval,mval-delta,mval+delta,ylab=vnames[j],xlab="time",type="b",ylim=c(miny,maxy),xlim=c(mintime,maxtime))
 					lines(lowess(timeorder[,contime],predict(obj_s,timeorder,na.action=na.exclude),f = farctionlowess),col="blue",lty=2)      
 					for (lg in 1:length(Ptoshow))
 					{
