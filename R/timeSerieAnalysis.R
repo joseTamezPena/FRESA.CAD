@@ -354,7 +354,7 @@ if (!requireNamespace("nlme", quietly = TRUE)) {
 	return (result);
 }
 
-trajectoriesPolyFeatures <- function(data,feature="v1", degree=2, time="t", group="ID")
+trajectoriesPolyFeatures <- function(data,feature="v1", degree=2, time="t", group="ID",timeOffset=0)
 {
   aids <- data[,group]
   ids <- unique(aids)
@@ -362,9 +362,17 @@ trajectoriesPolyFeatures <- function(data,feature="v1", degree=2, time="t", grou
   rownames(coefs) <- ids;
   for (i in 1:length(ids))
   {
-    whoid <- ids[i] == aids;
-    fd <- as.data.frame(cbind(xs = data[whoid,feature],t = data[whoid,time]));
-    coefs[i,] <- lm(paste("xs ~ poly(t, degree=",degree,", raw=TRUE)"),data = fd,na.action = na.omit)$coefficients;
+    whoid <- aids == ids[i];
+    coefs[i,] <- rep(NA,1 + degree);
+    if (sum(whoid) > 0)
+    {
+      fd <- as.data.frame(cbind(xs = data[whoid,feature],t = data[whoid,time]));
+      fitlm <- try(lm(paste("xs ~ poly(I(t -",timeOffset,"),degree = ",degree,", raw=TRUE)"),data = fd,na.action = na.omit));
+      if (!inherits(fitlm, "try-error"))
+      {
+        coefs[i,] <- fitlm$coefficients;
+      }
+    }
   }
   return(coefs)
 }

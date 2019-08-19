@@ -24,6 +24,9 @@
 	\item{group}{
 	The number of times that the CV process will be repeated
 	}
+	\item{timeOffset}{
+	The time offset
+	}
 }
 
 \value{
