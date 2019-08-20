@@ -354,23 +354,39 @@ if (!requireNamespace("nlme", quietly = TRUE)) {
 	return (result);
 }
 
-trajectoriesPolyFeatures <- function(data,feature="v1", degree=2, time="t", group="ID",timeOffset=0)
+trajectoriesPolyFeatures <- function(data,feature="v1", degree=2, time="t", group="ID",timeOffset=0,strata=NULL,...)
 {
   aids <- data[,group]
   ids <- unique(aids)
   coefs <- as.data.frame(matrix(0,nrow = length(ids),ncol = degree + 1));
   rownames(coefs) <- ids;
+  miny <- min(data[,feature],na.rm = TRUE);
+  maxy <- max(data[,feature],na.rm = TRUE);
+  minx <- min(data[,time],na.rm = TRUE);
+  maxx <- max(data[,time],na.rm = TRUE);
+  plot(1,type="p",xlim=c(minx, maxx), ylim=c(miny, maxy),...)
+  range <- (maxx-minx);
+  timesamples <- minx + ((0:100)/100.0)*range;
+  dataTime <- as.data.frame(cbind(0:100,timesamples));
   for (i in 1:length(ids))
   {
     whoid <- aids == ids[i];
     coefs[i,] <- rep(NA,1 + degree);
     if (sum(whoid) > 0)
     {
-      fd <- as.data.frame(cbind(xs = data[whoid,feature],t = data[whoid,time]));
-      fitlm <- try(lm(paste("xs ~ poly(I(t -",timeOffset,"),degree = ",degree,", raw=TRUE)"),data = fd,na.action = na.omit));
-      if (!inherits(fitlm, "try-error"))
+      minv = min(data[whoid,time],na.rm = TRUE);
+      maxv = max(data[whoid,time],na.rm = TRUE);
+      if ((minv < maxv) && (minv <= timeOffset) && (maxv >= timeOffset))
       {
-        coefs[i,] <- fitlm$coefficients;
+        colnames(dataTime) <- c(ids[i],"t");
+        fd <- as.data.frame(cbind(xs = data[whoid,feature],t = data[whoid,time]));
+        fitlm <- try(lm(paste("xs ~ poly(I(t -",timeOffset,"),degree = ",degree,", raw=TRUE)"),data = fd,na.action = na.omit));
+        if (!inherits(fitlm, "try-error"))
+        {
+          coefs[i,] <- fitlm$coefficients;
+          points(data[whoid,time],data[whoid,feature],type="p",col="red");
+          lines(timesamples,predict(fitlm,dataTime,na.action=na.exclude),col="blue",lty=2)
+        }
       }
     }
   }
