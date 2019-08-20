@@ -354,7 +354,7 @@ if (!requireNamespace("nlme", quietly = TRUE)) {
 	return (result);
 }
 
-trajectoriesPolyFeatures <- function(data,feature="v1", degree=2, time="t", group="ID",timeOffset=0,strata=NULL,...)
+trajectoriesPolyFeatures <- function(data,feature="v1", degree=2, time="t", group="ID",timeOffset=0,strata=NULL,plot=TRUE,...)
 {
   aids <- data[,group]
   ids <- unique(aids)
@@ -364,10 +364,20 @@ trajectoriesPolyFeatures <- function(data,feature="v1", degree=2, time="t", grou
   maxy <- max(data[,feature],na.rm = TRUE);
   minx <- min(data[,time],na.rm = TRUE);
   maxx <- max(data[,time],na.rm = TRUE);
-  plot(1,type="p",xlim=c(minx, maxx), ylim=c(miny, maxy),...)
+  if (plot) 
+  {
+    plot(1,type="n",xlim=c(minx, maxx), ylim=c(miny, maxy),...)
+    abline(v=timeOffset,col = "gray");
+  }
   range <- (maxx-minx);
   timesamples <- minx + ((0:100)/100.0)*range;
   dataTime <- as.data.frame(cbind(0:100,timesamples));
+  colors <- rep(1,length(ids));
+  if (!is.null(strata))
+  {
+    colors <- tapply(data[,strata], data[,group], mean,na.rm = TRUE) + 1;
+  }
+  
   for (i in 1:length(ids))
   {
     whoid <- aids == ids[i];
@@ -376,19 +386,32 @@ trajectoriesPolyFeatures <- function(data,feature="v1", degree=2, time="t", grou
     {
       minv = min(data[whoid,time],na.rm = TRUE);
       maxv = max(data[whoid,time],na.rm = TRUE);
-      if ((minv < maxv) && (minv <= timeOffset) && (maxv >= timeOffset))
+      dta <- data[whoid,feature];
+      dtpts <- length(dta[!is.na(dta)]);
+      
+      if ((dtpts > degree) && (minv < maxv) && (minv <= timeOffset) && (maxv >= timeOffset))
       {
         colnames(dataTime) <- c(ids[i],"t");
-        fd <- as.data.frame(cbind(xs = data[whoid,feature],t = data[whoid,time]));
-        fitlm <- try(lm(paste("xs ~ poly(I(t -",timeOffset,"),degree = ",degree,", raw=TRUE)"),data = fd,na.action = na.omit));
-        if (!inherits(fitlm, "try-error"))
+        stddev <- try(sd(data[whoid,feature],na.rm = TRUE))
+        if (!inherits(stddev, "try-error"))
         {
-          coefs[i,] <- fitlm$coefficients;
-          points(data[whoid,time],data[whoid,feature],type="p",col="red");
-          lines(timesamples,predict(fitlm,dataTime,na.action=na.exclude),col="blue",lty=2)
+          wts <- exp(-(2*(data[whoid,time] - timeOffset)/range)^2);
+          fd <- as.data.frame(cbind(xs = data[whoid,feature],t = data[whoid,time],wts=wts));
+          fitlm <- try(lm(paste("xs ~ poly(I(t -",timeOffset,"),degree = ",degree,", raw=TRUE)"),data = fd,weights = wts,na.action = na.omit));
+          if (!inherits(fitlm, "try-error"))
+          {
+            coefs[i,] <- fitlm$coefficients;
+            if (plot)
+            {
+              points(data[whoid,time],data[whoid,feature],type="p",col=colors[i]);
+              lines(timesamples,predict(fitlm,dataTime,na.action=na.exclude),col=colors[i],lty= 1 + colors[i])
+            }
+          }
         }
       }
     }
   }
+  
+  
   return(coefs)
 }

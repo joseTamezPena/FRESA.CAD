@@ -314,7 +314,7 @@ function(variableList,formula,Outcome,data,categorizationType=c("Raw","Categoric
 				}
 
 
-				if (((min(datacolumn)<0) && (datalength>4)) || (categorizationType=="RawRaw"))
+				if (((min(datacolumn,na.rm=TRUE)<0) && (datalength>4)) || (categorizationType=="RawRaw"))
 				{
 #					if (j<10) print(colnamesList[j]);
 					catlist <- character(1);
