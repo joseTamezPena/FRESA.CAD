@@ -164,7 +164,7 @@ CoxBenchmark <-  function(theData = NULL, theOutcome = "Class", reps = 100, trai
     
     ######################BESS#################################### 
     rcvBESS <- randomCV(theData,theOutcome,BESS,trainSampleSets = referenceCV$trainSamplesSets,featureSelectionFunction = "Self");
-    cStats <- predictionStats_survival(rcvBESS$survMedianTest,plotname = "BeSS", noNegativeRisk = TRUE);
+    cStats <- predictionStats_survival(rcvBESS$survMedianTest,plotname = "BeSS");
     CIFollowUPTable <- rbind(CIFollowUPTable,cStats$CIFollowUp);
     CIRisksTable <- rbind(CIRisksTable,cStats$CIRisk);
     LogRankTable <- rbind(LogRankTable,cStats$LogRank);

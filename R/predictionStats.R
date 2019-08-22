@@ -1,4 +1,4 @@
-predictionStats_survival <-  function(predictions, plotname="", noNegativeRisk=FALSE,...)
+predictionStats_survival <-  function(predictions, plotname="",...)
 {
   if (!requireNamespace("survminer", quietly = TRUE)) {
     install.packages("survminer", dependencies = TRUE)
@@ -21,19 +21,7 @@ predictionStats_survival <-  function(predictions, plotname="", noNegativeRisk=F
   #Curves <- survival::survfitBSWiMS <- survival::survfit(Surv(predictions[,1], predictions[,2]) ~ predictions[,6]>=median(predictions[,6]))
   if(plotname!="")
   {
-    if(noNegativeRisk)
-    {
-      graph<- survminer::ggsurvplot(Curves, data=newData, conf.int = TRUE, legend.labs=c("High Risk","Low Risk"),
-                        palette = c("#ff0000", "#00bbff"),
-                        ggtheme = ggplot2::theme_bw() + ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5, face = "bold", size = 30)),
-                        title = plotname,
-                        risk.table = TRUE,
-                        tables.height = 0.2,
-                        tables.theme = survminer::theme_cleantable())
-      print(graph)
-    }
-    else
-    {
+
       graph <- survminer::ggsurvplot(Curves, data=newData, conf.int = TRUE, legend.labs=c("Low Risk", "High Risk"),
                         palette = c("#00bbff", "#ff0000"),
                         ggtheme = ggplot2::theme_bw() + ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5, face = "bold", size = 30)),
@@ -42,9 +30,7 @@ predictionStats_survival <-  function(predictions, plotname="", noNegativeRisk=F
                         tables.height = 0.2,
                         tables.theme = survminer::theme_cleantable())
       print(graph)
-    }
     #plot(Curves,main=plotname)
-   
   }
   
   LogRank <- survival::survdiff(Surv(predictions[,1], predictions[,2]) ~ predictions[,6]>=median(predictions[,6]))
