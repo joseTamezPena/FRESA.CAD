@@ -106,6 +106,7 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
 	                hr = rep(NA,nrow(theSurvData))));
 	  }
 	}
+
 rpredict <-  function(currentModel,DataSet)
 {
 	 fclass <- class(currentModel)
@@ -126,7 +127,14 @@ rpredict <-  function(currentModel,DataSet)
 		{
 			if (is.null(pred$posterior))
 			{
-				pred <-as.numeric(as.character(pred[[1]]));
+				if (is.null(pred$prob))
+				{
+					pred <-as.numeric(as.character(pred[[1]]));
+				}
+				else
+				{
+					pred <-as.numeric(pred$prob[,2]);
+				}
 			}
 			else
 			{
