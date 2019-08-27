@@ -113,6 +113,7 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 			datao <- as.numeric(auxdata[i,]);
 			smdist <- mahalanobis(intdata,datao,globalcov);
 			qdata <- intdata[(smdist > 0) & (smdist < samplingthreshold),];
+#			print(nrow(qdata))
 			if (length(qdata) > 0)
 			{
 				if (nrow(qdata) >= h0)
