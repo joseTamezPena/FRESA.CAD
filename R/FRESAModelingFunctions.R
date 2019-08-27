@@ -260,6 +260,7 @@ BESS <- function(formula = formula, data=NULL, ...)
 	{
 		result$selectedfeatures <- gsub("xbest","",names(bessCoefficients));
 	}
+	result$ic.type <- ic.type;
 	class(result) <- "FRESA.BESS"
 	
 	return(result);
@@ -269,7 +270,7 @@ predict.FRESA.BESS <- function(object,...)
 {
 	parameters <- list(...);
 	testData <- parameters[[1]];
-	type = "BIC";
+	type = object$ic.type;
 	if (!is.null(parameters$type))
 	{
 		type <- parameters$type
