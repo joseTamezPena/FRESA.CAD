@@ -109,14 +109,7 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
 
 rpredict <-  function(currentModel,DataSet)
 {
-	 fclass <- class(currentModel)
-    if(fclass=="FRESA.BESS"){
-      pred <- try(predict(currentModel$fit,DataSet))
-    }
-    else{
-      pred <- try(predict(currentModel,DataSet))
-    }
-
+    pred <- try(predict(currentModel,DataSet))
 	if (inherits(pred, "try-error"))
 	{
 		pred <- numeric(nrow(DataSet));
@@ -554,10 +547,10 @@ if (!requireNamespace("glmnet", quietly = TRUE)) {
 					}
 					if (fclass == "FRESA.BESS")
 					{
-					  bessCoefficients <- currentModel$fit$bestmodel$coefficients
+					  bessCoefficients <- currentModel$selectedfeatures;
 					  if (!is.null(bessCoefficients))
 					  {
-					    selectedFeaturesSet[[rept]] <- gsub("xbest","",names(bessCoefficients));
+					    selectedFeaturesSet[[rept]] <- bessCoefficients;
 					  }
 					}
 

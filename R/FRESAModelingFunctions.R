@@ -212,6 +212,18 @@ BESS <- function(formula = formula, data=NULL, ...)
 	} 
 	baseformula <- as.character(formula);
 	usedFeatures <- colnames(data)[!(colnames(data) %in% baseformula[2])]
+	
+	method="sequential"
+	parameters <- list(...);
+	if (!is.null(parameters$method))
+	{
+		method <- parameters$method;
+	}
+	ic.type="BIC"
+	if (!is.null(parameters$ic.type))
+	{
+		ic.type <- parameters$ic.type;
+	}
 
 	if (sum(str_count(baseformula,"Surv")) > 0)
 	{
@@ -227,31 +239,27 @@ BESS <- function(formula = formula, data=NULL, ...)
 		y <- as.numeric(unlist(data[featuresOnSurvivalObject[[1]][2]]))
 		baseformula <- gsub(featuresOnSurvivalObject[[1]][1],"x",baseformula)
 		baseformula <- gsub(featuresOnSurvivalObject[[1]][2],"y",baseformula)
-		result <- list(fit=BeSS::bess(as.matrix(data[,usedFeatures]), survival::Surv(x, y), s.min=1, family = "cox",...),formula = formula,usedFeatures=usedFeatures);
+		result <- list(fit=BeSS::bess(as.matrix(data[,usedFeatures]), survival::Surv(x, y), method=method, family = "cox",ic.type=ic.type,...),formula = formula,usedFeatures=usedFeatures);
+		bessCoefficients <- result$fit$bestmodel$coefficients
 	}
 	else
 	{
 		tb <- table(data[,baseformula[2]]);
 		if (length(tb)>2)
 		{
-			result <- list(fit=BeSS::bess(as.matrix(data[,usedFeatures]),as.vector(data[,baseformula[2]]), method="sequential", family = "gaussian", epsilon = 1e-12,...),formula = formula,usedFeatures=usedFeatures);
+			result <- list(fit=BeSS::bess(as.matrix(data[,usedFeatures]),as.vector(data[,baseformula[2]]), method=method, family = "gaussian", epsilon = 1e-12,ic.type=ic.type,...),formula = formula,usedFeatures=usedFeatures);
 		}
 		else
 		{
-			result <- list(fit=BeSS::bess(as.matrix(data[,usedFeatures]),as.vector(data[,baseformula[2]]), method="sequential", family = "binomial", epsilon = 0,...), formula = formula,usedFeatures=usedFeatures);
-		}
-		parameters <- list(...);
-		type = "BIC";
-		if (!is.null(parameters$type))
-		{
-			type <- parameters$type
+			result <- list(fit=BeSS::bess(as.matrix(data[,usedFeatures]),as.vector(data[,baseformula[2]]), method=method, family = "binomial", epsilon = 0,ic.type=ic.type,...), formula = formula,usedFeatures=usedFeatures);
 		}
 
-		cbess <- coef (result$fit,sparse=FALSE,type=type)[-1];
-		result$selectedfeatures <- names(cbess)[cbess != 0]
+		bessCoefficients <- result$fit$bestmodel$coefficients[-1];
 	}
-	
-
+	if (!is.null(bessCoefficients))
+	{
+		result$selectedfeatures <- gsub("xbest","",names(bessCoefficients));
+	}
 	class(result) <- "FRESA.BESS"
 	
 	return(result);
