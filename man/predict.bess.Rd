@@ -5,7 +5,7 @@
 	This function predicts the outcome from a BESS model
 }
 \usage{
-	\method{predict}{FRESA_SVM}(object,...)
+	\method{predict}{FRESA.BESS}(object,...)
 }
 \arguments{
 	\item{object}{

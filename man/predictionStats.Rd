@@ -12,7 +12,7 @@
       predictionStats_binary(predictions, plotname="", center=FALSE,...)
       predictionStats_regression(predictions, plotname="",...)
       predictionStats_ordinal(predictions,plotname="",...)
-      predictionStats_survival(predictions,plotname="",noNegativeRisk=FALSE,...)
+      predictionStats_survival(predictions,plotname="",...)
 
 }
 \arguments{
@@ -24,9 +24,6 @@
 	}
 	\item{center}{
 		For binary predictions indicates if the prediction is around zero 
-	}
-	\item{noNegativeRisk}{
-		For risk predictions indicates if the prediction is negative
 	}
 	\item{...}{
 		Extra parameters to be passed to the plot function.
