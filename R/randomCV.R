@@ -50,7 +50,7 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
 	    cox$coefficients<-currentModel$bagging$bagged.model$coefficients[-c(1)];
 	    #cox$coefficients<-currentModel$BSWiMS.model$back.model$coefficients[-c(1)]
 	  }
-	  if(fclass=="bess")
+	  if(fclass=="FRESA.BESS")
 	  {
 	    baseformula <- as.character(theformula);
 	    formulaCox <- as.formula(paste(paste(baseformula[2],"~"), paste(selectedFeatures, collapse='+')));
@@ -110,7 +110,7 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
 rpredict <-  function(currentModel,DataSet)
 {
 	 fclass <- class(currentModel)
-    if(fclass=="bess"){
+    if(fclass=="FRESA.BESS"){
       pred <- try(predict(currentModel$fit,DataSet))
     }
     else{
@@ -552,7 +552,7 @@ if (!requireNamespace("glmnet", quietly = TRUE)) {
 					    }
 					  }
 					}
-					if (fclass == "bess")
+					if (fclass == "FRESA.BESS")
 					{
 					  bessCoefficients <- currentModel$fit$bestmodel$coefficients
 					  if (!is.null(bessCoefficients))

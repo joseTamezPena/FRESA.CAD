@@ -240,24 +240,24 @@ BESS <- function(formula = formula, data=NULL, ...)
 		{
 			result <- list(fit=BeSS::bess(as.matrix(data[,usedFeatures]),as.vector(data[,baseformula[2]]), method="sequential", family = "binomial", epsilon = 0,...), formula = formula,usedFeatures=usedFeatures);
 		}
+		parameters <- list(...);
+		type = "BIC";
+		if (!is.null(parameters$type))
+		{
+			type <- parameters$type
+		}
+
+		cbess <- coef (result$fit,sparse=FALSE,type=type)[-1];
+		result$selectedfeatures <- names(cbess)[cbess != 0]
 	}
 	
-	parameters <- list(...);
-	type = "BIC";
-	if (!is.null(parameters$type))
-	{
-		type <- parameters$type
-	}
 
-	cbess <- coef (result$fit,sparse=FALSE,type=type);
-	result$selectedfeatures <- names(cbess)[cbess != 0]
-
-	class(result) <- "bess"
+	class(result) <- "FRESA.BESS"
 	
 	return(result);
 }
 
-predict.bess <- function(object,...) 
+predict.FRESA.BESS <- function(object,...) 
 {
 	parameters <- list(...);
 	testData <- parameters[[1]];
