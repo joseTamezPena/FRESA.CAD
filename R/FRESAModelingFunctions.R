@@ -142,14 +142,42 @@ if (!requireNamespace("glmnet", quietly = TRUE)) {
 			baseformula <- gsub(featuresOnSurvivalObject[[1]][1],"x",baseformula)
 			baseformula <- gsub(featuresOnSurvivalObject[[1]][2],"y",baseformula)
 			result <- list(fit = glmnet::cv.glmnet(as.matrix(data[,usedFeatures]),survival::Surv(x,y),family = "cox",...),s = s,formula = formula,usedFeatures=usedFeatures);
-			class(result) <- "FRESA_LASSO"
+			if(exists(alpha))
+			{
+				if(alpha<1 && alpha > 0){
+				class(result) <- "FRESA_ELASTICNET"
+				}
+				if(alpha==0){
+				class(result) <- "FRESA_GLMNET_RIDGE"
+				}
+				else{
+				class(result) <- "FRESA_LASSO"
+				}
+			}
+			else{
+				class(result) <- "FRESA_LASSO"
+			}
 			
 			coef(result$fit,s)
 		}
 		else
 		{
 		result <- list(fit = glmnet::cv.glmnet(as.matrix(data[,usedFeatures]),as.vector(data[,baseformula[2]]),...),s = s,formula = formula,outcome = baseformula[2],usedFeatures = usedFeatures)
-		class(result) <- "FRESA_LASSO"
+			if(exists(alpha))
+			{
+				if(alpha<1 && alpha > 0){
+					class(result) <- "FRESA_ELASTICNET"
+				}
+				if(alpha==0){
+					class(result) <- "FRESA_GLMNET_RIDGE"
+				}
+				else{
+					class(result) <- "FRESA_LASSO"
+				}
+			}
+			else{
+			class(result) <- "FRESA_LASSO"
+			}
 		}
 	}
 	return(result);
@@ -184,14 +212,41 @@ LASSO_1SE <- function(formula = formula, data=NULL, ...)
 			baseformula <- gsub(featuresOnSurvivalObject[[1]][1],"x",baseformula)
 			baseformula <- gsub(featuresOnSurvivalObject[[1]][2],"y",baseformula)
 			result <- list(fit = glmnet::cv.glmnet(as.matrix(data[,usedFeatures]),survival::Surv(x,y),family = "cox",...),s = s,formula = formula,usedFeatures=usedFeatures);
-			class(result) <- "FRESA_LASSO"
-			
+			if(exists(alpha))
+			{
+				if(alpha<1 && alpha > 0){
+				class(result) <- "FRESA_ELASTICNET"
+				}
+				if(alpha==0){
+				class(result) <- "FRESA_GLMNET_RIDGE"
+				}
+				else{
+				class(result) <- "FRESA_LASSO"
+				}
+			}
+			else{
+				class(result) <- "FRESA_LASSO"
+			}
 			coef(result$fit,s)
 		}
 		else
 		{
 			result <- list(fit = glmnet::cv.glmnet(as.matrix(data[,usedFeatures]),as.vector(data[,baseformula[2]]),...),s = s,formula = formula,outcome = baseformula[2],usedFeatures = usedFeatures)
-			class(result) <- "FRESA_LASSO"
+			if(exists(alpha))
+			{
+				if(alpha<1 && alpha > 0){
+				class(result) <- "FRESA_ELASTICNET"
+				}
+				if(alpha==0){
+				class(result) <- "FRESA_GLMNET_RIDGE"
+				}
+				else{
+				class(result) <- "FRESA_LASSO"
+				}
+			}
+			else{
+				class(result) <- "FRESA_LASSO"
+			}
 		}
 	}
 	return(result);
