@@ -257,12 +257,31 @@ BinaryBenchmark <-	function(theData = NULL, theOutcome = "Class", reps = 100, tr
 		referenceCV <- randomCV(theData,theOutcome,BSWiMS.model,trainFraction = trainFraction,repetitions = reps,featureSelectionFunction = "Self");
 		referenceName = "BSWiMS";
 		referenceFilterName = "BSWiMS";
-		reftest <- referenceCV$medianTest[,2];
-		if (min(reftest) < -1) reftest <- 1.0/(1.0+exp(-reftest));
-		TheCVEvaluations$BSWiMS <- referenceCV;
-		times[[1]] <- referenceCV$theTimes;
-		elapcol <- names(referenceCV$theTimes) == "elapsed"
-		cputimes[[1]] = mean(referenceCV$theTimes[ elapcol ]);
+	}
+	if (class(referenceCV) == "list")
+	{
+		elapcol <- names(referenceCV[[1]]$theTimes) == "elapsed"
+		TheCVEvaluations <- referenceCV;
+		for (i in 1:length(referenceCV))
+		{
+			cStats <- predictionStats_binary(referenceCV[[i]]$testPredictions,plotname = names(referenceCV)[i],cex=0.8);
+			accciTable <- rbind(accciTable,cStats$accc)
+			errorciTable <- rbind(errorciTable,cStats$berror)
+			aucTable <- rbind(aucTable,cStats$aucs)
+			senTable <- rbind(senTable,cStats$sensitivity)
+			speTable <- rbind(speTable,cStats$specificity)
+			cidxTable <- rbind(cidxTable,cStats$cIndexCI)
+			preftest <- referenceCV[[i]]$medianTest[,2];
+			if (min(preftest) < -1) preftest <- 1.0/(1.0+exp(-reftest));
+			reftest <- cbind(reftest,preftest);
+			cputimes[[i]] = mean(referenceCV[[i]]$theTimes[ elapcol ]);
+			times[[i]] <- referenceCV[[i]]$theTimes;
+		}
+		referenceName <- names(referenceCV);
+		referenceCV <- referenceCV[[1]];
+	}
+	else
+	{
 		cStats <- predictionStats_binary(referenceCV$testPredictions,plotname = referenceName,cex=0.8);
 		accciTable <- rbind(accciTable,cStats$accc)
 		errorciTable <- rbind(errorciTable,cStats$berror)
@@ -270,49 +289,14 @@ BinaryBenchmark <-	function(theData = NULL, theOutcome = "Class", reps = 100, tr
 		senTable <- rbind(senTable,cStats$sensitivity)
 		speTable <- rbind(speTable,cStats$specificity)
 		cidxTable <- rbind(cidxTable,cStats$cIndexCI)
+		reftest <- referenceCV$medianTest[,2];
+		if (min(reftest) < -1) reftest <- 1.0/(1.0+exp(-reftest));
+		TheCVEvaluations$Reference <- referenceCV;
+		times[[1]] <- referenceCV$theTimes;
+		elapcol <- names(referenceCV$theTimes) == "elapsed"
+		cputimes[[1]] = mean(referenceCV$theTimes[ elapcol ]);
 	}
-	else
-	{
-		if (class(referenceCV) == "list")
-		{
-			elapcol <- names(referenceCV[[1]]$theTimes) == "elapsed"
-			TheCVEvaluations <- referenceCV;
-			for (i in 1:length(referenceCV))
-			{
-				cStats <- predictionStats_binary(referenceCV[[i]]$testPredictions,plotname = referenceName,cex=0.8);
-				accciTable <- rbind(accciTable,cStats$accc)
-				errorciTable <- rbind(errorciTable,cStats$berror)
-				aucTable <- rbind(aucTable,cStats$aucs)
-				senTable <- rbind(senTable,cStats$sensitivity)
-				speTable <- rbind(speTable,cStats$specificity)
-				cidxTable <- rbind(cidxTable,cStats$cIndexCI)
-				preftest <- referenceCV[[i]]$medianTest[,2];
-				if (min(preftest) < -1) preftest <- 1.0/(1.0+exp(-reftest));
-				reftest <- cbind(reftest,preftest);
-				cputimes[[i]] = mean(referenceCV[[i]]$theTimes[ elapcol ]);
-				times[[i]] <- referenceCV[[i]]$theTimes;
-			}
-			referenceName <- names(referenceCV);
-			referenceCV <- referenceCV[[1]];
-		}
-		else
-		{
-			cStats <- predictionStats_binary(referenceCV$testPredictions,plotname = referenceName,cex=0.8);
-			accciTable <- rbind(accciTable,cStats$accc)
-			errorciTable <- rbind(errorciTable,cStats$berror)
-			aucTable <- rbind(aucTable,cStats$aucs)
-			senTable <- rbind(senTable,cStats$sensitivity)
-			speTable <- rbind(speTable,cStats$specificity)
-			cidxTable <- rbind(cidxTable,cStats$cIndexCI)
-			reftest <- referenceCV$medianTest[,2];
-			if (min(reftest) < -1) reftest <- 1.0/(1.0+exp(-reftest));
-			TheCVEvaluations$Reference <- referenceCV;
-			times[[1]] <- referenceCV$theTimes;
-			elapcol <- names(referenceCV$theTimes) == "elapsed"
-			cputimes[[1]] = mean(referenceCV$theTimes[ elapcol ]);
-		}
-		reps <- referenceCV$repetitions;
-	}
+	reps <- referenceCV$repetitions;
 
 	rcvRF <- randomCV(theData,theOutcome,randomForest::randomForest,trainSampleSets = referenceCV$trainSamplesSets,featureSelectionFunction = "Self",asFactor = TRUE);
 	cStats <- predictionStats_binary(rcvRF$testPredictions,plotname = "Random Forest",center = TRUE,cex=0.8);
@@ -413,11 +397,10 @@ BinaryBenchmark <-	function(theData = NULL, theOutcome = "Class", reps = 100, tr
 	cputimes <- unlist(cputimes);
 	cputimes <- c(cputimes,sum(cputimes)-mean(rcvRPART$theTimes[ elapcol ]));
 	names(cputimes) <- theMethod;
-	names(times) <- theMethod;
 	
 ######################Filters	####################################	
 	
-	if (length(methodNames)==0)
+	if (class(referenceCV) != "list")
 	{
 		classnames <- colnames(test_Predictions);
 		cat("KNN\n")

@@ -853,5 +853,6 @@ if (!requireNamespace("glmnet", quietly = TRUE)) {
 					theTimes = theTimes,
 					repetitions=repetitions
 		);
+	class(results) <- "RandomHOCV"
 	return (results);
 }

@@ -9,19 +9,8 @@ function(x,...)
 		prefix <- parameters$prefix;
 	}
 
-#	op <- par(no.readonly=TRUE);
-
-#	par(mfrow = c(1,1));
-
+	op <- par(no.readonly=TRUE);
 	result = NULL;
-#	par(mfrow = c(1,2));
-	barplot(x$jaccard[order(-x$jaccard)],las = 2,cex.axis = 1,cex.names = 0.7,main = paste(prefix,"Jaccard Index"),ylab = "Jaccard")
-	unsize <- x$featsize
-	unsize[unsize == 0] <- 1;
-	barplot(unsize[order(unsize)],las = 2,cex.axis = 1,cex.names = 0.7,log = "y",main = paste(prefix,"Number of Features"),ylab = "# of Features")
-#	par(mfrow = c(1,1));
-
-#	par(op);
 
 	if (class(x)[2] == "Binary")
 	{
@@ -84,6 +73,12 @@ function(x,...)
 							
 		if (!is.null(x$errorciTable_filter))
 		{
+			par(op)
+			barplot(x$jaccard[order(-x$jaccard)],las = 2,cex.axis = 1,cex.names = 0.7,main = paste(prefix,"Jaccard Index"),ylab = "Jaccard")
+			unsize <- x$featsize
+			unsize[unsize == 0] <- 1;
+			barplot(unsize[order(unsize)],las = 2,cex.axis = 1,cex.names = 0.7,log = "y",main = paste(prefix,"Number of Features"),ylab = "# of Features")
+			par(op)
 			x$errorciTable_filter[is.na(x$errorciTable_filter)] <- 0;
 			bpBER_filter <- barPlotCiError(as.matrix(x$errorciTable_filter),metricname = "Balanced Error",thesets = x$theFiltersets,themethod = x$theClassMethod,main = paste(prefix,"Balanced Error"),scoreDirection = "<",ho=0.5,args.legend = list(bg = "white",x = "topleft"),col = terrain.colors(length(x$theClassMethod)),...)
 			testFilBalancedError <- apply(bpBER_filter$ciTable$mean,2,median);
@@ -372,6 +367,6 @@ function(x,...)
 
 
 	}
-#	par(op);
+	par(op);
 	return (result);
 }
