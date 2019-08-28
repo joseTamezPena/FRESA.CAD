@@ -279,6 +279,7 @@ BinaryBenchmark <-	function(theData = NULL, theOutcome = "Class", reps = 100, tr
 		}
 		referenceName <- names(referenceCV);
 		referenceCV <- referenceCV[[1]];
+		class(referenceCV) <- "list"
 	}
 	else
 	{
