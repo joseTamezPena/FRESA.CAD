@@ -7,7 +7,7 @@
 	Fits a \code{glmnet::cv.glmnet} object to the data, and sets the prediction to use the features that created the minimum CV error or one SE. 
 }
 \usage{
-	LASSO_MIN(formula = formula,data=NULL,...)
+	LASSO_MIN(formula = formula,data=NULL,s = "lambda.min",...)
 	LASSO_1SE(formula = formula,data=NULL,...)
 }
 
@@ -17,6 +17,9 @@
 	}
 	\item{data}{
 	The data to be used for training the KNN method
+	}
+	\item{s}{
+	The s value for lambda
 	}
 	\item{...}{
 	Parameters to be passed to the cv.glmnet function

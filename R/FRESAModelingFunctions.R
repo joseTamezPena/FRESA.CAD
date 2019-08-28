@@ -113,12 +113,12 @@ predict.FRESAKNN <- function(object, ...)
 }
 
 
-LASSO_MIN <- function(formula = formula, data=NULL, ...)
+LASSO_MIN <- function(formula = formula, data=NULL, s = "lambda.min", ...)
 {
 if (!requireNamespace("glmnet", quietly = TRUE)) {
 	 install.packages("glmnet", dependencies = TRUE)
 } 
-	s <- "lambda.min";
+	isSurv <- FALSE;
 	baseformula <- as.character(formula);
 	usedFeatures <- colnames(data)[!(colnames(data) %in% baseformula[2])]
 	if (length(usedFeatures)<5) #if less than 5 features, just use a lm fit.
@@ -130,6 +130,7 @@ if (!requireNamespace("glmnet", quietly = TRUE)) {
 	{
 		if (sum(str_count(baseformula,"Surv")) > 0)
 		{
+			isSurv <- TRUE;
 			featuresOnSurvival <- baseformula[2]
 			featuresOnSurvival <- gsub(" ", "", featuresOnSurvival)
 			featuresOnSurvival <- gsub("Surv\\(", "", featuresOnSurvival)
@@ -142,114 +143,75 @@ if (!requireNamespace("glmnet", quietly = TRUE)) {
 			baseformula <- gsub(featuresOnSurvivalObject[[1]][1],"x",baseformula)
 			baseformula <- gsub(featuresOnSurvivalObject[[1]][2],"y",baseformula)
 			result <- list(fit = glmnet::cv.glmnet(as.matrix(data[,usedFeatures]),survival::Surv(x,y),family = "cox",...),s = s,formula = formula,usedFeatures=usedFeatures);
-			if(exists(alpha))
-			{
-				if(alpha<1 && alpha > 0){
-				class(result) <- "FRESA_ELASTICNET"
-				}
-				if(alpha==0){
-				class(result) <- "FRESA_GLMNET_RIDGE"
-				}
-				else{
-				class(result) <- "FRESA_LASSO"
-				}
-			}
-			else{
-				class(result) <- "FRESA_LASSO"
-			}
-			
-			coef(result$fit,s)
-		}
-		else
-		{
-		result <- list(fit = glmnet::cv.glmnet(as.matrix(data[,usedFeatures]),as.vector(data[,baseformula[2]]),...),s = s,formula = formula,outcome = baseformula[2],usedFeatures = usedFeatures)
-			if(exists(alpha))
-			{
-				if(alpha<1 && alpha > 0){
-					class(result) <- "FRESA_ELASTICNET"
-				}
-				if(alpha==0){
-					class(result) <- "FRESA_GLMNET_RIDGE"
-				}
-				else{
-					class(result) <- "FRESA_LASSO"
-				}
-			}
-			else{
-			class(result) <- "FRESA_LASSO"
-			}
-		}
-	}
-	return(result);
-}
-
-LASSO_1SE <- function(formula = formula, data=NULL, ...)
-{
-	if (!requireNamespace("glmnet", quietly = TRUE)) {
-		install.packages("glmnet", dependencies = TRUE)
-	} 
-	s <- "lambda.1se";
-	baseformula <- as.character(formula);
-	usedFeatures <- colnames(data)[!(colnames(data) %in% baseformula[2])]
-	if (length(usedFeatures)<5) #if less than 5 features, just use a lm fit.
-	{
-		warning("Less than five features. Returning a lm model");
-		result <- lm(formula,data);
-	}
-	else
-	{
-		if (sum(str_count(baseformula,"Surv")) > 0)
-		{
-			featuresOnSurvival <- baseformula[2]
-			featuresOnSurvival <- gsub(" ", "", featuresOnSurvival)
-			featuresOnSurvival <- gsub("Surv\\(", "", featuresOnSurvival)
-			featuresOnSurvival <- gsub("\\)", "", featuresOnSurvival)
-			featuresOnSurvivalObject <- strsplit(featuresOnSurvival, ",")
-			
-			usedFeatures <- colnames(data)[!(colnames(data) %in%	featuresOnSurvivalObject[[1]])]
-			x <- as.numeric(unlist(data[featuresOnSurvivalObject[[1]][1]]))
-			y <- as.numeric(unlist(data[featuresOnSurvivalObject[[1]][2]]))
-			baseformula <- gsub(featuresOnSurvivalObject[[1]][1],"x",baseformula)
-			baseformula <- gsub(featuresOnSurvivalObject[[1]][2],"y",baseformula)
-			result <- list(fit = glmnet::cv.glmnet(as.matrix(data[,usedFeatures]),survival::Surv(x,y),family = "cox",...),s = s,formula = formula,usedFeatures=usedFeatures);
-			if(exists(alpha))
-			{
-				if(alpha<1 && alpha > 0){
-				class(result) <- "FRESA_ELASTICNET"
-				}
-				if(alpha==0){
-				class(result) <- "FRESA_GLMNET_RIDGE"
-				}
-				else{
-				class(result) <- "FRESA_LASSO"
-				}
-			}
-			else{
-				class(result) <- "FRESA_LASSO"
-			}
-			coef(result$fit,s)
 		}
 		else
 		{
 			result <- list(fit = glmnet::cv.glmnet(as.matrix(data[,usedFeatures]),as.vector(data[,baseformula[2]]),...),s = s,formula = formula,outcome = baseformula[2],usedFeatures = usedFeatures)
-			if(exists(alpha))
+		}
+	}
+	coefthr <- numeric(1*(!isSurv)+length(usedFeatures));
+	parameters <- list(...);
+	if(!is.null(parameters$alpha))
+	{
+		if(parameters$alpha < 1)
+		{
+			coefthr <- apply(data[,usedFeatures],2,sd, na.rm = TRUE);
+			coefthr <- 0.01/coefthr;
+			if (!isSurv)
 			{
-				if(alpha<1 && alpha > 0){
-				class(result) <- "FRESA_ELASTICNET"
-				}
-				if(alpha==0){
-				class(result) <- "FRESA_GLMNET_RIDGE"
-				}
-				else{
-				class(result) <- "FRESA_LASSO"
-				}
-			}
-			else{
-				class(result) <- "FRESA_LASSO"
+				coefthr <- c(1,coefthr);
 			}
 		}
 	}
+
+	cf <- coef(result$fit,s);
+	selectedFeatures <- character();
+	if (class(cf) == "list")
+	{
+		for (cl in 1:length(cf))
+		{
+			cenet <- as.matrix(cf[[cl]]);
+			if (!is.null(cenet))
+			{
+				lft <- cenet[as.vector(abs(cenet[,1]) > coefthr),,drop=FALSE];
+				sF <- rownames(lft);
+				if(!isSurv)
+				{
+					if (length(sF)>0)
+					{
+						sF <- sF[-1];
+					}
+				}
+				selectedFeatures <- append(selectedFeatures,sF);
+			}
+		}			
+	}
+	else
+	{
+		cenet <- as.matrix(cf);
+		if (!is.null(cenet))
+		{
+			lft <- cenet[as.vector(abs(cenet[,1]) > coefthr),,drop=FALSE];
+			sF <- rownames(lft);
+			if(!isSurv)
+			{
+				if (length(sF)>0)
+				{
+					sF <- sF[-1];
+				}
+			}
+			selectedFeatures <- sF;
+		}
+	}
+	result$selectedfeatures <- unique(selectedFeatures);
+	class(result) <- "FRESA_LASSO"
 	return(result);
+}
+
+LASSO_1SE <- function(formula = formula, data=NULL,...)
+{
+	result <- LASSO_MIN(formula,data,s = "lambda.1se",...);
+	return (result);
 }
 
 predict.FRESA_LASSO <- function(object,...) 
