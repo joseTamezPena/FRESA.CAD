@@ -550,6 +550,13 @@ BinaryBenchmark <-	function(theData = NULL, theOutcome = "Class", reps = 100, tr
 	}
 
 	test_Predictions <- as.data.frame(test_Predictions)
+	for (i in 2:ncol(test_Predictions))
+	{
+		if (test_Predictions[,i] < -1)
+		{	
+			test_Predictions[,i] <- 1.0/(1.0+exp(-test_Predictions[,i] ));
+		}
+	}
 
 
 
