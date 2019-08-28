@@ -145,7 +145,7 @@ if (!requireNamespace("glmnet", quietly = TRUE)) {
 			if(exists(alpha))
 			{
 				if(alpha<1 && alpha > 0){
-				class(result) <- "FRESA_ELASTICNET"a
+				class(result) <- "FRESA_ELASTICNET"
 				}
 				if(alpha==0){
 				class(result) <- "FRESA_GLMNET_RIDGE"
@@ -166,7 +166,7 @@ if (!requireNamespace("glmnet", quietly = TRUE)) {
 			if(exists(alpha))
 			{
 				if(alpha<1 && alpha > 0){
-					class(result) <- "FRESA_ELASTICNET"a
+					class(result) <- "FRESA_ELASTICNET"
 				}
 				if(alpha==0){
 					class(result) <- "FRESA_GLMNET_RIDGE"
@@ -215,7 +215,7 @@ LASSO_1SE <- function(formula = formula, data=NULL, ...)
 			if(exists(alpha))
 			{
 				if(alpha<1 && alpha > 0){
-				class(result) <- "FRESA_ELASTICNET"a
+				class(result) <- "FRESA_ELASTICNET"
 				}
 				if(alpha==0){
 				class(result) <- "FRESA_GLMNET_RIDGE"
@@ -235,7 +235,7 @@ LASSO_1SE <- function(formula = formula, data=NULL, ...)
 			if(exists(alpha))
 			{
 				if(alpha<1 && alpha > 0){
-				class(result) <- "FRESA_ELASTICNET"a
+				class(result) <- "FRESA_ELASTICNET"
 				}
 				if(alpha==0){
 				class(result) <- "FRESA_GLMNET_RIDGE"
