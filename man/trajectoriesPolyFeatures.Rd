@@ -6,7 +6,15 @@
 }
 
 \usage{
-	trajectoriesPolyFeatures(data,feature="v1", degree=2, time="t", group="ID")
+	trajectoriesPolyFeatures(data,
+                              feature="v1", 
+                              degree=2, 
+                              time="t", 
+                              group="ID",
+                              timeOffset=0,
+                              strata=NULL,
+                              plot=TRUE,
+                              ...)
 }
 \arguments{
 	\item{data}{
@@ -26,6 +34,15 @@
 	}
 	\item{timeOffset}{
 	The time offset
+	}
+	\item{strata}{
+	Data strafication
+	}
+	\item{plot}{
+	if TRUE it will plot the data
+	}
+	\item{...}{
+	parameters passed to plot
 	}
 }
 

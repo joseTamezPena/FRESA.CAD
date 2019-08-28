@@ -50,7 +50,7 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
 	    cox$coefficients<-currentModel$bagging$bagged.model$coefficients[-c(1)];
 	    #cox$coefficients<-currentModel$BSWiMS.model$back.model$coefficients[-c(1)]
 	  }
-	  if(fclass=="bess")
+	  if(fclass=="FRESA.BESS")
 	  {
 	    baseformula <- as.character(theformula);
 	    formulaCox <- as.formula(paste(paste(baseformula[2],"~"), paste(selectedFeatures, collapse='+')));
@@ -106,16 +106,10 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
 	                hr = rep(NA,nrow(theSurvData))));
 	  }
 	}
+
 rpredict <-  function(currentModel,DataSet)
 {
-	 fclass <- class(currentModel)
-    if(fclass=="bess"){
-      pred <- try(predict(currentModel$fit,DataSet))
-    }
-    else{
-      pred <- try(predict(currentModel,DataSet))
-    }
-
+    pred <- try(predict(currentModel,DataSet))
 	if (inherits(pred, "try-error"))
 	{
 		pred <- numeric(nrow(DataSet));
@@ -126,7 +120,14 @@ rpredict <-  function(currentModel,DataSet)
 		{
 			if (is.null(pred$posterior))
 			{
-				pred <-as.numeric(as.character(pred[[1]]));
+				if (is.null(pred$prob))
+				{
+					pred <-as.numeric(as.character(pred[[1]]));
+				}
+				else
+				{
+					pred <-as.numeric(pred$prob[,2]);
+				}
 			}
 			else
 			{
@@ -544,12 +545,12 @@ if (!requireNamespace("glmnet", quietly = TRUE)) {
 					    }
 					  }
 					}
-					if (fclass == "bess")
+					if (fclass == "FRESA.BESS")
 					{
-					  bessCoefficients <- currentModel$fit$bestmodel$coefficients
+					  bessCoefficients <- currentModel$selectedfeatures;
 					  if (!is.null(bessCoefficients))
 					  {
-					    selectedFeaturesSet[[rept]] <- gsub("xbest","",names(bessCoefficients));
+					    selectedFeaturesSet[[rept]] <- bessCoefficients;
 					  }
 					}
 
@@ -852,5 +853,6 @@ if (!requireNamespace("glmnet", quietly = TRUE)) {
 					theTimes = theTimes,
 					repetitions=repetitions
 		);
+	class(results) <- "RandomHOCV"
 	return (results);
 }
