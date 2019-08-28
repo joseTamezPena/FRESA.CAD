@@ -38,7 +38,7 @@ CoxBenchmark(theData = NULL, theOutcome = "Class", reps = 100, trainFraction = 0
 	The fraction of the data used for training.
 	}
 	\item{referenceCV}{
-	A user supplied random cross-validation object to be benchmarked
+	A  single random cross-validation object to be benchmarked or a list of CVObjects to be compared
 	}
 	\item{referenceName}{
 	The name of the reference classifier to be used in the reporting tables
