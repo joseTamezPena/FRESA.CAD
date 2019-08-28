@@ -78,44 +78,49 @@ function(x,...)
 							CIDX=bpCIDX
 							);
 
-		x$errorciTable_filter[is.na(x$errorciTable_filter)] <- 0;
-		bpBER_filter <- barPlotCiError(as.matrix(x$errorciTable_filter),metricname = "Balanced Error",thesets = x$theFiltersets,themethod = x$theClassMethod,main = paste(prefix,"Balanced Error"),scoreDirection = "<",ho=0.5,args.legend = list(bg = "white",x = "topleft"),col = terrain.colors(length(x$theClassMethod)),...)
-		testFilBalancedError <- apply(bpBER_filter$ciTable$mean,2,median);
-		testFilBalancedErrormax <- max(apply(bpBER_filter$ciTable$top95,2,max));
-		testFilBalancedErrormin <- min(apply(bpBER_filter$ciTable$low95,2,min))
+		metrics_filter <- NULL;
+		barPlotsCI_filter <- NULL;
+		minMaxMetrics <- NULL;
+							
+		if (!is.null(x$errorciTable_filter))
+		{
+			x$errorciTable_filter[is.na(x$errorciTable_filter)] <- 0;
+			bpBER_filter <- barPlotCiError(as.matrix(x$errorciTable_filter),metricname = "Balanced Error",thesets = x$theFiltersets,themethod = x$theClassMethod,main = paste(prefix,"Balanced Error"),scoreDirection = "<",ho=0.5,args.legend = list(bg = "white",x = "topleft"),col = terrain.colors(length(x$theClassMethod)),...)
+			testFilBalancedError <- apply(bpBER_filter$ciTable$mean,2,median);
+			testFilBalancedErrormax <- max(apply(bpBER_filter$ciTable$top95,2,max));
+			testFilBalancedErrormin <- min(apply(bpBER_filter$ciTable$low95,2,min))
 
-		x$accciTable_filter[is.na(x$accciTable_filter)] <- 0;
-		bpACC_filter <- barPlotCiError(as.matrix(x$accciTable_filter),metricname = "Accuracy",thesets = x$theFiltersets,themethod = x$theClassMethod,main = paste(prefix,"Accuracy"),offsets = c(0.5,1),args.legend = list(bg = "white",x = "bottomleft"),col = terrain.colors(length(x$theClassMethod)),...)
-		testFilACC <- apply(bpACC_filter$ciTable$mean,2,median);
-		testFilACCmin <- min(apply(bpACC_filter$ciTable$low95,2,min));
-		testFilACCmax <- max(apply(bpACC_filter$ciTable$top95,2,max));
+			x$accciTable_filter[is.na(x$accciTable_filter)] <- 0;
+			bpACC_filter <- barPlotCiError(as.matrix(x$accciTable_filter),metricname = "Accuracy",thesets = x$theFiltersets,themethod = x$theClassMethod,main = paste(prefix,"Accuracy"),offsets = c(0.5,1),args.legend = list(bg = "white",x = "bottomleft"),col = terrain.colors(length(x$theClassMethod)),...)
+			testFilACC <- apply(bpACC_filter$ciTable$mean,2,median);
+			testFilACCmin <- min(apply(bpACC_filter$ciTable$low95,2,min));
+			testFilACCmax <- max(apply(bpACC_filter$ciTable$top95,2,max));
 
-		x$aucTable_filter[is.na(x$aucTable_filter)] <- 0;
-		bpAUC_filter <- barPlotCiError(as.matrix(x$aucTable_filter),metricname = "AUC",thesets = x$theFiltersets,themethod = x$theClassMethod,main = paste(prefix,"ROC AUC"),offsets = c(0.5,1),ho=0.5,args.legend = list(bg = "white",x = "bottomleft"),col = terrain.colors(length(x$theClassMethod)),...)
-		testFilAUC <- apply(bpAUC_filter$ciTable$mean,2,median);
-		testFilAUCmin <- min(apply(bpAUC_filter$ciTable$low95,2,min));
-		testFilAUCmax <- max(apply(bpAUC_filter$ciTable$top95,2,max));
+			x$aucTable_filter[is.na(x$aucTable_filter)] <- 0;
+			bpAUC_filter <- barPlotCiError(as.matrix(x$aucTable_filter),metricname = "AUC",thesets = x$theFiltersets,themethod = x$theClassMethod,main = paste(prefix,"ROC AUC"),offsets = c(0.5,1),ho=0.5,args.legend = list(bg = "white",x = "bottomleft"),col = terrain.colors(length(x$theClassMethod)),...)
+			testFilAUC <- apply(bpAUC_filter$ciTable$mean,2,median);
+			testFilAUCmin <- min(apply(bpAUC_filter$ciTable$low95,2,min));
+			testFilAUCmax <- max(apply(bpAUC_filter$ciTable$top95,2,max));
 
-		x$cindexTable_filter[is.na(x$cindexTable_filter)] <- 0;
-		bpCIDX_filter <- barPlotCiError(as.matrix(x$cindexTable_filter),metricname = "CIDX",thesets = x$theFiltersets,themethod = x$theClassMethod,main = paste(prefix,"Concordance"),offsets = c(0.5,1),ho=0.5,args.legend = list(bg = "white",x = "bottomleft"),col = terrain.colors(length(x$theClassMethod)),...)
-		testFilCIDX <- apply(bpCIDX_filter$ciTable$mean,2,median);
-		testFilCIDXmin <- min(apply(bpCIDX_filter$ciTable$low95,2,min));
-		testFilCIDXmax <- max(apply(bpCIDX_filter$ciTable$top95,2,max));
-		
-		x$senciTable_filter[is.na(x$senciTable_filter)] <- 0;
-		bpSEN_filter <- barPlotCiError(as.matrix(x$senciTable_filter),metricname = "Sensitivity",thesets = x$theFiltersets,themethod = x$theClassMethod,main = paste(prefix,"Sensitivity"),offsets = c(0.5,1),args.legend = list(bg = "white",x = "bottomleft"),col = terrain.colors(length(x$theClassMethod)),...)
-		testFilSEN <- apply(bpSEN_filter$ciTable$mean,2,median);
-		testFilSENmin <- min(apply(bpSEN_filter$ciTable$low95,2,min));
-		testFilSENmax <- max(apply(bpSEN_filter$ciTable$top95,2,max));
+			x$cindexTable_filter[is.na(x$cindexTable_filter)] <- 0;
+			bpCIDX_filter <- barPlotCiError(as.matrix(x$cindexTable_filter),metricname = "CIDX",thesets = x$theFiltersets,themethod = x$theClassMethod,main = paste(prefix,"Concordance"),offsets = c(0.5,1),ho=0.5,args.legend = list(bg = "white",x = "bottomleft"),col = terrain.colors(length(x$theClassMethod)),...)
+			testFilCIDX <- apply(bpCIDX_filter$ciTable$mean,2,median);
+			testFilCIDXmin <- min(apply(bpCIDX_filter$ciTable$low95,2,min));
+			testFilCIDXmax <- max(apply(bpCIDX_filter$ciTable$top95,2,max));
+			
+			x$senciTable_filter[is.na(x$senciTable_filter)] <- 0;
+			bpSEN_filter <- barPlotCiError(as.matrix(x$senciTable_filter),metricname = "Sensitivity",thesets = x$theFiltersets,themethod = x$theClassMethod,main = paste(prefix,"Sensitivity"),offsets = c(0.5,1),args.legend = list(bg = "white",x = "bottomleft"),col = terrain.colors(length(x$theClassMethod)),...)
+			testFilSEN <- apply(bpSEN_filter$ciTable$mean,2,median);
+			testFilSENmin <- min(apply(bpSEN_filter$ciTable$low95,2,min));
+			testFilSENmax <- max(apply(bpSEN_filter$ciTable$top95,2,max));
 
-		x$speciTable_filter[is.na(x$speciTable_filter)] <- 0;
-		bpSPE_filter <- barPlotCiError(as.matrix(x$speciTable_filter),metricname = "Specificity",thesets = x$theFiltersets,themethod = x$theClassMethod,main = paste(prefix,"Specificity"),offsets = c(0.5,1),args.legend = list(bg = "white",x = "bottomleft"),col = terrain.colors(length(x$theClassMethod)),...)
-		testFilSPE <- apply(bpSPE_filter$ciTable$mean,2,median);
-		testFilSPEmin <- min(apply(bpSPE_filter$ciTable$low95,2,min));
-		testFilSPEmax <- max(apply(bpSPE_filter$ciTable$top95,2,max));
-		brnames <- names(testFilBalancedError);
-
-		metrics_filter <- rbind(BER = testFilBalancedError,
+			x$speciTable_filter[is.na(x$speciTable_filter)] <- 0;
+			bpSPE_filter <- barPlotCiError(as.matrix(x$speciTable_filter),metricname = "Specificity",thesets = x$theFiltersets,themethod = x$theClassMethod,main = paste(prefix,"Specificity"),offsets = c(0.5,1),args.legend = list(bg = "white",x = "bottomleft"),col = terrain.colors(length(x$theClassMethod)),...)
+			testFilSPE <- apply(bpSPE_filter$ciTable$mean,2,median);
+			testFilSPEmin <- min(apply(bpSPE_filter$ciTable$low95,2,min));
+			testFilSPEmax <- max(apply(bpSPE_filter$ciTable$top95,2,max));
+			brnames <- names(testFilBalancedError);
+			metrics_filter <- rbind(BER = testFilBalancedError,
 								ACC = testFilACC[brnames],
 								AUC = testFilAUC[brnames],
 								SEN = testFilSEN[brnames],
@@ -123,20 +128,21 @@ function(x,...)
 								CIDX = testFilCIDX[brnames]
 								);
 
-	   minMaxMetrics <- list(BER = c(min(testBalancedErrormin,testFilBalancedErrormin),max(testBalancedErrormax,testFilBalancedErrormax)),
-						ACC = c(min(testACCmin,testFilACCmin),max(testACCmax,testFilACCmax)),
-						AUC = c(min(testAUCmin,testFilAUCmin),max(testAUCmax,testFilAUCmax)),
-						SEN = c(min(testSENmin,testFilSENmin),max(testSENmax,testFilSENmax)),
-						SPE = c(min(testSPEmin,testFilSPEmin),max(testSPEmax,testFilSPEmax)),
-						CIDX = c(min(testFilCIDXmin,testFilCIDXmin),max(testFilCIDXmax,testFilCIDXmax))
-						);
-		barPlotsCI_filter <- list(BER=bpBER_filter,
+			barPlotsCI_filter <- list(BER=bpBER_filter,
 									ACC=bpACC_filter,
 									SEN=bpSEN_filter,
 									AUC=bpAUC_filter,
 									SPE=bpSPE_filter,
 									CIDX=bpCIDX_filter
 								);
+			minMaxMetrics <- list(BER = c(min(testBalancedErrormin,testFilBalancedErrormin),max(testBalancedErrormax,testFilBalancedErrormax)),
+						ACC = c(min(testACCmin,testFilACCmin),max(testACCmax,testFilACCmax)),
+						AUC = c(min(testAUCmin,testFilAUCmin),max(testAUCmax,testFilAUCmax)),
+						SEN = c(min(testSENmin,testFilSENmin),max(testSENmax,testFilSENmax)),
+						SPE = c(min(testSPEmin,testFilSPEmin),max(testSPEmax,testFilSPEmax)),
+						CIDX = c(min(testFilCIDXmin,testFilCIDXmin),max(testFilCIDXmax,testFilCIDXmax))
+						);
+		}
 
 		
 		result <- list(metrics = metrics, barPlotsCI = barPlotsCI,metrics_filter=metrics_filter,barPlotsCI_filter=barPlotsCI_filter, minMaxMetrics = minMaxMetrics);
