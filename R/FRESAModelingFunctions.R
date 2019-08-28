@@ -163,21 +163,21 @@ if (!requireNamespace("glmnet", quietly = TRUE)) {
 		else
 		{
 		result <- list(fit = glmnet::cv.glmnet(as.matrix(data[,usedFeatures]),as.vector(data[,baseformula[2]]),...),s = s,formula = formula,outcome = baseformula[2],usedFeatures = usedFeatures)
-		if(exists(alpha))
-		{
-		  if(alpha<1 && alpha > 0){
-		    class(result) <- "FRESA_ELASTICNET"a
-		  }
-		  if(alpha==0){
-		    class(result) <- "FRESA_GLMNET_RIDGE"
-		  }
-		  else{
-		    class(result) <- "FRESA_LASSO"
-		  }
-		}
-		else{
-		  class(result) <- "FRESA_LASSO"
-		}
+			if(exists(alpha))
+			{
+				if(alpha<1 && alpha > 0){
+					class(result) <- "FRESA_ELASTICNET"a
+				}
+				if(alpha==0){
+					class(result) <- "FRESA_GLMNET_RIDGE"
+				}
+				else{
+					class(result) <- "FRESA_LASSO"
+				}
+			}
+			else{
+			class(result) <- "FRESA_LASSO"
+			}
 		}
 	}
 	return(result);
