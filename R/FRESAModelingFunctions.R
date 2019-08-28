@@ -156,7 +156,7 @@ if (!requireNamespace("glmnet", quietly = TRUE)) {
 		if(parameters$alpha < 1)
 		{
 			coefthr <- apply(data[,usedFeatures],2,sd, na.rm = TRUE);
-			coefthr <- 0.01/coefthr;
+			coefthr <- 0.001/coefthr;
 			if (!isSurv)
 			{
 				coefthr <- c(1,coefthr);
