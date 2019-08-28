@@ -12,7 +12,7 @@ CoxBenchmark <-  function(theData = NULL, theOutcome = "Class", reps = 100, trai
       {
         theData <- get("theDataSet", envir=FRESAcacheEnv);
         theOutcome <- get("theDataOutcome", envir=FRESAcacheEnv);
-      }	
+      }
     }
     else
     {
@@ -35,7 +35,7 @@ CoxBenchmark <-  function(theData = NULL, theOutcome = "Class", reps = 100, trai
     CIFollowUPTable <- NULL 
     CIRisksTable <- NULL 
     LogRankTable <- NULL
-
+    
     CIFollowUPTable_filter <- NULL 
     CIRisksTable_filter <- NULL 
     LogRankTable_filter <- NULL
@@ -121,7 +121,7 @@ CoxBenchmark <-  function(theData = NULL, theOutcome = "Class", reps = 100, trai
       return(result);
     }
     
-
+    
     ######################Classification Algorithms####################################  
     if (is.null(referenceCV))
     {
@@ -130,7 +130,7 @@ CoxBenchmark <-  function(theData = NULL, theOutcome = "Class", reps = 100, trai
       referenceName = "BSWiMS";
       referenceFilterName = "COX.BSWiMS";
     }
-  
+    
     cStats <- predictionStats_survival(referenceCV$survMedianTest,plotname = referenceName);
     CIFollowUPTable <- rbind(CIFollowUPTable,cStats$CIFollowUp);
     CIRisksTable <- rbind(CIRisksTable,cStats$CIRisk);
@@ -179,12 +179,41 @@ CoxBenchmark <-  function(theData = NULL, theOutcome = "Class", reps = 100, trai
     senTable <- rbind(senTable,binaryStats$sensitivity)
     speTable <- rbind(speTable,binaryStats$specificity)
     
+    ######################BESS SEQUENTIAL BIC#################################### 
+    rcvBESSSequentialBIC <- randomCV(theData,theOutcome,BESS,trainSampleSets = referenceCV$trainSamplesSets,featureSelectionFunction = "Self",method="sequential",ic.type="BIC");
+    cStats <- predictionStats_survival(rcvBESSSequentialBIC$survMedianTest,plotname = "BeSS.SEQUENTIAL.BIC");
+    CIFollowUPTable <- rbind(CIFollowUPTable,cStats$CIFollowUp);
+    CIRisksTable <- rbind(CIRisksTable,cStats$CIRisk);
+    LogRankTable <- rbind(LogRankTable,cStats$LogRank);
+    
+    binaryPreds <- rcvBESSSequentialBIC$survMedianTest[,c("Outcome","LinearPredictorsMedian")]
+    binaryStats <- predictionStats_binary(binaryPreds,"BeSS.SEQUENTIAL.BIC")
+    accciTable <- rbind(accciTable,binaryStats$accc)
+    errorciTable <- rbind(errorciTable,binaryStats$berror)
+    aucTable <- rbind(aucTable,binaryStats$aucs)
+    senTable <- rbind(senTable,binaryStats$sensitivity)
+    speTable <- rbind(speTable,binaryStats$specificity)
+    
+    ######################BESS SEQUENTIAL#################################### 
+    rcvBESSSequential <- randomCV(theData,theOutcome,BESS,trainSampleSets = referenceCV$trainSamplesSets,featureSelectionFunction = "Self",method="sequential");
+    cStats <- predictionStats_survival(rcvBESSSequential$survMedianTest,plotname = "BeSS.SEQUENTIAL");
+    CIFollowUPTable <- rbind(CIFollowUPTable,cStats$CIFollowUp);
+    CIRisksTable <- rbind(CIRisksTable,cStats$CIRisk);
+    LogRankTable <- rbind(LogRankTable,cStats$LogRank);
+    
+    binaryPreds <- rcvBESSSequential$survMedianTest[,c("Outcome","LinearPredictorsMedian")]
+    binaryStats <- predictionStats_binary(binaryPreds,"BeSS.SEQUENTIAL")
+    accciTable <- rbind(accciTable,binaryStats$accc)
+    errorciTable <- rbind(errorciTable,binaryStats$berror)
+    aucTable <- rbind(aucTable,binaryStats$aucs)
+    senTable <- rbind(senTable,binaryStats$sensitivity)
+    speTable <- rbind(speTable,binaryStats$specificity)
     ######################Esemble#################################### 
     
     # ens <- cbind(referenceCV$survMedianTest[,1],referenceCV$survMedianTest[,2],rowMeans(cbind(1.0*(referenceCV$survMedianTest[,2] > 0),1.0*(rcvLASSO$survMedianTest[,2] > 0),rcvRF$survMedianTest[,2],rcvKNN$survMedianTest[,2],rcvSVM$survMedianTest[,2])))
     # rowMeans(cbind(1.0*(referenceCV$survMedianTest[,2] > 0),1.0*(rcvLASSO$survMedianTest[,2] > 0),rcvRF$survMedianTest[,2],rcvKNN$survMedianTest[,2],rcvSVM$survMedianTest[,2]))
     # cStats <- predictionStats_binary(ens,plotname = "Ensemble",center = TRUE,cex=0.8);
-      
+    
     ######################Filters  #################################### 
     cat("Cox\n")
     fmeth <- FilterMethod(survival::coxph,"Cox")
@@ -203,14 +232,16 @@ CoxBenchmark <-  function(theData = NULL, theOutcome = "Class", reps = 100, trai
     tnames <- rownames(test_Predictions)
     test_Predictions <- cbind(test_Predictions,rcvLASSO$survMedianTest[tnames,3],rcvLASSO$survMedianTest[tnames,4],rcvLASSO$survMedianTest[tnames,5],rcvLASSO$survMedianTest[tnames,6])
     test_Predictions <- cbind(test_Predictions,rcvBESS$survMedianTest[tnames,3],rcvBESS$survMedianTest[tnames,4],rcvBESS$survMedianTest[tnames,5],rcvBESS$survMedianTest[tnames,6])
+    test_Predictions <- cbind(test_Predictions,rcvBESSSequentialBIC$survMedianTest[tnames,3],rcvBESSSequentialBIC$survMedianTest[tnames,4],rcvBESSSequentialBIC$survMedianTest[tnames,5],rcvBESSSequentialBIC$survMedianTest[tnames,6])
+    test_Predictions <- cbind(test_Predictions,rcvBESSSequential$survMedianTest[tnames,3],rcvBESSSequential$survMedianTest[tnames,4],rcvBESSSequential$survMedianTest[tnames,5],rcvBESSSequential$survMedianTest[tnames,6])
     test_Predictions <- cbind(test_Predictions,fmeth$rcvFilter_reference$survMedianTest[tnames,3],fmeth$rcvFilter_reference$survMedianTest[tnames,4],fmeth$rcvFilter_reference$survMedianTest[tnames,5],fmeth$rcvFilter_reference$survMedianTest[tnames,6]);
     test_Predictions <- cbind(test_Predictions,fmeth$rcvFilter_LASSO$survMedianTest[tnames,3],fmeth$rcvFilter_LASSO$survMedianTest[tnames,4],fmeth$rcvFilter_LASSO$survMedianTest[tnames,5],fmeth$rcvFilter_LASSO$survMedianTest[tnames,6]);
     test_Predictions <- cbind(test_Predictions,fmeth$rcvFilter_BESS$survMedianTest[tnames,3],fmeth$rcvFilter_BESS$survMedianTest[tnames,4],fmeth$rcvFilter_BESS$survMedianTest[tnames,5],fmeth$rcvFilter_BESS$survMedianTest[tnames,6]);
     test_Predictions <- cbind(test_Predictions,fmeth$rcvFilter_UniCox$survMedianTest[tnames,3],fmeth$rcvFilter_UniCox$survMedianTest[tnames,4],fmeth$rcvFilter_UniCox$survMedianTest[tnames,5],fmeth$rcvFilter_UniCox$survMedianTest[tnames,6]);
-
+    
     ######################Column names  #################################### 
     predictions <- c("MartinGale","LinearPredictors","FollowUpTimes","Risks");
-    methods <- c(referenceName,"LASSO","BESS");
+    methods <- c(referenceName,"LASSO","BESS","BeSS.SEQUENTIAL.BIC","BeSS.SEQUENTIAL");
     
     filters <- c("COX.BSWiMS","COX.LASSO","COX.BESS","COX.UnivariateCox");
     # filters <- c(paste("COX.",referenceFilterName,sep=""),"COX.LASSO","COX.BESS","COX.IDI","COX.NRI","COX.tStudent","COX.Wilcoxon","COX.Kendall","COX.mRMR","UnivariateCox")
@@ -242,7 +273,7 @@ CoxBenchmark <-  function(theData = NULL, theOutcome = "Class", reps = 100, trai
     rownames(CIFollowUPTable) <- methods;
     rownames(CIRisksTable) <- methods;
     rownames(LogRankTable) <- methods;
-
+    
     rownames(CIFollowUPTable_filter) <- filters;
     rownames(CIRisksTable_filter) <- filters;
     rownames(LogRankTable_filter) <- filters;
@@ -262,6 +293,8 @@ CoxBenchmark <-  function(theData = NULL, theOutcome = "Class", reps = 100, trai
     ff <- names(referenceCV$featureFrequency)
     ff <- c(ff,names(rcvLASSO$featureFrequency))
     ff <- c(ff,names(rcvBESS$featureFrequency))
+    ff <- c(ff,names(rcvBESSSequentialBIC$featureFrequency))
+    ff <- c(ff,names(rcvBESSSequential$featureFrequency))
     ff <- c(ff,names(fmeth$rcvFilter_reference$featureFrequency))
     ff <- c(ff,names(fmeth$rcvFilter_LASSO$featureFrequency))
     ff <- c(ff,names(fmeth$rcvFilter_BESS$featureFrequency))
@@ -282,6 +315,12 @@ CoxBenchmark <-  function(theData = NULL, theOutcome = "Class", reps = 100, trai
     ff <- rcvBESS$featureFrequency
     fnames <- selnames %in% names(ff)
     selFrequency[fnames,"BESS"] <- ff[selnames[fnames]]
+    ff <- rcvBESSSequentialBIC$featureFrequency
+    fnames <- selnames %in% names(ff)
+    selFrequency[fnames,"BeSS.SEQUENTIAL.BIC"] <- ff[selnames[fnames]]
+    ff <- rcvBESSSequential$featureFrequency
+    fnames <- selnames %in% names(ff)
+    selFrequency[fnames,"BeSS.SEQUENTIAL"] <- ff[selnames[fnames]]
     ff <- fmeth$rcvFilter_reference$featureFrequency
     fnames <- selnames %in% names(ff)
     selFrequency[fnames,referenceFilterName] <- ff[selnames[fnames]]
@@ -294,16 +333,18 @@ CoxBenchmark <-  function(theData = NULL, theOutcome = "Class", reps = 100, trai
     ff <- fmeth$rcvFilter_UniCox$featureFrequency
     fnames <- selnames %in% names(ff)
     selFrequency[fnames,"COX.UnivariateCox"] <- ff[selnames[fnames]]
-
-
+    
+    
     elapcol <- names(referenceCV$theTimes) == "elapsed"
-    theMethod <- c(referenceName,"LASSO","BESS")
-    cputimes <- list(Reference = mean(referenceCV$theTimes[ elapcol ]),LASSO = mean(rcvLASSO$theTimes[ elapcol ]),BESS = mean(rcvBESS$theTimes[ elapcol ]))
+    theMethod <- c(referenceName,"LASSO","BESS","BeSS.SEQUENTIAL.BIC","BeSS.SEQUENTIAL")
+    cputimes <- list(Reference = mean(referenceCV$theTimes[ elapcol ]),LASSO = mean(rcvLASSO$theTimes[ elapcol ]),BESS = mean(rcvBESS$theTimes[ elapcol ]), BESS.SEQUENTIAL.BIC = mean(rcvBESSSequentialBIC$theTimes[ elapcol]), BESS.SEQUENTIAL = mean(rcvBESSSequential$theTimes[ elapcol]))
     
     
     jaccard_filter = list(Reference = referenceCV$jaccard,
                           LASSO = rcvLASSO$jaccard,
                           BESS = rcvBESS$jaccard,
+                          BESS.SEQUENTIAL.BIC = rcvBESSSequentialBIC$jaccard,
+                          BESS.SEQUENTIAL = rcvBESSSequential$jaccard,
                           COX.Reference = fmeth$rcvFilter_reference$jaccard,
                           COX.LASSO = fmeth$rcvFilter_LASSO$jaccard,
                           COX.BESS = fmeth$rcvFilter_BESS$jaccard,
@@ -328,6 +369,8 @@ CoxBenchmark <-  function(theData = NULL, theOutcome = "Class", reps = 100, trai
                    TheCVEvaluations = list(Reference = referenceCV,
                                            LASSO = rcvLASSO,
                                            BESS = rcvBESS,
+                                           BESS.SEQUENTIAL.BIC = rcvBESSSequentialBIC,
+                                           BESS.SEQUENTIAL = rcvBESSSequential,
                                            COX.Reference = fmeth$rcvFilter_reference,
                                            COX.LASSO = fmeth$rcvFilter_LASSO,
                                            COX.BESS = fmeth$rcvFilter_BESS,
