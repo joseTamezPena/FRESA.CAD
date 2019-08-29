@@ -159,7 +159,7 @@ if (!requireNamespace("glmnet", quietly = TRUE)) {
 			coefthr <- 0.001/coefthr;
 			if (!isSurv)
 			{
-				coefthr <- c(1,coefthr);
+				coefthr <- c(0,coefthr);
 			}
 		}
 	}
@@ -179,14 +179,7 @@ if (!requireNamespace("glmnet", quietly = TRUE)) {
 				lcoef[[cl]] <- as.numeric(lft);
 				names(lcoef[[cl]]) <- rownames(lft);
 				sF <- rownames(lft);
-				if(!isSurv)
-				{
-					if (length(sF)>0)
-					{
-						sF <- sF[-1];
-					}
-				}
-				selectedFeatures <- append(selectedFeatures,sF);
+				selectedFeatures <- sF[rownames(lft) %in% usedFeatures];
 			}
 		}			
 	}
@@ -199,14 +192,7 @@ if (!requireNamespace("glmnet", quietly = TRUE)) {
 			lcoef <- as.numeric(lft);
 			names(lcoef) <- rownames(lft);
 			sF <- rownames(lft);
-			if(!isSurv)
-			{
-				if (length(sF)>0)
-				{
-					sF <- sF[-1];
-				}
-			}
-			selectedFeatures <- sF;
+			selectedFeatures <- sF[rownames(lft) %in% usedFeatures];
 		}
 	}
 	result$selectedfeatures <- unique(selectedFeatures);
