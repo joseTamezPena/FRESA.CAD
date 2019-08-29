@@ -385,9 +385,7 @@ BinaryBenchmark <-	function(theData = NULL, theOutcome = "Class", reps = 100, tr
 	lasstest <- rcvLASSO$medianTest[,2];
 	if (min(lasstest) < 0) lasstest <- 1.0*(lasstest > 0);
 
-	print(reftest);
 	ens <- cbind(referenceCV$medianTest[,1],rowMeans(cbind(reftest,lasstest,rcvRF$medianTest[,2],rcvKNN$medianTest[,2],rcvSVM$medianTest[,2])));
-	print(ens);
 	cStats <- predictionStats_binary(ens,plotname = "Ensemble",center = TRUE,cex=0.8);
 	accciTable <- rbind(accciTable,cStats$accc)
 	errorciTable <- rbind(errorciTable,cStats$berror)
