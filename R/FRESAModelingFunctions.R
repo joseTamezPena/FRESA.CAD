@@ -166,14 +166,18 @@ if (!requireNamespace("glmnet", quietly = TRUE)) {
 
 	cf <- coef(result$fit,s);
 	selectedFeatures <- character();
+	lcoef <- numeric();
 	if (class(cf) == "list")
 	{
+		lcoef <- list();
 		for (cl in 1:length(cf))
 		{
 			cenet <- as.matrix(cf[[cl]]);
 			if (!is.null(cenet))
 			{
 				lft <- cenet[as.vector(abs(cenet[,1]) > coefthr),,drop=FALSE];
+				lcoef[[cl]] <- as.numeric(lft);
+				names(lcoef[[cl]]) <- rownames(lft);
 				sF <- rownames(lft);
 				if(!isSurv)
 				{
@@ -192,6 +196,8 @@ if (!requireNamespace("glmnet", quietly = TRUE)) {
 		if (!is.null(cenet))
 		{
 			lft <- cenet[as.vector(abs(cenet[,1]) > coefthr),,drop=FALSE];
+			lcoef <- as.numeric(lft);
+			names(lcoef) <- rownames(lft);
 			sF <- rownames(lft);
 			if(!isSurv)
 			{
@@ -204,6 +210,7 @@ if (!requireNamespace("glmnet", quietly = TRUE)) {
 		}
 	}
 	result$selectedfeatures <- unique(selectedFeatures);
+	result$coef <- lcoef;
 	class(result) <- "FRESA_LASSO"
 	return(result);
 }

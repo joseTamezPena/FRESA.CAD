@@ -36,7 +36,7 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
 	    formulaCox <- as.formula(paste(paste(baseformula[2],"~"), paste(selectedFeatures, collapse='+')));
 	    cox <- try(survival::coxph(formula=formulaCox, data=theSurvData));
 	    #changing the coef to the ones with lasso
-	    cox$coefficients<-lft
+	    cox$coefficients <- currentModel$coef;
 	  }
 	  if (fclass == "fitFRESA")
 	  {
