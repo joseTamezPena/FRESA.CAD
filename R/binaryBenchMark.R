@@ -243,14 +243,15 @@ BinaryBenchmark <-	function(theData = NULL, theOutcome = "Class", reps = 100, tr
 	reftest <- numeric();
 	theFiltersets <- character();
 	theClassMethod <- character();
-	selFrequency <- NULL;
 	elapcol <- character();
 	cputimes <- list();
 	jaccard <- NULL;
 	featsize <- NULL;
 	TheCVEvaluations = list();
 	times <- list();
-
+	jaccard_filter <- list();
+	selFrequency <- data.frame(colnames(theData));
+	rownames(selFrequency) <- colnames(theData);
 	if (is.null(referenceCV))
 	{
  		cat("Modeling BSWiMS: + Model found, - No Model \n"); 
@@ -272,12 +273,16 @@ BinaryBenchmark <-	function(theData = NULL, theOutcome = "Class", reps = 100, tr
 			speTable <- rbind(speTable,cStats$specificity)
 			cidxTable <- rbind(cidxTable,cStats$cIndexCI)
 			preftest <- referenceCV[[i]]$medianTest[,2];
-			if (min(preftest) < -1) preftest <- 1.0/(1.0+exp(-reftest));
+			if (min(preftest) < -1) preftest <- 1.0/(1.0+exp(-preftest));
 			reftest <- cbind(reftest,preftest);
 			cputimes[[i]] = mean(referenceCV[[i]]$theTimes[ elapcol ]);
 			times[[i]] <- referenceCV[[i]]$theTimes;
+			selFrequency <- cbind(selFrequency,numeric(ncol(theData)));
+			selFrequency[names(referenceCV[[i]]$featureFrequency),ncol(selFrequency)] <- referenceCV[[i]]$featureFrequency;
+			jaccard_filter[[i]] <- referenceCV[[i]]$jaccard;
 		}
 		referenceName <- names(referenceCV);
+		referenceFilterName <- paste("FS",names(referenceCV),sep="_");
 		referenceCV <- referenceCV[[1]];
 		class(referenceCV) <- "list"
 	}
@@ -296,6 +301,9 @@ BinaryBenchmark <-	function(theData = NULL, theOutcome = "Class", reps = 100, tr
 		times[[1]] <- referenceCV$theTimes;
 		elapcol <- names(referenceCV$theTimes) == "elapsed"
 		cputimes[[1]] = mean(referenceCV$theTimes[ elapcol ]);
+		selFrequency <- cbind(selFrequency,numeric(ncol(theData)));
+		selFrequency[names(referenceCV$featureFrequency),ncol(selFrequency)] <- referenceCV$featureFrequency;
+		jaccard_filter[[1]] <- referenceCV$jaccard;
 	}
 	reps <- referenceCV$repetitions;
 
@@ -309,6 +317,11 @@ BinaryBenchmark <-	function(theData = NULL, theOutcome = "Class", reps = 100, tr
 	cidxTable <- rbind(cidxTable,cStats$cIndexCI)
 	TheCVEvaluations$RF <- rcvRF;
 	times$RF <- rcvRF$theTimes
+	selFrequency <- cbind(selFrequency,numeric(ncol(theData)));
+	selFrequency[names(rcvRF$featureFrequency),ncol(selFrequency)] <- rcvRF$featureFrequency;
+	theFiltersets <- c(referenceFilterName,"RF");
+	jaccard_filter$RF <- rcvRF$jaccard;
+
 	
 	rcvRPART <- randomCV(theData,theOutcome,rpart::rpart,trainSampleSets = referenceCV$trainSamplesSets,featureSelectionFunction = "Self",asFactor = TRUE);
 	cStats <- predictionStats_binary(rcvRPART$testPredictions,plotname = "RPART",center = TRUE,cex=0.8);
@@ -320,6 +333,11 @@ BinaryBenchmark <-	function(theData = NULL, theOutcome = "Class", reps = 100, tr
 	cidxTable <- rbind(cidxTable,cStats$cIndexCI)
 	TheCVEvaluations$RPART <- rcvRPART;
 	times$RPART <- rcvRPART$theTimes
+	selFrequency <- cbind(selFrequency,numeric(ncol(theData)));
+	selFrequency[names(rcvRPART$featureFrequency),ncol(selFrequency)] <- rcvRPART$featureFrequency;
+	theFiltersets <- c(theFiltersets,"RPART");
+	jaccard_filter$RPART <- rcvRPART$jaccard;
+
 
 	rcvLASSO <- randomCV(theData,theOutcome,LASSO_MIN,trainSampleSets = referenceCV$trainSamplesSets,featureSelectionFunction = "Self",family = "binomial");
 	cStats <- predictionStats_binary(rcvLASSO$testPredictions,plotname = "LASSO",center = FALSE,cex=0.8);
@@ -331,6 +349,10 @@ BinaryBenchmark <-	function(theData = NULL, theOutcome = "Class", reps = 100, tr
 	cidxTable <- rbind(cidxTable,cStats$cIndexCI)
 	TheCVEvaluations$LASSO <- rcvLASSO;
 	times$LASSO <- rcvLASSO$theTimes
+	selFrequency <- cbind(selFrequency,numeric(ncol(theData)));
+	selFrequency[names(rcvLASSO$featureFrequency),ncol(selFrequency)] <- rcvLASSO$featureFrequency;
+	theFiltersets <- c(theFiltersets,"LASSO_MIN");
+	jaccard_filter$LASSO <- rcvLASSO$jaccard;
 	
 	rcvSVM <- randomCV(theData,theOutcome,e1071::svm,trainSampleSets = referenceCV$trainSamplesSets,featureSelectionFunction = mRMR.classic_FRESA,asFactor=TRUE);
 	cStats <- predictionStats_binary(rcvSVM$testPredictions,plotname = "SVM",center = TRUE,cex=0.8);
@@ -342,6 +364,10 @@ BinaryBenchmark <-	function(theData = NULL, theOutcome = "Class", reps = 100, tr
 	cidxTable <- rbind(cidxTable,cStats$cIndexCI)
 	TheCVEvaluations$SVM <- rcvSVM;
 	times$SVM <- rcvSVM$theTimes
+	selFrequency <- cbind(selFrequency,numeric(ncol(theData)));
+	selFrequency[names(rcvSVM$featureFrequency),ncol(selFrequency)] <- rcvSVM$featureFrequency;
+	theFiltersets <- c(theFiltersets,"mRMR.classic");
+	jaccard_filter$mRMR <- rcvSVM$jaccard;
 
 	rcvKNN <- randomCV(theData,theOutcome,KNN_method,trainSampleSets = referenceCV$trainSamplesSets,featureSelectionFunction = referenceCV$selectedFeaturesSet,scaleMethod = "Order");
 	cStats <- predictionStats_binary(rcvKNN$testPredictions,plotname = "KNN",center = TRUE,cex=0.8);
@@ -352,13 +378,16 @@ BinaryBenchmark <-	function(theData = NULL, theOutcome = "Class", reps = 100, tr
 	speTable <- rbind(speTable,cStats$specificity)
 	cidxTable <- rbind(cidxTable,cStats$cIndexCI)
 	TheCVEvaluations$KNN <- rcvKNN;
-	times$KNN <- rcvKNN$theTimes
+	times$KNN <- rcvKNN$theTimes;
 
 # Method Meta Ensemble	
 
 	lasstest <- rcvLASSO$medianTest[,2];
 	if (min(lasstest) < 0) lasstest <- 1.0*(lasstest > 0);
+
+	print(reftest);
 	ens <- cbind(referenceCV$medianTest[,1],rowMeans(cbind(reftest,lasstest,rcvRF$medianTest[,2],rcvKNN$medianTest[,2],rcvSVM$medianTest[,2])));
+	print(ens);
 	cStats <- predictionStats_binary(ens,plotname = "Ensemble",center = TRUE,cex=0.8);
 	accciTable <- rbind(accciTable,cStats$accc)
 	errorciTable <- rbind(errorciTable,cStats$berror)
@@ -476,78 +505,45 @@ BinaryBenchmark <-	function(theData = NULL, theOutcome = "Class", reps = 100, tr
 		test_Predictions <- cbind(test_Predictions,fmeth$rcvFilter_wilcox$medianTest[tnames,2]);
 		test_Predictions <- cbind(test_Predictions,fmeth$rcvFilter_kendall$medianTest[tnames,2]);
 		colnames(test_Predictions) <-	c(classnames,paste("SVM.",referenceFilterName,sep=""),"SVM.LASSO","SVM.RPART","SVM.RF","SVM.IDI","SVM.NRI","SVM.tStudent","SVM.Wilcox","SVM.Kendall");
-		theFiltersets <- c(referenceFilterName,"LASSO","RPART","RF.ref","IDI","NRI","t-test","Wilcoxon","Kendall","mRMR")
 		theClassMethod <- c("KNN","Naive Bayes","NC RSS","NC Spearman","RF","SVM")
-		ff <- names(referenceCV$featureFrequency)
-		ff <- c(ff,names(rcvLASSO$featureFrequency))
-		ff <- c(ff,names(rcvRPART$featureFrequency))
-		ff <- c(ff,names(fmeth$rcvFilter_RF$featureFrequency))
-		ff <- c(ff,names(fmeth$rcvFilter_IDI$featureFrequency))
-		ff <- c(ff,names(fmeth$rcvFilter_NRI$featureFrequency))
-		ff <- c(ff,names(fmeth$rcvFilter_tStudent$featureFrequency))
-		ff <- c(ff,names(fmeth$rcvFilter_wilcox$featureFrequency))
-		ff <- c(ff,names(fmeth$rcvFilter_kendall$featureFrequency))
-		ff <- c(ff,names(fmeth$rcvFilter_mRMR$featureFrequency))
-		ff <- unique(ff)
 
-	#	Nvar <- min(c(1000,length(ff)))
-	#	selFrequency <- matrix(0,nrow = Nvar,ncol = length(theFiltersets))
-	#	rownames(selFrequency) <- ff[1:Nvar]
+		selFrequency <- cbind(selFrequency,numeric(ncol(theData)));
+		selFrequency[names(fmeth$rcvFilter_IDI$featureFrequency),ncol(selFrequency)] <- fmeth$rcvFilter_IDI$featureFrequency;
+		theFiltersets <- c(referenceFilterName,"IDI");
+		jaccard_filter$IDI <- fmeth$rcvFilter_IDI$jaccard;
 
-		Nvar <- length(ff);
-		selFrequency <- matrix(0,nrow = Nvar,ncol = length(theFiltersets))
-		rownames(selFrequency) <- ff
+		selFrequency <- cbind(selFrequency,numeric(ncol(theData)));
+		selFrequency[names(fmeth$rcvFilter_NRI$featureFrequency),ncol(selFrequency)] <- fmeth$rcvFilter_NRI$featureFrequency;
+		theFiltersets <- c(referenceFilterName,"NRI");
+		jaccard_filter$NRI <- fmeth$rcvFilter_NRI$jaccard;
 
+		selFrequency <- cbind(selFrequency,numeric(ncol(theData)));
+		selFrequency[names(fmeth$rcvFilter_tStudent$featureFrequency),ncol(selFrequency)] <- fmeth$rcvFilter_tStudent$featureFrequency;
+		theFiltersets <- c(referenceFilterName,"tStudent");
+		jaccard_filter$tStudent <- fmeth$rcvFilter_tStudent$jaccard;
 
-		selnames <- rownames(selFrequency)
-		colnames(selFrequency) <- theFiltersets
-		ff <- referenceCV$featureFrequency
-		fnames <- selnames %in% names(ff)
-		selFrequency[fnames,referenceFilterName] <- ff[selnames[fnames]]
-		ff <- rcvLASSO$featureFrequency
-		fnames <- selnames %in% names(ff)
-		selFrequency[fnames,"LASSO"] <- ff[selnames[fnames]]
-		ff <- rcvRPART$featureFrequency
-		fnames <- selnames %in% names(ff)
-		selFrequency[fnames,"RPART"] <- ff[selnames[fnames]]
-		ff <- fmeth$rcvFilter_RF$featureFrequency
-		fnames <- selnames %in% names(ff)
-		selFrequency[fnames,"RF.ref"] <- ff[selnames[fnames]]
-		ff <- fmeth$rcvFilter_IDI$featureFrequency
-		fnames <- selnames %in% names(ff)
-		selFrequency[fnames,"IDI"] <- ff[selnames[fnames]]
-		ff <- fmeth$rcvFilter_NRI$featureFrequency
-		fnames <- selnames %in% names(ff)
-		selFrequency[fnames,"NRI"] <- ff[selnames[fnames]]
-		ff <- fmeth$rcvFilter_wilcox$featureFrequency
-		fnames <- selnames %in% names(ff)
-		selFrequency[fnames,"Wilcoxon"] <- ff[selnames[fnames]]
-		ff <- fmeth$rcvFilter_tStudent$featureFrequency
-		fnames <- selnames %in% names(ff)
-		selFrequency[fnames,"t-test"] <- ff[selnames[fnames]]
-		ff <- fmeth$rcvFilter_kendall$featureFrequency
-		fnames <- selnames %in% names(ff)
-		selFrequency[fnames,"Kendall"] <- ff[selnames[fnames]]
-		ff <- fmeth$rcvFilter_mRMR$featureFrequency
-		fnames <- selnames %in% names(ff)
-		selFrequency[fnames,"mRMR"] <- ff[selnames[fnames]]
-		selFrequency <- selFrequency/reps
-		jaccard_filter = list(Reference = referenceCV$jaccard,
-											LASSO = rcvLASSO$jaccard,
-											rpart = rcvRPART$jaccard,
-											RF = fmeth$rcvFilter_RF$jaccard,
-											IDI = fmeth$rcvFilter_IDI$jaccard,
-											NRI = fmeth$rcvFilter_NRI$jaccard,
-											ttest = fmeth$rcvFilter_tStudent$jaccard,
-											wtest = fmeth$rcvFilter_wilcox$jaccard,
-											kendall = fmeth$rcvFilter_kendall$jaccard,
-											mRMR = fmeth$rcvFilter_mRMR$jaccard
-										);
-		featsize <- unlist(lapply(jaccard_filter, `[`, c('averageLength')))
-		names(featsize) <- theFiltersets;
-		jaccard <- unlist(lapply(jaccard_filter, `[`, c('Jaccard.SM')))
-		names(jaccard) <- theFiltersets;
+		selFrequency <- cbind(selFrequency,numeric(ncol(theData)));
+		selFrequency[names(fmeth$rcvFilter_wilcox$featureFrequency),ncol(selFrequency)] <- fmeth$rcvFilter_wilcox$featureFrequency;
+		theFiltersets <- c(referenceFilterName,"wilcox");
+		jaccard_filter$wilcox <- fmeth$rcvFilter_wilcox$jaccard;
+
+		selFrequency <- cbind(selFrequency,numeric(ncol(theData)));
+		selFrequency[names(fmeth$rcvFilter_kendall$featureFrequency),ncol(selFrequency)] <- fmeth$rcvFilter_kendall$featureFrequency;
+		theFiltersets <- c(referenceFilterName,"kendall");
+		jaccard_filter$kendall <- fmeth$rcvFilter_kendall$jaccard;
+
 	}
+	featsize <- unlist(lapply(jaccard_filter, `[`, c('averageLength')))
+	names(featsize) <- theFiltersets;
+	jaccard <- unlist(lapply(jaccard_filter, `[`, c('Jaccard.SM')))
+	names(jaccard) <- theFiltersets;
+	selFrequency <- as.data.frame(selFrequency[,-1])
+	selFrequency <- selFrequency/reps;
+	colnames(selFrequency) <- theFiltersets;
+	totsum <- apply(selFrequency,1,sum);
+	selFrequency <- selFrequency[order(-totsum),];
+	totsum <- totsum[order(-totsum)];
+	selFrequency <- selFrequency[totsum>0,];
 
 	test_Predictions <- as.data.frame(test_Predictions)
 	for (i in 2:ncol(test_Predictions))
@@ -557,9 +553,6 @@ BinaryBenchmark <-	function(theData = NULL, theOutcome = "Class", reps = 100, tr
 			test_Predictions[,i] <- 1.0/(1.0+exp(-test_Predictions[,i] ));
 		}
 	}
-
-
-
 
 	
 	result <- list(errorciTable = errorciTable,accciTable = accciTable,aucTable = aucTable,senTable = senTable,speTable = speTable,cidxTable=cidxTable,
