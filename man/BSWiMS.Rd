@@ -28,6 +28,7 @@
 	            featureSize=0,
 	            NumberofRepeats=1
 	            )
+	BOOST_BSWiMS(formula = formula, data=NULL,thrs = c(0.05,0.10,0.25,0.40,0.50),...)
 
 }
 \arguments{
@@ -78,6 +79,12 @@
 	}
 	\item{NumberofRepeats}{
 		How many times the BSWiMS search will be repeated
+	}
+	\item{thrs}{
+		Boost Grid search thresholds
+	}
+	\item{...}{
+		BSWiMS.model parameters
 	}
 }
 \details{

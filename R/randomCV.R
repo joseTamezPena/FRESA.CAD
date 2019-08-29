@@ -29,7 +29,7 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
 	    warning("The number of selected features is bigger than the number of observations, the top will be used.")
 	  }
 	  
-	  if (fclass == "FRESA_LASSO")
+	  if (fclass == "FRESA_GLMNET")
 	  {
 	    #Creating lasso object
 	    baseformula <- as.character(theformula);
@@ -466,88 +466,12 @@ if (!requireNamespace("glmnet", quietly = TRUE)) {
 							selectedFeaturesSet[[rept]] <- names(ffet);
 						}
 					}
-					if (fclass == "FRESA_LASSO")
+					if (fclass == "FRESA_GLMNET")
 					{
-					  # cf <- coef(currentModel$fit, s = currentModel$s)
-					  # if (class(cf) == "list")
-					  # {
-					    # cenet <- as.matrix(cf[[1]]);
-					    # if (!is.null(cenet))
-					    # {
-					      # lft <- cenet[as.vector(cenet[,1] != 0),,drop=FALSE]
-					      # numbers<-as.numeric(lft)
-					      # names(numbers)<-rownames(lft)
-					      # if(isSurv)
-					      # {
-					        # if (length(lft)>0)
-					        # {
-					          # selectedFeaturesSet[[rept]] <- names(lft);
-					        # }
-					      # }
-					      # else{
-					        # if (length(lft)>1)
-					        # {
-					          # if(isSurv)
-					          # {
-					            # if (length(lft)>0)
-					            # {
-					              # selectedFeaturesSet[[rept]] <- names(lft);
-					            # }
-					          # }
-					          # else{
-					            # selectedFeaturesSet[[rept]] <- names(lft)[-1];
-					          # }
-					          # for (cl in 2:length(cf))
-					          # {
-					            # cenet <- as.matrix(cf[[cl]]);
-					            # lft <- cenet[as.vector(cenet[,1] != 0),,drop=FALSE]
-					            # numbers<-as.numeric(lft)
-					            # names(numbers)<-rownames(lft)
-					            # lft<-numbers
-					            # if(isSurv)
-					            # {
-					              # if (length(lft)>0)
-					              # {
-					                # selectedFeaturesSet[[rept]] <- append(selectedFeaturesSet[[rept]],names(lft));
-					              # }
-					            # }
-					            # else{
-					              # if (length(lft)>1)
-					              # {
-					                # selectedFeaturesSet[[rept]] <- append(selectedFeaturesSet[[rept]],names(lft)[-1]);
-					              # }
-					            # }
-					          # }
-					          # selectedFeaturesSet[[rept]] <- unique(selectedFeaturesSet[[rept]]);
-					        # }
-					      # }
-					      
-					    # }
-					  # }else{
-					    # cenet <- as.matrix(cf);
-					    # lft <- cenet[as.vector(cenet[,1]!=0),,drop=FALSE]
-					    # numbers<-as.numeric(lft)
-					    # names(numbers)<-rownames(lft)
-					    # lft<-numbers
-					    
-					    # if(isSurv)
-					    # {
-					      # if (length(lft)>0)
-					      # {
-					        # selectedFeaturesSet[[rept]] <- names(lft);
-					      # }
-					    # }
-					    # else{
-					      # if (length(lft)>1)
-					      # {
-					        # selectedFeaturesSet[[rept]] <- names(lft)[-1];
-					      # }
-					    # }
-					  # }
-					  lassoCoefficients <- currentModel$selectedfeatures;
-					  if (!is.null(lassoCoefficients))
+					  lassofeatures <- currentModel$selectedfeatures;
+					  if (!is.null(lassofeatures))
 					  {
-					    selectedFeaturesSet[[rept]] <- lassoCoefficients;
+					    selectedFeaturesSet[[rept]] <- lassofeatures;
 					  }
 					}
 					if (fclass == "FRESA.BESS")

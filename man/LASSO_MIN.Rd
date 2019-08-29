@@ -1,13 +1,15 @@
 \name{LASSO}
 \alias{LASSO}
+\alias{GLMNET}
 \alias{LASSO_MIN}
 \alias{LASSO_1SE}
-\title{CV LASSO fit with s="lambda.min" or s="lambda.1se"}
+\title{GLMNET, or LASSO fit with s="lambda.min" or s="lambda.1se"}
 \description{
 	Fits a \code{glmnet::cv.glmnet} object to the data, and sets the prediction to use the features that created the minimum CV error or one SE. 
 }
 \usage{
-	LASSO_MIN(formula = formula,data=NULL,s = "lambda.min",...)
+	GLMNET(formula = formula,data=NULL,coef.thr=0.001,s="lambda.min",...)
+	LASSO_MIN(formula = formula,data=NULL,...)
 	LASSO_1SE(formula = formula,data=NULL,...)
 }
 
@@ -20,6 +22,12 @@
 	}
 	\item{s}{
 	The s value for lambda
+	}
+	\item{coef.thr}{
+	The threshold for feature selection when alpha < 1.
+	}
+	\item{s}{
+	The lambda threshold to be use at prediction and feature selection
 	}
 	\item{...}{
 	Parameters to be passed to the cv.glmnet function

@@ -113,11 +113,12 @@ predict.FRESAKNN <- function(object, ...)
 }
 
 
-LASSO_MIN <- function(formula = formula, data=NULL, s = "lambda.min", ...)
+GLMNET <- function(formula = formula, data=NULL,coef.thr=0.001,s="lambda.min",...)
 {
 if (!requireNamespace("glmnet", quietly = TRUE)) {
 	 install.packages("glmnet", dependencies = TRUE)
 } 
+	parameters <- list(...);
 	isSurv <- FALSE;
 	baseformula <- as.character(formula);
 	usedFeatures <- colnames(data)[!(colnames(data) %in% baseformula[2])]
@@ -142,21 +143,20 @@ if (!requireNamespace("glmnet", quietly = TRUE)) {
 			y <- as.numeric(unlist(data[featuresOnSurvivalObject[[1]][2]]))
 			baseformula <- gsub(featuresOnSurvivalObject[[1]][1],"x",baseformula)
 			baseformula <- gsub(featuresOnSurvivalObject[[1]][2],"y",baseformula)
-			result <- list(fit = glmnet::cv.glmnet(as.matrix(data[,usedFeatures]),survival::Surv(x,y),family = "cox",...),s = s,formula = formula,usedFeatures=usedFeatures);
+			result <- list(fit = glmnet::cv.glmnet(as.matrix(data[,usedFeatures]),survival::Surv(x,y),family = "cox",...),s=s,formula = formula,usedFeatures=usedFeatures);
 		}
 		else
 		{
-			result <- list(fit = glmnet::cv.glmnet(as.matrix(data[,usedFeatures]),as.vector(data[,baseformula[2]]),...),s = s,formula = formula,outcome = baseformula[2],usedFeatures = usedFeatures)
+			result <- list(fit = glmnet::cv.glmnet(as.matrix(data[,usedFeatures]),as.vector(data[,baseformula[2]]),...),s=s,formula = formula,outcome = baseformula[2],usedFeatures = usedFeatures)
 		}
 	}
 	coefthr <- numeric(1*(!isSurv)+length(usedFeatures));
-	parameters <- list(...);
 	if(!is.null(parameters$alpha))
 	{
 		if(parameters$alpha < 1)
 		{
 			coefthr <- apply(data[,usedFeatures],2,sd, na.rm = TRUE);
-			coefthr <- 0.001/coefthr;
+			coefthr <- coef.thr/coefthr;
 			if (!isSurv)
 			{
 				coefthr <- c(0,coefthr);
@@ -197,17 +197,24 @@ if (!requireNamespace("glmnet", quietly = TRUE)) {
 	}
 	result$selectedfeatures <- unique(selectedFeatures);
 	result$coef <- lcoef;
-	class(result) <- "FRESA_LASSO"
+	class(result) <- "FRESA_GLMNET"
 	return(result);
 }
 
-LASSO_1SE <- function(formula = formula, data=NULL,...)
+LASSO_MIN <- function(formula = formula, data=NULL, ...)
 {
-	result <- LASSO_MIN(formula,data,s = "lambda.1se",...);
+	result <- GLMNET(formula,data,s = "lambda.min",...);
 	return (result);
 }
 
-predict.FRESA_LASSO <- function(object,...) 
+
+LASSO_1SE <- function(formula = formula, data=NULL,...)
+{
+	result <- GLMNET(formula,data,s = "lambda.1se",...);
+	return (result);
+}
+
+predict.FRESA_GLMNET <- function(object,...) 
 {
 		parameters <- list(...);
 		testData <- parameters[[1]];
