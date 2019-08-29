@@ -507,27 +507,27 @@ BinaryBenchmark <-	function(theData = NULL, theOutcome = "Class", reps = 100, tr
 
 		selFrequency <- cbind(selFrequency,numeric(ncol(theData)));
 		selFrequency[names(fmeth$rcvFilter_IDI$featureFrequency),ncol(selFrequency)] <- fmeth$rcvFilter_IDI$featureFrequency;
-		theFiltersets <- c(referenceFilterName,"IDI");
+		theFiltersets <- c(theFiltersets,"IDI");
 		jaccard_filter$IDI <- fmeth$rcvFilter_IDI$jaccard;
 
 		selFrequency <- cbind(selFrequency,numeric(ncol(theData)));
 		selFrequency[names(fmeth$rcvFilter_NRI$featureFrequency),ncol(selFrequency)] <- fmeth$rcvFilter_NRI$featureFrequency;
-		theFiltersets <- c(referenceFilterName,"NRI");
+		theFiltersets <- c(theFiltersets,"NRI");
 		jaccard_filter$NRI <- fmeth$rcvFilter_NRI$jaccard;
 
 		selFrequency <- cbind(selFrequency,numeric(ncol(theData)));
 		selFrequency[names(fmeth$rcvFilter_tStudent$featureFrequency),ncol(selFrequency)] <- fmeth$rcvFilter_tStudent$featureFrequency;
-		theFiltersets <- c(referenceFilterName,"tStudent");
+		theFiltersets <- c(theFiltersets,"tStudent");
 		jaccard_filter$tStudent <- fmeth$rcvFilter_tStudent$jaccard;
 
 		selFrequency <- cbind(selFrequency,numeric(ncol(theData)));
 		selFrequency[names(fmeth$rcvFilter_wilcox$featureFrequency),ncol(selFrequency)] <- fmeth$rcvFilter_wilcox$featureFrequency;
-		theFiltersets <- c(referenceFilterName,"wilcox");
+		theFiltersets <- c(theFiltersets,"wilcox");
 		jaccard_filter$wilcox <- fmeth$rcvFilter_wilcox$jaccard;
 
 		selFrequency <- cbind(selFrequency,numeric(ncol(theData)));
 		selFrequency[names(fmeth$rcvFilter_kendall$featureFrequency),ncol(selFrequency)] <- fmeth$rcvFilter_kendall$featureFrequency;
-		theFiltersets <- c(referenceFilterName,"kendall");
+		theFiltersets <- c(theFiltersets,"kendall");
 		jaccard_filter$kendall <- fmeth$rcvFilter_kendall$jaccard;
 
 	}
