@@ -80,6 +80,7 @@ export(jaccardMatrix)
 export(nearestCentroid)
 export(predict.GMVE)
 export(trajectoriesPolyFeatures)
+export(predict.FRESA_BESS)
 export(GLMNET)
 
 useDynLib(FRESA.CAD,.registration = TRUE)
@@ -103,6 +104,7 @@ S3method(predict, FRESA_BOOST)
 S3method(predict, GMVE_BSWiMS) 
 S3method(predict, CLUSTER_CLASS) 
 S3method(predict, GMVE) 
+S3method(predict, FRESA_BESS) 
 
 
 importFrom(Rcpp, evalCpp)

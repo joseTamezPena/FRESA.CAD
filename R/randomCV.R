@@ -50,7 +50,7 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
 	    cox$coefficients<-currentModel$bagging$bagged.model$coefficients[-c(1)];
 	    #cox$coefficients<-currentModel$BSWiMS.model$back.model$coefficients[-c(1)]
 	  }
-	  if(fclass=="FRESA.BESS")
+	  if(fclass=="FRESA_BESS")
 	  {
 	    baseformula <- as.character(theformula);
 	    formulaCox <- as.formula(paste(paste(baseformula[2],"~"), paste(selectedFeatures, collapse='+')));
@@ -474,7 +474,7 @@ if (!requireNamespace("glmnet", quietly = TRUE)) {
 					    selectedFeaturesSet[[rept]] <- lassofeatures;
 					  }
 					}
-					if (fclass == "FRESA.BESS")
+					if (fclass == "FRESA_BESS")
 					{
 					  bessCoefficients <- currentModel$selectedfeatures;
 					  if (!is.null(bessCoefficients))
