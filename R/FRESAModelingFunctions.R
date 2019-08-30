@@ -444,7 +444,9 @@ BOOST_BSWiMS <- function(formula = formula, data=NULL, thrs = c(0.05,0.10,0.25,0
 	bclassModel <- NULL;
 	balternativeModel <- NULL;
 	posModel <- NULL;
+	bdataModel <- NULL;
 	orgModel <- BSWiMS.model(formula,data,...);
+	selectedfeatures <- names(orgModel$bagging$frequencyTable);
 	if (length(orgModel$bagging$frequencyTable) > 0)
 	{
 		orgPredict <- predict(orgModel,data);
@@ -561,7 +563,15 @@ BOOST_BSWiMS <- function(formula = formula, data=NULL, thrs = c(0.05,0.10,0.25,0
 		}
 		cat("}")
 	}
+	if (!is.null(bclassModel))
+	{
+		selectedfeatures <- c(selectedfeatures,names(balternativeModel$bagging$frequencyTable))
+		selectedfeatures <- c(selectedfeatures,names(bclassModel$bagging$frequencyTable))
+		selectedfeatures <- c(selectedfeatures,names(posModel$bagging$frequencyTable));
+	}
+	selectedfeatures <- unique(selectedfeatures);
 	result <- list(original = orgModel,posModel = posModel,alternativeModel = balternativeModel,classModel = bclassModel )
+	result$selectedfeatures <- selectedfeatures;
 	class(result) <- "FRESA_BOOST"
 	return(result);
 }
@@ -638,6 +648,7 @@ ClustClass <- function(formula = formula, data=NULL, filtermethod=univariate_Wil
 	{
 		clus <- do.call(clustermethod,c(list(data[,names(fm)]),clustermethod.control));
 	}
+	selectedfeatures <- names(fm);
 	tb <- table(clus$classification);
 	classlabels <- as.numeric(names(tb));
 	models <- list();
@@ -675,6 +686,8 @@ ClustClass <- function(formula = formula, data=NULL, filtermethod=univariate_Wil
 		}
 	}
 	result <- list(features = fm,cluster = clus,models = models);
+	result$selectedfeatures <- selectedfeatures;
+
 	class(result) <- "CLUSTER_CLASS"
 	return(result);
 }
@@ -731,6 +744,7 @@ GMVEBSWiMS <- function(formula = formula, data=NULL, GMVE.control = list(p.thres
 	error <- sum(1*(baseClass$bagging$bagged.model$linear.predictors > 0.5) != outcomedata)/totsamples;
 
 	models <- list();
+	selectedfeatures <- names(baseClass$bagging$frequencyTable);
 	
 	if (length(baseClass$bagging$frequencyTable) > 0)
 	{
@@ -791,6 +805,7 @@ GMVEBSWiMS <- function(formula = formula, data=NULL, GMVE.control = list(p.thres
 		models[[1]] <- baseClass;
 	}
 	result <- list(features = fm,cluster = clus,models = models, baseModel = baseClass);
+	result$selectedfeatures <- selectedfeatures;
 	class(result) <- "GMVE_BSWiMS"
 	return(result);
 }

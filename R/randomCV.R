@@ -466,21 +466,10 @@ if (!requireNamespace("glmnet", quietly = TRUE)) {
 							selectedFeaturesSet[[rept]] <- names(ffet);
 						}
 					}
-					if (fclass == "FRESA_GLMNET")
+					if (!is.null(currentModel$selectedfeatures))
 					{
-					  lassofeatures <- currentModel$selectedfeatures;
-					  if (!is.null(lassofeatures))
-					  {
-					    selectedFeaturesSet[[rept]] <- lassofeatures;
-					  }
-					}
-					if (fclass == "FRESA_BESS")
-					{
-					  bessCoefficients <- currentModel$selectedfeatures;
-					  if (!is.null(bessCoefficients))
-					  {
-					    selectedFeaturesSet[[rept]] <- bessCoefficients;
-					  }
+						ffet <- currentModel$selectedfeatures;
+						selectedFeaturesSet[[rept]] <- ffet;
 					}
 
 
