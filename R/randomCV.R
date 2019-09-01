@@ -262,7 +262,6 @@ if (!requireNamespace("glmnet", quietly = TRUE)) {
 	{
 		repetitions <- trainSampleSets$repetitions
 	}
-
 	for (rept in 1:repetitions)
 	{
 #		cat(ncol(theData),":",nrow(theData),"\n")

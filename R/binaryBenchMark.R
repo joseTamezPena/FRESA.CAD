@@ -425,7 +425,7 @@ BinaryBenchmark <-	function(theData = NULL, theOutcome = "Class", reps = 100, tr
 	cputimes <- unlist(cputimes);
 	cputimes <- c(cputimes,sum(cputimes)-mean(rcvRPART$theTimes[ elapcol ]));
 	names(cputimes) <- theMethod;
-	
+
 ######################Filters	####################################	
 	
 	if (class(referenceCV) != "list")
@@ -531,6 +531,7 @@ BinaryBenchmark <-	function(theData = NULL, theOutcome = "Class", reps = 100, tr
 		jaccard_filter$kendall <- fmeth$rcvFilter_kendall$jaccard;
 
 	}
+
 	featsize <- unlist(lapply(jaccard_filter, `[`, c('averageLength')))
 	names(featsize) <- theFiltersets;
 	jaccard <- unlist(lapply(jaccard_filter, `[`, c('Jaccard.SM')))
