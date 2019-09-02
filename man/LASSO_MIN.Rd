@@ -19,9 +19,6 @@
 	\item{data}{
 	The data to be used for training the KNN method
 	}
-	\item{s}{
-	The s value for lambda
-	}
 	\item{coef.thr}{
 	The threshold for feature selection when alpha < 1.
 	}
