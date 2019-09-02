@@ -131,4 +131,5 @@ importFrom("graphics", "layout")
 importFrom("stats", "as.formula")
 importFrom("utils", "head")
 importFrom("stats", "mahalanobis")
+importFrom("graphics", "points")
 
