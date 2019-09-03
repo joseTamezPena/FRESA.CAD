@@ -66,6 +66,16 @@ error.bar <- function(x, y, upper, lower=upper, length=0.03, ...){
 
 	cmm <- colMeans(interMethodScore)
 	rmm <- rowMeans(interMethodScore)
+	if (scoreDirection == ">")
+	{
+		cmm <- cmm + 1.0e-10*colMeans(barmatrix)
+		rmm <- rmm + 1.0e-10*rowMeans(barmatrix)
+	}
+	else
+	{
+		cmm <- cmm - 1.0e-10*colMeans(barmatrix)
+		rmm <- rmm - 1.0e-10*rowMeans(barmatrix)
+	}
 
 	interMethodScore <- interMethodScore[order(-rmm),order(-cmm)];
 	SupMethod <- SupMethod[order(-rmm),order(-cmm)];
