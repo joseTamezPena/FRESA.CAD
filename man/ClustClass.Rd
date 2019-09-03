@@ -61,9 +61,9 @@ Finally, the function will call the classification function on each cluster retu
 }
 
 \examples{
-	\dontrun{
-	# Get the Sonar data set
-      library(mlbench)
+	\dontrun{	
+      library(mlbench) # Location of the Sonar data set
+	  library(mclust) # The cluster library
       data(Sonar)
       Sonar$Class <- 1*(Sonar$Class == "M")
 	  #Train hierachical classifier
