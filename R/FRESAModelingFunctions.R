@@ -343,14 +343,24 @@ predict.FRESA_SVM <- function(object,...)
 		return(pLS);
 }
 
-NAIVE_BAYES <- function(formula = formula, data=NULL, ...)
+NAIVE_BAYES <- function(formula = formula, data=NULL,pca=TRUE,...)
 {
 if (!requireNamespace("naivebayes", quietly = TRUE)) {
 	 install.packages("naivebayes", dependencies = TRUE)
 } 
 	baseformula <- as.character(formula);
 	if (class(data[,baseformula[2]]) != "factor") data[,baseformula[2]] <- as.factor(data[,baseformula[2]])
-	result <- list(fit = naivebayes::naive_bayes(formula,data,...))
+	pcaobj <- NULL;
+	if (pca && (nrow(data) > 4*ncol(data)))
+	{
+		outcome <- data[,baseformula[2]];
+		data <- data[,!(colnames(data) %in% baseformula[2])];
+		pcaobj <- prcomp(data);
+		data <- as.data.frame(cbind(outcome,pcaobj$x));
+		colnames(data) <- c(baseformula[2],colnames(pcaobj$x));
+		if (class(data[,baseformula[2]]) != "factor") data[,baseformula[2]] <- as.factor(data[,baseformula[2]])
+	}
+	result <- list(fit = naivebayes::naive_bayes(formula,data,...),pcaobj=pcaobj,outcome=baseformula[2]);
 	class(result) <- "FRESA_NAIVEBAYES"
 	return(result);
 }
@@ -358,9 +368,17 @@ if (!requireNamespace("naivebayes", quietly = TRUE)) {
 
 predict.FRESA_NAIVEBAYES <- function(object,...) 
 {
-		parameters <- list(...);
-		testData <- parameters[[1]];
-		pLS <- as.numeric(as.character(predict(object$fit,testData)));
+	parameters <- list(...);
+	testData <- parameters[[1]];
+	if (!is.null(object$pcaobj))
+	{
+		testData <- predict(object$pcaobj,testData);
+	}
+	else
+	{
+		testData <- testData[,!(colnames(testData) %in% object$outcome)];
+	}
+	pLS <- as.numeric(as.character(predict(object$fit,testData)));
 	if (length(table(pLS)) == 2)
 	{
 		prop <- predict(object$fit,testData,type = "prob");
@@ -368,7 +386,7 @@ predict.FRESA_NAIVEBAYES <- function(object,...)
 		pLS[is.nan(pLS)] <- 0.5;
 		pLS[is.na(pLS)] <- 0.5;
 	}
-		return(pLS);
+	return(pLS);
 }
 
 LM_RIDGE_MIN <- function(formula = formula, data=NULL, ...)
