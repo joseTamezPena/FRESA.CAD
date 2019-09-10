@@ -546,7 +546,8 @@ function(formula=formula,data=NULL,type=c("Auto","LM","LOGIT","COX"),testType=c(
 		bagging=bagg,
 		formula.list=formula.list,
 		forward.selection.list=forward.selection.list,
-		oridinalModels=oridinalModels
+		oridinalModels=oridinalModels,
+		equivalent=equivalent
 	);
 	class(result) <- c("fitFRESA","BSWiMS");
 	

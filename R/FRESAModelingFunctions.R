@@ -351,7 +351,7 @@ if (!requireNamespace("naivebayes", quietly = TRUE)) {
 	baseformula <- as.character(formula);
 	if (class(data[,baseformula[2]]) != "factor") data[,baseformula[2]] <- as.factor(data[,baseformula[2]])
 	pcaobj <- NULL;
-	if (pca && (nrow(data) > 4*ncol(data)))
+	if (pca && (nrow(data) > 2*ncol(data)))
 	{
 		outcome <- data[,baseformula[2]];
 		data <- data[,!(colnames(data) %in% baseformula[2])];

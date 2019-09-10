@@ -2,6 +2,12 @@ ensemblePredict <-
 function (formulaList,trainData,testData=NULL, predictType = c("prob", "linear"),type = c("LOGIT", "LM","COX","SVM"),Outcome=NULL,nk = 0) 
 {
 
+medianWeightedI <- function(x, w) { 
+  w <- w[order(x)]
+  x <- x[order(x)]
+  x[which.min(abs(filter(c(0,cumsum(w)/sum(w)), c(.5,.5), sides=1)[-1] - 0.5))]
+}
+
 #	cat("Median\n")
 #		print(formulaList);
 	if (length(formulaList)==0)
@@ -60,6 +66,7 @@ function (formulaList,trainData,testData=NULL, predictType = c("prob", "linear")
 	noequalSets <- FALSE;
 	nrowcases <- minTrainSamples
 	nrowcontrols <- minTrainSamples
+	mweights <- numeric(length(formulaList));
 	if ((type == "LOGIT") || (type == "COX"))
 	{
 		casesample = subset(trainData,get(vOutcome)  == 1);
@@ -151,18 +158,11 @@ function (formulaList,trainData,testData=NULL, predictType = c("prob", "linear")
 			varOutcome <- var(trainOutcome);
 			trainPrediction <- predict.fitFRESA(bestmodel,EquTrainSet,predictType);
 			residual <- as.vector(abs(trainPrediction-trainOutcome));
-			observations <- nrow(EquTrainSet);
-			if (predictType[1]=="linear")
-			{
-				Rwts <- (varOutcome-sum(residual^2)/observations)/varOutcome; #Correlation
-			}
-			else
-			{
-				Rwts <- 2.0*(sum(1.0*(residual<0.5))/observations - 0.5); # 2*(ACC-0.5)
-			}
+			Rwts <- (varOutcome-(mean(residual))^2)/varOutcome; #Correlation
 			if (Rwts<=0) Rwts <- 1.0e-4;
 			wmedpred <- Rwts*curprediction;
 			swts <- Rwts;
+			mweights[1] <-  Rwts;
 		}
 
 
@@ -198,6 +198,8 @@ function (formulaList,trainData,testData=NULL, predictType = c("prob", "linear")
 						if (maxTrainSamples > nrowcases)  trainCaseses <- casesample[sample(1:nrowcases,maxTrainSamples,replace=TRUE),]
 						if (maxTrainSamples > nrowcontrols)  trainControls <- controlsample[sample(1:nrowcontrols,maxTrainSamples,replace=TRUE),]
 						EquTrainSet <- rbind(trainCaseses,trainControls)
+						trainOutcome <- EquTrainSet[,vOutcome];
+						varOutcome <- var(trainOutcome);
 					}
 					if (nk>0) 
 					{
@@ -213,26 +215,19 @@ function (formulaList,trainData,testData=NULL, predictType = c("prob", "linear")
 								if (maxTrainSamples > nrowcases)  trainCaseses <- casesample[sample(1:nrowcases,maxTrainSamples,replace=TRUE),]
 								if (maxTrainSamples > nrowcontrols)  trainControls <- controlsample[sample(1:nrowcontrols,maxTrainSamples,replace=TRUE),]
 								EquTrainSet <- rbind(trainCaseses,trainControls)
+								trainOutcome <- EquTrainSet[,vOutcome];
+								varOutcome <- var(trainOutcome);
 							}
 							fm <- modelFitting(ftmp,EquTrainSet,type,fitFRESA=TRUE)
 						}
 						curprediction <- predict.fitFRESA(fm,testData,predictType);
-						trainOutcome <- EquTrainSet[,vOutcome];
-						varOutcome <- var(trainOutcome);
 						trainPrediction <- predict.fitFRESA(fm,EquTrainSet,predictType);
 						residual <- as.vector(abs(trainPrediction-trainOutcome));
-						observations <- nrow(EquTrainSet);
-						if (predictType[1]=="linear")
-						{
-							Rwts <- (varOutcome-sum(residual^2)/observations)/varOutcome; #Correlation
-						}
-						else
-						{
-							Rwts <- 2.0*(sum(1.0*(residual<0.5))/observations - 0.5); # 2*(ACC-0.5)
-						}
+						Rwts <- (varOutcome-(mean(residual))^2)/varOutcome; #Correlation
 						if (Rwts<=0) Rwts <- 1.0e-4;
 						wmedpred <- wmedpred + Rwts*curprediction;
 						swts <- swts + Rwts;
+						mweights[i] <-  Rwts;
 						out <- cbind(out,curprediction);
 					}
 					else
@@ -246,7 +241,8 @@ function (formulaList,trainData,testData=NULL, predictType = c("prob", "linear")
 				out <- cbind(out,curprediction);
 			}
 			out <- as.data.frame(out);
-			medianout <- rowMedians(out[,-1],na.rm = TRUE);
+#			medianout <- rowMedians(out[,-1],na.rm = TRUE);
+			medianout <- apply(out[,-1],1,medianWeightedI,w=mweights);
 			wmedpredict <- wmedpred;
 			if (swts>0) wmedpredict <- wmedpred/swts;
 			if (nk>0) 
