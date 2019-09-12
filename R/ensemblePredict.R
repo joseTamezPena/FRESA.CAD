@@ -66,7 +66,8 @@ medianWeightedI <- function(x, w) {
 	noequalSets <- FALSE;
 	nrowcases <- minTrainSamples
 	nrowcontrols <- minTrainSamples
-	mweights <- numeric(length(formulaList));
+	mweights <- numeric();
+	msize <- numeric();
 	if ((type == "LOGIT") || (type == "COX"))
 	{
 		casesample = subset(trainData,get(vOutcome)  == 1);
@@ -162,7 +163,8 @@ medianWeightedI <- function(x, w) {
 			if (Rwts<=0) Rwts <- 1.0e-4;
 			wmedpred <- Rwts*curprediction;
 			swts <- Rwts;
-			mweights[1] <-  Rwts;
+			mweights <-  c(mweights,Rwts);
+			msize <- c(msize,length(bestmodel$coef));
 		}
 
 
@@ -227,7 +229,8 @@ medianWeightedI <- function(x, w) {
 						if (Rwts<=0) Rwts <- 1.0e-4;
 						wmedpred <- wmedpred + Rwts*curprediction;
 						swts <- swts + Rwts;
-						mweights[i] <-  Rwts;
+						mweights <- c(mweights,Rwts);
+						msize <- c(msize,length(fm$coef));
 						out <- cbind(out,curprediction);
 					}
 					else
@@ -242,6 +245,9 @@ medianWeightedI <- function(x, w) {
 			}
 			out <- as.data.frame(out);
 #			medianout <- rowMedians(out[,-1],na.rm = TRUE);
+#			print(mweights)
+#			print(msize)
+			mweights <- mweights - 0.1*msize/max(msize);
 			medianout <- apply(out[,-1],1,medianWeightedI,w=mweights);
 			wmedpredict <- wmedpred;
 			if (swts>0) wmedpredict <- wmedpred/swts;

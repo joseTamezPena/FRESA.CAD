@@ -277,6 +277,7 @@ function(formula=formula,data=NULL,type=c("Auto","LM","LOGIT","COX"),testType=c(
 							if (length(attr(terms(formula(BSWiMS.model$back.formula)),"term.labels"))>0)
 							{
 								curAUC <-  (BSWiMS.model$bootCV$sensitivity + BSWiMS.model$bootCV$specificity)/2;
+								curAUC <- curAUC + rnorm(length(curAUC),0,1e-10);
 								firstMedAUC <- median(IIRMetricPDF);
 								currentMedAUC <- median(curAUC);
 								firstCount <- sum(currentMedAUC >= IIRMetricPDF)
@@ -326,6 +327,7 @@ function(formula=formula,data=NULL,type=c("Auto","LM","LOGIT","COX"),testType=c(
 							{
 								sdOutcome <- BSWiMS.model$bootCV$outcomeSD;
 								curRMS <- BSWiMS.model$bootCV$testSampledRMSE;
+								curRMS <- curRMS + rnorm(length(curRMS),0,1e-10);
 								firstMedRMS <- median(IIRMetricPDF);
 								curMedRMS <- median(curRMS);
 								firstCount <- sum(curMedRMS <= IIRMetricPDF);
@@ -367,6 +369,7 @@ function(formula=formula,data=NULL,type=c("Auto","LM","LOGIT","COX"),testType=c(
 				if ((testType=="zIDI") || (testType=="zNRI"))
 				{
 					IIRMetricPDF <- (firstModel$bootCV$sensitivity + firstModel$bootCV$specificity)/2;
+					IIRMetricPDF <- IIRMetricPDF + rnorm(length(IIRMetricPDF),0,1e-10);
 					if (!isInferior) 
 					{
 						isInferior <- ( (sum(0.5 <= IIRMetricPDF)/length(IIRMetricPDF)) < 0.5 );
@@ -375,6 +378,7 @@ function(formula=formula,data=NULL,type=c("Auto","LM","LOGIT","COX"),testType=c(
 				else
 				{
 					IIRMetricPDF <- firstModel$bootCV$testSampledRMSE;
+					IIRMetricPDF <- IIRMetricPDF + rnorm(length(IIRMetricPDF),0,1e-10);
 					if (print)
 					{
 						cat(length(IIRMetricPDF),": Sup std Outcome",sdOutcome,":",(sum(sdOutcome >= IIRMetricPDF)/length(IIRMetricPDF)),"\n");

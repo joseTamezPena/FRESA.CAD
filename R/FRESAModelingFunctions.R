@@ -774,6 +774,7 @@ GMVEBSWiMS <- function(formula = formula, data=NULL, GMVE.control = list(p.thres
 		{
 			fthr <- max(baseClass$bagging$frequencyTable)/2;
 			fm <- unique(c(names(baseClass$bagging$frequencyTable[baseClass$bagging$frequencyTable > fthr]),as.character(baseClass$univariate$Name)[1:2]));
+			fm <- correlated_Remove(data,fm,thr=0.85);
 		}
 		
 		if (length(fm) > (totsamples/10)) # we will keep the number of selected features small
