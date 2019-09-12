@@ -181,10 +181,14 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 							newCovariance <- cov(intdata[inside,])+gmincov;
 							distanceupdate <- mahalanobis(intdata[inside,],newCentroid,newCovariance);
 							distanceupdate <- distanceupdate[order(distanceupdate)];
-							dsample <- (1:ptsinside)/ptsinside;
-							dsample[ptsinside] <- p.threshold*dsample[ptsinside];
-							disTheoretical <- qchisq(dsample,p);
-							kst <- ks.test(disTheoretical,distanceupdate);
+							mvsd <- as.integer(ptsinside/p.threshold+0.5);
+							dsample <- (1:mvsd)/mvsd;
+							if (dsample[ptsinside] > p.threshold)
+							{
+								dsample[ptsinside] <- p.threshold;
+							}
+							disTheoretical <- qchisq(dsample[1:ptsinside],p);
+							kst <- ks.test(disTheoretical,distanceupdate + rnorm(length(distanceupdate),0,1e-10));
 							if (kst$p.value > maxp)
 							{
 								 bestmean[[k]] <- newCentroid;
@@ -235,10 +239,14 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 								distancecluster1 <- mahalanobis(bestCMean,newCentroid,newCovariance);
 								distancecluster2 <- mahalanobis(newCentroid,bestCMean,bestCCov);
 								distanceupdate <- distanceupdate[order(distanceupdate)]
-								dsample <- (1:ptsinside)/ptsinside;
-								dsample[ptsinside] <- p.threshold*dsample[ptsinside];
-								disTheoretical <- qchisq(dsample,p);
-								kst <- ks.test(disTheoretical,distanceupdate);
+								mvsd <- as.integer(ptsinside/p.threshold+0.5);
+								dsample <- (1:mvsd)/mvsd;
+								if (dsample[ptsinside] > p.threshold)
+								{
+									dsample[ptsinside] <- p.threshold;
+								}
+								disTheoretical <- qchisq(dsample[1:ptsinside],p);
+								kst <- ks.test(disTheoretical,distanceupdate + rnorm(length(distanceupdate),0,1e-10));
 								if ( ((kst$p.value >= minpvalThr) || (kst$statistic <= minD)) && (distancecluster1 < chithreshold2) && (distancecluster2 < chithreshold2) )
 								{
 									refinecount <- refinecount + kst$p.value;

@@ -766,14 +766,13 @@ GMVEBSWiMS <- function(formula = formula, data=NULL, GMVE.control = list(p.thres
 	
 	if (length(baseClass$bagging$frequencyTable) > 0)
 	{
-		if (length(baseClass$BSWiMS.model$back.model$coefficients) > 2)
+		if (length(baseClass$BSWiMS.model$back.model$coefficients) >= 2)
 		{
 			fm <- names(baseClass$BSWiMS.model$back.model$coefficients)[-1];
 		}
 		else
 		{
-			fthr <- max(baseClass$bagging$frequencyTable)/2;
-			fm <- unique(c(names(baseClass$bagging$frequencyTable[baseClass$bagging$frequencyTable > fthr]),as.character(baseClass$univariate$Name)[1:2]));
+			fm <- unique(c(selectedfeatures,as.character(baseClass$univariate$Name)[1:2]));
 			fm <- correlated_Remove(data,fm,thr=0.85);
 		}
 		
