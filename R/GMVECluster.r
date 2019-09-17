@@ -105,6 +105,7 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 		JClusters <- 0;
 		auxdata <- intdata[maxMahadis == 0,];
 		andata <- nrow(auxdata);
+#		print(andata);
 		auxdata <- auxdata[sample(andata),];
 	## Loop for cluster candidates
 		cat(":");
@@ -181,13 +182,8 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 							newCovariance <- cov(intdata[inside,])+gmincov;
 							distanceupdate <- mahalanobis(intdata[inside,],newCentroid,newCovariance);
 							distanceupdate <- distanceupdate[order(distanceupdate)];
-							mvsd <- as.integer(ptsinside/p.threshold+0.5);
-							dsample <- (1:mvsd)/mvsd;
-							if (dsample[ptsinside] > p.threshold)
-							{
-								dsample[ptsinside] <- p.threshold;
-							}
-							disTheoretical <- qchisq(dsample[1:ptsinside],p);
+							dsample <- (0:(ptsinside-1))/ptsinside;
+							disTheoretical <- qchisq(dsample,p);
 							kst <- ks.test(disTheoretical,distanceupdate + rnorm(length(distanceupdate),0,1e-10));
 							if (kst$p.value > maxp)
 							{
@@ -207,6 +203,10 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 			cat("-");
 ## Now use the similar centroids to refine the candidate clusters
 			refinecount <- 1;
+			if (verbose) 
+			{
+				cat(cycles,":",atalpha,":",maxp,":",sum(inside),"->");
+			}
 			cat(":");
 			if (maxp > minpvalThr)
 			{
@@ -239,13 +239,8 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 								distancecluster1 <- mahalanobis(bestCMean,newCentroid,newCovariance);
 								distancecluster2 <- mahalanobis(newCentroid,bestCMean,bestCCov);
 								distanceupdate <- distanceupdate[order(distanceupdate)]
-								mvsd <- as.integer(ptsinside/p.threshold+0.5);
-								dsample <- (1:mvsd)/mvsd;
-								if (dsample[ptsinside] > p.threshold)
-								{
-									dsample[ptsinside] <- p.threshold;
-								}
-								disTheoretical <- qchisq(dsample[1:ptsinside],p);
+								dsample <- (0:(ptsinside-1))/ptsinside;
+								disTheoretical <- qchisq(dsample,p);
 								kst <- ks.test(disTheoretical,distanceupdate + rnorm(length(distanceupdate),0,1e-10));
 								if ( ((kst$p.value >= minpvalThr) || (kst$statistic <= minD)) && (distancecluster1 < chithreshold2) && (distancecluster2 < chithreshold2) )
 								{
@@ -258,6 +253,10 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 							}
 						}
 					}
+				}
+				if (verbose) 
+				{
+					cat(atalpha/refinecount,":",pvals[k] <- pvals[k]/refinecount,":",sum(inside),"->");
 				}
 			}
 			cat("-");
@@ -329,7 +328,7 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 		}
 		if (verbose) 
 		{
-			cat(cycles,":",k,":",inside.centroid,":(",ondata,"->",andata,"):",atalpha,":",maxp,":",minD,":",JClusters,":",refinecount,":",sum(inside),"\n");
+			cat(k,":",inside.centroid,":(",ondata,"->",andata,"):",atalpha,":",maxp,":",minD,":",JClusters,":",refinecount,":",sum(inside),"\n");
 		}
 		else 
 		{
