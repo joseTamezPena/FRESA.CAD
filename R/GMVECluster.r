@@ -275,7 +275,7 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 			}
 			inside <- numeric(0);
 			## Include cluster only if p value is significant and no overlap with already discovered clusters
-			if ((maxp < minpvalThr) || (inside.centroid > 0.5))
+			if ((maxp < minpvalThr) || (inside.centroid > 0.75))
 			{
 				cycles <- cycles + 1;
 				bestmean[[k]] <- NULL;
