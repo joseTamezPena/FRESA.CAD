@@ -104,42 +104,49 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 		detcovmat <- numeric();
 		JClusters <- 0;
 		auxdata <- intdata[maxMahadis == 0,];
-		andata <- nrow(auxdata);
-#		print(andata);
-		auxdata <- auxdata[sample(andata),];
-	## Loop for cluster candidates
-		cat(":");
-		for (i in sampling.rate*(1:as.integer(andata/sampling.rate)))
+		if (length(auxdata) > ncol(intdata))
 		{
-			datao <- as.numeric(auxdata[i,]);
-			smdist <- mahalanobis(intdata,datao,globalcov);
-			qdata <- intdata[(smdist > 0) & (smdist < samplingthreshold),];
-#			print(nrow(qdata))
-			if (length(qdata) > 0)
+			andata <- nrow(auxdata);
+	#		print(andata);
+			auxdata <- auxdata[sample(andata),];
+		## Loop for cluster candidates
+			cat(":");
+			for (i in sampling.rate*(1:as.integer(andata/sampling.rate)))
 			{
-				if (nrow(qdata) >= h0)
+				datao <- as.numeric(auxdata[i,]);
+				smdist <- mahalanobis(intdata,datao,globalcov);
+				qdata <- intdata[(smdist > 0) & (smdist < samplingthreshold),];
+	#			print(nrow(qdata))
+				if (length(qdata)>ncol(intdata))
 				{
-					for (j in 1:tryouts)
+					if (nrow(qdata) >= h0)
 					{
-						sdata <- rbind(datao,qdata[sample(nrow(qdata),p),]);
-						jmean <- apply(sdata,2,mean);
-						jcov <- cov(sdata)+gmincov;
-						jcovDet <- try(det(jcov));
-						if ( !inherits(jcovDet, "try-error") && !is.nan(jcovDet) && !is.na(jcovDet) )
+						for (j in 1:tryouts)
 						{
-							mdist <- try(mahalanobis(intdata,jmean,jcov));
-							if ((!inherits(mdist, "try-error")) && (jcovDet > minminVar))
+							sdata <- rbind(datao,qdata[sample(nrow(qdata),p),]);
+							jmean <- apply(sdata,2,mean);
+							jcov <- cov(sdata)+gmincov;
+							jcovDet <- try(det(jcov));
+							if ( !inherits(jcovDet, "try-error") && !is.nan(jcovDet) && !is.na(jcovDet) )
 							{
-								JClusters <- JClusters + 1;
-								mdistlist[[JClusters]] <- mdist[order(mdist)];
-								colmean[[JClusters]] <- jmean;
-								covmat[[JClusters]] <- jcov;
-								detcovmat[JClusters] <- jcovDet^(1.0/(2.0*p));
+								mdist <- try(mahalanobis(intdata,jmean,jcov));
+								if ((!inherits(mdist, "try-error")) && (jcovDet > minminVar))
+								{
+									JClusters <- JClusters + 1;
+									mdistlist[[JClusters]] <- mdist[order(mdist)];
+									colmean[[JClusters]] <- jmean;
+									covmat[[JClusters]] <- jcov;
+									detcovmat[JClusters] <- jcovDet^(1.0/(2.0*p));
+								}
 							}
 						}
 					}
 				}
 			}
+		}
+		else
+		{
+			andata <- 0;
 		}
 		cat("-");
 		atalpha <- 0;
