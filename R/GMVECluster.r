@@ -104,7 +104,7 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 		detcovmat <- numeric();
 		JClusters <- 0;
 		auxdata <- intdata[maxMahadis == 0,];
-		if (length(auxdata) > ncol(intdata))
+		if (nrow(auxdata) >= h0)
 		{
 			andata <- nrow(auxdata);
 	#		print(andata);
@@ -117,7 +117,7 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 				smdist <- mahalanobis(intdata,datao,globalcov);
 				qdata <- intdata[(smdist > 0) & (smdist < samplingthreshold),];
 	#			print(nrow(qdata))
-				if (length(qdata)>ncol(intdata))
+				if (!is.null(qdata))
 				{
 					if (nrow(qdata) >= h0)
 					{
