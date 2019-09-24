@@ -46,7 +46,7 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 	ndata <- nrow(intdata);
 	chithreshold <- qchisq(p.threshold,p);
 	chithreshold2 <- qchisq(p.threshold/2,p);
-	chithreshold3 <- qchisq(p.threshold/5,p);
+	chithreshold3 <- qchisq(p.threshold/4,p);
 	chithreshold_out <- qchisq(0.999,p);
 	samplingthreshold <- qchisq(p.samplingthreshold,p);
 #	print(samplingthreshold);
@@ -282,7 +282,7 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 			}
 			inside <- numeric(0);
 			## Include cluster only if p value is significant and no overlap with already discovered clusters
-			if ((maxp < minpvalThr) || (inside.centroid > 0.75))
+			if ((maxp < minpvalThr) || (inside.centroid >= 0.5))
 			{
 				cycles <- cycles + 1;
 				bestmean[[k]] <- NULL;
