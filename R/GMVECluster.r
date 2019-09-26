@@ -125,7 +125,7 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 						{
 							sdata <- rbind(datao,qdata[sample(nrow(qdata),p),]);
 							jmean <- apply(sdata,2,mean);
-							jcov <- cov(sdata)+gmincov;
+							jcov <- cov(sdata);
 							jcovDet <- try(det(jcov));
 							if ( !inherits(jcovDet, "try-error") && !is.nan(jcovDet) && !is.na(jcovDet) )
 							{
@@ -186,7 +186,7 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 						if (ptsinside >= h0)
 						{
 							newCentroid <- apply(intdata[inside,],2,mean);
-							newCovariance <- cov(intdata[inside,])+gmincov;
+							newCovariance <- cov(intdata[inside,]);
 							distanceupdate <- mahalanobis(intdata[inside,],newCentroid,newCovariance);
 							distanceupdate <- distanceupdate[order(distanceupdate)];
 							dsample <- (0:(ptsinside-1))/ptsinside;
@@ -219,43 +219,46 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 			{
 				for ( alpha in alphalist )
 				{
-					h <- as.integer(alpha*ndata+0.5);
-					if (h >= p1) 
+					if (alpha > atalpha)
 					{
-						Ellipsoidvol <- numeric(JClusters);
-						for (i in 1:JClusters)
+						h <- as.integer(alpha*ndata+0.5);
+						if (h >= p1) 
 						{
-							Ellipsoidvol[i] <- mdistlist[[i]][h]*detcovmat[i];
-						}
-						minEllipVol <- which.min(Ellipsoidvol)[1];
-						mincentroid <- colmean[[minEllipVol]];
-						minCov <- covmat[[minEllipVol]];
-						mdist <- mdistlist[[minEllipVol]];
-						correction <- mdist[h]/qchisq(alpha,p);
-						minCov <- minCov*correction;
-						mdist <- mahalanobis(intdata,mincentroid,minCov);
-						inside <- (mdist < chithreshold);
-						if (!is.na(sum(inside)))
-						{
-							ptsinside <- sum(inside)
-							if (ptsinside >= h0)
+							Ellipsoidvol <- numeric(JClusters);
+							for (i in 1:JClusters)
 							{
-								newCentroid <- apply(intdata[inside,],2,mean);
-								newCovariance <- cov(intdata[inside,]);
-								distanceupdate <- mahalanobis(intdata[inside,],newCentroid,newCovariance);
-								distancecluster1 <- mahalanobis(bestCMean,newCentroid,newCovariance);
-								distancecluster2 <- mahalanobis(newCentroid,bestCMean,bestCCov);
-								distanceupdate <- distanceupdate[order(distanceupdate)]
-								dsample <- (0:(ptsinside-1))/ptsinside;
-								disTheoretical <- qchisq(dsample,p);
-								kst <- ks.test(disTheoretical,distanceupdate + rnorm(length(distanceupdate),0,1e-10));
-								if ( ((kst$p.value >= minpvalThr) || (kst$statistic <= minD)) && (distancecluster1 < chithreshold2) && (distancecluster2 < chithreshold2) )
+								Ellipsoidvol[i] <- mdistlist[[i]][h]*detcovmat[i];
+							}
+							minEllipVol <- which.min(Ellipsoidvol)[1];
+							mincentroid <- colmean[[minEllipVol]];
+							minCov <- covmat[[minEllipVol]];
+							mdist <- mdistlist[[minEllipVol]];
+							correction <- mdist[h]/qchisq(alpha,p);
+							minCov <- minCov*correction;
+							mdist <- mahalanobis(intdata,mincentroid,minCov);
+							inside <- (mdist < chithreshold);
+							if (!is.na(sum(inside)))
+							{
+								ptsinside <- sum(inside)
+								if (ptsinside >= h0)
 								{
-									refinecount <- refinecount + kst$p.value;
-									bestmean[[k]] <- bestmean[[k]] + kst$p.value*newCentroid;
-									bestCov[[k]] <-bestCov[[k]] + kst$p.value*newCovariance;
-									pvals[k] <- pvals[k]+ kst$p.value*maxp;
-									atalpha <- atalpha + kst$p.value*alpha;
+									newCentroid <- apply(intdata[inside,],2,mean);
+									newCovariance <- cov(intdata[inside,]);
+									distanceupdate <- mahalanobis(intdata[inside,],newCentroid,newCovariance);
+									distancecluster1 <- mahalanobis(bestCMean,newCentroid,newCovariance);
+									distancecluster2 <- mahalanobis(newCentroid,bestCMean,bestCCov);
+									distanceupdate <- distanceupdate[order(distanceupdate)]
+									dsample <- (0:(ptsinside-1))/ptsinside;
+									disTheoretical <- qchisq(dsample,p);
+									kst <- ks.test(disTheoretical,distanceupdate + rnorm(length(distanceupdate),0,1e-10));
+									if ( ((kst$p.value >= max(0.2*maxp,minpvalThr)) && (kst$statistic <= (1.25*minD))) && (distancecluster1 >= 0.90*distancecluster2) && (distancecluster1 < chithreshold2) && (distancecluster2 < chithreshold2) )
+									{
+										refinecount <- refinecount + kst$p.value;
+										bestmean[[k]] <- bestmean[[k]] + kst$p.value*newCentroid;
+										bestCov[[k]] <- bestCov[[k]] + kst$p.value*newCovariance;
+										pvals[k] <- pvals[k]+ kst$p.value*kst$p.value;
+										atalpha <- atalpha + kst$p.value*alpha;
+									}
 								}
 							}
 						}
