@@ -31,9 +31,6 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 	  install.packages("robustbase", dependencies = TRUE)
 	  }
 	  
-	a = as.numeric(Sys.time());
-	set.seed(a);
-
 	intdata <- dataset
 	features <- colnames(dataset);
 	ndata <- nrow(intdata);
@@ -197,7 +194,7 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 						if (ptsinside >= h0)
 						{
 							newCentroid <- apply(intdata[inside,],2,mean);
-							newCovariance <- cov(intdata[inside,]);
+							newCovariance <- cov(intdata[inside,])/p.threshold;
 							distanceupdate <- mahalanobis(intdata[inside,],newCentroid,newCovariance);
 							distanceupdate <- distanceupdate[order(distanceupdate)];
 							dsample <- (0:(ptsinside-1))/ptsinside;
@@ -254,7 +251,7 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 								if (ptsinside >= h0)
 								{
 									newCentroid <- apply(intdata[inside,],2,mean);
-									newCovariance <- cov(intdata[inside,]);
+									newCovariance <- cov(intdata[inside,])/p.threshold;
 									distanceupdate <- mahalanobis(intdata[inside,],newCentroid,newCovariance);
 									distancecluster1 <- mahalanobis(bestCMean,newCentroid,newCovariance);
 									distancecluster2 <- mahalanobis(newCentroid,bestCMean,bestCCov);
@@ -262,7 +259,7 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 									dsample <- (0:(ptsinside-1))/ptsinside;
 									disTheoretical <- qchisq(dsample,p);
 									kst <- ks.test(disTheoretical,distanceupdate + rnorm(length(distanceupdate),0,1e-10));
-									if ( ((kst$p.value >= max(0.2*maxp,minpvalThr)) && (kst$statistic <= (1.25*minD))) && (distancecluster1 >= 0.90*distancecluster2) && (distancecluster1 < chithreshold2) && (distancecluster2 < chithreshold2) )
+									if ( ((kst$p.value >= max(0.2*maxp,minpvalThr)) && (kst$statistic <= (1.25*minD))) && (distancecluster1 < chithreshold2) && (distancecluster2 < chithreshold2) )
 									{
 										cat("+");
 										refinecount <- refinecount + kst$p.value;
@@ -277,7 +274,7 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 					}
 				}
 				bestmean[[k]] <- bestmean[[k]]/refinecount;
-				bestCov[[k]] <- (bestCov[[k]]/refinecount)/p.threshold;
+				bestCov[[k]] <- bestCov[[k]]/refinecount;
 				pvals[k] <- pvals[k]/refinecount;
 				atalpha <- atalpha/refinecount;
 				if (verbose) 
@@ -292,12 +289,12 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 			{
 				for (i in 1:(k-1))
 				{
-					inside.centroid <- inside.centroid + 0.25*(mahalanobis(bestmean[[i]],bestmean[[k]],bestCov[[k]]) < chithreshold3) + 0.75*(mahalanobis(bestmean[[k]],bestmean[[i]],bestCov[[i]]) < chithreshold3);
+					inside.centroid <- inside.centroid + 1.0*(mahalanobis(bestmean[[i]],bestmean[[k]],bestCov[[k]]) < chithreshold3) + 1.0*(mahalanobis(bestmean[[k]],bestmean[[i]],bestCov[[i]]) < chithreshold3);
 				}
 			}
 			inside <- numeric(0);
 			## Include cluster only if p value is significant and no overlap with already discovered clusters
-			if ((maxp < minpvalThr) || (inside.centroid >= 0.5))
+			if ((maxp < minpvalThr) || (inside.centroid > 0))
 			{
 				cat("-");
 				cycles <- cycles + 1;
@@ -313,7 +310,7 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 				cludata <- intdata[inside,];
 				if (nrow(cludata) > p1)
 				{
-					bestCov[[k]] <- cov(cludata);
+					bestCov[[k]] <- cov(cludata)/p.threshold;
 					bestmean[[k]] <- apply(cludata,2,mean);
 					lcov <- try(robustbase::covMcd(cludata));
 					if (!inherits(lcov, "try-error"))
