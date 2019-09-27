@@ -24,7 +24,7 @@
 #' @importFrom 
 #' @export
 
-GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthreshold=0.50,sampling.rate = 3,jitter=TRUE,tryouts=25,verbose=FALSE)
+GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthreshold=0.750,sampling.rate = 3,jitter=TRUE,tryouts=25,verbose=FALSE)
 {
 
   if (!requireNamespace("robustbase", quietly = TRUE)) {
@@ -67,7 +67,6 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 	minvvar <- vvar/(ndata*ndata);
 	gmincov <- diag(minvvar);
 	minminVar <- det(gmincov);
-	detmincov <- cov(gmincov);
 	jitteredData <- NULL;
 	if (jitter)
 	{
