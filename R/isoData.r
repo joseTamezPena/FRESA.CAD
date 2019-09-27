@@ -23,7 +23,7 @@ clusterISODATA <- function(dataset,clusteringMethod=GMVECluster,trainFraction=0.
 	{ 
 		cat("[");
 		res <- try(clusteringMethod(dataset[sample(nrow(dataset),trainFraction*nrow(dataset)),],...));
-		cat("]");
+		cat("]\n");
 		classLabels[[i]] <- nearestCentroid(dataset,clustercov = res$robCov);
 		clustercenters[[i]] <- res$robCov;
 		clusterPvals[[i]] <- res$pvals;	
