@@ -70,6 +70,7 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 	while ((andata >= h0) && (cycles < 5))
 	{
 		
+		fchithreshold <- qchisq(0.975,p);
 		chithreshold <- qchisq(p.threshold,p);
 		chithreshold2 <- qchisq(p.threshold/5,p);
 		chithreshold3 <- qchisq(p.threshold/2,p);
@@ -187,14 +188,14 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 					correction <- mdist[h]/qchisq(alpha,p);
 					minCov <- minCov*correction;
 					mdist <- mahalanobis(intdata,mincentroid,minCov);
-					inside <- (mdist < chithreshold);
+					inside <- (mdist < fchithreshold);
 					if (!is.na(sum(inside)))
 					{
 						ptsinside <- sum(inside)
 						if (ptsinside >= h0)
 						{
 							newCentroid <- apply(intdata[inside,],2,mean);
-							newCovariance <- cov(intdata[inside,])/p.threshold;
+							newCovariance <- cov(intdata[inside,]);
 							distanceupdate <- mahalanobis(intdata[inside,],newCentroid,newCovariance);
 							distanceupdate <- distanceupdate[order(distanceupdate)];
 							dsample <- (0:(ptsinside-1))/ptsinside;
@@ -244,14 +245,14 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 							correction <- mdist[h]/qchisq(alpha,p);
 							minCov <- minCov*correction;
 							mdist <- mahalanobis(intdata,mincentroid,minCov);
-							inside <- (mdist < chithreshold);
+							inside <- (mdist < fchithreshold);
 							if (!is.na(sum(inside)))
 							{
 								ptsinside <- sum(inside)
 								if (ptsinside >= h0)
 								{
 									newCentroid <- apply(intdata[inside,],2,mean);
-									newCovariance <- cov(intdata[inside,])/p.threshold;
+									newCovariance <- cov(intdata[inside,]);
 									distanceupdate <- mahalanobis(intdata[inside,],newCentroid,newCovariance);
 									distancecluster1 <- mahalanobis(bestCMean,newCentroid,newCovariance);
 									distancecluster2 <- mahalanobis(newCentroid,bestCMean,bestCCov);
@@ -310,8 +311,8 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 				cludata <- intdata[inside,];
 				if (nrow(cludata) > p1)
 				{
-					bestCov[[k]] <- cov(cludata)/p.threshold;
-					bestmean[[k]] <- apply(cludata,2,mean);
+#					bestCov[[k]] <- cov(cludata);
+#					bestmean[[k]] <- apply(cludata,2,mean);
 					lcov <- try(robustbase::covMcd(cludata));
 					if (!inherits(lcov, "try-error"))
 					{
