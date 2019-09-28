@@ -194,7 +194,7 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 						if (ptsinside >= h0)
 						{
 							newCentroid <- apply(intdata[inside,],2,mean);
-							newCovariance <- cov(intdata[inside,])/p.threshold;
+							newCovariance <- cov(intdata[inside,]);
 							distanceupdate <- mahalanobis(intdata[inside,],newCentroid,newCovariance);
 							distanceupdate <- distanceupdate[order(distanceupdate)];
 							dsample <- (0:(ptsinside-1))/ptsinside;
@@ -221,9 +221,9 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 			{
 				cat(cycles,":",atalpha,":",maxp,":",sum(inside),"->");
 			}
-			cat("|");
 			if (maxp > minpvalThr)
 			{
+				cat("|");
 				refinecount <- 1;
 				for ( alpha in alphalist )
 				{
@@ -251,7 +251,7 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 								if (ptsinside >= h0)
 								{
 									newCentroid <- apply(intdata[inside,],2,mean);
-									newCovariance <- cov(intdata[inside,])/p.threshold;
+									newCovariance <- cov(intdata[inside,]);
 									distanceupdate <- mahalanobis(intdata[inside,],newCentroid,newCovariance);
 									distancecluster1 <- mahalanobis(bestCMean,newCentroid,newCovariance);
 									distancecluster2 <- mahalanobis(newCentroid,bestCMean,bestCCov);
@@ -274,7 +274,7 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 					}
 				}
 				bestmean[[k]] <- bestmean[[k]]/refinecount;
-				bestCov[[k]] <- bestCov[[k]]/refinecount;
+				bestCov[[k]] <- bestCov[[k]]/refinecount/p.threshold;
 				pvals[k] <- pvals[k]/refinecount;
 				atalpha <- atalpha/refinecount;
 				if (verbose) 
@@ -308,7 +308,7 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 				mdist <- mahalanobis(intdata,bestmean[[k]],bestCov[[k]]);
 				inside <- (mdist < chithreshold);
 				cludata <- intdata[inside,];
-				if (nrow(cludata) > p1)
+				if (nrow(cludata) >= p1)
 				{
 					bestCov[[k]] <- cov(cludata)/p.threshold;
 					bestmean[[k]] <- apply(cludata,2,mean);
@@ -348,8 +348,8 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 		{
 			cat("]");
 		}
-		p.threshold <- 0.9*p.threshold;
-		minpvalThr <- minpvalThr/10.0;
+		p.threshold <- 0.95*p.threshold;
+		minpvalThr <- minpvalThr/2.0;
 	}
 	k <- length(bestmean);
 	## assign clusters labels to all points
