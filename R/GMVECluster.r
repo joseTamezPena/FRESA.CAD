@@ -208,7 +208,7 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 								correction <- 1.0
 							}
 							#Checking adjusted for trimmed covariance
-							dsample <- p.threshold*(0:(ptsinside-1))/ptsinside;
+							dsample <- p.threshold*(1:ptsinside)/ptsinside;
 							disTheoretical <- qchisq(dsample,p);
 							kst <- ks.test(disTheoretical,distanceupdate/correction + rnorm(ptsinside,0,1e-10));
 							if ((kst$statistic < minD) && (kst$p.value > 0.75*maxp))
