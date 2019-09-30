@@ -24,7 +24,7 @@
 #' @importFrom 
 #' @export
 
-GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthreshold=0.650,sampling.rate = 3,jitter=TRUE,tryouts=30,verbose=FALSE)
+GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthreshold=0.50,sampling.rate = 3,jitter=TRUE,tryouts=30,verbose=FALSE)
 {
 
   if (!requireNamespace("robustbase", quietly = TRUE)) {
@@ -51,8 +51,7 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 	robCov <- list();
 	pvals <- numeric();
 	## the list of possible volume fractions
-	alphalist <- c(0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.10,0.15,0.20,0.25,0.30,0.35,0.40,0.45,0.50,p.threshold);
-	hlist <- as.integer(ndata*alphalist);
+	alphalist <- c(0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.10,0.15,0.20,0.25,0.30,0.35,0.40,0.45,0.50,0.60,0.75,0.95);
 	p1 <- p + 1;
 	minpvalThr <- 0.05;
 	globalcov <- cov(intdata);
@@ -169,6 +168,7 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 		ondata <- ndata;
 		inside.centroid <- 0;
 		maxpD <- -1;
+		optsinside <- 0;
 		if (JClusters > 0)
 		{
 	## Loop for different cluster volumes fractions and select the one with the closer Gaussian distribution and minimum volume
@@ -208,10 +208,10 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 								correction <- 1.0
 							}
 							#Checking adjusted for trimmed covariance
-							dsample <- p.threshold*(1:ptsinside)/ptsinside;
+							dsample <- p.threshold*(0:(ptsinside-1))/ptsinside;
 							disTheoretical <- qchisq(dsample,p);
 							kst <- ks.test(disTheoretical,distanceupdate/correction + rnorm(ptsinside,0,1e-10));
-							if ((kst$statistic < minD) && (kst$p.value > 0.5*maxp))
+							if ((kst$statistic < minD) && (kst$p.value > 0.75*maxp))
 							{
 								 bcorrection <- correction;
 								 bestmean[[k]] <- newCentroid;
@@ -223,9 +223,10 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 								{
 									maxp <- kst$p.value;
 								}
+								optsinside <- ptsinside
 							}
 							#Checking no-adjusted covariance
-							dsample <- (1:ptsinside)/ptsinside;
+							dsample <- (0:(ptsinside-1))/ptsinside;
 							disTheoretical <- qchisq(dsample,p);
 							kst <- ks.test(disTheoretical,distanceupdate + rnorm(ptsinside,0,1e-10));
 							if (kst$p.value > maxp)
@@ -240,6 +241,7 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 								 }
 								 pvals[k] <- maxp;
 								 atalpha <- alpha;
+								 optsinside <- ptsinside
 							}
 						}
 					}
@@ -248,7 +250,7 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 			cat("/");
 			if (verbose) 
 			{
-				cat(cycles,":",atalpha,":",maxp,":",bcorrection,":",sum(inside),"->");
+				cat(cycles,":",atalpha,":",maxp,":",bcorrection,":",optsinside,"->");
 			}
 			inside.centroid <- 0;
 ## Check for cluster overlap
