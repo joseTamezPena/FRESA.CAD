@@ -282,14 +282,6 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 					mdist <- mahalanobis(cludata,bestmean[[k]],bestCov[[k]]);
 					bestCov[[k]] <- bestCov[[k]]*bcorrection;
 					robCov[[k]] <- list(centroid=bestmean[[k]],cov=bestCov[[k]]);
-					if (nrow(cludata) > 2*p)
-					{
-						lcov <- try(robustbase::covMcd(cludata));
-						if (!inherits(lcov, "try-error"))
-						{
-							robCov[[k]] <- list(centroid=lcov$center,cov=lcov$cov);
-						}
-					}
 					mdist <- mahalanobis(intdata,bestmean[[k]],bestCov[[k]]);
 					inside <- (mdist < chithreshold);
 					intdata <- intdata[!inside,];
