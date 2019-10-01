@@ -24,7 +24,7 @@
 #' @importFrom 
 #' @export
 
-GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthreshold=0.50,sampling.rate = 3,jitter=TRUE,tryouts=30,verbose=FALSE)
+GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthreshold=0.750,sampling.rate = 3,jitter=TRUE,tryouts=30,verbose=FALSE)
 {
 
   if (!requireNamespace("robustbase", quietly = TRUE)) {
@@ -203,10 +203,10 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 							distanceupdate <- mahalanobis(auxdata,newCentroid,newCovariance);
 							distanceupdate <- distanceupdate[order(distanceupdate)];
 							correction <- distanceupdate[ptsinside]/chithreshold;
-							if (correction < 1) 
-							{
-								correction <- 1.0
-							}
+#							if (correction < 1) 
+#							{
+#								correction <- 1.0
+#							}
 							#Checking adjusted for trimmed covariance
 							dsample <- p.threshold*(1:ptsinside)/ptsinside;
 							disTheoretical <- qchisq(dsample,p);
