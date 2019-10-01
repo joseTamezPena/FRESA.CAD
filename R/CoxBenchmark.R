@@ -1,142 +1,182 @@
 CoxBenchmark <-  function(theData = NULL, theOutcome = "Class", reps = 100, trainFraction = 0.5,referenceCV = NULL,referenceName = "Reference",referenceFilterName="COX.BSWiMS")
 {
-    if (!requireNamespace("BeSS", quietly = TRUE)) {
-      install.packages("BeSS", dependencies = TRUE)
-    }
-    if (!requireNamespace("survminer", quietly = TRUE)) {
-      install.packages("survminer", dependencies = TRUE)
-    }
-    if (is.null(theData))
+  if (!requireNamespace("BeSS", quietly = TRUE)) {
+    install.packages("BeSS", dependencies = TRUE)
+  }
+  if (!requireNamespace("survminer", quietly = TRUE)) {
+    install.packages("survminer", dependencies = TRUE)
+  }
+  if (is.null(theData))
+  {
+    if (exists("theDataSet", envir=FRESAcacheEnv))
     {
-      if (exists("theDataSet", envir=FRESAcacheEnv))
-      {
-        theData <- get("theDataSet", envir=FRESAcacheEnv);
-        theOutcome <- get("theDataOutcome", envir=FRESAcacheEnv);
-      }
+      theData <- get("theDataSet", envir=FRESAcacheEnv);
+      theOutcome <- get("theDataOutcome", envir=FRESAcacheEnv);
     }
-    else
+  }
+  else
+  {
+    assign("theDataSet",theData,FRESAcacheEnv);
+    assign("theDataOutcome",theOutcome,FRESAcacheEnv);
+  }
+  
+  aucTable <- NULL 
+  accciTable <- NULL
+  errorciTable <- NULL
+  senTable <- NULL
+  speTable <- NULL
+  
+  aucTable_filter <- NULL 
+  accciTable_filter <- NULL
+  errorciTable_filter <- NULL
+  senTable_filter <- NULL
+  speTable_filter <- NULL
+  
+  CIFollowUPTable <- NULL 
+  CIRisksTable <- NULL 
+  LogRankTable <- NULL
+  
+  CIFollowUPTable_filter <- NULL 
+  CIRisksTable_filter <- NULL 
+  LogRankTable_filter <- NULL
+  fmeth_0 <- NULL;
+  
+  FilterMethod <-  function(clasfun = survival::coxph, classname = "", center = FALSE, ...)
+  {
+    #rcvFilter_reference <- cpFinal$TheCVEvaluations$Reference$testPredictions
+    rcvFilter_reference <- FRESA.CAD::randomCV(theData,theOutcome,clasfun,trainSampleSets = referenceCV$trainSamplesSets,featureSelectionFunction = referenceCV$selectedFeaturesSet);
+    cStats <- predictionStats_survival(rcvFilter_reference$survMedianTest,plotname="Cox with BSWiMS");
+    CIFollowUPTable_filter <- rbind(CIFollowUPTable_filter,cStats$CIFollowUp);
+    CIRisksTable_filter <- rbind(CIRisksTable_filter,cStats$CIRisk);
+    LogRankTable_filter <- rbind(LogRankTable_filter,cStats$LogRank);
+    #Stats binary
+    #cambiar a median antes de subir
+    #rcvFilter_reference <- cpFinal$TheCVEvaluations$COX.Reference
+    binaryPreds <- rcvFilter_reference$survMedianTest[,c("Outcome","LinearPredictorsMedian")]
+    binaryStats <- predictionStats_binary(binaryPreds,"Cox with BSWiMS")
+    accciTable_filter <- rbind(accciTable_filter,binaryStats$accc)
+    errorciTable_filter <- rbind(errorciTable_filter,binaryStats$berror)
+    aucTable_filter <- rbind(aucTable_filter,binaryStats$aucs)
+    senTable_filter <- rbind(senTable_filter,binaryStats$sensitivity)
+    speTable_filter <- rbind(speTable_filter,binaryStats$specificity)
+    
+    rcvFilter_LASSO <- FRESA.CAD::randomCV(theData,theOutcome,clasfun,trainSampleSets = referenceCV$trainSamplesSets,featureSelectionFunction = rcvLASSO$selectedFeaturesSet);
+    cStats <- predictionStats_survival(rcvFilter_LASSO$survMedianTest,plotname="Cox with LASSO");
+    CIFollowUPTable_filter <- rbind(CIFollowUPTable_filter,cStats$CIFollowUp);
+    CIRisksTable_filter <- rbind(CIRisksTable_filter,cStats$CIRisk);
+    LogRankTable_filter <- rbind(LogRankTable_filter,cStats$LogRank);
+    #Stats binary
+    binaryPreds <- rcvFilter_LASSO$survMedianTest[,c("Outcome","LinearPredictorsMedian")]
+    binaryStats <- predictionStats_binary(binaryPreds,"Cox with Lasso")
+    accciTable_filter <- rbind(accciTable_filter,binaryStats$accc)
+    errorciTable_filter <- rbind(errorciTable_filter,binaryStats$berror)
+    aucTable_filter <- rbind(aucTable_filter,binaryStats$aucs)
+    senTable_filter <- rbind(senTable_filter,binaryStats$sensitivity)
+    speTable_filter <- rbind(speTable_filter,binaryStats$specificity)
+    
+    
+    rcvFilter_BESS <- FRESA.CAD::randomCV(theData,theOutcome,clasfun,trainSampleSets = referenceCV$trainSamplesSets,featureSelectionFunction = rcvBESS$selectedFeaturesSet);
+    cStats <- predictionStats_survival(rcvFilter_BESS$survMedianTest,plotname="Cox with BESS");
+    CIFollowUPTable_filter <- rbind(CIFollowUPTable_filter,cStats$CIFollowUp);
+    CIRisksTable_filter <- rbind(CIRisksTable_filter,cStats$CIRisk);
+    LogRankTable_filter <- rbind(LogRankTable_filter,cStats$LogRank);
+    
+    #Stats binary
+    binaryStats <- predictionStats_binary(rcvFilter_BESS$survMedianTest[,c("Outcome","LinearPredictorsMedian")],"Cox with BeSS")
+    accciTable_filter <- rbind(accciTable_filter,binaryStats$accc)
+    errorciTable_filter <- rbind(errorciTable_filter,binaryStats$berror)
+    aucTable_filter <- rbind(aucTable_filter,binaryStats$aucs)
+    senTable_filter <- rbind(senTable_filter,binaryStats$sensitivity)
+    speTable_filter <- rbind(speTable_filter,binaryStats$specificity)
+    
+    cat("Univariate cox Feature Selection: ");
+    rcvFilter_UniCox <- FRESA.CAD::randomCV(theData,theOutcome,clasfun,trainSampleSets = referenceCV$trainSamplesSets,featureSelectionFunction = univariate_cox);
+    cStats <- predictionStats_survival(rcvFilter_UniCox$survMedianTest,"Cox with Univariate cox Feature Selection");
+    CIFollowUPTable_filter <- rbind(CIFollowUPTable_filter,cStats$CIFollowUp);
+    CIRisksTable_filter <- rbind(CIRisksTable_filter,cStats$CIRisk);
+    LogRankTable_filter <- rbind(LogRankTable_filter,cStats$LogRank);
+    
+    #Stats binary
+    binaryStats <- predictionStats_binary(rcvFilter_UniCox$survMedianTest[,c("Outcome","LinearPredictorsMedian")],"Unicox")
+    accciTable_filter <- rbind(accciTable_filter,binaryStats$accc)
+    errorciTable_filter <- rbind(errorciTable_filter,binaryStats$berror)
+    aucTable_filter <- rbind(aucTable_filter,binaryStats$aucs)
+    senTable_filter <- rbind(senTable_filter,binaryStats$sensitivity)
+    speTable_filter <- rbind(speTable_filter,binaryStats$specificity)
+    
+    result <- list(CIFollowUPTable_filter = CIFollowUPTable_filter,
+                   CIRisksTable_filter = CIRisksTable_filter,
+                   LogRankTable_filter = LogRankTable_filter,
+                   accciTable_filter = accciTable_filter,
+                   errorciTable_filter = errorciTable_filter,
+                   aucTable_filter = aucTable_filter,
+                   senTable_filter = senTable_filter,
+                   speTable_filter = speTable_filter,
+                   rcvFilter_reference = rcvFilter_reference,
+                   rcvFilter_LASSO = rcvFilter_LASSO,
+                   rcvFilter_BESS = rcvFilter_BESS,
+                   rcvFilter_UniCox = rcvFilter_UniCox
+    )
+    
+    return(result);
+  }
+  
+  
+  ######################Classification Algorithms####################################  
+  theFiltersets <- character();
+  theClassMethod <- character();
+  elapcol <- character();
+  cputimes <- list();
+  jaccard <- NULL;
+  featsize <- NULL;
+  TheCVEvaluations = list();
+  times <- list();
+  jaccard_filter <- list();
+  selFrequency <- data.frame(colnames(theData));
+  rownames(selFrequency) <- colnames(theData);
+  
+  if (is.null(referenceCV))
+  {
+    cat("Modeling BSWiMS: + Model found, - No Model \n"); 
+    referenceCV <- FRESA.CAD::randomCV(theData,theOutcome,BSWiMS.model,trainFraction = trainFraction,repetitions = reps,featureSelectionFunction = "Self");
+    referenceName = "BSWiMS";
+    referenceFilterName = "Cox.BSWiMS";
+  }
+  if (class(referenceCV) == "list")
+  {
+    elapcol <- names(referenceCV[[1]]$theTimes) == "elapsed"
+    TheCVEvaluations <- referenceCV;
+    for (i in 1:length(referenceCV))
     {
-      assign("theDataSet",theData,FRESAcacheEnv);
-      assign("theDataOutcome",theOutcome,FRESAcacheEnv);
+      cStats <- predictionStats_survival(referenceCV[[i]]$survMedianTest,plotname = names(referenceCV)[i]);
+      CIFollowUPTable <- rbind(CIFollowUPTable,cStats$CIFollowUp);
+      CIRisksTable <- rbind(CIRisksTable,cStats$CIRisk);
+      LogRankTable <- rbind(LogRankTable,cStats$LogRank);
+      #referenceCV <- cpFinal$TheCVEvaluations$Reference
+      binaryPreds <- referenceCV[[i]]$survMedianTest[,c("Outcome","LinearPredictorsMedian")]
+      binaryStats <- predictionStats_binary(binaryPreds,"BSWiMS")
+      accciTable <- rbind(accciTable,binaryStats$accc)
+      errorciTable <- rbind(errorciTable,binaryStats$berror)
+      aucTable <- rbind(aucTable,binaryStats$aucs);
+      senTable <- rbind(senTable,binaryStats$sensitivity);
+      speTable <- rbind(speTable,binaryStats$specificity);
+      cputimes[[i]] = mean(referenceCV[[i]]$theTimes[ elapcol ]);
+      times[[i]] <- referenceCV[[i]]$theTimes;
+      selFrequency <- cbind(selFrequency,numeric(ncol(theData)));
+      selFrequency[names(referenceCV[[i]]$featureFrequency),ncol(selFrequency)] <- referenceCV[[i]]$featureFrequency;
+      jaccard_filter[[i]] <- referenceCV[[i]]$jaccard;
     }
-    
-    aucTable <- NULL 
-    accciTable <- NULL
-    errorciTable <- NULL
-    senTable <- NULL
-    speTable <- NULL
-    
-    aucTable_filter <- NULL 
-    accciTable_filter <- NULL
-    errorciTable_filter <- NULL
-    senTable_filter <- NULL
-    speTable_filter <- NULL
-    
-    CIFollowUPTable <- NULL 
-    CIRisksTable <- NULL 
-    LogRankTable <- NULL
-    
-    CIFollowUPTable_filter <- NULL 
-    CIRisksTable_filter <- NULL 
-    LogRankTable_filter <- NULL
-    fmeth_0 <- NULL;
-    
-    FilterMethod <-  function(clasfun = survival::coxph, classname = "", center = FALSE, ...)
-    {
-      #rcvFilter_reference <- cpFinal$TheCVEvaluations$Reference$testPredictions
-      rcvFilter_reference <- randomCV(theData,theOutcome,clasfun,trainSampleSets = referenceCV$trainSamplesSets,featureSelectionFunction = referenceCV$selectedFeaturesSet);
-      cStats <- predictionStats_survival(rcvFilter_reference$survMedianTest,plotname="Cox with BSWiMS");
-      CIFollowUPTable_filter <- rbind(CIFollowUPTable_filter,cStats$CIFollowUp);
-      CIRisksTable_filter <- rbind(CIRisksTable_filter,cStats$CIRisk);
-      LogRankTable_filter <- rbind(LogRankTable_filter,cStats$LogRank);
-      #Stats binary
-      #cambiar a median antes de subir
-      #rcvFilter_reference <- cpFinal$TheCVEvaluations$COX.Reference
-      binaryPreds <- rcvFilter_reference$survMedianTest[,c("Outcome","LinearPredictorsMedian")]
-      binaryStats <- predictionStats_binary(binaryPreds,"Cox with BSWiMS")
-      accciTable_filter <- rbind(accciTable_filter,binaryStats$accc)
-      errorciTable_filter <- rbind(errorciTable_filter,binaryStats$berror)
-      aucTable_filter <- rbind(aucTable_filter,binaryStats$aucs)
-      senTable_filter <- rbind(senTable_filter,binaryStats$sensitivity)
-      speTable_filter <- rbind(speTable_filter,binaryStats$specificity)
-      
-      rcvFilter_LASSO <- randomCV(theData,theOutcome,clasfun,trainSampleSets = referenceCV$trainSamplesSets,featureSelectionFunction = rcvLASSO$selectedFeaturesSet);
-      cStats <- predictionStats_survival(rcvFilter_LASSO$survMedianTest,plotname="Cox with LASSO");
-      CIFollowUPTable_filter <- rbind(CIFollowUPTable_filter,cStats$CIFollowUp);
-      CIRisksTable_filter <- rbind(CIRisksTable_filter,cStats$CIRisk);
-      LogRankTable_filter <- rbind(LogRankTable_filter,cStats$LogRank);
-      #Stats binary
-      binaryPreds <- rcvFilter_LASSO$survMedianTest[,c("Outcome","LinearPredictorsMedian")]
-      binaryStats <- predictionStats_binary(binaryPreds,"Cox with Lasso")
-      accciTable_filter <- rbind(accciTable_filter,binaryStats$accc)
-      errorciTable_filter <- rbind(errorciTable_filter,binaryStats$berror)
-      aucTable_filter <- rbind(aucTable_filter,binaryStats$aucs)
-      senTable_filter <- rbind(senTable_filter,binaryStats$sensitivity)
-      speTable_filter <- rbind(speTable_filter,binaryStats$specificity)
-      
-      
-      rcvFilter_BESS <- randomCV(theData,theOutcome,clasfun,trainSampleSets = referenceCV$trainSamplesSets,featureSelectionFunction = rcvBESS$selectedFeaturesSet);
-      cStats <- predictionStats_survival(rcvFilter_BESS$survMedianTest,plotname="Cox with BESS");
-      CIFollowUPTable_filter <- rbind(CIFollowUPTable_filter,cStats$CIFollowUp);
-      CIRisksTable_filter <- rbind(CIRisksTable_filter,cStats$CIRisk);
-      LogRankTable_filter <- rbind(LogRankTable_filter,cStats$LogRank);
-      
-      #Stats binary
-      binaryStats <- predictionStats_binary(rcvFilter_BESS$survMedianTest[,c("Outcome","LinearPredictorsMedian")],"Cox with BeSS")
-      accciTable_filter <- rbind(accciTable_filter,binaryStats$accc)
-      errorciTable_filter <- rbind(errorciTable_filter,binaryStats$berror)
-      aucTable_filter <- rbind(aucTable_filter,binaryStats$aucs)
-      senTable_filter <- rbind(senTable_filter,binaryStats$sensitivity)
-      speTable_filter <- rbind(speTable_filter,binaryStats$specificity)
-      
-      cat("Univariate cox Feature Selection: ");
-      rcvFilter_UniCox <- randomCV(theData,theOutcome,clasfun,trainSampleSets = referenceCV$trainSamplesSets,featureSelectionFunction = univariate_cox);
-      cStats <- predictionStats_survival(rcvFilter_UniCox$survMedianTest,"Cox with Univariate cox Feature Selection");
-      CIFollowUPTable_filter <- rbind(CIFollowUPTable_filter,cStats$CIFollowUp);
-      CIRisksTable_filter <- rbind(CIRisksTable_filter,cStats$CIRisk);
-      LogRankTable_filter <- rbind(LogRankTable_filter,cStats$LogRank);
-      
-      #Stats binary
-      binaryStats <- predictionStats_binary(rcvFilter_UniCox$survMedianTest[,c("Outcome","LinearPredictorsMedian")],"Unicox")
-      accciTable_filter <- rbind(accciTable_filter,binaryStats$accc)
-      errorciTable_filter <- rbind(errorciTable_filter,binaryStats$berror)
-      aucTable_filter <- rbind(aucTable_filter,binaryStats$aucs)
-      senTable_filter <- rbind(senTable_filter,binaryStats$sensitivity)
-      speTable_filter <- rbind(speTable_filter,binaryStats$specificity)
-      
-      result <- list(CIFollowUPTable_filter = CIFollowUPTable_filter,
-                     CIRisksTable_filter = CIRisksTable_filter,
-                     LogRankTable_filter = LogRankTable_filter,
-                     accciTable_filter = accciTable_filter,
-                     errorciTable_filter = errorciTable_filter,
-                     aucTable_filter = aucTable_filter,
-                     senTable_filter = senTable_filter,
-                     speTable_filter = speTable_filter,
-                     rcvFilter_reference = rcvFilter_reference,
-                     rcvFilter_LASSO = rcvFilter_LASSO,
-                     rcvFilter_BESS = rcvFilter_BESS,
-                     rcvFilter_UniCox = rcvFilter_UniCox
-      )
-      
-      return(result);
-    }
-    
-    
-    ######################Classification Algorithms####################################  
-    if (is.null(referenceCV))
-    {
-      cat("Modeling BSWiMS: + Model found, - No Model \n"); 
-      referenceCV <- randomCV(theData,theOutcome,BSWiMS.model,trainFraction = trainFraction,repetitions = reps,featureSelectionFunction = "Self");
-      referenceName = "BSWiMS";
-      referenceFilterName = "COX.BSWiMS";
-    }
-    
+    referenceName <- names(referenceCV);
+    referenceFilterName <- paste("FS",names(referenceCV),sep="_");
+    referenceCV <- referenceCV[[1]];
+    class(referenceCV) <- "list"
+  }
+  else
+  {
     cStats <- predictionStats_survival(referenceCV$survMedianTest,plotname = referenceName);
     CIFollowUPTable <- rbind(CIFollowUPTable,cStats$CIFollowUp);
     CIRisksTable <- rbind(CIRisksTable,cStats$CIRisk);
     LogRankTable <- rbind(LogRankTable,cStats$LogRank);
-    
-    #referenceCV <- cpFinal$TheCVEvaluations$Reference
     binaryPreds <- referenceCV$survMedianTest[,c("Outcome","LinearPredictorsMedian")]
     binaryStats <- predictionStats_binary(binaryPreds,"BSWiMS")
     accciTable <- rbind(accciTable,binaryStats$accc)
@@ -144,77 +184,196 @@ CoxBenchmark <-  function(theData = NULL, theOutcome = "Class", reps = 100, trai
     aucTable <- rbind(aucTable,binaryStats$aucs)
     senTable <- rbind(senTable,binaryStats$sensitivity)
     speTable <- rbind(speTable,binaryStats$specificity)
-    
-    # 1 - pchisq(cStats$LogRank$chisq, length(cStats$LogRank$n) - 1)
-    ######################LASSO#################################### 
-    rcvLASSO <- randomCV(theData,theOutcome,LASSO_MIN,trainSampleSets = referenceCV$trainSamplesSets,featureSelectionFunction = "Self");
-    cStats <- predictionStats_survival(rcvLASSO$survMedianTest,plotname = "LASSO");
-    CIFollowUPTable <- rbind(CIFollowUPTable,cStats$CIFollowUp);
-    CIRisksTable <- rbind(CIRisksTable,cStats$CIRisk);
-    LogRankTable <- rbind(LogRankTable,cStats$LogRank);
-    
-    #rcvLASSO <- cpFinal$TheCVEvaluations$LASSO
-    binaryPreds <- rcvLASSO$survMedianTest[,c("Outcome","LinearPredictorsMedian")]
-    binaryStats <- predictionStats_binary(binaryPreds,"Lasso")
-    accciTable <- rbind(accciTable,binaryStats$accc)
-    errorciTable <- rbind(errorciTable,binaryStats$berror)
-    aucTable <- rbind(aucTable,binaryStats$aucs)
-    senTable <- rbind(senTable,binaryStats$sensitivity)
-    speTable <- rbind(speTable,binaryStats$specificity)
-    
-    ######################BESS#################################### 
-    rcvBESS <- randomCV(theData,theOutcome,BESS,trainSampleSets = referenceCV$trainSamplesSets,featureSelectionFunction = "Self");
-    cStats <- predictionStats_survival(rcvBESS$survMedianTest,plotname = "BeSS");
-    CIFollowUPTable <- rbind(CIFollowUPTable,cStats$CIFollowUp);
-    CIRisksTable <- rbind(CIRisksTable,cStats$CIRisk);
-    LogRankTable <- rbind(LogRankTable,cStats$LogRank);
-    
-    #rcvBESS <- cpFinal$TheCVEvaluations$BESS
-    #rcvBESS$survMedianTest[,"LinearPredictorsMedian"] <- -rcvBESS$survMedianTest[,"LinearPredictorsMedian"]
-    binaryPreds <- rcvBESS$survMedianTest[,c("Outcome","LinearPredictorsMedian")]
-    binaryStats <- predictionStats_binary(binaryPreds,"BeSS")
-    accciTable <- rbind(accciTable,binaryStats$accc)
-    errorciTable <- rbind(errorciTable,binaryStats$berror)
-    aucTable <- rbind(aucTable,binaryStats$aucs)
-    senTable <- rbind(senTable,binaryStats$sensitivity)
-    speTable <- rbind(speTable,binaryStats$specificity)
-    
-    ######################BESS SEQUENTIAL BIC#################################### 
-    rcvBESSSequentialBIC <- randomCV(theData,theOutcome,BESS,trainSampleSets = referenceCV$trainSamplesSets,featureSelectionFunction = "Self",method="sequential",ic.type="BIC");
-    cStats <- predictionStats_survival(rcvBESSSequentialBIC$survMedianTest,plotname = "BeSS.SEQUENTIAL.BIC");
-    CIFollowUPTable <- rbind(CIFollowUPTable,cStats$CIFollowUp);
-    CIRisksTable <- rbind(CIRisksTable,cStats$CIRisk);
-    LogRankTable <- rbind(LogRankTable,cStats$LogRank);
-    
-    binaryPreds <- rcvBESSSequentialBIC$survMedianTest[,c("Outcome","LinearPredictorsMedian")]
-    binaryStats <- predictionStats_binary(binaryPreds,"BeSS.SEQUENTIAL.BIC")
-    accciTable <- rbind(accciTable,binaryStats$accc)
-    errorciTable <- rbind(errorciTable,binaryStats$berror)
-    aucTable <- rbind(aucTable,binaryStats$aucs)
-    senTable <- rbind(senTable,binaryStats$sensitivity)
-    speTable <- rbind(speTable,binaryStats$specificity)
-    
-    ######################BESS SEQUENTIAL#################################### 
-    rcvBESSSequential <- randomCV(theData,theOutcome,BESS,trainSampleSets = referenceCV$trainSamplesSets,featureSelectionFunction = "Self",method="sequential");
-    cStats <- predictionStats_survival(rcvBESSSequential$survMedianTest,plotname = "BeSS.SEQUENTIAL");
-    CIFollowUPTable <- rbind(CIFollowUPTable,cStats$CIFollowUp);
-    CIRisksTable <- rbind(CIRisksTable,cStats$CIRisk);
-    LogRankTable <- rbind(LogRankTable,cStats$LogRank);
-    
-    binaryPreds <- rcvBESSSequential$survMedianTest[,c("Outcome","LinearPredictorsMedian")]
-    binaryStats <- predictionStats_binary(binaryPreds,"BeSS.SEQUENTIAL")
-    accciTable <- rbind(accciTable,binaryStats$accc)
-    errorciTable <- rbind(errorciTable,binaryStats$berror)
-    aucTable <- rbind(aucTable,binaryStats$aucs)
-    senTable <- rbind(senTable,binaryStats$sensitivity)
-    speTable <- rbind(speTable,binaryStats$specificity)
-    ######################Esemble#################################### 
-    
-    # ens <- cbind(referenceCV$survMedianTest[,1],referenceCV$survMedianTest[,2],rowMeans(cbind(1.0*(referenceCV$survMedianTest[,2] > 0),1.0*(rcvLASSO$survMedianTest[,2] > 0),rcvRF$survMedianTest[,2],rcvKNN$survMedianTest[,2],rcvSVM$survMedianTest[,2])))
-    # rowMeans(cbind(1.0*(referenceCV$survMedianTest[,2] > 0),1.0*(rcvLASSO$survMedianTest[,2] > 0),rcvRF$survMedianTest[,2],rcvKNN$survMedianTest[,2],rcvSVM$survMedianTest[,2]))
-    # cStats <- predictionStats_binary(ens,plotname = "Ensemble",center = TRUE,cex=0.8);
-    
-    ######################Filters  #################################### 
+    TheCVEvaluations$Reference <- referenceCV;
+    times[[1]] <- referenceCV$theTimes;
+    elapcol <- names(referenceCV$theTimes) == "elapsed"
+    cputimes[[1]] = mean(referenceCV$theTimes[ elapcol ]);
+    selFrequency <- cbind(selFrequency,numeric(ncol(theData)));
+    selFrequency[names(referenceCV$featureFrequency),ncol(selFrequency)] <- referenceCV$featureFrequency;
+    jaccard_filter[[1]] <- referenceCV$jaccard;
+  }
+  reps <- referenceCV$repetitions;
+  
+  # 1 - pchisq(cStats$LogRank$chisq, length(cStats$LogRank$n) - 1)
+  ######################LASSO#################################### 
+  rcvLASSO <- FRESA.CAD::randomCV(theData,theOutcome,LASSO_MIN,trainSampleSets = referenceCV$trainSamplesSets,featureSelectionFunction = "Self");
+  cStats <- predictionStats_survival(rcvLASSO$survMedianTest,plotname = "LASSO");
+  CIFollowUPTable <- rbind(CIFollowUPTable,cStats$CIFollowUp);
+  CIRisksTable <- rbind(CIRisksTable,cStats$CIRisk);
+  LogRankTable <- rbind(LogRankTable,cStats$LogRank);
+  
+  #rcvLASSO <- cpFinal$TheCVEvaluations$LASSO
+  binaryPreds <- rcvLASSO$survMedianTest[,c("Outcome","LinearPredictorsMedian")]
+  binaryStats <- predictionStats_binary(binaryPreds,"Lasso")
+  accciTable <- rbind(accciTable,binaryStats$accc)
+  errorciTable <- rbind(errorciTable,binaryStats$berror)
+  aucTable <- rbind(aucTable,binaryStats$aucs)
+  senTable <- rbind(senTable,binaryStats$sensitivity)
+  speTable <- rbind(speTable,binaryStats$specificity)
+  TheCVEvaluations$LASSO <- rcvLASSO;
+  times$LASSO <- rcvLASSO$theTimes
+  selFrequency <- cbind(selFrequency,numeric(ncol(theData)));
+  selFrequency[names(rcvLASSO$featureFrequency),ncol(selFrequency)] <- rcvLASSO$featureFrequency;
+  theFiltersets <- c(theFiltersets,"LASSO");
+  jaccard_filter$LASSO <- rcvLASSO$jaccard;
+  
+  ######################GLMNET_RIDGE#################################### 
+  rcvGLMNET_RIDGE <- FRESA.CAD::randomCV(theData,theOutcome,GLMNET_RIDGE_MIN,trainSampleSets = referenceCV$trainSamplesSets,featureSelectionFunction = "Self");
+  cStats <- predictionStats_survival(rcvGLMNET_RIDGE$survMedianTest,plotname = "GLMNET_RIDGE");
+  CIFollowUPTable <- rbind(CIFollowUPTable,cStats$CIFollowUp);
+  CIRisksTable <- rbind(CIRisksTable,cStats$CIRisk);
+  LogRankTable <- rbind(LogRankTable,cStats$LogRank);
+  
+  #rcvGLMNET_RIDGE <- cpFinal$TheCVEvaluations$GLMNET_RIDGE
+  binaryPreds <- rcvGLMNET_RIDGE$survMedianTest[,c("Outcome","LinearPredictorsMedian")]
+  binaryStats <- predictionStats_binary(binaryPreds,"Ridge")
+  accciTable <- rbind(accciTable,binaryStats$accc)
+  errorciTable <- rbind(errorciTable,binaryStats$berror)
+  aucTable <- rbind(aucTable,binaryStats$aucs)
+  senTable <- rbind(senTable,binaryStats$sensitivity)
+  speTable <- rbind(speTable,binaryStats$specificity)
+  TheCVEvaluations$RIDGE <- rcvGLMNET_RIDGE;
+  times$RIDGE <- rcvGLMNET_RIDGE$theTimes
+  selFrequency <- cbind(selFrequency,numeric(ncol(theData)));
+  selFrequency[names(rcvGLMNET_RIDGE$featureFrequency),ncol(selFrequency)] <- rcvGLMNET_RIDGE$featureFrequency;
+  theFiltersets <- c(theFiltersets,"RIDGE");
+  jaccard_filter$RIDGE <- rcvGLMNET_RIDGE$jaccard;
+  
+  ######################GLMNET_ELASTICNET#################################### 
+  rcvGLMNET_ELASTICNET <- FRESA.CAD::randomCV(theData,theOutcome,GLMNET_ELASTICNET_MIN,trainSampleSets = referenceCV$trainSamplesSets,featureSelectionFunction = "Self");
+  cStats <- predictionStats_survival(rcvGLMNET_ELASTICNET$survMedianTest,plotname = "GLMNET_ELASTICNET");
+  CIFollowUPTable <- rbind(CIFollowUPTable,cStats$CIFollowUp);
+  CIRisksTable <- rbind(CIRisksTable,cStats$CIRisk);
+  LogRankTable <- rbind(LogRankTable,cStats$LogRank);
+  
+  #rcvGLMNET_ELASTICNET <- cpFinal$TheCVEvaluations$GLMNET_ELASTICNET
+  binaryPreds <- rcvGLMNET_ELASTICNET$survMedianTest[,c("Outcome","LinearPredictorsMedian")]
+  binaryStats <- predictionStats_binary(binaryPreds,"ElasticNet")
+  accciTable <- rbind(accciTable,binaryStats$accc)
+  errorciTable <- rbind(errorciTable,binaryStats$berror)
+  aucTable <- rbind(aucTable,binaryStats$aucs)
+  senTable <- rbind(senTable,binaryStats$sensitivity)
+  speTable <- rbind(speTable,binaryStats$specificity)
+  TheCVEvaluations$ELASTICNET <- rcvGLMNET_ELASTICNET;
+  times$ELASTICNET <- rcvGLMNET_ELASTICNET$theTimes
+  selFrequency <- cbind(selFrequency,numeric(ncol(theData)));
+  selFrequency[names(rcvGLMNET_ELASTICNET$featureFrequency),ncol(selFrequency)] <- rcvGLMNET_ELASTICNET$featureFrequency;
+  theFiltersets <- c(theFiltersets,"ELASTICNET");
+  jaccard_filter$ELASTICNET <- rcvGLMNET_ELASTICNET$jaccard;
+  
+  ######################BESS#################################### 
+  rcvBESS <- FRESA.CAD::randomCV(theData,theOutcome,BESS,trainSampleSets = referenceCV$trainSamplesSets,featureSelectionFunction = "Self",method="gsection");
+  cStats <- predictionStats_survival(rcvBESS$survMedianTest,plotname = "BeSS");
+  CIFollowUPTable <- rbind(CIFollowUPTable,cStats$CIFollowUp);
+  CIRisksTable <- rbind(CIRisksTable,cStats$CIRisk);
+  LogRankTable <- rbind(LogRankTable,cStats$LogRank);
+  
+  #rcvBESS <- cpFinal$TheCVEvaluations$BESS
+  #rcvBESS$survMedianTest[,"LinearPredictorsMedian"] <- -rcvBESS$survMedianTest[,"LinearPredictorsMedian"]
+  binaryPreds <- rcvBESS$survMedianTest[,c("Outcome","LinearPredictorsMedian")];
+  binaryStats <- predictionStats_binary(binaryPreds,"BeSS");
+  accciTable <- rbind(accciTable,binaryStats$accc);
+  errorciTable <- rbind(errorciTable,binaryStats$berror);
+  aucTable <- rbind(aucTable,binaryStats$aucs);
+  senTable <- rbind(senTable,binaryStats$sensitivity);
+  speTable <- rbind(speTable,binaryStats$specificity);
+  TheCVEvaluations$BESS <- rcvBESS;
+  times$BESS <- rcvBESS$theTimes
+  selFrequency <- cbind(selFrequency,numeric(ncol(theData)));
+  selFrequency[names(rcvBESS$featureFrequency),ncol(selFrequency)] <- rcvBESS$featureFrequency;
+  theFiltersets <- c(theFiltersets,"BESS");
+  jaccard_filter$BESS <- rcvBESS$jaccard;
+  
+  ######################BESS SEQUENTIAL#################################### 
+  rcvBESSSequential <- FRESA.CAD::randomCV(theData,theOutcome,BESS,trainSampleSets = referenceCV$trainSamplesSets,featureSelectionFunction = "Self",method="sequential",ic.type="GIC");
+  cStats <- predictionStats_survival(rcvBESSSequential$survMedianTest,plotname = "BeSS.SEQUENTIAL");
+  CIFollowUPTable <- rbind(CIFollowUPTable,cStats$CIFollowUp);
+  CIRisksTable <- rbind(CIRisksTable,cStats$CIRisk);
+  LogRankTable <- rbind(LogRankTable,cStats$LogRank);
+  
+  binaryPreds <- rcvBESSSequential$survMedianTest[,c("Outcome","LinearPredictorsMedian")];
+  binaryStats <- predictionStats_binary(binaryPreds,"BeSS.SEQUENTIAL");
+  accciTable <- rbind(accciTable,binaryStats$accc);
+  errorciTable <- rbind(errorciTable,binaryStats$berror);
+  aucTable <- rbind(aucTable,binaryStats$aucs);
+  senTable <- rbind(senTable,binaryStats$sensitivity);
+  speTable <- rbind(speTable,binaryStats$specificity);
+  TheCVEvaluations$BESS.SEQUENTIAL <- rcvBESSSequential;
+  times$BESS.SEQUENTIAL <- rcvBESSSequential$theTimes
+  selFrequency <- cbind(selFrequency,numeric(ncol(theData)));
+  selFrequency[names(rcvBESSSequential$featureFrequency),ncol(selFrequency)] <- rcvBESSSequential$featureFrequency;
+  theFiltersets <- c(theFiltersets,"BESS.SEQUENTIAL");
+  jaccard_filter$BESS.SEQUENTIAL <- rcvBESSSequential$jaccard;
+  
+  ######################BESS SEQUENTIAL BIC#################################### 
+  rcvBESSSequentialBIC <- FRESA.CAD::randomCV(theData,theOutcome,BESS,trainSampleSets = referenceCV$trainSamplesSets,featureSelectionFunction = "Self");
+  cStats <- predictionStats_survival(rcvBESSSequentialBIC$survMedianTest,plotname = "BeSS.SEQUENTIAL.BIC");
+  CIFollowUPTable <- rbind(CIFollowUPTable,cStats$CIFollowUp);
+  CIRisksTable <- rbind(CIRisksTable,cStats$CIRisk);
+  LogRankTable <- rbind(LogRankTable,cStats$LogRank);
+  binaryPreds <- rcvBESSSequentialBIC$survMedianTest[,c("Outcome","LinearPredictorsMedian")]
+  binaryStats <- predictionStats_binary(binaryPreds,"BeSS.SEQUENTIAL.BIC")
+  accciTable <- rbind(accciTable,binaryStats$accc);
+  errorciTable <- rbind(errorciTable,binaryStats$berror);
+  aucTable <- rbind(aucTable,binaryStats$aucs);
+  senTable <- rbind(senTable,binaryStats$sensitivity);
+  speTable <- rbind(speTable,binaryStats$specificity);
+  TheCVEvaluations$BESS.SEQUENTIAL.BIC <- rcvBESSSequentialBIC;
+  times$BESS.SEQUENTIAL.BIC <- rcvBESSSequentialBIC$theTimes
+  selFrequency <- cbind(selFrequency,numeric(ncol(theData)));
+  selFrequency[names(rcvBESSSequentialBIC$featureFrequency),ncol(selFrequency)] <- rcvBESSSequentialBIC$featureFrequency;
+  theFiltersets <- c(theFiltersets,"BESS.SEQUENTIAL.BIC");
+  jaccard_filter$BESS.SEQUENTIAL.BIC <- rcvBESSSequentialBIC$jaccard;
+  ######################Esemble#################################### 
+  
+  ######################Predictions union  #################################### 
+  test_Predictions <- referenceCV$survMedianTest;
+  tnames <- rownames(test_Predictions)
+  test_Predictions <- cbind(test_Predictions,rcvLASSO$survMedianTest[tnames,3],rcvLASSO$survMedianTest[tnames,4],rcvLASSO$survMedianTest[tnames,5],rcvLASSO$survMedianTest[tnames,6])
+  test_Predictions <- cbind(test_Predictions,rcvGLMNET_RIDGE$survMedianTest[tnames,3],rcvGLMNET_RIDGE$survMedianTest[tnames,4],rcvGLMNET_RIDGE$survMedianTest[tnames,5],rcvGLMNET_RIDGE$survMedianTest[tnames,6])
+  test_Predictions <- cbind(test_Predictions,rcvGLMNET_ELASTICNET$survMedianTest[tnames,3],rcvGLMNET_ELASTICNET$survMedianTest[tnames,4],rcvGLMNET_ELASTICNET$survMedianTest[tnames,5],rcvGLMNET_ELASTICNET$survMedianTest[tnames,6])
+  test_Predictions <- cbind(test_Predictions,rcvBESS$survMedianTest[tnames,3],rcvBESS$survMedianTest[tnames,4],rcvBESS$survMedianTest[tnames,5],rcvBESS$survMedianTest[tnames,6])
+  test_Predictions <- cbind(test_Predictions,rcvBESSSequential$survMedianTest[tnames,3],rcvBESSSequential$survMedianTest[tnames,4],rcvBESSSequential$survMedianTest[tnames,5],rcvBESSSequential$survMedianTest[tnames,6])
+  test_Predictions <- cbind(test_Predictions,rcvBESSSequentialBIC$survMedianTest[tnames,3],rcvBESSSequentialBIC$survMedianTest[tnames,4],rcvBESSSequentialBIC$survMedianTest[tnames,5],rcvBESSSequentialBIC$survMedianTest[tnames,6])
+
+  predictions <- c("MartinGale","LinearPredictors","FollowUpTimes","Risks");
+  methods <- c(referenceName,"LASSO","RIDGE","ELASTICNET","BESS","BeSS.SEQUENTIAL","BeSS.SEQUENTIAL.BIC");
+  columnNamesMethods <- NULL;
+  
+  for(x in methods)
+  {
+    for(y in predictions)
+    {
+      columnNamesMethods <- cbind(columnNamesMethods,paste(x,y,sep=""))
+    }
+  }  
+
+  colnames(test_Predictions) <- c("Times","Outcome",columnNamesMethods);
+  thesets <- c("Survival Algorithm")
+  theMethod <- c(referenceName,"LASSO","RIDGE","ELASTICNET","BESS","BeSS.SEQUENTIAL","BeSS.SEQUENTIAL.BIC");
+  rownames(CIFollowUPTable) <- theMethod;
+  rownames(CIRisksTable) <- theMethod;
+  rownames(LogRankTable) <- theMethod;
+  rownames(accciTable) <- theMethod;
+  rownames(errorciTable) <- theMethod;
+  rownames(aucTable) <- theMethod;
+  rownames(senTable) <- theMethod;
+  rownames(speTable) <- theMethod;
+  
+  cputimes$LASSO = mean(rcvLASSO$theTimes[ elapcol ])
+  cputimes$RIDGE = mean(rcvGLMNET_RIDGE$theTimes[ elapcol ])
+  cputimes$ELASTICNET = mean(rcvGLMNET_ELASTICNET$theTimes[ elapcol ])
+  cputimes$BESS = mean(rcvBESS$theTimes[ elapcol ])
+  cputimes$BESS.SEQUENTIAL = mean(rcvBESSSequential$theTimes[ elapcol ])
+  cputimes$BESS.SEQUENTIAL.BIC = mean(rcvBESSSequentialBIC$theTimes[ elapcol ])
+  cputimes <- unlist(cputimes);
+  names(cputimes) <- theMethod;
+  
+  ######################Filters  #################################### 
+  
+  if (class(referenceCV) != "list")
+  {
+    classnames <- colnames(test_Predictions);
     cat("Cox\n")
     fmeth <- FilterMethod(survival::coxph,"Cox")
     CIFollowUPTable_filter <- rbind(CIFollowUPTable_filter,fmeth$CIFollowUPTable_filter);
@@ -225,165 +384,77 @@ CoxBenchmark <-  function(theData = NULL, theOutcome = "Class", reps = 100, trai
     aucTable_filter <- rbind(aucTable_filter,fmeth$aucTable_filter)
     senTable_filter <- rbind(senTable_filter,fmeth$senTable_filter)
     speTable_filter <- rbind(speTable_filter,fmeth$speTable_filter)
+    TheCVEvaluations$Cox.Reference <- fmeth$rcvFilter_reference;
+    TheCVEvaluations$Cox.LASSO = fmeth$rcvFilter_LASSO;
+    TheCVEvaluations$Cox.BESS = fmeth$rcvFilter_BESS;
+    TheCVEvaluations$Cox.Unicox = fmeth$rcvFilter_UniCox;
     
-    
-    ######################Predictions union  #################################### 
-    test_Predictions <- referenceCV$survMedianTest;
-    tnames <- rownames(test_Predictions)
-    test_Predictions <- cbind(test_Predictions,rcvLASSO$survMedianTest[tnames,3],rcvLASSO$survMedianTest[tnames,4],rcvLASSO$survMedianTest[tnames,5],rcvLASSO$survMedianTest[tnames,6])
-    test_Predictions <- cbind(test_Predictions,rcvBESS$survMedianTest[tnames,3],rcvBESS$survMedianTest[tnames,4],rcvBESS$survMedianTest[tnames,5],rcvBESS$survMedianTest[tnames,6])
-    test_Predictions <- cbind(test_Predictions,rcvBESSSequentialBIC$survMedianTest[tnames,3],rcvBESSSequentialBIC$survMedianTest[tnames,4],rcvBESSSequentialBIC$survMedianTest[tnames,5],rcvBESSSequentialBIC$survMedianTest[tnames,6])
-    test_Predictions <- cbind(test_Predictions,rcvBESSSequential$survMedianTest[tnames,3],rcvBESSSequential$survMedianTest[tnames,4],rcvBESSSequential$survMedianTest[tnames,5],rcvBESSSequential$survMedianTest[tnames,6])
     test_Predictions <- cbind(test_Predictions,fmeth$rcvFilter_reference$survMedianTest[tnames,3],fmeth$rcvFilter_reference$survMedianTest[tnames,4],fmeth$rcvFilter_reference$survMedianTest[tnames,5],fmeth$rcvFilter_reference$survMedianTest[tnames,6]);
     test_Predictions <- cbind(test_Predictions,fmeth$rcvFilter_LASSO$survMedianTest[tnames,3],fmeth$rcvFilter_LASSO$survMedianTest[tnames,4],fmeth$rcvFilter_LASSO$survMedianTest[tnames,5],fmeth$rcvFilter_LASSO$survMedianTest[tnames,6]);
     test_Predictions <- cbind(test_Predictions,fmeth$rcvFilter_BESS$survMedianTest[tnames,3],fmeth$rcvFilter_BESS$survMedianTest[tnames,4],fmeth$rcvFilter_BESS$survMedianTest[tnames,5],fmeth$rcvFilter_BESS$survMedianTest[tnames,6]);
     test_Predictions <- cbind(test_Predictions,fmeth$rcvFilter_UniCox$survMedianTest[tnames,3],fmeth$rcvFilter_UniCox$survMedianTest[tnames,4],fmeth$rcvFilter_UniCox$survMedianTest[tnames,5],fmeth$rcvFilter_UniCox$survMedianTest[tnames,6]);
     
-    ######################Column names  #################################### 
-    predictions <- c("MartinGale","LinearPredictors","FollowUpTimes","Risks");
-    methods <- c(referenceName,"LASSO","BESS","BeSS.SEQUENTIAL.BIC","BeSS.SEQUENTIAL");
-    
-    filters <- c("COX.BSWiMS","COX.LASSO","COX.BESS","COX.UnivariateCox");
-    # filters <- c(paste("COX.",referenceFilterName,sep=""),"COX.LASSO","COX.BESS","COX.IDI","COX.NRI","COX.tStudent","COX.Wilcoxon","COX.Kendall","COX.mRMR","UnivariateCox")
     columnNamesMethods <- NULL;
-    
-    for(x in methods)
-    {
-      for(y in predictions)
-      {
-        columnNamesMethods <- cbind(columnNamesMethods,paste(x,y,sep=""))
-      }
-    }
-    
+    filters = c("COX.BSWiMS","COX.LASSO","COX.BESS","COX.UnivariateCox");
     for(x in filters)
     {
       for(y in predictions)
       {
         columnNamesMethods <- cbind(columnNamesMethods,paste(x,y,sep=""))
       }
+    }  
+    
+    colnames(test_Predictions) <-	c(classnames,columnNamesMethods);
+    selFrequency <- cbind(selFrequency,numeric(ncol(theData)));
+    selFrequency[names(fmeth$rcvFilter_UniCox$featureFrequency),ncol(selFrequency)] <- fmeth$rcvFilter_UniCox$featureFrequency;
+    theFiltersets <- c(theFiltersets,"Cox.Unicox");
+    jaccard_filter$kendall <- fmeth$rcvFilter_UniCox$jaccard;
+    
+    
+  }
+  
+  
+  
+  
+  
+  featsize <- unlist(lapply(jaccard_filter, `[`, c('averageLength')))
+  names(featsize) <- theFiltersets;
+  jaccard <- unlist(lapply(jaccard_filter, `[`, c('Jaccard.SM')))
+  names(jaccard) <- theFiltersets;
+  selFrequency <- as.data.frame(selFrequency[,-1])
+  selFrequency <- selFrequency/reps;
+  colnames(selFrequency) <- theFiltersets;
+  totsum <- apply(selFrequency,1,sum);
+  selFrequency <- selFrequency[order(-totsum),];
+  totsum <- totsum[order(-totsum)];
+  selFrequency <- selFrequency[totsum>0,];
+  
+  test_Predictions <- as.data.frame(test_Predictions)
+  for (i in 2:ncol(test_Predictions))
+  {
+    if (test_Predictions[,i] < -1)
+    {	
+      test_Predictions[,i] <- 1.0/(1.0+exp(-test_Predictions[,i] ));
     }
-    
-    methodsAndFilters <-c(methods,filters);
-    columnNamesMethods <- cbind("Times","Outcome",columnNamesMethods)
-    colnames(test_Predictions) <- columnNamesMethods;
-    test_Predictions <- as.data.frame(test_Predictions)
-    
-    thesets <- c("Survival Algorithm")
-    
-    rownames(CIFollowUPTable) <- methods;
-    rownames(CIRisksTable) <- methods;
-    rownames(LogRankTable) <- methods;
-    
-    rownames(CIFollowUPTable_filter) <- filters;
-    rownames(CIRisksTable_filter) <- filters;
-    rownames(LogRankTable_filter) <- filters;
-    
-    rownames(accciTable) <- methods;
-    rownames(errorciTable) <- methods;
-    rownames(aucTable) <- methods;
-    rownames(senTable) <- methods;
-    rownames(speTable) <- methods;
-    
-    rownames(accciTable_filter) <- filters;
-    rownames(errorciTable_filter) <- filters;
-    rownames(aucTable_filter) <- filters;
-    rownames(senTable_filter) <- filters;
-    rownames(speTable_filter) <- filters;
-    
-    ff <- names(referenceCV$featureFrequency)
-    ff <- c(ff,names(rcvLASSO$featureFrequency))
-    ff <- c(ff,names(rcvBESS$featureFrequency))
-    ff <- c(ff,names(rcvBESSSequentialBIC$featureFrequency))
-    ff <- c(ff,names(rcvBESSSequential$featureFrequency))
-    ff <- c(ff,names(fmeth$rcvFilter_reference$featureFrequency))
-    ff <- c(ff,names(fmeth$rcvFilter_LASSO$featureFrequency))
-    ff <- c(ff,names(fmeth$rcvFilter_BESS$featureFrequency))
-    ff <- c(ff,names(fmeth$rcvFilter_UniCox$featureFrequency))
-    ff <- unique(ff)
-    
-    Nvar <- min(c(1000,length(ff)))
-    selFrequency <- matrix(0,nrow = Nvar,ncol = length(methodsAndFilters))
-    rownames(selFrequency) <- ff[1:Nvar]
-    selnames <- rownames(selFrequency)
-    colnames(selFrequency) <- methodsAndFilters
-    ff <- referenceCV$featureFrequency
-    fnames <- selnames %in% names(ff)
-    selFrequency[fnames,referenceName] <- ff[selnames[fnames]]
-    ff <- rcvLASSO$featureFrequency
-    fnames <- selnames %in% names(ff)
-    selFrequency[fnames,"LASSO"] <- ff[selnames[fnames]]
-    ff <- rcvBESS$featureFrequency
-    fnames <- selnames %in% names(ff)
-    selFrequency[fnames,"BESS"] <- ff[selnames[fnames]]
-    ff <- rcvBESSSequentialBIC$featureFrequency
-    fnames <- selnames %in% names(ff)
-    selFrequency[fnames,"BeSS.SEQUENTIAL.BIC"] <- ff[selnames[fnames]]
-    ff <- rcvBESSSequential$featureFrequency
-    fnames <- selnames %in% names(ff)
-    selFrequency[fnames,"BeSS.SEQUENTIAL"] <- ff[selnames[fnames]]
-    ff <- fmeth$rcvFilter_reference$featureFrequency
-    fnames <- selnames %in% names(ff)
-    selFrequency[fnames,referenceFilterName] <- ff[selnames[fnames]]
-    ff <- fmeth$rcvFilter_LASSO$featureFrequency
-    fnames <- selnames %in% names(ff)
-    selFrequency[fnames,"COX.LASSO"] <- ff[selnames[fnames]]
-    ff <- fmeth$rcvFilter_BESS$featureFrequency
-    fnames <- selnames %in% names(ff)
-    selFrequency[fnames,"COX.BESS"] <- ff[selnames[fnames]]
-    ff <- fmeth$rcvFilter_UniCox$featureFrequency
-    fnames <- selnames %in% names(ff)
-    selFrequency[fnames,"COX.UnivariateCox"] <- ff[selnames[fnames]]
-    
-    
-    elapcol <- names(referenceCV$theTimes) == "elapsed"
-    theMethod <- c(referenceName,"LASSO","BESS","BeSS.SEQUENTIAL.BIC","BeSS.SEQUENTIAL")
-    cputimes <- list(Reference = mean(referenceCV$theTimes[ elapcol ]),LASSO = mean(rcvLASSO$theTimes[ elapcol ]),BESS = mean(rcvBESS$theTimes[ elapcol ]), BESS.SEQUENTIAL.BIC = mean(rcvBESSSequentialBIC$theTimes[ elapcol]), BESS.SEQUENTIAL = mean(rcvBESSSequential$theTimes[ elapcol]))
-    
-    
-    jaccard_filter = list(Reference = referenceCV$jaccard,
-                          LASSO = rcvLASSO$jaccard,
-                          BESS = rcvBESS$jaccard,
-                          BESS.SEQUENTIAL.BIC = rcvBESSSequentialBIC$jaccard,
-                          BESS.SEQUENTIAL = rcvBESSSequential$jaccard,
-                          COX.Reference = fmeth$rcvFilter_reference$jaccard,
-                          COX.LASSO = fmeth$rcvFilter_LASSO$jaccard,
-                          COX.BESS = fmeth$rcvFilter_BESS$jaccard,
-                          COX.UniCox = fmeth$rcvFilter_UniCox$jaccard
-    );
-    
-    featsize <- unlist(lapply(jaccard_filter, `[`, c('averageLength')))
-    names(featsize) <- methodsAndFilters;
-    jaccard <- unlist(lapply(jaccard_filter, `[`, c('Jaccard.SM')))
-    names(jaccard) <- methodsAndFilters;
-    cputimes <- unlist(cputimes);
-    cputimes <- c(cputimes,sum(cputimes));
-    names(cputimes) <- methods;
-    
-    result <- list(errorciTable = errorciTable,accciTable = accciTable,aucTable = aucTable,senTable = senTable,speTable = speTable,
-                   errorciTable_filter = errorciTable_filter,accciTable_filter = accciTable_filter,aucTable_filter = aucTable_filter,senTable_filter = senTable_filter,speTable_filter = speTable_filter,
-                   CIRisksTable = CIRisksTable,CIFollowUPTable = CIFollowUPTable,LogRankTable = LogRankTable,
-                   CIRisksTable_filter = CIRisksTable_filter,CIFollowUPTable_filter = CIFollowUPTable_filter,LogRankTable_filter = LogRankTable_filter,
-                   times = list(Reference = referenceCV$theTimes,LASSO = rcvLASSO$theTimes, BESS = rcvBESS$theTimes),
-                   jaccard = jaccard,
-                   featsize = featsize,
-                   TheCVEvaluations = list(Reference = referenceCV,
-                                           LASSO = rcvLASSO,
-                                           BESS = rcvBESS,
-                                           BESS.SEQUENTIAL.BIC = rcvBESSSequentialBIC,
-                                           BESS.SEQUENTIAL = rcvBESSSequential,
-                                           COX.Reference = fmeth$rcvFilter_reference,
-                                           COX.LASSO = fmeth$rcvFilter_LASSO,
-                                           COX.BESS = fmeth$rcvFilter_BESS,
-                                           Cox.UniCox = fmeth$rcvFilter_UniCox
-                   ),
-                   thesets = thesets,
-                   theMethod = methods,
-                   theFiltersets = filters,
-                   testPredictions = test_Predictions,
-                   featureSelectionFrequency = selFrequency,
-                   cpuElapsedTimes=cputimes				 
-    )
-    class(result) <- c("FRESA_benchmark","Survival.COX");
-    return(result)
+  }
+  
+  
+  result <- list(errorciTable = errorciTable,accciTable = accciTable,aucTable = aucTable,senTable = senTable,speTable = speTable,
+                 errorciTable_filter = errorciTable_filter,accciTable_filter = accciTable_filter,aucTable_filter = aucTable_filter,senTable_filter = senTable_filter,speTable_filter = speTable_filter,
+                 CIRisksTable = CIRisksTable,CIFollowUPTable = CIFollowUPTable,LogRankTable = LogRankTable,
+                 CIRisksTable_filter = CIRisksTable_filter,CIFollowUPTable_filter = CIFollowUPTable_filter,LogRankTable_filter = LogRankTable_filter,
+                 times = list(Reference = referenceCV$theTimes,LASSO = rcvLASSO$theTimes, RIDGE = rcvGLMNET_RIDGE$theTimes, ELASTICNET = rcvGLMNET_ELASTICNET, BESS = rcvBESS$theTimes, BESS.SEQUENTIAL = rcvBESSSequential$theTimes, BESS.SEQUENTIAL.BIC=rcvBESSSequentialBIC$theTimes),
+                 jaccard = jaccard,
+                 featsize = featsize,
+                 TheCVEvaluations = TheCVEvaluations,
+                 thesets = thesets,
+                 theMethod = theMethod,
+                 theFiltersets = theFiltersets,
+                 testPredictions = test_Predictions,
+                 featureSelectionFrequency = selFrequency,
+                 cpuElapsedTimes=cputimes				 
+  )
+  class(result) <- c("FRESA_benchmark","Survival.COX");
+  return(result)
 }
 

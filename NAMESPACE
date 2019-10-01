@@ -82,6 +82,10 @@ export(predict.GMVE)
 export(trajectoriesPolyFeatures)
 export(predict.FRESA_BESS)
 export(GLMNET)
+export(GLMNET_ELASTICNET_MIN)
+export(GLMNET_RIDGE_MIN)
+export(univariate_cox)
+
 
 useDynLib(FRESA.CAD,.registration = TRUE)
 

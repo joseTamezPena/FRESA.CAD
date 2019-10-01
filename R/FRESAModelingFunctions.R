@@ -214,6 +214,30 @@ LASSO_1SE <- function(formula = formula, data=NULL,...)
 	return (result);
 }
 
+GLMNET_RIDGE_MIN <- function(formula = formula, data=NULL, ...)
+{
+	result <- GLMNET(formula,data,s = "lambda.min", alpha=0,...);
+	return (result);
+}
+
+GLMNET_ELASTICNET_MIN <- function(formula = formula, data=NULL, ...)
+{
+	result <- GLMNET(formula,data,s = "lambda.min",alpha=0-95,...);
+	return (result);
+}
+
+GLMNET_RIDGE_1SE <- function(formula = formula, data=NULL, ...)
+{
+	result <- GLMNET(formula,data,s = "lambda.1se", alpha=0,...);
+	return (result);
+}
+
+GLMNET_ELASTICNET_1SE <- function(formula = formula, data=NULL, ...)
+{
+	result <- GLMNET(formula,data,s = "lambda.1se",alpha=0-95,...);
+	return (result);
+}
+
 predict.FRESA_GLMNET <- function(object,...) 
 {
 		parameters <- list(...);
@@ -222,7 +246,7 @@ predict.FRESA_GLMNET <- function(object,...)
 		return(pLS);
 }
 
-BESS <- function(formula = formula, data=NULL, ...)
+BESS <- function(formula = formula, data=NULL, method="sequential", ic.type="BIC",...)
 {
 	if (!requireNamespace("BeSS", quietly = TRUE)) {
 		install.packages("BeSS", dependencies = TRUE)
@@ -230,18 +254,6 @@ BESS <- function(formula = formula, data=NULL, ...)
 	baseformula <- as.character(formula);
 	usedFeatures <- colnames(data)[!(colnames(data) %in% baseformula[2])]
 	
-	method="sequential"
-	parameters <- list(...);
-	if (!is.null(parameters$method))
-	{
-		method <- parameters$method;
-	}
-	ic.type="BIC"
-	if (!is.null(parameters$ic.type))
-	{
-		ic.type <- parameters$ic.type;
-	}
-
 	if (sum(str_count(baseformula,"Surv")) > 0)
 	{
 		baseformula <- as.character(formula);
@@ -256,14 +268,7 @@ BESS <- function(formula = formula, data=NULL, ...)
 		y <- as.numeric(unlist(data[featuresOnSurvivalObject[[1]][2]]))
 		baseformula <- gsub(featuresOnSurvivalObject[[1]][1],"x",baseformula)
 		baseformula <- gsub(featuresOnSurvivalObject[[1]][2],"y",baseformula)
-		if (is.null(parameters$method))
-		{
-			result <- list(fit=BeSS::bess(as.matrix(data[,usedFeatures]), survival::Surv(x, y), method=method, family = "cox",ic.type=ic.type,...),formula = formula,usedFeatures=usedFeatures);
-		}
-		else
-		{
-			result <- list(fit=BeSS::bess(as.matrix(data[,usedFeatures]), survival::Surv(x, y), family = "cox",ic.type=ic.type,...),formula = formula,usedFeatures=usedFeatures);
-		}
+		result <- list(fit=BeSS::bess(as.matrix(data[,usedFeatures]), survival::Surv(x, y), method=method, family = "cox",ic.type=ic.type,...),formula = formula,usedFeatures=usedFeatures);
 		bessCoefficients <- result$fit$bestmodel$coefficients
 	}
 	else
@@ -271,25 +276,12 @@ BESS <- function(formula = formula, data=NULL, ...)
 		tb <- table(data[,baseformula[2]]);
 		if (length(tb)>2)
 		{
-			if (is.null(parameters$method))
-			{
-				result <- list(fit=BeSS::bess(as.matrix(data[,usedFeatures]),as.vector(data[,baseformula[2]]), method=method, family = "gaussian", epsilon = 1e-12,ic.type=ic.type,...),formula = formula,usedFeatures=usedFeatures);
-			}
-			else
-			{
-				result <- list(fit=BeSS::bess(as.matrix(data[,usedFeatures]),as.vector(data[,baseformula[2]]), family = "gaussian", epsilon = 1e-12,ic.type=ic.type,...),formula = formula,usedFeatures=usedFeatures);
-			}
+			result <- list(fit=BeSS::bess(as.matrix(data[,usedFeatures]),as.vector(data[,baseformula[2]]), method=method, family = "gaussian", epsilon = 1e-12,ic.type=ic.type,...),formula = formula,usedFeatures=usedFeatures);
 		}
 		else
 		{
-			if (is.null(parameters$method))
-			{
-				result <- list(fit=BeSS::bess(as.matrix(data[,usedFeatures]),as.vector(data[,baseformula[2]]), method=method, family = "binomial", epsilon = 0,ic.type=ic.type,...), formula = formula,usedFeatures=usedFeatures);
-			}
-			else
-			{
-				result <- list(fit=BeSS::bess(as.matrix(data[,usedFeatures]),as.vector(data[,baseformula[2]]), family = "binomial", epsilon = 0,ic.type=ic.type,...), formula = formula,usedFeatures=usedFeatures);
-			}
+			result <- list(fit=BeSS::bess(as.matrix(data[,usedFeatures]),as.vector(data[,baseformula[2]]), method=method, family = "binomial", epsilon = 0,ic.type=ic.type,...), formula = formula,usedFeatures=usedFeatures);
+
 		}
 		bessCoefficients <- result$fit$bestmodel$coefficients[-1];
 	}
@@ -300,6 +292,18 @@ BESS <- function(formula = formula, data=NULL, ...)
 	result$ic.type <- ic.type;
 	class(result) <- "FRESA_BESS"
 	
+	return(result);
+}
+
+BESS_GSECTION <- function(formula = formula, data=NULL, method="gsection", ic.type="NULL",...)
+{
+	result <- BESS(formula, data, method, ic.type,...);
+	return(result);
+}
+
+BESS_GIC <- function(formula = formula, data=NULL, ic.type="GIC",...)
+{
+	result <- BESS(formula = formula, data = data, ic.type=ic.type,...);
 	return(result);
 }
 
