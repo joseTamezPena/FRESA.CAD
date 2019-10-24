@@ -5,7 +5,7 @@
 	FRESA wrapper to fit \code{naivebayes::naive_bayes} object to the data 
 }
 \usage{
-	NAIVE_BAYES(formula = formula,data=NULL,...)
+	NAIVE_BAYES(formula = formula,data=NULL,pca=TRUE,...)
 }
 
 \arguments{
@@ -14,6 +14,9 @@
 	}
 	\item{data}{
 	The data to be used for training the method
+	}
+	\item{pca}{
+	will do the PCA of the dataset
 	}
 	\item{...}{
 	Parameters to be passed to the naivebayes::naive_bayes function
