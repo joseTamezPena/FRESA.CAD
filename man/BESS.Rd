@@ -5,7 +5,7 @@
 	Fits a \code{BeSS::bess} object to the data, and return the selected features  
 }
 \usage{
-	BESS(formula = formula,data=NULL,...)
+	BESS(formula = formula, data=NULL, method="sequential", ic.type="BIC",...)
 }
 
 \arguments{
@@ -15,8 +15,14 @@
 	\item{data}{
 	The data to be used for training the bess model
 	}
+	\item{method}{
+	BeSS: Methods to be used to select the optimal model size
+	}
+	\item{ic.type}{
+	BeSS: Types of best model returned.
+	}
 	\item{...}{
-	Parameters to be passed to the bess function
+	Parameters to be passed to the \code{BeSS::bess} function
 	}
 }
 
@@ -31,9 +37,9 @@
 	The list of features used by fit
 	}
 	\item{selectedfeatures}{
-	The character vector of the model features acording to BeSS type
+	The character vector of the model features according to BeSS type
 	}
 }
-\author{Jose G. Tamez-Pena}
+\author{Jorge Orozco}
 \seealso{\code{BeSS::bess}}
 \keyword{Model_Generation}

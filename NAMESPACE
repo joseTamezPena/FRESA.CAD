@@ -137,5 +137,6 @@ importFrom("utils", "head")
 importFrom("stats", "mahalanobis")
 importFrom("graphics", "points")
 importFrom("stats", "prcomp")
+importFrom("stats", "filter")
 
 
