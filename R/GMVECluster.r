@@ -108,10 +108,13 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 			}
 		}
 
-		auxdata <- intdata[maxMahadis == 0,];
-		if (nrow(auxdata) < h0)
+		if (sum(1*(maxMahadis == 0)) < h0)
 		{
 			auxdata <- intdata;
+		}
+		else
+		{
+			auxdata <- intdata[maxMahadis == 0,];
 		}
 
 		andata <- nrow(auxdata);

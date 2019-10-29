@@ -421,7 +421,7 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 														if (sum(infnum)>0)
 														{
 #															print(coef_Panalysis);
-															coef_Panalysis[coef_Panalysis == Inf] <- 20.0;
+															coef_Panalysis[coef_Panalysis == Inf] <- 100.0;
 														}
 														avgLogPvalues[znames] <- avgLogPvalues[znames] + coef_Panalysis;
 														coef_Panalysis[coef_Panalysis > 10.0] <- 10.0;
