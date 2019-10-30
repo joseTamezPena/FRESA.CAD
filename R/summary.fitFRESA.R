@@ -73,8 +73,9 @@ summary.fitFRESA <- function(object,type=c("Improvement","Residual"),ci=c(0.025,
 					# }
 					# else
 					{
-						lowci[n] <- zval1*abs(lowci[n]/object$baggingAnalysis$avgZvalues[n]);
-						hici[n] <- zval2*abs(hici[n]/object$baggingAnalysis$avgZvalues[n]);
+						azval <- qnorm(exp(-object$baggingAnalysis$avgLogPvalues[n]))
+						lowci[n] <- zval1*abs(lowci[n]/azval);
+						hici[n] <- zval2*abs(hici[n]/azval);
 					}
 				}
 				cis = cbind(object$baggingAnalysis$coefficients+lowci,object$baggingAnalysis$coefficients,object$baggingAnalysis$coefficients+hici);
@@ -139,8 +140,9 @@ summary.fitFRESA <- function(object,type=c("Improvement","Residual"),ci=c(0.025,
 					# }
 					# else
 					{
-						lowci[n] <- zval1*abs(lowci[n]/object$baggingAnalysis$avgZvalues[n]);
-						hici[n] <- zval2*abs(hici[n]/object$baggingAnalysis$avgZvalues[n]);
+						azval <- qnorm(exp(-object$baggingAnalysis$avgLogPvalues[n]))
+						lowci[n] <- zval1*abs(lowci[n]/azval);
+						hici[n] <- zval2*abs(hici[n]/azval);
 					}
 				}
 				cis = cbind(object$baggingAnalysis$coefficients+lowci,object$baggingAnalysis$coefficients,object$baggingAnalysis$coefficients+hici);
