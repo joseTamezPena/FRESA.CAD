@@ -99,7 +99,7 @@ error.bar <- function(x, y, upper, lower=upper, length=0.03, ...){
   }
   else
   {
-    nf <- layout(matrix(c(1,2), 2, 1, byrow = TRUE),heights = c(5,1))
+    nf <- layout(matrix(c(1,2), 2, 1, byrow = TRUE),heights = c(5,1));
   }
   mar = par("mar")
   par(mar = c(0.0, mar[2],mar[3], mar[4]))
@@ -125,7 +125,7 @@ error.bar <- function(x, y, upper, lower=upper, length=0.03, ...){
 
 	par(mar = c(0.0, mar[2],mar[3], mar[4]))
 	barp <- barplot(rowMeans(barmatrix),cex.axis=0.4,cex.names=0.4,las=2,ylim = c(ymin,ymax),ylab=metricname, xaxt="n",cex.lab=0.4,...)
-    xpos <- barp
+    xpos <- barp;
 	par(mar = c(2.0, mar[2], 0.5, mar[4]));
 	rowmax <- apply(interMethodScore,1,max,na.rm = TRUE);
 	barplot(rowmax,cex.axis=0.4,cex.names=0.4,las=2,ylab="Score",xlab="Methods",col=col[rowmax-min(interMethodScore)+1],cex.lab=0.4);

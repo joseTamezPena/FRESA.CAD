@@ -15,38 +15,45 @@ function(x,...)
 	if (class(x)[2] == "Binary")
 	{
 
+		args.legend = list(bg = "white",x="bottomright")
+		mar = par("mar")
+		if (mar[4] >= 8)
+		{
+			args.legend = list(bg = "white",x="bottomright",inset=c(-0.25,0),cex=0.75)
+		}
+
 		x$errorciTable[is.na(x$errorciTable)] <- 0;
-		bpBER <- barPlotCiError(as.matrix(x$errorciTable),metricname = "Balanced Error",thesets = x$thesets,themethod = x$theMethod,main = paste(prefix,"Balanced Error"),offsets = c(0.5,1),scoreDirection = "<",ho=0.5,args.legend = list(bg = "white",x = "topright"),col = terrain.colors(length(x$theMethod)),...);
+		bpBER <- barPlotCiError(as.matrix(x$errorciTable),metricname = "Balanced Error",thesets = x$thesets,themethod = x$theMethod,main = paste(prefix,"Balanced Error"),offsets = c(0.5,1),scoreDirection = "<",ho=0.5,args.legend = args.legend,col = terrain.colors(length(x$theMethod)),...);
 		testBalancedError <- bpBER$ciTable$mean;
 		testBalancedErrormin <- min(bpBER$ciTable$low95);
 		testBalancedErrormax <- max(bpBER$ciTable$top95);
 
 		x$accciTable[is.na(x$accciTable)] <- 0;
-		bpACC <- barPlotCiError(as.matrix(x$accciTable),metricname = "Accuracy",thesets = x$thesets,themethod = x$theMethod,main =  paste(prefix,"Accuracy"),offsets = c(0.5,1),args.legend = list(bg = "white",x = "bottomright"),col = terrain.colors(length(x$theMethod)),...);
+		bpACC <- barPlotCiError(as.matrix(x$accciTable),metricname = "Accuracy",thesets = x$thesets,themethod = x$theMethod,main =  paste(prefix,"Accuracy"),offsets = c(0.5,1),args.legend = args.legend,col = terrain.colors(length(x$theMethod)),...);
 		testACC <- bpACC$ciTable$mean;
 		testACCmin <- min(bpACC$ciTable$low95);
 		testACCmax <- max(bpACC$ciTable$top95);
 
 		x$aucTable[is.na(x$aucTable)] <- 0;
-		bpAUC <- barPlotCiError(as.matrix(x$aucTable),metricname = "AUC",thesets = x$thesets,themethod = x$theMethod,main = paste(prefix,"ROC AUC"),offsets = c(0.5,1),ho=0.5,args.legend = list(bg = "white",x = "bottomright"),col = terrain.colors(length(x$theMethod)),...);
+		bpAUC <- barPlotCiError(as.matrix(x$aucTable),metricname = "AUC",thesets = x$thesets,themethod = x$theMethod,main = paste(prefix,"ROC AUC"),offsets = c(0.5,1),ho=0.5,args.legend = args.legend,col = terrain.colors(length(x$theMethod)),...);
 		testAUC <- bpAUC$ciTable$mean;
 		testAUCmin <- min(bpAUC$ciTable$low95);
 		testAUCmax <- max(bpAUC$ciTable$top95);
 
 		x$cidxTable[is.na(x$cidxTable)] <- 0;
-		bpCIDX <- barPlotCiError(as.matrix(x$cidxTable),metricname = "CIndex",thesets = x$thesets,themethod = x$theMethod,main = paste(prefix,"Concordance"),offsets = c(0.5,1),ho=0.5,args.legend = list(bg = "white",x = "bottomright"),col = terrain.colors(length(x$theMethod)),...);
+		bpCIDX <- barPlotCiError(as.matrix(x$cidxTable),metricname = "CIndex",thesets = x$thesets,themethod = x$theMethod,main = paste(prefix,"Concordance"),offsets = c(0.5,1),ho=0.5,args.legend = args.legend,col = terrain.colors(length(x$theMethod)),...);
 		testCIDX <- bpCIDX$ciTable$mean;
 		testCIDXmin <- min(bpCIDX$ciTable$low95);
 		testCIDXmax <- max(bpCIDX$ciTable$top95);
 
 		x$senTable[is.na(x$senTable)] <- 0;
-		bpSEN <- barPlotCiError(as.matrix(x$senTable),metricname = "Sensitivity",thesets = x$thesets,themethod = x$theMethod,main = paste(prefix,"Sensitivity"),offsets = c(0.5,1),args.legend = list(bg = "white",x = "bottomright"),col = terrain.colors(length(x$theMethod)),...);
+		bpSEN <- barPlotCiError(as.matrix(x$senTable),metricname = "Sensitivity",thesets = x$thesets,themethod = x$theMethod,main = paste(prefix,"Sensitivity"),offsets = c(0.5,1),args.legend = args.legend,col = terrain.colors(length(x$theMethod)),...);
 		testSEN <- bpSEN$ciTable$mean;
 		testSENmin <- min(bpSEN$ciTable$low95);
 		testSENmax <- max(bpSEN$ciTable$top95);
 
 		x$speTable[is.na(x$speTable)] <- 0;
-		bpSPE <- barPlotCiError(as.matrix(x$speTable),metricname = "Specificity",thesets = x$thesets,themethod = x$theMethod,main = paste(prefix,"Specificity"),offsets = c(0.5,1),args.legend = list(bg = "white",x = "bottomright"),col = terrain.colors(length(x$theMethod)),...);
+		bpSPE <- barPlotCiError(as.matrix(x$speTable),metricname = "Specificity",thesets = x$thesets,themethod = x$theMethod,main = paste(prefix,"Specificity"),offsets = c(0.5,1),args.legend = args.legend,col = terrain.colors(length(x$theMethod)),...);
 		testSPE <- bpSPE$ciTable$mean;
 		testSPEmin <- min(bpSPE$ciTable$low95);
 		testSPEmax <- max(bpSPE$ciTable$top95);

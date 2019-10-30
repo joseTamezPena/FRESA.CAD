@@ -277,7 +277,6 @@ function(formula=formula,data=NULL,type=c("Auto","LM","LOGIT","COX"),testType=c(
 							if (length(attr(terms(formula(BSWiMS.model$back.formula)),"term.labels"))>0)
 							{
 								curAUC <-  (BSWiMS.model$bootCV$sensitivity + BSWiMS.model$bootCV$specificity)/2;
-								curAUC <- curAUC + rnorm(length(curAUC),0,1e-10);
 								firstMedAUC <- median(IIRMetricPDF);
 								currentMedAUC <- median(curAUC);
 								firstCount <- sum(currentMedAUC >= IIRMetricPDF)
@@ -291,8 +290,8 @@ function(formula=formula,data=NULL,type=c("Auto","LM","LOGIT","COX"),testType=c(
 #									hist(curAUC)
 									cat(BSWiMS.model$back.formula,": Base AUC: ",firstMedAUC,"Current Blind AUC: ",currentMedAUC," Inferior Count:",firstCount," Tests:",length(IIRMetricPDF)," Fraction:",infraction," KStest:",simTest,"\n");
 								}
-								if (supchance < 0.975) infraction <- 1.0;
-								isInferior <- (infraction > 0.90);
+								if (supchance < 0.75) infraction <- 1.0;
+								isInferior <- (infraction > 0.975);
 								if ( !isInferior && (cycles < 3) && (simTest > 0.05) )
 								{
 									IIRMetricPDF <- c(IIRMetricPDF,curAUC[sample(length(curAUC),(1.0-infraction)*length(curAUC))]);
@@ -327,7 +326,6 @@ function(formula=formula,data=NULL,type=c("Auto","LM","LOGIT","COX"),testType=c(
 							{
 								sdOutcome <- BSWiMS.model$bootCV$outcomeSD;
 								curRMS <- BSWiMS.model$bootCV$testSampledRMSE;
-								curRMS <- curRMS + rnorm(length(curRMS),0,1e-10);
 								firstMedRMS <- median(IIRMetricPDF);
 								curMedRMS <- median(curRMS);
 								firstCount <- sum(curMedRMS <= IIRMetricPDF);
@@ -339,8 +337,8 @@ function(formula=formula,data=NULL,type=c("Auto","LM","LOGIT","COX"),testType=c(
 								{
 									cat("Sd:", sdOutcome,"(",supchance,")",BSWiMS.model$back.formula,": Base: ",firstMedRMS,"(",max(IIRMetricPDF),") Current: ",BSWiMS.model$bootCV$testRMSE,"(",min(BSWiMS.model$bootCV$testSampledRMSE),") Inferior Count:",firstCount," Tests:",length(firstModel$bootCV$testSampledRMSE)," Fraction:",infraction,"\n");
 								}
-								if (supchance < 0.975) infraction <- 1.0;
-								isInferior <- (infraction > 0.90);
+								if (supchance < 0.75) infraction <- 1.0;
+								isInferior <- (infraction > 0.975);
 								if ( !isInferior && (cycles < 3) && (simTest > 0.05) )
 								{
 									IIRMetricPDF <- c(IIRMetricPDF,curRMS[sample(length(curRMS),(1.0-infraction)*length(curRMS))]);
