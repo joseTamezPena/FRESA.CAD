@@ -44,6 +44,21 @@ extern "C" SEXP modelFittingCpp(SEXP _ymat,SEXP _xmat,SEXP _type)
 	return result;
 }
 
+extern "C" SEXP wtmodelFittingCpp(SEXP _ymat,SEXP _xmat,SEXP _type,SEXP _wts)
+{
+	std::string type = Rcpp::as<std::string>(_type);
+	Rcpp::NumericMatrix rymat(_ymat);
+	Rcpp::NumericMatrix rX(_xmat);
+	Rcpp::NumericVector wts(_wts);
+	mat ymat(rymat.begin(), rymat.rows(), rymat.cols(),false);
+	mat X(rX.begin(), rX.rows(), rX.cols(),false);
+	vec betas=modelFittingFunc(ymat,X,type,wts);
+	vec linearPredictors = predictForFresaFunc(betas,X,"linear",type);
+	Rcpp::List result = Rcpp::List::create(Rcpp::Named("coefficients")=Rcpp::wrap(betas.t()),
+										   Rcpp::Named("linear.predictors")=Rcpp::wrap(linearPredictors)); 
+	return result;
+}
+
 extern "C" SEXP improvedResidualsCpp(SEXP _oldResiduals,SEXP _newResiduals,SEXP _testType,SEXP _samples)
 {
 	std::string testType = Rcpp::as<std::string>(_testType);
@@ -892,8 +907,13 @@ vec binomial_dev_resids(const vec &y,const vec &mu,const vec &wt)
 }
        
 	  
-	   
 vec modelFittingFunc(const mat &ymat,const mat &XP,const std::string &type)
+{
+	vec weights = ones<vec>(ymat.n_rows); 
+	return modelFittingFunc(ymat,XP,type,weights);
+}	
+   
+vec modelFittingFunc(const mat &ymat,const mat &XP,const std::string &type,const vec &weights)
 {
   int  nobs = ymat.n_rows;
   mat X=XP;
@@ -919,7 +939,7 @@ vec modelFittingFunc(const mat &ymat,const mat &XP,const std::string &type)
 		}
     }
   vec offset = zeros<vec>(nobs); 
-  vec weights = ones<vec>(nobs); 
+//  vec weights = ones<vec>(nobs); 
   vec newstrat = zeros<vec>(nobs);
 
   vec strata;

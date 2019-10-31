@@ -93,6 +93,7 @@ vec logit_link(const vec &mu);
 vec logit_linkinv(const vec &eta);
 vec logit_mu_eta(const vec &eta);
 vec binomial_dev_resids(const vec &y,const vec &mu,const vec &wt);
+vec modelFittingFunc(const mat &ymat,const mat &XP,const std::string & type,const vec &weights);
 vec modelFittingFunc(const mat &ymat,const mat &XP,const std::string & type);
 vec predictForFresaFunc(const vec &cf,const mat &newdata,const std::string & typ, const std::string & opc);		
 vec improveProbFuncSamples(const vec &x1,const vec &x2,const vec &y,unsigned int samples,double se_nri=0, double se_idi=0); 

@@ -283,7 +283,7 @@ function(formula=formula,data=NULL,type=c("Auto","LM","LOGIT","COX"),testType=c(
 								curCount <- sum(firstMedAUC <= curAUC)
 								supchance <- sum(0.5 <= curAUC)/length(curAUC);
 								infraction <- 1.0 - 0.5*firstCount/length(IIRMetricPDF)-0.5*curCount/length(curAUC);
-								simTest <- ks.test(IIRMetricPDF,curAUC + rnorm(length(curAUC),0,1e-10))$p.value
+								simTest <- ks.test(IIRMetricPDF + rnorm(length(IIRMetricPDF),0,1e-10),curAUC + rnorm(length(curAUC),0,1e-10))$p.value
 								if (print) 
 								{
 #									hist(IIRMetricPDF)
@@ -332,7 +332,7 @@ function(formula=formula,data=NULL,type=c("Auto","LM","LOGIT","COX"),testType=c(
 								curCount <- sum(firstMedRMS >= curRMS);
 								supchance <- sum(sdOutcome >= curRMS)/length(curRMS);
 								infraction <- 1.0 - 0.5*firstCount/length(IIRMetricPDF) - 0.5*curCount/length(curRMS);
-								simTest <- ks.test(IIRMetricPDF,curRMS + rnorm(length(curRMS),0,1e-10))$p.value
+								simTest <- ks.test(IIRMetricPDF + rnorm(length(IIRMetricPDF),0,1e-10),curRMS + rnorm(length(curRMS),0,1e-10))$p.value
 								if (print) 
 								{
 									cat("Sd:", sdOutcome,"(",supchance,")",BSWiMS.model$back.formula,": Base: ",firstMedRMS,"(",max(IIRMetricPDF),") Current: ",BSWiMS.model$bootCV$testRMSE,"(",min(BSWiMS.model$bootCV$testSampledRMSE),") Inferior Count:",firstCount," Tests:",length(firstModel$bootCV$testSampledRMSE)," Fraction:",infraction,"\n");
@@ -367,7 +367,7 @@ function(formula=formula,data=NULL,type=c("Auto","LM","LOGIT","COX"),testType=c(
 				if ((testType=="zIDI") || (testType=="zNRI"))
 				{
 					IIRMetricPDF <- (firstModel$bootCV$sensitivity + firstModel$bootCV$specificity)/2;
-					IIRMetricPDF <- IIRMetricPDF + rnorm(length(IIRMetricPDF),0,1e-10);
+					IIRMetricPDF <- IIRMetricPDF;
 					if (!isInferior) 
 					{
 						isInferior <- ( (sum(0.5 <= IIRMetricPDF)/length(IIRMetricPDF)) < 0.5 );
@@ -376,7 +376,7 @@ function(formula=formula,data=NULL,type=c("Auto","LM","LOGIT","COX"),testType=c(
 				else
 				{
 					IIRMetricPDF <- firstModel$bootCV$testSampledRMSE;
-					IIRMetricPDF <- IIRMetricPDF + rnorm(length(IIRMetricPDF),0,1e-10);
+					IIRMetricPDF <- IIRMetricPDF;
 					if (print)
 					{
 						cat(length(IIRMetricPDF),": Sup std Outcome",sdOutcome,":",(sum(sdOutcome >= IIRMetricPDF)/length(IIRMetricPDF)),"\n");

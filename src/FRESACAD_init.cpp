@@ -32,6 +32,7 @@ extern "C" SEXP ForwardResidualModelCpp(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP
 extern "C" SEXP improvedResidualsCpp(SEXP, SEXP, SEXP, SEXP);
 extern "C" SEXP improveProbCpp(SEXP, SEXP, SEXP);
 extern "C" SEXP modelFittingCpp(SEXP, SEXP, SEXP);
+extern "C" SEXP wtmodelFittingCpp(SEXP, SEXP, SEXP, SEXP);
 extern "C" SEXP predictForFresa(SEXP, SEXP, SEXP, SEXP);
 extern "C" SEXP rankInverseNormalCpp(SEXP, SEXP, SEXP, SEXP, SEXP);
 extern "C" SEXP ReclassificationFRESAModelCpp(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
@@ -47,6 +48,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"improvedResidualsCpp",          (DL_FUNC) &improvedResidualsCpp,           4},
     {"improveProbCpp",                (DL_FUNC) &improveProbCpp,                 3},
     {"modelFittingCpp",               (DL_FUNC) &modelFittingCpp,                3},
+    {"wtmodelFittingCpp",             (DL_FUNC) &wtmodelFittingCpp,              3},
     {"predictForFresa",               (DL_FUNC) &predictForFresa,                4},
     {"rankInverseNormalCpp",          (DL_FUNC) &rankInverseNormalCpp,           5},
     {"ReclassificationFRESAModelCpp", (DL_FUNC) &ReclassificationFRESAModelCpp, 15},
