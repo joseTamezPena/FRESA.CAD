@@ -354,7 +354,7 @@ BinaryBenchmark <-	function(theData = NULL, theOutcome = "Class", reps = 100, tr
 	theFiltersets <- c(theFiltersets,"LASSO_MIN");
 	jaccard_filter$LASSO <- rcvLASSO$jaccard;
 	
-	rcvSVM <- randomCV(theData,theOutcome,e1071::svm,trainSampleSets = referenceCV$trainSamplesSets,featureSelectionFunction = mRMR.classic_FRESA,asFactor=TRUE);
+	rcvSVM <- randomCV(theData,theOutcome,e1071::svm,trainSampleSets = referenceCV$trainSamplesSets,featureSelectionFunction = mRMR.classic_FRESA,asFactor=TRUE,probability = TRUE);
 	cStats <- predictionStats_binary(rcvSVM$testPredictions,plotname = "SVM",center = TRUE,cex=0.8);
 	accciTable <- rbind(accciTable,cStats$accc)
 	errorciTable <- rbind(errorciTable,cStats$berror)
@@ -479,7 +479,7 @@ BinaryBenchmark <-	function(theData = NULL, theOutcome = "Class", reps = 100, tr
 
 		cat("Filtered SVM\n")
 		
-		fmeth <- FilterMethod(e1071::svm,"SVM",center = TRUE,asFactor=TRUE)
+		fmeth <- FilterMethod(e1071::svm,"SVM",center = TRUE,asFactor=TRUE,probability = TRUE)
 		aucTable_filter <- rbind(aucTable_filter,fmeth$aucTable_filter);
 		accciTable_filter <- rbind(accciTable_filter,fmeth$accciTable_filter);
 		errorciTable_filter <- rbind(errorciTable_filter,fmeth$errorciTable_filter);

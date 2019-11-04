@@ -14,6 +14,9 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
     assign("theDataSet",theData,FRESAcacheEnv);
     assign("theDataOutcome",theOutcome,FRESAcacheEnv);
   }
+  dataTable <- table(theData[,theOutcome]);
+  theClasses <- as.numeric(names(dataTable));
+  classLen <- length(theClasses);
   
   survpredict <- function(currentModel,Dataset,TestDataset,selectedFeatures)
   {
@@ -117,7 +120,31 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
   
   rpredict <-  function(currentModel,DataSet)
   {
-    pred <- try(predict(currentModel,DataSet))
+	fclass <- class(currentModel);
+	fclass <- fclass[length(fclass)];
+	pred <- try(predict(currentModel,DataSet))
+	if (asFactor && (classLen == 2))
+	{
+		if ( (fclass == "randomForest") || (fclass == "rpart") ) 
+		{
+			pred <- try(predict(currentModel,DataSet,type="prob"))[,"1"];
+		}
+		else
+		{
+			if (fclass == "svm")
+			{
+				parameters <- list(...);
+				if 	(!is.null(parameters$probability))
+				{
+					if (parameters$probability)
+					{
+						pred <- try(predict(currentModel,DataSet,probability = TRUE));
+						pred <- attr(pred,"probabilities")[,"1"];
+					}
+				}
+			}
+		}
+	}
     if (inherits(pred, "try-error"))
     {
       pred <- numeric(nrow(DataSet));
@@ -237,9 +264,6 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
   }
   
   
-  dataTable <- table(theData[,theOutcome]);
-  theClasses <- as.numeric(names(dataTable));
-  classLen <- length(theClasses);
   selectedFeaturesSet <- list();
   testClases <- ((classLen < 10) && (min(dataTable) >= 5));
   samplePerClass <- as.integer((nrow(theData)/classLen)*trainFraction);
