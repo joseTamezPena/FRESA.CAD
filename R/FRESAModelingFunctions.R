@@ -358,13 +358,13 @@ if (!requireNamespace("naivebayes", quietly = TRUE)) {
 	scaleparm <- NULL;
 	if (pca && (nrow(data) > 2*ncol(data)))
 	{
-		outcome <- as.character(data[,baseformula[2]]);
+		outcome <- data[,baseformula[2]];
 		data <- data[,!(colnames(data) %in% baseformula[2])];
 		scaleparm <- FRESAScale(data,method="Order");
 		pcaobj <- prcomp(scaleparm$scaledData);
-		data <- as.data.frame(cbind(outcome,pcaobj$x));
+		data <- as.data.frame(cbind(as.numeric(as.character(outcome)),pcaobj$x));
 		colnames(data) <- c(baseformula[2],colnames(pcaobj$x));
-		if (class(data[,baseformula[2]]) != "factor") data[,baseformula[2]] <- as.factor(data[,baseformula[2]])
+		data[,baseformula[2]] <- as.factor(data[,baseformula[2]])
 	}
 	result <- list(fit = naivebayes::naive_bayes(formula,data,...),pcaobj=pcaobj,outcome=baseformula[2],scaleparm=scaleparm);
 	class(result) <- "FRESA_NAIVEBAYES"
