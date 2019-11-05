@@ -358,7 +358,7 @@ if (!requireNamespace("naivebayes", quietly = TRUE)) {
 	scaleparm <- NULL;
 	if (pca && (nrow(data) > 2*ncol(data)))
 	{
-		outcome <- data[,baseformula[2]];
+		outcome <- as.character(data[,baseformula[2]]);
 		data <- data[,!(colnames(data) %in% baseformula[2])];
 		scaleparm <- FRESAScale(data,method="Order");
 		pcaobj <- prcomp(scaleparm$scaledData);
