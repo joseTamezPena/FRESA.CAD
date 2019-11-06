@@ -311,18 +311,31 @@ predict.FRESA_BESS <- function(object,...)
 {
 	parameters <- list(...);
 	testData <- parameters[[1]];
-	if (object$fit$method == "gsection")
+	pLS <- NULL;
+	if (!is.null(parameters$type))
 	{
-		pLS <- predict(object$fit,testData,type="opt");
-	}
-	else
-	{
-		type = object$ic.type;
-		if (!is.null(parameters$type))
+		type <- parameters$type;
+		if (type == "response")
 		{
-			type <- parameters$type
+			print(object$fit$bestmodel$coef)
+			pLS <- predict(object$fit$bestmodel,testData,type=type);
 		}
-		pLS <- predict(object$fit,testData,type=type);
+	}
+	if (is.null(pLS))
+	{
+		if (object$fit$method == "gsection")
+		{
+			pLS <- predict(object$fit,testData,type="opt");
+		}
+		else
+		{
+			type = object$ic.type;
+			if (!is.null(parameters$type))
+			{
+				type <- parameters$type;
+			}
+			pLS <- predict(object$fit,testData,type=type);
+		}
 	}
 	return(pLS);
 }
