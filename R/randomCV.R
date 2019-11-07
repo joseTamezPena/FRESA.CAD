@@ -364,8 +364,8 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
         testSet <- rbind(testSet,ssubsets[[jind]][-unique(sampleTrain),]);
         
         jind <- jind + 1;
-        cat("Train Class: ",s," rows:",nrow(trainSet),"\n");
-        cat("Test Class: ",s," rows:",nrow(testSet),"\n");
+#        cat("Train Class: ",s," rows:",nrow(trainSet),"\n");
+#        cat("Test Class: ",s," rows:",nrow(testSet),"\n");
       }
     }
     else
@@ -478,7 +478,7 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
       #			cat(ncol(trainSet),":",nrow(trainSet),"\n")
       
       theTimes <- append(theTimes,system.time(currentModel <- try(fittingFunction(theformula,trainSet,...))));
-	  cat("Here\n")
+#	  cat("Here\n")
       if ( inherits(currentModel, "try-error"))
       {
         if ((testClases) && (!asFactor))
@@ -525,7 +525,7 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
           if (!is.null(currentModel$selectedfeatures))
           {
             ffet <- currentModel$selectedfeatures;
-			print(ffet);
+#			print(ffet);
             selectedFeaturesSet[[rept]] <- ffet;
           }
           if (fclass == "FRESA_BESS")

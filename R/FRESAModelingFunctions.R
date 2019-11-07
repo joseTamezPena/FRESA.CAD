@@ -317,8 +317,11 @@ predict.FRESA_BESS <- function(object,...)
 		type <- parameters$type;
 		if (type == "response")
 		{
-			print(object$fit$bestmodel$coef)
-			pLS <- predict(object$fit$bestmodel,testData,type=type);
+			newdata <- as.data.frame(cbind(y=1:nrow(testData),testData[,object$selectedfeatures]))
+			colnames(newdata) <- c("y",paste("xbest",object$selectedfeatures,sep=""))
+			object$fit$bestmodel$formula <- formula(paste("y~",paste(colnames(newdata)[-1],collapse = " + ")))
+			object$fit$bestmodel$terms <- terms(object$fit$bestmodel$formula)
+			pLS <- predict(object$fit$bestmodel,newdata,type=type);
 		}
 	}
 	if (is.null(pLS))
