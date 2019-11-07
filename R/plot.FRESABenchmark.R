@@ -76,6 +76,8 @@ function(x,...)
 			}
 			colnames(mcnemar) <- colnames(x$testPredictions)[-1]
 			rownames(mcnemar) <- colnames(x$testPredictions)[-1]
+			colnames(pmcnemar) <- colnames(x$testPredictions)[-1]
+			rownames(pmcnemar) <- colnames(x$testPredictions)[-1]
 			par(op);
 			par(mfrow = c(1,1),mar = c(2,2,2,2));
 			gplots::heatmap.2(mcnemar,trace = "none",mar = c(5,10),col=rev(heat.colors(8)),main = "McNemar's test",cexRow = 0.65,cexCol = 0.75,srtCol = 25)
