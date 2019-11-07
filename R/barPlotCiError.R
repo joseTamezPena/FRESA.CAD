@@ -1,5 +1,6 @@
 barPlotCiError <-  function(ciTable, metricname, thesets, themethod, main, angle=0, offsets=c(0.1,0.1),scoreDirection=">",ho=NULL, ...)
 {
+  op <- par(no.readonly=TRUE);
 
 error.bar <- function(x, y, upper, lower=upper, length=0.03, ...){
   if (length(x) != length(y) | length(y) != length(lower) | length(lower) != length(upper))
@@ -89,7 +90,6 @@ error.bar <- function(x, y, upper, lower=upper, length=0.03, ...){
   ymin <- min(0,1.25*min(ciTable));
   ymax <- max(0,1.10*max(ciTable));
   
-#  op <- par(no.readonly=TRUE);
 #  par(mfrow = c(1,1));
   par(pty="m")
 
@@ -133,7 +133,7 @@ error.bar <- function(x, y, upper, lower=upper, length=0.03, ...){
  }
   par(mar=mar);
 #  par(mfrow = c(1,1),mar=mar);
-#  par(op)
+  par(op)
 
   
   return(list(barplot=barpo,ciTable = list(mean=barmatrix,low95=infmatrix,top95=upmatrix), supMethod = SupMethod, infMethod = InfMethod, interMethodScore=interMethodScore ))

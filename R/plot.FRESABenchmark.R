@@ -59,6 +59,30 @@ function(x,...)
 		testSPEmax <- max(bpSPE$ciTable$top95);
 		brnames <- names(testBalancedError);
 		
+		mcnemar <- matrix(1,ncol = ncol(x$testPredictions)-1,nrow=ncol(x$testPredictions)-1)
+		pmcnemar <- mcnemar;
+		if ((ncol(x$testPredictions)-1) > 2)
+		{
+			for (i in 2:(ncol(x$testPredictions)-1))
+			{
+				for (j in (i+1):ncol(x$testPredictions))
+				{
+					tb <- table(x$testPredictions[,i] > 0.5,x$testPredictions[,j] > 0.5)
+					pmcnemar[i-1,j-1] <- epiR::epi.kappa(tb)$mcnemar$p.value;
+					pmcnemar[j-1,i-1] <- pmcnemar[i-1,j-1];
+					mcnemar[i-1,j-1] <- -log10(max(pmcnemar[i-1,j-1],0.0001));
+					mcnemar[j-1,i-1] <- mcnemar[i-1,j-1];
+				}
+			}
+			colnames(mcnemar) <- colnames(x$testPredictions)[-1]
+			rownames(mcnemar) <- colnames(x$testPredictions)[-1]
+			par(op);
+			par(mfrow = c(1,1),mar = c(2,2,2,2));
+			gplots::heatmap.2(mcnemar,trace = "none",mar = c(5,10),col=rev(heat.colors(8)),main = "McNemar's test",cexRow = 0.65,cexCol = 0.75,srtCol = 25)
+			par(op);
+		}
+
+		
 		metrics <- rbind(BER = testBalancedError,
 							ACC = testACC[brnames],
 							AUC = testAUC[brnames],
@@ -147,7 +171,7 @@ function(x,...)
 		}
 
 		
-		result <- list(metrics = metrics, barPlotsCI = barPlotsCI,metrics_filter=metrics_filter,barPlotsCI_filter=barPlotsCI_filter, minMaxMetrics = minMaxMetrics);
+		result <- list(metrics = metrics, barPlotsCI = barPlotsCI,metrics_filter=metrics_filter,barPlotsCI_filter=barPlotsCI_filter, minMaxMetrics = minMaxMetrics,mcnemar=pmcnemar);
 	}
 	if (class(x)[2] == "Ordinal")
 	{
