@@ -374,7 +374,7 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
       {
         sampleTrain <- sample(nrow(theData),nrow(theData)*trainFraction,replace=BootReplace)
 		usample <- unique(sampleTrain);
-		if (length(usample) == nrow(ssubsets[[jind]]))
+		if (length(usample) == nrow(theData))
 		{	
 			 sampleTrain <- sampleTrain[sampleTrain != usample[1]]; # remove at least one sample
 		}
