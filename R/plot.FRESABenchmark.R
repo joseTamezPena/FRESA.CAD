@@ -59,30 +59,6 @@ function(x,...)
 		testSPEmax <- max(bpSPE$ciTable$top95);
 		brnames <- names(testBalancedError);
 		
-		mcnemar <- matrix(1,ncol = ncol(x$testPredictions)-1,nrow=ncol(x$testPredictions)-1)
-		pmcnemar <- mcnemar;
-		if ((ncol(x$testPredictions)-1) > 2)
-		{
-			for (i in 2:(ncol(x$testPredictions)-1))
-			{
-				for (j in (i+1):ncol(x$testPredictions))
-				{
-					tb <- table(x$testPredictions[,i] > 0.5,x$testPredictions[,j] > 0.5)
-					pmcnemar[i-1,j-1] <- epiR::epi.kappa(tb)$mcnemar$p.value;
-					pmcnemar[j-1,i-1] <- pmcnemar[i-1,j-1];
-					mcnemar[i-1,j-1] <- -log10(max(pmcnemar[i-1,j-1],0.0001));
-					mcnemar[j-1,i-1] <- mcnemar[i-1,j-1];
-				}
-			}
-			colnames(mcnemar) <- colnames(x$testPredictions)[-1]
-			rownames(mcnemar) <- colnames(x$testPredictions)[-1]
-			colnames(pmcnemar) <- colnames(x$testPredictions)[-1]
-			rownames(pmcnemar) <- colnames(x$testPredictions)[-1]
-			par(op);
-			par(mfrow = c(1,1),mar = c(2,2,2,2));
-			gplots::heatmap.2(mcnemar,trace = "none",mar = c(5,10),col=rev(heat.colors(8)),main = "McNemar's test",cexRow = 0.65,cexCol = 0.75,srtCol = 25)
-			par(op);
-		}
 
 		
 		metrics <- rbind(BER = testBalancedError,
@@ -170,6 +146,31 @@ function(x,...)
 						SPE = c(min(testSPEmin,testFilSPEmin),max(testSPEmax,testFilSPEmax)),
 						CIDX = c(min(testFilCIDXmin,testFilCIDXmin),max(testFilCIDXmax,testFilCIDXmax))
 						);
+		}
+		mcnemar <- matrix(1,ncol = ncol(x$testPredictions)-1,nrow=ncol(x$testPredictions)-1)
+		pmcnemar <- mcnemar;
+		if ((ncol(x$testPredictions)-1) > 2)
+		{
+			for (i in 2:(ncol(x$testPredictions)-1))
+			{
+				for (j in (i+1):ncol(x$testPredictions))
+				{
+					tb <- table(x$testPredictions[,i] > 0.5,x$testPredictions[,j] > 0.5)
+					pmcnemar[i-1,j-1] <- epiR::epi.kappa(tb)$mcnemar$p.value;
+					pmcnemar[j-1,i-1] <- pmcnemar[i-1,j-1];
+					mcnemar[i-1,j-1] <- -log10(max(pmcnemar[i-1,j-1],0.0001));
+					mcnemar[j-1,i-1] <- mcnemar[i-1,j-1];
+				}
+			}
+			mcnemar[is.nan(mcnemar)] <- 1.0
+			colnames(mcnemar) <- colnames(x$testPredictions)[-1]
+			rownames(mcnemar) <- colnames(x$testPredictions)[-1]
+			colnames(pmcnemar) <- colnames(x$testPredictions)[-1]
+			rownames(pmcnemar) <- colnames(x$testPredictions)[-1]
+			par(op);
+			par(mfrow = c(1,1),mar = c(2,2,2,2));
+			gplots::heatmap.2(mcnemar,trace = "none",mar = c(5,10),col=rev(heat.colors(8)),main = "McNemar's test",cexRow = 0.65,cexCol = 0.75,srtCol = 25,key.xlab="-log(p)")
+			par(op);
 		}
 
 		
@@ -297,8 +298,34 @@ function(x,...)
 						SEN =c(min(testSENmin,testFilSENmin),max(testSENmax,testFilSENmax)),
 						AUC =c(min(testAUCmin,testFilAUCmin),max(testAUCmax,testFilAUCmax))
 						);
+		mcnemar <- matrix(1,ncol = ncol(x$testPredictions)-1,nrow=ncol(x$testPredictions)-1)
+		pmcnemar <- mcnemar;
+		if ((ncol(x$testPredictions)-1) > 2)
+		{
+			for (i in 2:(ncol(x$testPredictions)-1))
+			{
+				for (j in (i+1):ncol(x$testPredictions))
+				{
+					tb <- table(x$testPredictions[,i],x$testPredictions[,j])
+					pmcnemar[i-1,j-1] <- epiR::epi.kappa(tb)$mcnemar$p.value;
+					pmcnemar[j-1,i-1] <- pmcnemar[i-1,j-1];
+					mcnemar[i-1,j-1] <- -log10(max(pmcnemar[i-1,j-1],0.0001));
+					mcnemar[j-1,i-1] <- mcnemar[i-1,j-1];
+				}
+			}
+			mcnemar[is.nan(mcnemar)] <- 1.0
+			colnames(mcnemar) <- colnames(x$testPredictions)[-1]
+			rownames(mcnemar) <- colnames(x$testPredictions)[-1]
+			colnames(pmcnemar) <- colnames(x$testPredictions)[-1]
+			rownames(pmcnemar) <- colnames(x$testPredictions)[-1]
+			par(op);
+			par(mfrow = c(1,1),mar = c(2,2,2,2));
+			gplots::heatmap.2(mcnemar,trace = "none",mar = c(5,10),col=rev(heat.colors(8)),main = "McNemar's test",cexRow = 0.65,cexCol = 0.75,srtCol = 25,key.xlab="-log(p)")
+			par(op);
+		}
 
-		result <- list(metrics = metrics, barPlotsCI = barPlotsCI,metrics_filter=metrics_filter,barPlotsCI_filter=barPlotsCI_filter, minMaxMetrics = minMaxMetrics);
+
+		result <- list(metrics = metrics, barPlotsCI = barPlotsCI,metrics_filter=metrics_filter,barPlotsCI_filter=barPlotsCI_filter, minMaxMetrics = minMaxMetrics,mcnemar=pmcnemar);
 	}
 	if (class(x)[2] == "Regression")
 	{
@@ -395,8 +422,32 @@ function(x,...)
 						Pearson = c(min(c(testPearsonmin,testFilPearsonmin)),max(c(testPearsonmax,testFilPearsonmax))),
 						Bias = c(min(c(testBiasmin,testFilBiasmin)),max(c(testBiasmax,testFilBiasmax)))
 						);
+		ttable <- matrix(1,ncol = ncol(x$testPredictions)-1,nrow=ncol(x$testPredictions)-1)
+		pttable <- ttable;
+		if ((ncol(x$testPredictions)-1) > 2)
+		{
+			for (i in 2:(ncol(x$testPredictions)-1))
+			{
+				for (j in (i+1):ncol(x$testPredictions))
+				{
+					pttable[i-1,j-1] <-  t.test(x$testPredictions[,i],x$testPredictions[,j],paired=TRUE)$p.value;
+					pttable[j-1,i-1] <- pttable[i-1,j-1];
+					ttable[i-1,j-1] <- -log10(max(pttable[i-1,j-1],0.0001));
+					ttable[j-1,i-1] <- ttable[i-1,j-1];
+				}
+			}
+			ttable[is.nan(ttable)] <- 1.0
+			colnames(ttable) <- colnames(x$testPredictions)[-1]
+			rownames(ttable) <- colnames(x$testPredictions)[-1]
+			colnames(pttable) <- colnames(x$testPredictions)[-1]
+			rownames(pttable) <- colnames(x$testPredictions)[-1]
+			par(op);
+			par(mfrow = c(1,1),mar = c(2,2,2,2));
+			gplots::heatmap.2(mcnemar,trace = "none",mar = c(5,10),col=rev(heat.colors(8)),main = "t-test",cexRow = 0.65,cexCol = 0.75,srtCol = 25,key.xlab="-log(p)")
+			par(op);
+		}
 
-		result <- list(metrics = metrics, barPlotsCI = barPlotsCI,metrics_filter=metrics_filter,barPlotsCI_filter=barPlotsCI_filter, minMaxMetrics = minMaxMetrics);
+		result <- list(metrics = metrics, barPlotsCI = barPlotsCI,metrics_filter=metrics_filter,barPlotsCI_filter=barPlotsCI_filter, minMaxMetrics = minMaxMetrics,ttable=pttable);
 
 
 	}
