@@ -147,8 +147,8 @@ function(x,...)
 						CIDX = c(min(testFilCIDXmin,testFilCIDXmin),max(testFilCIDXmax,testFilCIDXmax))
 						);
 		}
-		mcnemar <- matrix(1,ncol = ncol(x$testPredictions)-1,nrow=ncol(x$testPredictions)-1)
-		pmcnemar <- mcnemar;
+		mcnemar <- matrix(0,ncol = ncol(x$testPredictions)-1,nrow=ncol(x$testPredictions)-1)
+		pmcnemar <- matrix(1,ncol = ncol(x$testPredictions)-1,nrow=ncol(x$testPredictions)-1)
 		if ((ncol(x$testPredictions)-1) > 2)
 		{
 			for (i in 2:(ncol(x$testPredictions)-1))
@@ -298,34 +298,33 @@ function(x,...)
 						SEN =c(min(testSENmin,testFilSENmin),max(testSENmax,testFilSENmax)),
 						AUC =c(min(testAUCmin,testFilAUCmin),max(testAUCmax,testFilAUCmax))
 						);
-		mcnemar <- matrix(1,ncol = ncol(x$testPredictions)-1,nrow=ncol(x$testPredictions)-1)
-		pmcnemar <- mcnemar;
+		wilcoxtable <- matrix(0,ncol = ncol(x$testPredictions)-1,nrow=ncol(x$testPredictions)-1)
+		pwilcoxtable <- matrix(1,ncol = ncol(x$testPredictions)-1,nrow=ncol(x$testPredictions)-1)
 		if ((ncol(x$testPredictions)-1) > 2)
 		{
 			for (i in 2:(ncol(x$testPredictions)-1))
 			{
 				for (j in (i+1):ncol(x$testPredictions))
 				{
-					tb <- table(x$testPredictions[,i],x$testPredictions[,j])
-					pmcnemar[i-1,j-1] <- epiR::epi.kappa(tb)$mcnemar$p.value;
-					pmcnemar[j-1,i-1] <- pmcnemar[i-1,j-1];
-					mcnemar[i-1,j-1] <- -log10(max(pmcnemar[i-1,j-1],0.0001));
-					mcnemar[j-1,i-1] <- mcnemar[i-1,j-1];
+					pwilcoxtable[i-1,j-1] <- wilcox.test(x$testPredictions[,i],x$testPredictions[,j],paired = TRUE)$p.value
+					pwilcoxtable[j-1,i-1] <- pwilcoxtable[i-1,j-1];
+					wilcoxtable[i-1,j-1] <- -log10(max(pwilcoxtable[i-1,j-1],0.0001));
+					wilcoxtable[j-1,i-1] <- wilcoxtable[i-1,j-1];
 				}
 			}
-			mcnemar[is.nan(mcnemar)] <- 1.0
-			colnames(mcnemar) <- colnames(x$testPredictions)[-1]
-			rownames(mcnemar) <- colnames(x$testPredictions)[-1]
-			colnames(pmcnemar) <- colnames(x$testPredictions)[-1]
-			rownames(pmcnemar) <- colnames(x$testPredictions)[-1]
+			wilcoxtable[is.nan(wilcoxtable)] <- 1.0
+			colnames(wilcoxtable) <- colnames(x$testPredictions)[-1]
+			rownames(wilcoxtable) <- colnames(x$testPredictions)[-1]
+			colnames(pwilcoxtable) <- colnames(x$testPredictions)[-1]
+			rownames(pwilcoxtable) <- colnames(x$testPredictions)[-1]
 			par(op);
 			par(mfrow = c(1,1),mar = c(2,2,2,2));
-			gplots::heatmap.2(mcnemar,trace = "none",mar = c(5,10),col=rev(heat.colors(8)),main = "McNemar's test",cexRow = 0.65,cexCol = 0.75,srtCol = 25,key.xlab="-log(p)")
+			gplots::heatmap.2(wilcoxtable,trace = "none",mar = c(5,10),col=rev(heat.colors(8)),main = "Wilcoxon test",cexRow = 0.65,cexCol = 0.75,srtCol = 25,key.xlab="-log(p)")
 			par(op);
 		}
 
 
-		result <- list(metrics = metrics, barPlotsCI = barPlotsCI,metrics_filter=metrics_filter,barPlotsCI_filter=barPlotsCI_filter, minMaxMetrics = minMaxMetrics,mcnemar=pmcnemar);
+		result <- list(metrics = metrics, barPlotsCI = barPlotsCI,metrics_filter=metrics_filter,barPlotsCI_filter=barPlotsCI_filter, minMaxMetrics = minMaxMetrics,wilcoxtable=pwilcoxtable);
 	}
 	if (class(x)[2] == "Regression")
 	{
@@ -422,8 +421,8 @@ function(x,...)
 						Pearson = c(min(c(testPearsonmin,testFilPearsonmin)),max(c(testPearsonmax,testFilPearsonmax))),
 						Bias = c(min(c(testBiasmin,testFilBiasmin)),max(c(testBiasmax,testFilBiasmax)))
 						);
-		ttable <- matrix(1,ncol = ncol(x$testPredictions)-1,nrow=ncol(x$testPredictions)-1)
-		pttable <- ttable;
+		ttable <- matrix(0,ncol = ncol(x$testPredictions)-1,nrow=ncol(x$testPredictions)-1)
+		pttable <- matrix(1,ncol = ncol(x$testPredictions)-1,nrow=ncol(x$testPredictions)-1)
 		if ((ncol(x$testPredictions)-1) > 2)
 		{
 			for (i in 2:(ncol(x$testPredictions)-1))
@@ -443,7 +442,7 @@ function(x,...)
 			rownames(pttable) <- colnames(x$testPredictions)[-1]
 			par(op);
 			par(mfrow = c(1,1),mar = c(2,2,2,2));
-			gplots::heatmap.2(mcnemar,trace = "none",mar = c(5,10),col=rev(heat.colors(8)),main = "t-test",cexRow = 0.65,cexCol = 0.75,srtCol = 25,key.xlab="-log(p)")
+			gplots::heatmap.2(ttable,trace = "none",mar = c(5,10),col=rev(heat.colors(8)),main = "t-test",cexRow = 0.65,cexCol = 0.75,srtCol = 25,key.xlab="-log(p)")
 			par(op);
 		}
 
