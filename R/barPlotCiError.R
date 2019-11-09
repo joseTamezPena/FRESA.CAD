@@ -109,26 +109,26 @@ error.bar <- function(x, y, upper, lower=upper, length=0.03, ...){
     
   error.bar(barpo,as.vector(barmatrix),as.vector((upmatrix - barmatrix)),as.vector((barmatrix-infmatrix)))
 
-	par(mar = c(2.0, mar[2], 0.5, mar[4]))
+	par(mar = c(2.0, mar[2], 0.65, mar[4]))
 	col = heat.colors(1+max(interMethodScore)-min(interMethodScore));
-	barplot(interMethodScore,las=2,cex.axis=0.4,beside = TRUE,axisnames = FALSE,ylab="Score",col=col[as.vector(interMethodScore)-min(interMethodScore)+1]);
+	barplot(interMethodScore,las=2,cex.axis=0.75,beside = TRUE,axisnames = FALSE,ylab="Score",col=col[as.vector(interMethodScore)-min(interMethodScore)+1]);
   #text(cex=0.7, x=xpos, y=-0.1, thesets, xpd=TRUE, srt=45)
   text(cex=0.8, x = xpos - offsets[1], y = min(interMethodScore)-offsets[2], thesets, xpd = TRUE, srt = angle)
   if (length(thesets) > 1)
   {
 	par(mar = c(0.0, mar[2],mar[3], mar[4]))
-	barp <- barplot(colMeans(barmatrix),cex.axis=0.4,cex.names=0.4,las=2,ylim = c(ymin,ymax),ylab=metricname, xaxt="n",cex.lab=0.4)
+	barp <- barplot(colMeans(barmatrix),cex.axis=0.95,cex.names=0.95,las=2,ylim = c(ymin,ymax),ylab=metricname, xaxt="n",cex.lab=0.85)
     xpos <- barp;
-	par(mar = c(2.0, mar[2], 0.5, mar[4]))
+	par(mar = c(2.0, mar[2], 0.65, mar[4]))
 	colmax <- apply(interMethodScore,2,max,na.rm = TRUE);
-	barplot(colmax,cex.axis=0.4,cex.names=0.5,las=2,ylab="Score",xlab="Sets",col=col[colmax-min(interMethodScore)+1],cex.lab=0.4);
+	barplot(colmax,cex.axis=0.95,cex.names=0.75,las=2,ylab="Score",xlab="Sets",col=col[colmax-min(interMethodScore)+1],cex.lab=0.85);
 
 	par(mar = c(0.0, mar[2],mar[3], mar[4]))
-	barp <- barplot(rowMeans(barmatrix),cex.axis=0.4,cex.names=0.4,las=2,ylim = c(ymin,ymax),ylab=metricname, xaxt="n",cex.lab=0.4,...)
+	barp <- barplot(rowMeans(barmatrix),cex.axis=0.95,cex.names=0.95,las=2,ylim = c(ymin,ymax),ylab=metricname, xaxt="n",cex.lab=0.85)
     xpos <- barp;
-	par(mar = c(2.0, mar[2], 0.5, mar[4]));
+	par(mar = c(2.0, mar[2], 0.65, mar[4]));
 	rowmax <- apply(interMethodScore,1,max,na.rm = TRUE);
-	barplot(rowmax,cex.axis=0.4,cex.names=0.4,las=2,ylab="Score",xlab="Methods",col=col[rowmax-min(interMethodScore)+1],cex.lab=0.4);
+	barplot(rowmax,cex.axis=0.95,cex.names=0.75,las=2,ylab="Score",xlab="Methods",col=col[rowmax-min(interMethodScore)+1],cex.lab=0.85);
 
  }
   par(mar=mar);
