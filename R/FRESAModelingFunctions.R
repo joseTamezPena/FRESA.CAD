@@ -31,8 +31,8 @@ CVsignature <- function(formula = formula, data=NULL, ...)
 
 predict.FRESAsignature <- function(object, ...) 
 {
-		parameters <- list(...);
-		testframe <- parameters[[1]];
+	parameters <- list(...);
+	testframe <- parameters[[1]];
 	method <- object$method;
 	if (!is.null(parameters$method)) method=parameters$method;
 	controlDistances <- signatureDistance(object$fit$controlTemplate,testframe,method);
@@ -311,18 +311,34 @@ predict.FRESA_BESS <- function(object,...)
 {
 	parameters <- list(...);
 	testData <- parameters[[1]];
-	if (object$fit$method == "gsection")
+	pLS <- NULL;
+	if (!is.null(parameters$type))
 	{
-		pLS <- predict(object$fit,testData,type="opt");
-	}
-	else
-	{
-		type = object$ic.type;
-		if (!is.null(parameters$type))
+		type <- parameters$type;
+		if (type == "response")
 		{
-			type <- parameters$type
+			newdata <- as.data.frame(cbind(y=1:nrow(testData),testData[,object$selectedfeatures]))
+			colnames(newdata) <- c("y",paste("xbest",object$selectedfeatures,sep=""))
+			object$fit$bestmodel$formula <- formula(paste("y~",paste(colnames(newdata)[-1],collapse = " + ")))
+			object$fit$bestmodel$terms <- terms(object$fit$bestmodel$formula)
+			pLS <- predict(object$fit$bestmodel,newdata,type=type);
 		}
-		pLS <- predict(object$fit,testData,type=type);
+	}
+	if (is.null(pLS))
+	{
+		if (object$fit$method == "gsection")
+		{
+			pLS <- predict(object$fit,testData,type="opt");
+		}
+		else
+		{
+			type = object$ic.type;
+			if (!is.null(parameters$type))
+			{
+				type <- parameters$type;
+			}
+			pLS <- predict(object$fit,testData,type=type);
+		}
 	}
 	return(pLS);
 }
@@ -334,7 +350,16 @@ TUNED_SVM <- function(formula = formula, data=NULL,...)
 		}
 	obj <- e1071::tune.svm(formula, data=data,gamma = 2^(2*(-10:0)), cost = 2^(2*(-5:2)));
 	fit <- e1071::svm(formula, data=data,gamma=obj$best.parameters$gamma,cost=obj$best.parameters$cost,...);
-	result <- list(fit = fit,tuneSVM=obj);
+	
+	parameters <- list(...);
+	probability <- NULL;
+	if 	(!is.null(parameters$probability))
+	{
+		probability <- parameters$probability
+	}
+
+	result <- list(fit = fit,tuneSVM=obj,probability = probability);
+		
 	class(result) <- "FRESA_SVM"
 	return(result);
 }
@@ -343,7 +368,15 @@ predict.FRESA_SVM <- function(object,...)
 {
 		parameters <- list(...);
 		testData <- parameters[[1]];
-		pLS <- predict(object$fit,...);
+		if (is.null(object$probability))
+		{
+			pLS <- predict(object$fit,...);
+		}
+		else
+		{
+			pLS <- predict(object$fit,testData,probability = object$probability);
+			pLS <- attr(pLS,"probabilities")[,"1"];
+		}
 		return(pLS);
 }
 

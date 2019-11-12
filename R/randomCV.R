@@ -145,6 +145,13 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
 			}
 		}
 	}
+	if (classLen == 2)
+	{
+		if (fclass == "FRESA_BESS")
+		{
+			pred <- try(predict(currentModel,DataSet,type = "response"));
+		}
+	}
     if (inherits(pred, "try-error"))
     {
       pred <- numeric(nrow(DataSet));
@@ -266,6 +273,12 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
   
   selectedFeaturesSet <- list();
   testClases <- ((classLen < 10) && (min(dataTable) >= 5));
+  BootReplace = FALSE;
+  if (class(trainFraction) == "character")
+  {
+	 BootReplace <- (trainFraction == "Bootstrap");
+	 trainFraction <- 0.5 + 0.5*BootReplace;
+  }
   samplePerClass <- as.integer((nrow(theData)/classLen)*trainFraction);
   if (testClases)
   {
@@ -313,7 +326,7 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
         {
           if (classSamplingType == "Proportional")
           {
-            sampleTrain <- sample(nrow(ssubsets[[jind]]),as.integer(nrow(ssubsets[[jind]])*trainFraction));
+            sampleTrain <- sample(nrow(ssubsets[[jind]]),as.integer(nrow(ssubsets[[jind]])*trainFraction),replace=BootReplace);
           }
           else
           {
@@ -321,7 +334,7 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
             ssize <- min(c(nrow(ssubsets[[jind]])-1,as.integer(nrow(ssubsets[[jind]])*maxfrac))); # minimum training size
             if (samplePerClass > ssize)
             {
-              sampleTrain <- sample(nrow(ssubsets[[jind]]),ssize);
+              sampleTrain <- sample(nrow(ssubsets[[jind]]),ssize,replace=BootReplace);
               if (classSamplingType == "Augmented")
               {
                 therest <- samplePerClass-ssize;
@@ -331,9 +344,14 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
             }
             else
             {
-              sampleTrain <- sample(nrow(ssubsets[[jind]]),samplePerClass);
+              sampleTrain <- sample(nrow(ssubsets[[jind]]),samplePerClass,replace=BootReplace);
             }
           }
+		  usample <- unique(sampleTrain);
+		  if (length(usample) == nrow(ssubsets[[jind]]))
+		  {	
+			 sampleTrain <- sampleTrain[sampleTrain != usample[1]]; # remove at least one sample
+		  }
           trainSamplesSets[[tset]] <- sampleTrain;
         }
         else
@@ -346,14 +364,20 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
         testSet <- rbind(testSet,ssubsets[[jind]][-unique(sampleTrain),]);
         
         jind <- jind + 1;
-        #				cat("Class: ",s," rows:",nrow(trainSet),"\n");
+#        cat("Train Class: ",s," rows:",nrow(trainSet),"\n");
+#        cat("Test Class: ",s," rows:",nrow(testSet),"\n");
       }
     }
     else
     {
       if (is.null(trainSampleSets))
       {
-        sampleTrain <- sample(nrow(theData),nrow(theData)*trainFraction)
+        sampleTrain <- sample(nrow(theData),nrow(theData)*trainFraction,replace=BootReplace)
+		usample <- unique(sampleTrain);
+		if (length(usample) == nrow(theData))
+		{	
+			 sampleTrain <- sampleTrain[sampleTrain != usample[1]]; # remove at least one sample
+		}
         trainSamplesSets[[tset]] <- sampleTrain;
       }
       else
@@ -362,7 +386,7 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
       }
       tset <- tset + 1;
       trainSet <- theData[sampleTrain,];
-      testSet <- theData[-sampleTrain,];
+      testSet <- theData[-unique(sampleTrain),];
     }
     
     selnames <- character();
@@ -454,6 +478,7 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
       #			cat(ncol(trainSet),":",nrow(trainSet),"\n")
       
       theTimes <- append(theTimes,system.time(currentModel <- try(fittingFunction(theformula,trainSet,...))));
+#	  cat("Here\n")
       if ( inherits(currentModel, "try-error"))
       {
         if ((testClases) && (!asFactor))
@@ -500,6 +525,7 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
           if (!is.null(currentModel$selectedfeatures))
           {
             ffet <- currentModel$selectedfeatures;
+#			print(ffet);
             selectedFeaturesSet[[rept]] <- ffet;
           }
           if (fclass == "FRESA_BESS")

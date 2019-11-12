@@ -59,6 +59,8 @@ function(x,...)
 		testSPEmax <- max(bpSPE$ciTable$top95);
 		brnames <- names(testBalancedError);
 		
+
+		
 		metrics <- rbind(BER = testBalancedError,
 							ACC = testACC[brnames],
 							AUC = testAUC[brnames],
@@ -145,9 +147,70 @@ function(x,...)
 						CIDX = c(min(testFilCIDXmin,testFilCIDXmin),max(testFilCIDXmax,testFilCIDXmax))
 						);
 		}
+		mcnemar <- matrix(0,ncol = ncol(x$testPredictions)-1,nrow=ncol(x$testPredictions)-1)
+		pmcnemar <- matrix(1,ncol = ncol(x$testPredictions)-1,nrow=ncol(x$testPredictions)-1)
+		if ((ncol(x$testPredictions)-1) > 2)
+		{
+			for (i in 2:(ncol(x$testPredictions)-1))
+			{
+				for (j in (i+1):ncol(x$testPredictions))
+				{
+					th1 <- 0.5*((min(x$testPredictions[,i]) >= 0.0) && (max(x$testPredictions[,i]) <= 1.0));
+					th2 <- 0.5*((min(x$testPredictions[,j]) >= 0.0) && (max(x$testPredictions[,j]) <= 1.0));
+					tb <- table((x$testPredictions[,i] > th1),(x$testPredictions[,j] > th2))
+					if (length(tb) > 3)
+					{
+						pmcnemar[i-1,j-1] <- epiR::epi.kappa(tb)$mcnemar$p.value;
+						mcnemar[i-1,j-1] <- -log10(max(pmcnemar[i-1,j-1],0.0001));
+					}
+					else
+					{
+						pmcnemar[i-1,j-1] <- 0;
+						mcnemar[i-1,j-1] <- 5;
+					}
+					pmcnemar[j-1,i-1] <- pmcnemar[i-1,j-1];
+					mcnemar[j-1,i-1] <- mcnemar[i-1,j-1];
+				}
+			}
+			mcnemar[is.nan(mcnemar)] <- 6;
+			colnames(mcnemar) <- colnames(x$testPredictions)[-1]
+			rownames(mcnemar) <- colnames(x$testPredictions)[-1]
+			colnames(pmcnemar) <- colnames(x$testPredictions)[-1]
+			rownames(pmcnemar) <- colnames(x$testPredictions)[-1]
+			par(op);
+			par(mfrow = c(1,1),mar = c(2,2,2,2));
+			gplots::heatmap.2(mcnemar,trace = "none",mar = c(5,10),col=rev(heat.colors(8)),main = "p(Method A = Method B)",cexRow = 0.65,cexCol = 0.75,srtCol = 25,key.xlab="-log(p)",xlab="Method B", ylab="Method A")
+			par(op);
+		}
 
+		AUCtable <- matrix(0,ncol = ncol(x$testPredictions)-1,nrow=ncol(x$testPredictions)-1)
+		pAUCtable <- matrix(1,ncol = ncol(x$testPredictions)-1,nrow=ncol(x$testPredictions)-1)
+		if ((ncol(x$testPredictions)-1) > 2)
+		{
+			for (i in 2:ncol(x$testPredictions))
+			{
+				for (j in 2:ncol(x$testPredictions))
+				{
+					roct <- roc.test(roc(x$testPredictions$Outcome,x$testPredictions[,i],quiet = TRUE),
+									roc(x$testPredictions$Outcome,x$testPredictions[,j],quiet = TRUE),
+									alternative="less")
+					pAUCtable[i-1,j-1] <-  roct$p.value;
+					AUCtable[i-1,j-1] <- -log10(max(pAUCtable[i-1,j-1],0.0001));
+				}
+			}
+			AUCtable[is.nan(AUCtable)] <- 0.0;
+			colnames(AUCtable) <- colnames(x$testPredictions)[-1]
+			rownames(AUCtable) <- colnames(x$testPredictions)[-1]
+			colnames(pAUCtable) <- colnames(x$testPredictions)[-1]
+			rownames(pAUCtable) <- colnames(x$testPredictions)[-1]
+			par(op);
+			par(mfrow = c(1,1),mar = c(2,2,2,2));
+			topf <- apply(AUCtable,1,mean)
+			gplots::heatmap.2(AUCtable[order(topf),],trace = "none",mar = c(5,10),col=rev(heat.colors(8)),Rowv=FALSE,dendrogram = "column",cexRow = 0.65,cexCol = 0.75,srtCol = 25,key.xlab="-log(p)",main = "p(ROC_AUC A > ROC_AUC B)",xlab="Method B",ylab="Method A")
+			par(op);
+		}
 		
-		result <- list(metrics = metrics, barPlotsCI = barPlotsCI,metrics_filter=metrics_filter,barPlotsCI_filter=barPlotsCI_filter, minMaxMetrics = minMaxMetrics);
+		result <- list(metrics = metrics, barPlotsCI = barPlotsCI,metrics_filter=metrics_filter,barPlotsCI_filter=barPlotsCI_filter, minMaxMetrics = minMaxMetrics,mcnemar=pmcnemar,AUCtable=pAUCtable);
 	}
 	if (class(x)[2] == "Ordinal")
 	{
@@ -271,8 +334,35 @@ function(x,...)
 						SEN =c(min(testSENmin,testFilSENmin),max(testSENmax,testFilSENmax)),
 						AUC =c(min(testAUCmin,testFilAUCmin),max(testAUCmax,testFilAUCmax))
 						);
+		fttable <- matrix(0,ncol = ncol(x$testPredictions)-1,nrow=ncol(x$testPredictions)-1)
+		pfttable <- matrix(1,ncol = ncol(x$testPredictions)-1,nrow=ncol(x$testPredictions)-1)
+		if ((ncol(x$testPredictions)-1) > 2)
+		{
+			for (i in 2:ncol(x$testPredictions))
+			{
+				for (j in 2:ncol(x$testPredictions))
+				{
+					rss1 <- max(sum((x$testPredictions[,j]-x$testPredictions$Outcome)^2),1e-10);
+					rss2 <- max(sum((x$testPredictions[,i]-x$testPredictions$Outcome)^2),1e-10);
+					rss2 <- rss2/rss1;
+					pfttable[i-1,j-1] <-  pf(nrow(cp$testPredictions)*(rss2-1.0),1.0,nrow(cp$testPredictions),lower.tail = FALSE);
+					fttable[i-1,j-1] <- -log10(max(pfttable[i-1,j-1],0.0001));
+				}
+			}
+			fttable[is.nan(fttable)] <- 0.0;
+			colnames(fttable) <- colnames(x$testPredictions)[-1]
+			rownames(fttable) <- colnames(x$testPredictions)[-1]
+			colnames(pfttable) <- colnames(x$testPredictions)[-1]
+			rownames(pfttable) <- colnames(x$testPredictions)[-1]
+			par(op);
+			par(mfrow = c(1,1),mar = c(2,2,2,2));
+			topf <- apply(fttable,1,mean)
+			gplots::heatmap.2(fttable[order(topf),],trace = "none",mar = c(5,10),col=rev(heat.colors(8)),Rowv=FALSE,dendrogram = "column",cexRow = 0.65,cexCol = 0.75,srtCol = 25,key.xlab="-log(p)",main = "p(Method A > Method B)",xlab="Method B",ylab="Method A")
+			par(op);
+		}
 
-		result <- list(metrics = metrics, barPlotsCI = barPlotsCI,metrics_filter=metrics_filter,barPlotsCI_filter=barPlotsCI_filter, minMaxMetrics = minMaxMetrics);
+
+		result <- list(metrics = metrics, barPlotsCI = barPlotsCI,metrics_filter=metrics_filter,barPlotsCI_filter=barPlotsCI_filter, minMaxMetrics = minMaxMetrics,fttable=pfttable);
 	}
 	if (class(x)[2] == "Regression")
 	{
@@ -369,8 +459,36 @@ function(x,...)
 						Pearson = c(min(c(testPearsonmin,testFilPearsonmin)),max(c(testPearsonmax,testFilPearsonmax))),
 						Bias = c(min(c(testBiasmin,testFilBiasmin)),max(c(testBiasmax,testFilBiasmax)))
 						);
+						
 
-		result <- list(metrics = metrics, barPlotsCI = barPlotsCI,metrics_filter=metrics_filter,barPlotsCI_filter=barPlotsCI_filter, minMaxMetrics = minMaxMetrics);
+		fttable <- matrix(0,ncol = ncol(x$testPredictions)-1,nrow=ncol(x$testPredictions)-1)
+		pfttable <- matrix(1,ncol = ncol(x$testPredictions)-1,nrow=ncol(x$testPredictions)-1)
+		if ((ncol(x$testPredictions)-1) > 2)
+		{
+			for (i in 2:ncol(x$testPredictions))
+			{
+				for (j in 2:ncol(x$testPredictions))
+				{
+					rss1 <- max(sum((x$testPredictions[,j]-x$testPredictions$Outcome)^2),1e-10);
+					rss2 <- max(sum((x$testPredictions[,i]-x$testPredictions$Outcome)^2),1e-10);
+					rss2 <- rss2/rss1;
+					pfttable[i-1,j-1] <-  pf(nrow(cp$testPredictions)*(rss2-1.0),1.0,nrow(cp$testPredictions),lower.tail = FALSE);
+					fttable[i-1,j-1] <- -log10(max(pfttable[i-1,j-1],0.0001));
+				}
+			}
+			fttable[is.nan(fttable)] <- 0.0;
+			colnames(fttable) <- colnames(x$testPredictions)[-1]
+			rownames(fttable) <- colnames(x$testPredictions)[-1]
+			colnames(pfttable) <- colnames(x$testPredictions)[-1]
+			rownames(pfttable) <- colnames(x$testPredictions)[-1]
+			par(op);
+			par(mfrow = c(1,1),mar = c(2,2,2,2));
+			topf <- apply(fttable,1,mean)
+			gplots::heatmap.2(fttable[order(topf),],trace = "none",mar = c(5,10),col=rev(heat.colors(8)),Rowv=FALSE,dendrogram = "column",cexRow = 0.65,cexCol = 0.75,srtCol = 25,key.xlab="-log(p)",main = "p(Method A > Method B)",xlab="Method B",ylab="Method A")
+			par(op);
+		}
+
+		result <- list(metrics = metrics, barPlotsCI = barPlotsCI,metrics_filter=metrics_filter,barPlotsCI_filter=barPlotsCI_filter, minMaxMetrics = minMaxMetrics,fttable=pfttable);
 
 
 	}
