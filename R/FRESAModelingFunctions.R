@@ -31,8 +31,8 @@ CVsignature <- function(formula = formula, data=NULL, ...)
 
 predict.FRESAsignature <- function(object, ...) 
 {
-		parameters <- list(...);
-		testframe <- parameters[[1]];
+	parameters <- list(...);
+	testframe <- parameters[[1]];
 	method <- object$method;
 	if (!is.null(parameters$method)) method=parameters$method;
 	controlDistances <- signatureDistance(object$fit$controlTemplate,testframe,method);

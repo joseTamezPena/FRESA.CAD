@@ -155,16 +155,24 @@ function(x,...)
 			{
 				for (j in (i+1):ncol(x$testPredictions))
 				{
-					th1 <- 0.5*(min(x$testPredictions[,i]) >= 0.0);
-					th2 <- 0.5*(min(x$testPredictions[,j]) >= 0.0);
-					tb <- table(x$testPredictions[,i] > th1,x$testPredictions[,j] > th2)
-					pmcnemar[i-1,j-1] <- epiR::epi.kappa(tb)$mcnemar$p.value;
+					th1 <- 0.5*((min(x$testPredictions[,i]) >= 0.0) && (max(x$testPredictions[,i]) <= 1.0));
+					th2 <- 0.5*((min(x$testPredictions[,j]) >= 0.0) && (max(x$testPredictions[,j]) <= 1.0));
+					tb <- table((x$testPredictions[,i] > th1),(x$testPredictions[,j] > th2))
+					if (length(tb) > 3)
+					{
+						pmcnemar[i-1,j-1] <- epiR::epi.kappa(tb)$mcnemar$p.value;
+						mcnemar[i-1,j-1] <- -log10(max(pmcnemar[i-1,j-1],0.0001));
+					}
+					else
+					{
+						pmcnemar[i-1,j-1] <- 0;
+						mcnemar[i-1,j-1] <- 5;
+					}
 					pmcnemar[j-1,i-1] <- pmcnemar[i-1,j-1];
-					mcnemar[i-1,j-1] <- -log10(max(pmcnemar[i-1,j-1],0.0001));
 					mcnemar[j-1,i-1] <- mcnemar[i-1,j-1];
 				}
 			}
-			mcnemar[is.nan(mcnemar)] <- 0;
+			mcnemar[is.nan(mcnemar)] <- 6;
 			colnames(mcnemar) <- colnames(x$testPredictions)[-1]
 			rownames(mcnemar) <- colnames(x$testPredictions)[-1]
 			colnames(pmcnemar) <- colnames(x$testPredictions)[-1]
