@@ -142,6 +142,7 @@ CoxBenchmark <-  function(theData = NULL, theOutcome = "Class", reps = 100, trai
     referenceName = "BSWiMS";
     referenceFilterName = "Cox.BSWiMS";
     methods <- c(referenceName);
+    theFiltersets <- c(referenceName);
   }
   if (class(referenceCV) == "list")
   {
