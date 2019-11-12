@@ -206,7 +206,7 @@ function(x,...)
 			par(op);
 			par(mfrow = c(1,1),mar = c(2,2,2,2));
 			topf <- apply(AUCtable,1,mean)
-			gplots::heatmap.2(AUCtable[order(topf),],trace = "none",mar = c(5,10),col=rev(heat.colors(8)),Rowv=FALSE,dendrogram = "column",cexRow = 0.65,cexCol = 0.75,srtCol = 25,key.xlab="-log(p)",main = "p(ROC_AUC A > ROC_AUC B)",xlab="Method B",ylab="Method A")
+			gplots::heatmap.2(AUCtable[order(topf),order(topf)],trace = "none",mar = c(5,10),col=rev(heat.colors(8)),Rowv=FALSE,dendrogram = "none",cexRow = 0.65,cexCol = 0.75,srtCol = 25,key.xlab="-log(p)",main = "p(ROC_AUC A > ROC_AUC B)",xlab="Method B",ylab="Method A")
 			par(op);
 		}
 		
