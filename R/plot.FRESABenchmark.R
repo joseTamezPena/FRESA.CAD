@@ -155,7 +155,9 @@ function(x,...)
 			{
 				for (j in (i+1):ncol(x$testPredictions))
 				{
-					tb <- table(x$testPredictions[,i] > 0.5,x$testPredictions[,j] > 0.5)
+					th1 <- 0.5*(min(x$testPredictions[,i]) >= 0.0);
+					th2 <- 0.5*(min(x$testPredictions[,j]) >= 0.0);
+					tb <- table(x$testPredictions[,i] > th1,x$testPredictions[,j] > th2)
 					pmcnemar[i-1,j-1] <- epiR::epi.kappa(tb)$mcnemar$p.value;
 					pmcnemar[j-1,i-1] <- pmcnemar[i-1,j-1];
 					mcnemar[i-1,j-1] <- -log10(max(pmcnemar[i-1,j-1],0.0001));
