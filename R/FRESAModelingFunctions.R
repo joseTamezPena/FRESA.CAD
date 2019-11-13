@@ -857,7 +857,7 @@ predict.GMVE_BSWiMS <- function(object,...)
 }
 
 
-rpredict <-  function(currentModel,DataSet,asFactor=FALSE,classLen=2)
+rpredict <-  function(currentModel,DataSet,asFactor=FALSE,classLen=2,...)
 {
 	fclass <- class(currentModel);
 	fclass <- fclass[length(fclass)];

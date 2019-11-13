@@ -5,7 +5,12 @@
 	Hierarchical use of Binary Classifier. Wrongly classified subjects are classified using a KNN method followed by the final classifier
 }
 \usage{
-	HCLAS_KNN_CLASS(formula = formula, data=NULL,method=BSWiMS.model,hysteresis = 0.0,...)
+	HCLAS_KNN_CLASS(formula = formula, 
+	                data=NULL,
+	                method=BSWiMS.model,
+	                hysteresis = 0.0,
+	                ...
+					)
 }
 \arguments{
 	\item{formula}{
@@ -24,8 +29,6 @@
 	parameters for the classification function
 	}
 }
-
-original = orgModel,alternativeModel = alternativeModel,classModel = classModel,accuracy=accuracy,selectedfeatures = selectedfeatures
 
 \value{
 	\item{original}{

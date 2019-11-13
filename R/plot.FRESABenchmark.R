@@ -345,7 +345,7 @@ function(x,...)
 					rss1 <- max(sum((x$testPredictions[,j]-x$testPredictions$Outcome)^2),1e-10);
 					rss2 <- max(sum((x$testPredictions[,i]-x$testPredictions$Outcome)^2),1e-10);
 					rss2 <- rss2/rss1;
-					pfttable[i-1,j-1] <-  pf(nrow(cp$testPredictions)*(rss2-1.0),1.0,nrow(cp$testPredictions),lower.tail = FALSE);
+					pfttable[i-1,j-1] <-  pf(nrow(x$testPredictions)*(rss2-1.0),1.0,nrow(x$testPredictions),lower.tail = FALSE);
 					fttable[i-1,j-1] <- -log10(max(pfttable[i-1,j-1],0.0001));
 				}
 			}
@@ -472,7 +472,7 @@ function(x,...)
 					rss1 <- max(sum((x$testPredictions[,j]-x$testPredictions$Outcome)^2),1e-10);
 					rss2 <- max(sum((x$testPredictions[,i]-x$testPredictions$Outcome)^2),1e-10);
 					rss2 <- rss2/rss1;
-					pfttable[i-1,j-1] <-  pf(nrow(cp$testPredictions)*(rss2-1.0),1.0,nrow(cp$testPredictions),lower.tail = FALSE);
+					pfttable[i-1,j-1] <-  pf(nrow(x$testPredictions)*(rss2-1.0),1.0,nrow(x$testPredictions),lower.tail = FALSE);
 					fttable[i-1,j-1] <- -log10(max(pfttable[i-1,j-1],0.0001));
 				}
 			}

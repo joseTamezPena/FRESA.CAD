@@ -479,9 +479,9 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
         #				print(selectedFeaturesSet);
         if ((length(selectedFeaturesSet[[rept]])>0) || is.null(featureSelectionFunction))
         {
-          pred <- rpredict(currentModel,testSet,asFactor,classLen);
+          pred <- rpredict(currentModel,testSet,asFactor,classLen,...);
           ctestPredictions <- cbind(testSet[,theOutcome],rep(rept,nrow(testSet)),pred);
-          pred <- rpredict(currentModel,trainSet,asFactor,classLen);
+          pred <- rpredict(currentModel,trainSet,asFactor,classLen,...);
           ctrainPredictions <- cbind(trainSet[,theOutcome],rep(rept,nrow(trainSet)),pred);
           rownames(ctestPredictions) <- rownames(testSet);
           rownames(ctrainPredictions) <- rownames(trainSet);
