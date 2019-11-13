@@ -5,7 +5,12 @@
 	FRESA wrapper to fit grid-tuned \code{ e1071::svm} object 
 }
 \usage{
-	TUNED_SVM(formula = formula,data=NULL,...)
+	TUNED_SVM(formula = formula,
+	          data=NULL,
+	          gamma = 2^(2*(-8:-1)),
+	          cost = 2^(2*(-4:1)),
+	          ...
+	          )
 }
 
 \arguments{
@@ -14,6 +19,12 @@
 	}
 	\item{data}{
 	The data to be used for training the method
+	}
+	\item{gamma}{
+	The vector of possible gamma values
+	}
+	\item{cost}{
+	The vector of possible cost values 
 	}
 	\item{...}{
 	Parameters to be passed to the e1071::svm function

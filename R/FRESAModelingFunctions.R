@@ -344,12 +344,12 @@ predict.FRESA_BESS <- function(object,...)
 	return(pLS);
 }
 
-TUNED_SVM <- function(formula = formula, data=NULL,...)
+TUNED_SVM <- function(formula = formula, data=NULL,gamma = 2^(2*(-8:-1)), cost = 2^(2*(-4:1)),...)
 {
 	if (!requireNamespace("e1071", quietly = TRUE)) {
 		install.packages("e1071", dependencies = TRUE)
 		}
-	obj <- e1071::tune.svm(formula, data=data,gamma = 2^(2*(-10:0)), cost = 2^(2*(-5:2)));
+	obj <- e1071::tune.svm(formula, data=data,gamma = gamma, cost = cost);
 	fit <- e1071::svm(formula, data=data,gamma=obj$best.parameters$gamma,cost=obj$best.parameters$cost,...);
 	
 	parameters <- list(...);
