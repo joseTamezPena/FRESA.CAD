@@ -474,7 +474,7 @@ predict.FRESA_RIDGE <- function(object,...)
 }
 
 
-BOOST_BSWiMS <- function(formula = formula, data=NULL,hysteresis=0.05,...)
+HCLAS_BSWiMS <- function(formula = formula, data=NULL,hysteresis = 0.025,...)
 {
 	if (class(formula) == "character")
 	{
@@ -508,29 +508,33 @@ BOOST_BSWiMS <- function(formula = formula, data=NULL,hysteresis=0.05,...)
 		accuracy <- sum(correctSet)/nrow(data);
 		if (accuracy < 0.98)
 		{
-			falseP <- (orgPredict > (0.5 - hysteresis)) & (outcomedata == 0 );
-			falseN <- (orgPredict < (0.5 + hysteresis)) & (outcomedata == 1 );
+			falseP <- (orgPredict > (0.5 + hysteresis)) & (outcomedata == 0 );
+			falseN <- (orgPredict < (0.5 - hysteresis)) & (outcomedata == 1 );
 			if ((sum(falseP) > 5) && (sum(falseN) > 5))
 			{
 				incorrectSet <- falseP | falseN  ;
+
+
 				alternativeModel <- BSWiMS.model(formula,data[incorrectSet,],...);
 				selectedfeatures <- c(selectedfeatures,names(alternativeModel$bagging$frequencyTable));
 				selectedfeatures <- unique(selectedfeatures);
 
+				kn <- 1 + as.integer(sqrt(sum(incorrectSet))+0.5);
 				classData <- data[,c(Outcome,selectedfeatures)];
-				classData[,Outcome] <- 1*correctSet;
-				classModel <- KNN_method(formula(paste(Outcome,"~.")),classData);
-				cat("[",sum(!correctSet),"]")
+				classData[,Outcome] <- 1*(!incorrectSet);
+				classModel <- KNN_method(formula(paste(Outcome,"~.")),classData,kn=kn);
+
+				cat("[",sum(incorrectSet),"]")
 			}
 		}
 	}
 	result <- list(original = orgModel,alternativeModel = alternativeModel,classModel = classModel,accuracy=accuracy,selectedfeatures = selectedfeatures )
-	class(result) <- "FRESA_BOOST"
+	class(result) <- "FRESA_HCLAS"
 	return(result);
 }
 
 
-predict.FRESA_BOOST <- function(object,...) 
+predict.FRESA_HCLAS <- function(object,...) 
 {
 	parameters <- list(...);
 	testData <- parameters[[1]];
@@ -538,17 +542,22 @@ predict.FRESA_BOOST <- function(object,...)
 	if (!is.null(object$alternativeModel))
 	{
 		classPred <- predict(object$classModel,testData);
-		pclassPred <- pmax(rep(object$accuracy,length(classPred)),classPred);
 		palt <- predict(object$alternativeModel,testData);
 			
-		p1 <- pclassPred*pLS;
-		p2 <- pclassPred*(1.0-pLS);
+		p1 <- classPred*pLS;
+		p2 <- classPred*(1.0-pLS);
 		p3 <- (1.0-classPred)*palt;
 		p4 <- (1.0-classPred)*(1.0-palt);
 		pval <- cbind(p1,p2,p3,p4);
 		mv <- apply(pval,1,which.max);
-		palt <- cbind(pLS,pLS,palt,palt);
-		pLS <- palt[mv];
+		pval <- cbind(pLS,pLS,palt,palt);
+		for (i in 1:length(palt))
+		{
+			palt[i] <- pval[i,mv[i]];
+		}
+		altcheck <- (classPred <= 0.55);
+		pLS[altcheck] <- classPred[altcheck]*pLS[altcheck];
+		pLS[altcheck] <- pLS[altcheck] + (1.0-classPred[altcheck])*palt[altcheck];
 	}
 	return(pLS);
 }
