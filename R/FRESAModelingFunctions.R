@@ -609,7 +609,7 @@ predict.FRESA_HCLAS <- function(object,...)
 		{
 			palt[i] <- pval[i,mv[i]];
 		}
-		altcheck <- (classPred <= 0.55);
+		altcheck <- (classPred < 0.50);
 		pLS[altcheck] <- classPred[altcheck]*pLS[altcheck];
 		pLS[altcheck] <- pLS[altcheck] + (1.0-classPred[altcheck])*palt[altcheck];
 	}
