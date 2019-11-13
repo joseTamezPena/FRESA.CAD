@@ -1,6 +1,5 @@
 \name{BSWiMS.model}
 \alias{BSWiMS.model}
-\alias{HCLAS_BSWiMS}
 \title{BSWiMS model selection}
 \description{
 	This function returns a set of models that best predict the outcome. Based on a Bootstrap Stage Wise Model Selection algorithm.
@@ -28,8 +27,6 @@
 	            featureSize=0,
 	            NumberofRepeats=1
 	            )
-	HCLAS_BSWiMS(formula = formula, data=NULL,hysteresis = 0.025,...)
-
 }
 \arguments{
 	\item{formula}{
@@ -79,12 +76,6 @@
 	}
 	\item{NumberofRepeats}{
 		How many times the BSWiMS search will be repeated
-	}
-	\item{hysteresis}{
-		Hysteresis of false classification threshold
-	}
-	\item{...}{
-		BSWiMS.model parameters
 	}
 }
 \details{

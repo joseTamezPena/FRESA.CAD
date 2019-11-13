@@ -91,8 +91,8 @@ KNN_method <- function(formula = formula, data=NULL, ...)
 
 predict.FRESAKNN <- function(object, ...) 
 {
-		parameters <- list(...);
-		testframe <- parameters[[1]];
+	parameters <- list(...);
+	testframe <- parameters[[1]];
 
 	testframe <- as.data.frame(testframe[,object$usedFeatures]);
 	trainframe <- object$scaledData
@@ -109,15 +109,16 @@ predict.FRESAKNN <- function(object, ...)
 		prop <- attributes(knnclass);
 		knnclass <- abs(prop$prob-1*(knnclass=="0"))
 	}
-		return(knnclass);
+	return(knnclass);
 }
 
 
 GLMNET <- function(formula = formula, data=NULL,coef.thr=0.001,s="lambda.min",...)
 {
-if (!requireNamespace("glmnet", quietly = TRUE)) {
-	 install.packages("glmnet", dependencies = TRUE)
-} 
+	if (!requireNamespace("glmnet", quietly = TRUE)) 
+	{
+		install.packages("glmnet", dependencies = TRUE)
+	} 
 	parameters <- list(...);
 	isSurv <- FALSE;
 	baseformula <- as.character(formula);
@@ -474,7 +475,7 @@ predict.FRESA_RIDGE <- function(object,...)
 }
 
 
-HCLAS_BSWiMS <- function(formula = formula, data=NULL,hysteresis = 0.025,...)
+HCLAS_KNN_CLASS <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis = 0.0,...)
 {
 	if (class(formula) == "character")
 	{
@@ -498,15 +499,30 @@ HCLAS_BSWiMS <- function(formula = formula, data=NULL,hysteresis = 0.025,...)
 
 	alternativeModel <- NULL;
 	classModel <- NULL;
-	orgModel <- BSWiMS.model(formula,data,...);
-	selectedfeatures <- names(orgModel$bagging$frequencyTable);
-	accuracy <- 1.0;
-	if (length(orgModel$bagging$frequencyTable) > 0)
+	selectedfeatures <- colnames(data)[!(colnames(data) %in% baseformula[2])]
+	orgModel <- method(formula,data,...);
+	if (!is.null(orgModel$selectedfeatures))
 	{
-		orgPredict <- predict(orgModel,data);
+		selectedfeatures <- orgModel$selectedfeatures;
+	}
+	else
+	{
+		if (!is.null(orgModel$bagging))
+		{
+			selectedfeatures <- names(orgModel$bagging$frequencyTable);
+		}
+	}
+	accuracy <- 1.0;
+	if (length(selectedfeatures) > 0)
+	{
+		orgPredict <- rpredict(orgModel,data);
+		if ((min(orgPredict) < -0.1) && (max(orgPredict) > 0.1))
+		{
+			orgPredict <- 1.0/(1.0+exp(-orgPredict));
+		}
 		correctSet <- ((orgPredict >= 0.5) == (outcomedata > 0));
 		accuracy <- sum(correctSet)/nrow(data);
-		if (accuracy < 0.98)
+		if ((accuracy < 0.98) || (hysteresis < 0))
 		{
 			falseP <- (orgPredict > (0.5 + hysteresis)) & (outcomedata == 0 );
 			falseN <- (orgPredict < (0.5 - hysteresis)) & (outcomedata == 1 );
@@ -515,9 +531,39 @@ HCLAS_BSWiMS <- function(formula = formula, data=NULL,hysteresis = 0.025,...)
 				incorrectSet <- falseP | falseN  ;
 
 
-				alternativeModel <- BSWiMS.model(formula,data[incorrectSet,],...);
-				selectedfeatures <- c(selectedfeatures,names(alternativeModel$bagging$frequencyTable));
-				selectedfeatures <- unique(selectedfeatures);
+				alternativeModel <- method(formula,data[incorrectSet,],...);
+				if (!is.null(orgModel$selectedfeatures))
+				{
+					selectedfeatures <- c(selectedfeatures,alternativeModel$selectedfeatures);
+					selectedfeatures <- unique(selectedfeatures);
+				}
+				else
+				{
+					if (!is.null(orgModel$bagging))
+					{
+						selectedfeatures <- c(selectedfeatures,names(alternativeModel$bagging$frequencyTable));
+						selectedfeatures <- unique(selectedfeatures);
+					}
+				}
+				
+				if (hysteresis < 0)
+				{
+					orgModel <- method(formula,data[!incorrectSet,],...);
+					if (!is.null(orgModel$selectedfeatures))
+					{
+						selectedfeatures <- c(selectedfeatures,alternativeModel$selectedfeatures);
+						selectedfeatures <- unique(selectedfeatures);
+					}
+					else
+					{
+						if (!is.null(orgModel$bagging))
+						{
+							selectedfeatures <- c(selectedfeatures,names(alternativeModel$bagging$frequencyTable));
+							selectedfeatures <- unique(selectedfeatures);
+						}
+					}
+				}
+
 
 				kn <- 1 + as.integer(sqrt(sum(incorrectSet))+0.5);
 				classData <- data[,c(Outcome,selectedfeatures)];
@@ -538,11 +584,19 @@ predict.FRESA_HCLAS <- function(object,...)
 {
 	parameters <- list(...);
 	testData <- parameters[[1]];
-	pLS <- predict(object$original,testData);
+	pLS <- rpredict(object$original,testData);
+	if ((min(pLS) < -0.1) && (max(pLS) > 0.1))
+	{
+		pLS <- 1.0/(1.0+exp(-pLS));
+	}
 	if (!is.null(object$alternativeModel))
 	{
-		classPred <- predict(object$classModel,testData);
-		palt <- predict(object$alternativeModel,testData);
+		classPred <- rpredict(object$classModel,testData);
+		palt <- rpredict(object$alternativeModel,testData);
+		if ((min(palt) < -0.1) && (max(palt) > 0.1))
+		{
+			palt <- 1.0/(1.0+exp(-palt));
+		}
 			
 		p1 <- classPred*pLS;
 		p2 <- classPred*(1.0-pLS);
@@ -801,3 +855,90 @@ predict.GMVE_BSWiMS <- function(object,...)
 	}
 	return(pLS);
 }
+
+
+rpredict <-  function(currentModel,DataSet,asFactor=FALSE,classLen=2)
+{
+	fclass <- class(currentModel);
+	fclass <- fclass[length(fclass)];
+	pred <- try(predict(currentModel,DataSet))
+	if (asFactor && (classLen == 2))
+	{
+		if ( (fclass == "randomForest") || (fclass == "rpart") ) 
+		{
+			pred <- try(predict(currentModel,DataSet,type="prob"))[,"1"];
+		}
+		else
+		{
+			if (fclass == "svm")
+			{
+				parameters <- list(...);
+				if 	(!is.null(parameters$probability))
+				{
+					if (parameters$probability)
+					{
+						pred <- try(predict(currentModel,DataSet,probability = TRUE));
+						pred <- attr(pred,"probabilities")[,"1"];
+					}
+				}
+			}
+		}
+	}
+	if (classLen == 2)
+	{
+		if (fclass == "FRESA_BESS")
+		{
+			pred <- try(predict(currentModel,DataSet,type = "response"));
+		}
+	}
+    if (inherits(pred, "try-error"))
+    {
+      pred <- numeric(nrow(DataSet));
+    }
+    else
+    {
+      if (class(pred) == "list")
+      {
+        if (is.null(pred$posterior))
+        {
+          if (is.null(pred$prob))
+          {
+            pred <-as.numeric(as.character(pred[[1]]));
+          }
+          else
+          {
+            pred <-as.numeric(pred$prob[,2]);
+          }
+        }
+        else
+        {
+          pred <-as.numeric(pred$posterior[,2]);
+        }
+      }
+      if (class(pred) == "factor")
+      {
+        pred <- as.numeric(as.character(pred));
+      }
+      if (class(pred) == "array")
+      {
+        pnames <- colnames(pred);
+        pred <- pnames[apply(pred[,,1],1,which.max)];
+        pred <- as.numeric(pred);
+      }
+      if (class(pred) == "matrix") 
+      {
+        if (ncol(pred)>1)
+        {
+          pnames <- colnames(pred);
+          pred <- pnames[apply(pred,1,which.max)];
+          pred <- as.numeric(pred);
+        }
+        else
+        {
+          pred <- as.vector(pred);
+        }
+      }
+    }
+    return (pred)
+  }
+  
