@@ -344,7 +344,7 @@ predict.FRESA_BESS <- function(object,...)
 	return(pLS);
 }
 
-TUNED_SVM <- function(formula = formula, data=NULL,gamma = 2^(2*(-8:-1)), cost = 2^(2*(-4:1)),...)
+TUNED_SVM <- function(formula = formula, data=NULL,gamma = 10^(-5:-1), cost = 10^(-3:1),...)
 {
 	if (!requireNamespace("e1071", quietly = TRUE)) {
 		install.packages("e1071", dependencies = TRUE)

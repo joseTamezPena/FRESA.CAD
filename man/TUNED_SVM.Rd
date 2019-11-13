@@ -7,8 +7,8 @@
 \usage{
 	TUNED_SVM(formula = formula,
 	          data=NULL,
-	          gamma = 2^(2*(-8:-1)),
-	          cost = 2^(2*(-4:1)),
+	          gamma = 10^(-5:-1),
+	          cost = 10^(-3:1),
 	          ...
 	          )
 }
