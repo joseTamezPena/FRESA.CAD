@@ -166,13 +166,13 @@ function(x,...)
 					else
 					{
 						pmcnemar[i-1,j-1] <- 0;
-						mcnemar[i-1,j-1] <- 5;
+						mcnemar[i-1,j-1] <- 4;
 					}
 					pmcnemar[j-1,i-1] <- pmcnemar[i-1,j-1];
 					mcnemar[j-1,i-1] <- mcnemar[i-1,j-1];
 				}
 			}
-			mcnemar[is.nan(mcnemar)] <- 6;
+			mcnemar[is.nan(mcnemar)] <- 4;
 			colnames(mcnemar) <- colnames(x$testPredictions)[-1]
 			rownames(mcnemar) <- colnames(x$testPredictions)[-1]
 			colnames(pmcnemar) <- colnames(x$testPredictions)[-1]
@@ -349,7 +349,7 @@ function(x,...)
 					fttable[i-1,j-1] <- -log10(max(pfttable[i-1,j-1],0.0001));
 				}
 			}
-			fttable[is.nan(fttable)] <- 0.0;
+			fttable[is.nan(fttable)] <- 4.0;
 			colnames(fttable) <- colnames(x$testPredictions)[-1]
 			rownames(fttable) <- colnames(x$testPredictions)[-1]
 			colnames(pfttable) <- colnames(x$testPredictions)[-1]
@@ -476,7 +476,7 @@ function(x,...)
 					fttable[i-1,j-1] <- -log10(max(pfttable[i-1,j-1],0.0001));
 				}
 			}
-			fttable[is.nan(fttable)] <- 0.0;
+			fttable[is.nan(fttable)] <- 4.0;
 			colnames(fttable) <- colnames(x$testPredictions)[-1]
 			rownames(fttable) <- colnames(x$testPredictions)[-1]
 			colnames(pfttable) <- colnames(x$testPredictions)[-1]
