@@ -118,6 +118,10 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 			auxdata <- intdata[maxMahadis == 0,];
 			andata <- nrow(auxdata);
 		}
+		if (length(andata) == 0 ) 
+		{
+			andata <- 0;
+		}
 
 		if (andata >= h0)
 		{
@@ -286,7 +290,8 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 					}
 					else
 					{	
-						maxMahadis <- rep(TRUE,nrow(intdata));
+						ndata <- 0;
+						maxMahadis <- rep(1,nrow(intdata));
 					}
 				}
 				else
@@ -306,6 +311,8 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 			bestCov[[k]] <- NULL;
 			robCov[[k]] <- NULL;
 			k <- k - 1;
+			ndata <- nrow(intdata);
+			maxMahadis <- numeric(ndata);
 		}
 		p.threshold <- 0.95*p.threshold;
 		minpvalThr <- minpvalThr/10.0;
