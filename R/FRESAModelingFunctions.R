@@ -1,3 +1,93 @@
+rpredict <-	function(currentModel,DataSet,asFactor=FALSE,classLen=2,...)
+{
+	fclass <- class(currentModel);
+	fclass <- fclass[length(fclass)];
+	pred <- try(predict(currentModel,DataSet))
+	if (asFactor && (classLen == 2))
+	{
+		if ( (fclass == "randomForest") || (fclass == "rpart") ) 
+		{
+			pred <- try(predict(currentModel,DataSet,type="prob"))[,"1"];
+		}
+		else
+		{
+			if (fclass == "svm")
+			{
+				parameters <- list(...);
+				if 	(!is.null(parameters$probability))
+				{
+					if (parameters$probability)
+					{
+						pred <- try(predict(currentModel,DataSet,probability = TRUE));
+						pred <- attr(pred,"probabilities")[,"1"];
+					}
+				}
+			}
+		}
+	}
+	if (classLen == 2)
+	{
+		if (fclass == "FRESA_BESS")
+		{
+			pred <- try(predict(currentModel,DataSet,type = "response"));
+		}
+		if (fclass == "lm")
+		{
+			pred <- try(predict(currentModel,DataSet,type = "response"));
+		}
+	}
+	if (inherits(pred, "try-error"))
+	{
+		pred <- numeric(nrow(DataSet));
+	}
+	else
+	{
+		if (class(pred) == "list")
+		{
+			if (is.null(pred$posterior))
+			{
+				if (is.null(pred$prob))
+				{
+					pred <-as.numeric(as.character(pred[[1]]));
+				}
+				else
+				{
+					pred <-as.numeric(pred$prob[,2]);
+				}
+			}
+			else
+			{
+				pred <-as.numeric(pred$posterior[,2]);
+			}
+		}
+		if (class(pred) == "factor")
+		{
+			pred <- as.numeric(as.character(pred));
+		}
+		if (class(pred) == "array")
+		{
+			pnames <- colnames(pred);
+			pred <- pnames[apply(pred[,,1],1,which.max)];
+			pred <- as.numeric(pred);
+		}
+		if (class(pred) == "matrix") 
+		{
+			if (ncol(pred)>1)
+			{
+				pnames <- colnames(pred);
+				pred <- pnames[apply(pred,1,which.max)];
+				pred <- as.numeric(pred);
+			}
+			else
+			{
+				pred <- as.vector(pred);
+			}
+		}
+	}
+	return (pred)
+}
+	
+
 CVsignature <- function(formula = formula, data=NULL, ...)
 {
 	baseformula <- as.character(formula);
@@ -43,10 +133,10 @@ predict.FRESAsignature <- function(object, ...)
 
 KNN_method <- function(formula = formula, data=NULL, ...)
 {
-		parameters <- list(...);
+	parameters <- list(...);
 	if (is.null(parameters$kn))
 	{
-		kn <- as.integer(sqrt(nrow(data))+0.5);
+		kn <- as.integer(sqrt(nrow(data)/2)+0.5);
 	}
 	else
 	{
@@ -84,6 +174,7 @@ KNN_method <- function(formula = formula, data=NULL, ...)
 	}
 	
 	result <- list(trainData=as.data.frame(data[,usedFeatures]),scaledData=scaledData,classData=data[,baseformula[2]],outcome=baseformula[2],usedFeatures=usedFeatures,mean_col=mean_vec,disp_col=disp_vec,kn=kn,scaleMethod=scaleMethod);
+	result$selectedfeatures <- usedFeatures;
 	class(result) <- "FRESAKNN"
 	return(result);
 }
@@ -616,6 +707,50 @@ predict.FRESA_HCLAS <- function(object,...)
 	return(pLS);
 }
 
+filteredFit <- function(formula = formula, data=NULL, filtermethod=univariate_Wilcoxon, classmethod=e1071::svm,filtermethod.control=list(pvalue=0.05,limit=0.1),...)
+{
+	if (class(formula) == "character")
+	{
+		formula <- formula(formula);
+	}
+	varlist <- attr(terms(formula,data=data),"variables")
+	dependent <- as.character(varlist[[2]])
+	Outcome = dependent[1];
+	if (length(dependent) == 3)
+	{
+		Outcome = dependent[3];
+	}
+	fm <- NULL
+	
+	if (is.null(filtermethod.control))
+	{
+		fm <- filtermethod(data,Outcome);
+	}
+	else
+	{
+		fm <- do.call(filtermethod,c(list(data,Outcome),filtermethod.control));
+	}
+	usedFeatures <-  c(Outcome,names(fm));
+	fit <- classmethod(formula,data[,usedFeatures],...);
+	parameters <- list(...);
+	result <- list(fit=fit,filter=fm,selectedfeatures = names(fm),usedFeatures = usedFeatures,parameters=parameters,asFactor=(class(data[,Outcome])=="factor"),classLen=length(table(data[,Outcome])));
+	class(result) <- "FRESA_FILTERFIT";
+	return (result)	
+}
+
+predict.FRESA_FILTERFIT <- function(object,...)
+{
+	parameters <- list(...);
+	testData <- parameters[[1]];
+	probability <- FALSE;
+	if (!is.null(object$parameters$probability))
+	{
+		probability <- object$parameters$probability;
+	}
+	pLS <- rpredict(object$fit,testData[,object$usedFeatures],asFactor=object$asFactor,classLen=object$classLen,probability=probability,...);
+	return (pLS);
+}
+
 ClustClass <- function(formula = formula, data=NULL, filtermethod=univariate_Wilcoxon, clustermethod=NULL, classmethod=LASSO_1SE,filtermethod.control=list(pvalue=0.05,limit=0.1),clustermethod.control=NULL,classmethod.control=list(family = "binomial"))
 {
 	if (class(formula) == "character")
@@ -625,7 +760,7 @@ ClustClass <- function(formula = formula, data=NULL, filtermethod=univariate_Wil
 	else
 	{
 		baseformula <- as.character(formula);
-		baseformula[3] <- str_replace_all(baseformula[3],"[.]","1");
+#		baseformula[3] <- str_replace_all(baseformula[3],"[.]","1");
 		baseformula <- paste(baseformula[2],"~",baseformula[3]);
 		formula <- formula(baseformula);
 	}
@@ -855,90 +990,3 @@ predict.GMVE_BSWiMS <- function(object,...)
 	}
 	return(pLS);
 }
-
-
-rpredict <-  function(currentModel,DataSet,asFactor=FALSE,classLen=2,...)
-{
-	fclass <- class(currentModel);
-	fclass <- fclass[length(fclass)];
-	pred <- try(predict(currentModel,DataSet))
-	if (asFactor && (classLen == 2))
-	{
-		if ( (fclass == "randomForest") || (fclass == "rpart") ) 
-		{
-			pred <- try(predict(currentModel,DataSet,type="prob"))[,"1"];
-		}
-		else
-		{
-			if (fclass == "svm")
-			{
-				parameters <- list(...);
-				if 	(!is.null(parameters$probability))
-				{
-					if (parameters$probability)
-					{
-						pred <- try(predict(currentModel,DataSet,probability = TRUE));
-						pred <- attr(pred,"probabilities")[,"1"];
-					}
-				}
-			}
-		}
-	}
-	if (classLen == 2)
-	{
-		if (fclass == "FRESA_BESS")
-		{
-			pred <- try(predict(currentModel,DataSet,type = "response"));
-		}
-	}
-    if (inherits(pred, "try-error"))
-    {
-      pred <- numeric(nrow(DataSet));
-    }
-    else
-    {
-      if (class(pred) == "list")
-      {
-        if (is.null(pred$posterior))
-        {
-          if (is.null(pred$prob))
-          {
-            pred <-as.numeric(as.character(pred[[1]]));
-          }
-          else
-          {
-            pred <-as.numeric(pred$prob[,2]);
-          }
-        }
-        else
-        {
-          pred <-as.numeric(pred$posterior[,2]);
-        }
-      }
-      if (class(pred) == "factor")
-      {
-        pred <- as.numeric(as.character(pred));
-      }
-      if (class(pred) == "array")
-      {
-        pnames <- colnames(pred);
-        pred <- pnames[apply(pred[,,1],1,which.max)];
-        pred <- as.numeric(pred);
-      }
-      if (class(pred) == "matrix") 
-      {
-        if (ncol(pred)>1)
-        {
-          pnames <- colnames(pred);
-          pred <- pnames[apply(pred,1,which.max)];
-          pred <- as.numeric(pred);
-        }
-        else
-        {
-          pred <- as.vector(pred);
-        }
-      }
-    }
-    return (pred)
-  }
-  

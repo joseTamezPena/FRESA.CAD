@@ -85,7 +85,8 @@ export(GLMNET)
 export(GLMNET_ELASTICNET_MIN)
 export(GLMNET_RIDGE_MIN)
 export(univariate_cox)
-
+export(filteredFit)
+export(predict.FRESA_FILTERFIT);
 
 useDynLib(FRESA.CAD,.registration = TRUE)
 
@@ -105,10 +106,11 @@ S3method(predict, FRESA_NAIVEBAYES)
 S3method(predict, FRESA_RIDGE) 
 S3method(predict, FRESA_SVM) 
 S3method(predict, FRESA_HCLAS) 
-S3method(predict, GMVE_BSWiMS) 
-S3method(predict, CLUSTER_CLASS) 
-S3method(predict, GMVE) 
-S3method(predict, FRESA_BESS) 
+S3method(predict, GMVE_BSWiMS)
+S3method(predict, CLUSTER_CLASS)
+S3method(predict, GMVE)
+S3method(predict, FRESA_BESS)
+S3method(predict, FRESA_FILTERFIT) 
 
 
 importFrom(Rcpp, evalCpp)
