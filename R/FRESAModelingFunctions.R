@@ -482,25 +482,19 @@ HCLAS_KNN_CLASS <- function(formula = formula, data=NULL,method=BSWiMS.model,hys
 	{
 		formula <- formula(formula);
 	}
-	else
-	{
-		baseformula <- as.character(formula);
-		baseformula[3] <- str_replace_all(baseformula[3],"[.]","1");
-		baseformula <- paste(baseformula[2],"~",baseformula[3]);
-		formula <- formula(baseformula);
-	}
-	varlist <- attr(terms(formula),"variables")
+	varlist <- attr(terms(formula,data=data),"variables")
 	dependent <- as.character(varlist[[2]])
 	Outcome = dependent[1];
 	if (length(dependent) == 3)
 	{
 		Outcome = dependent[3];
 	}
+
 	outcomedata <- data[,Outcome];
 
 	alternativeModel <- NULL;
 	classModel <- NULL;
-	selectedfeatures <- colnames(data)[!(colnames(data) %in% baseformula[2])]
+	selectedfeatures <- colnames(data)[!(colnames(data) %in% Outcome)]
 	orgModel <- method(formula,data,...);
 	if (!is.null(orgModel$selectedfeatures))
 	{
@@ -668,20 +662,33 @@ ClustClass <- function(formula = formula, data=NULL, filtermethod=univariate_Wil
 	{
 		formula <- formula(formula);
 	}
-	else
-	{
-		baseformula <- as.character(formula);
-#		baseformula[3] <- str_replace_all(baseformula[3],"[.]","1");
-		baseformula <- paste(baseformula[2],"~",baseformula[3]);
-		formula <- formula(baseformula);
-	}
-	varlist <- attr(terms(formula),"variables")
+	varlist <- attr(terms(formula,data=data),"variables")
 	dependent <- as.character(varlist[[2]])
 	Outcome = dependent[1];
 	if (length(dependent) == 3)
 	{
 		Outcome = dependent[3];
 	}
+
+#	if (class(formula) == "character")
+#	{
+#		formula <- formula(formula);
+#	}
+#	else
+#	{
+#		baseformula <- as.character(formula);
+#		baseformula[3] <- str_replace_all(baseformula[3],"[.]","1");
+#		baseformula <- paste(baseformula[2],"~",baseformula[3]);
+#		formula <- formula(baseformula);
+#	}
+#	varlist <- attr(terms(formula),"variables")
+#	dependent <- as.character(varlist[[2]])
+#	Outcome = dependent[1];
+#	if (length(dependent) == 3)
+#	{
+#		Outcome = dependent[3];
+#	}
+
 	outcomedata <- data[,Outcome];
 	totsamples <- nrow(data);
 	minSamples <- max(5,0.05*totsamples);

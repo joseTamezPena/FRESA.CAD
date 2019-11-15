@@ -1,6 +1,6 @@
 \name{TUNED_SVM}
 \alias{TUNED_SVM}
-\title{Naive Bayes Modeling}
+\title{Tuned SVM}
 \description{
 	FRESA wrapper to fit grid-tuned \code{ e1071::svm} object 
 }
