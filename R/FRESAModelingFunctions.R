@@ -113,10 +113,10 @@ predict.FRESAKNN <- function(object, ...)
 		{
 			knnclass_1 <- try(class::knn(trainframe,testframe,factor(object$classData),object$kn-1,prob=TRUE))
 			prop <- attributes(knnclass_1);
-			knnclass <- knnclass+abs(prop$prob-1*(knnclass_1=="0"))
+			knnclass <- knnclass+0.5*abs(prop$prob-1*(knnclass_1=="0"))
 			knnclass_1 <- try(class::knn(trainframe,testframe,factor(object$classData),object$kn+1,prob=TRUE))
 			prop <- attributes(knnclass_1);
-			knnclass <- (knnclass+abs(prop$prob-1*(knnclass_1=="0")))/3.0;
+			knnclass <- (knnclass+0.5*abs(prop$prob-1*(knnclass_1=="0")))/2.0;
 		}
 	}
 	return(knnclass);
@@ -595,7 +595,7 @@ predict.FRESA_HCLAS <- function(object,...)
 	}
 	if (!is.null(object$alternativeModel))
 	{
-		classPred <- rpredict(object$classModel,testData);
+		classPred <- pmax(predict(object$classModel,testData),1*((pLS > 0.975) | (pLS < 0.025)));
 		palt <- rpredict(object$alternativeModel,testData);
 		if ((min(palt) < -0.1) && (max(palt) > 0.1))
 		{
