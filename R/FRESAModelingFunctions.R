@@ -109,6 +109,15 @@ predict.FRESAKNN <- function(object, ...)
 	{
 		prop <- attributes(knnclass);
 		knnclass <- abs(prop$prob-1*(knnclass=="0"))
+		if (object$kn>2)
+		{
+			knnclass_1 <- try(class::knn(trainframe,testframe,factor(object$classData),object$kn-1,prob=TRUE))
+			prop <- attributes(knnclass_1);
+			knnclass <- knnclass+abs(prop$prob-1*(knnclass_1=="0"))
+			knnclass_1 <- try(class::knn(trainframe,testframe,factor(object$classData),object$kn+1,prob=TRUE))
+			prop <- attributes(knnclass_1);
+			knnclass <- (knnclass+abs(prop$prob-1*(knnclass_1=="0")))/3.0;
+		}
 	}
 	return(knnclass);
 }
@@ -669,25 +678,6 @@ ClustClass <- function(formula = formula, data=NULL, filtermethod=univariate_Wil
 	{
 		Outcome = dependent[3];
 	}
-
-#	if (class(formula) == "character")
-#	{
-#		formula <- formula(formula);
-#	}
-#	else
-#	{
-#		baseformula <- as.character(formula);
-#		baseformula[3] <- str_replace_all(baseformula[3],"[.]","1");
-#		baseformula <- paste(baseformula[2],"~",baseformula[3]);
-#		formula <- formula(baseformula);
-#	}
-#	varlist <- attr(terms(formula),"variables")
-#	dependent <- as.character(varlist[[2]])
-#	Outcome = dependent[1];
-#	if (length(dependent) == 3)
-#	{
-#		Outcome = dependent[3];
-#	}
 
 	outcomedata <- data[,Outcome];
 	totsamples <- nrow(data);
