@@ -108,15 +108,29 @@ predict.FRESAKNN <- function(object, ...)
 	if (length(table(knnclass))==2)
 	{
 		prop <- attributes(knnclass);
-		knnclass <- abs(prop$prob-1*(knnclass=="0"))
-		if (object$kn>2)
+		knnclass <- abs(prop$prob-1*(knnclass == "0"))
+		if (object$kn > 2)
 		{
 			knnclass_1 <- try(class::knn(trainframe,testframe,factor(object$classData),object$kn-1,prob=TRUE))
-			prop <- attributes(knnclass_1);
-			knnclass <- knnclass+0.5*abs(prop$prob-1*(knnclass_1=="0"))
-			knnclass_1 <- try(class::knn(trainframe,testframe,factor(object$classData),object$kn+1,prob=TRUE))
-			prop <- attributes(knnclass_1);
-			knnclass <- (knnclass+0.5*abs(prop$prob-1*(knnclass_1=="0")))/2.0;
+			prop_1 <- attributes(knnclass_1);
+			knnclass_2 <- try(class::knn(trainframe,testframe,factor(object$classData),object$kn+1,prob=TRUE))
+			prop_2 <- attributes(knnclass_2);
+			knnclass <- (knnclass + 0.5*abs(prop_1$prob-1*(knnclass_1 == "0")) + 0.5*abs(prop_2$prob-1*(knnclass_2 == "0")))/2.0;
+		}
+	}
+	else
+	{
+		prop <- attributes(knnclass);
+		if (object$kn > 2)
+		{
+			knnclass_1 <- try(class::knn(trainframe,testframe,factor(object$classData),object$kn-1,prob=TRUE))
+			prop_1 <- attributes(knnclass_1);
+			prop[knnclass_1 == knnclass] <- 0.75*prop[knnclass_1 == knnclass] + 0.25*prop_1[knnclass_1 == knnclass];
+			prop[!(knnclass_1 == knnclass)] <- 0.75*prop[!(knnclass_1 == knnclass)] + 0.25*(1.0-prop_1[!(knnclass_1 == knnclass)]);
+			knnclass_1 <- try(class::knn(trainframe,testframe,factor(object$classData),object$kn+2,prob=TRUE))
+			prop_1 <- attributes(knnclass_1);
+			prop[knnclass_1 == knnclass] <- 0.75*prop[knnclass_1 == knnclass] + 0.25*prop_1[knnclass_1 == knnclass];
+			prop[!(knnclass_1 == knnclass)] <- 0.75*prop[!(knnclass_1 == knnclass)] + 0.25*(1.0-prop_1[!(knnclass_1 == knnclass)]);
 		}
 	}
 	return(knnclass);
