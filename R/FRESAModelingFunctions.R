@@ -704,32 +704,59 @@ predict.FRESA_HCLAS <- function(object,...)
 		{
 			if (class(object$classModel)[[1]] == "svm.formula")
 			{
-				tb <- sqrt(table(object$classSet)/length(object$classSet));
-				classPred <- predict(object$classModel,testData,probability = TRUE);
-				probal <- attributes(classPred)$probabilities;
-				pmodel <- pLS;
-				nm <- length(object$alternativeModel)
-				for (n in 1:nm)
+				if (length(object$alternativeModel) == 1)
 				{
-					ptmp <- rpredict(object$alternativeModel[[n]],testData)
-					if ((min(ptmp) < -0.1) && (max(ptmp) > 0.1))
+					classPred <- predict(object$classModel,testData,probability = TRUE);
+					classPred <- attributes(classPred)$probabilities[,"0"];
+					palt <- rpredict(object$alternativeModel[[1]],testData);
+					if ((min(palt) < -0.1) && (max(palt) > 0.1))
 					{
-						ptmp <- 1.0/(1.0+exp(-ptmp));
+						palt <- 1.0/(1.0+exp(-palt));
 					}
-					pmodel <- cbind(pmodel,ptmp);
+					p1 <- classPred*pLS;
+					p2 <- classPred*(1.0-pLS);
+					p3 <- (1.0-classPred)*palt;
+					p4 <- (1.0-classPred)*(1.0-palt);
+					pval <- cbind(p1,p2,p3,p4);
+					mv <- apply(pval,1,which.max);
+					pval <- cbind(pLS,pLS,palt,palt);
+					for (i in 1:length(palt))
+					{
+						palt[i] <- pval[i,mv[i]];
+					}
+					altcheck <- (classPred < 0.50+object$hysteresis);
+					pLS[altcheck] <- classPred[altcheck]*pLS[altcheck];
+					pLS[altcheck] <- pLS[altcheck] + (1.0-classPred[altcheck])*palt[altcheck];
 				}
-				totclass <- nm+1;
-				for (i in 1:length(pLS))
+				else
 				{
-					pLS[i] <- 0;
-					wts <- 0;
-					for (n in 1:totclass)
-					{	
-						wt <-  probal[i,as.character(n-1)]*tb[n];
-						pLS[i] <- pLS[i]+wt*pmodel[i,n];
-						wts <- wts + wt;
+					tb <- sqrt(table(object$classSet)/length(object$classSet));
+					classPred <- predict(object$classModel,testData,probability = TRUE);
+					probal <- attributes(classPred)$probabilities;
+					pmodel <- pLS;
+					nm <- length(object$alternativeModel)
+					for (n in 1:nm)
+					{
+						ptmp <- rpredict(object$alternativeModel[[n]],testData)
+						if ((min(ptmp) < -0.1) && (max(ptmp) > 0.1))
+						{
+							ptmp <- 1.0/(1.0+exp(-ptmp));
+						}
+						pmodel <- cbind(pmodel,ptmp);
 					}
-					pLS[i] <- pLS[i]/wts;
+					totclass <- nm+1;
+					for (i in 1:length(pLS))
+					{
+						pLS[i] <- 0;
+						wts <- 0;
+						for (n in 1:totclass)
+						{	
+							wt <-  probal[i,as.character(n-1)]*tb[n];
+							pLS[i] <- pLS[i]+wt*pmodel[i,n];
+							wts <- wts + wt;
+						}
+						pLS[i] <- pLS[i]/wts;
+					}
 				}
 			}
 		}
