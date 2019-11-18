@@ -44,14 +44,6 @@ predict.FRESAsignature <- function(object, ...)
 KNN_method <- function(formula = formula, data=NULL, ...)
 {
 	parameters <- list(...);
-	if (is.null(parameters$kn))
-	{
-		kn <- as.integer(sqrt(nrow(data)/2)+0.5);
-	}
-	else
-	{
-		kn <- parameters$kn;
-	}
 
 	baseformula <- as.character(formula);
 	usedFeatures <- colnames(data)[!(colnames(data) %in% baseformula[2])]
@@ -59,6 +51,15 @@ KNN_method <- function(formula = formula, data=NULL, ...)
 	if (length(tlabs) > 0)
 	{
 		usedFeatures <- tlabs;
+	}
+	if (is.null(parameters$kn))
+	{
+		tb <- table(data[,baseformula[2]]);
+		kn <- as.integer(sqrt(min(tb))+0.5);
+	}
+	else
+	{
+		kn <- parameters$kn;
 	}
 #	print(usedFeatures);
 
@@ -502,7 +503,7 @@ predict.FRESA_RIDGE <- function(object,...)
 }
 
 
-HCLAS_KNN_CLASS <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis = 0.0,...)
+HCLAS_CLUSTER <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis = 0.0,classMethod=KNN_method,classModel.Control=NULL,...)
 {
 	if (class(formula) == "character")
 	{
@@ -558,7 +559,7 @@ HCLAS_KNN_CLASS <- function(formula = formula, data=NULL,method=BSWiMS.model,hys
 				outcomedata <- preData[,Outcome];
 				falseP <- (thePredict > (0.5 - hysteresis)) & (outcomedata == 0 );
 				falseN <- (thePredict < (0.5 + hysteresis)) & (outcomedata == 1 );
-				if ((sum(falseP) > 5) && (sum(falseN) > 5))
+				if ((sum(falseP) > 4) && (sum(falseN) > 4))
 				{
 					incorrectSet <- falseP | falseN;
 					nextdata <- preData[incorrectSet,];
@@ -598,7 +599,15 @@ HCLAS_KNN_CLASS <- function(formula = formula, data=NULL,method=BSWiMS.model,hys
 					classData[correctSet[[i]],Outcome] <- i-1;
 					allCorrectSet <- c(allCorrectSet,correctSet[[i]]);
 				}
-				classModel <- KNN_method(formula(paste(Outcome,"~.")),classData[,c(Outcome,selectedfeatures)],kn=kn);
+				if (is.null(classModel.Control))
+				{
+					classModel <- classMethod(formula(paste(Outcome,"~.")),classData[,c(Outcome,selectedfeatures)]);
+				}
+				else
+				{
+					classData[,Outcome] <- as.factor(classData[,Outcome]);
+					classModel <- do.call(classMethod,c(list(formula(paste(Outcome,"~.")),classData[,c(Outcome,selectedfeatures)]),classModel.Control));
+				}
 			}
 		}
 	}
@@ -626,66 +635,102 @@ predict.FRESA_HCLAS <- function(object,...)
 	}
 	if (!is.null(object$classModel))
 	{
-		classPred <- predict(object$classModel,testData);
-		if (length(object$alternativeModel) == 1)
+		if (class(object$classModel)[[1]] == "FRESAKNN")
 		{
-			classPred <- 1.0 - classPred;
-			palt <- rpredict(object$alternativeModel[[1]],testData);
-			if ((min(palt) < -0.1) && (max(palt) > 0.1))
+			classPred <- predict(object$classModel,testData);
+			if (length(object$alternativeModel) == 1)
 			{
-				palt <- 1.0/(1.0+exp(-palt));
+				classPred <- 1.0 - classPred;
+				palt <- rpredict(object$alternativeModel[[1]],testData);
+				if ((min(palt) < -0.1) && (max(palt) > 0.1))
+				{
+					palt <- 1.0/(1.0+exp(-palt));
+				}
+				p1 <- classPred*pLS;
+				p2 <- classPred*(1.0-pLS);
+				p3 <- (1.0-classPred)*palt;
+				p4 <- (1.0-classPred)*(1.0-palt);
+				pval <- cbind(p1,p2,p3,p4);
+				mv <- apply(pval,1,which.max);
+				pval <- cbind(pLS,pLS,palt,palt);
+				for (i in 1:length(palt))
+				{
+					palt[i] <- pval[i,mv[i]];
+				}
+				altcheck <- (classPred < 0.50+object$hysteresis);
+				pLS[altcheck] <- classPred[altcheck]*pLS[altcheck];
+				pLS[altcheck] <- pLS[altcheck] + (1.0-classPred[altcheck])*palt[altcheck];
 			}
-			p1 <- classPred*pLS;
-			p2 <- classPred*(1.0-pLS);
-			p3 <- (1.0-classPred)*palt;
-			p4 <- (1.0-classPred)*(1.0-palt);
-			pval <- cbind(p1,p2,p3,p4);
-			mv <- apply(pval,1,which.max);
-			pval <- cbind(pLS,pLS,palt,palt);
-			for (i in 1:length(palt))
+			else
 			{
-				palt[i] <- pval[i,mv[i]];
+				pmodel <- pLS;
+				prbclas <- attributes(classPred)$prob;
+	#			print(prbclas)
+				classPred <- as.numeric(as.character(classPred))+1;
+	#			print(classPred)
+				nm <- length(object$alternativeModel)
+				for (n in 1:nm)
+				{
+					ptmp <- rpredict(object$alternativeModel[[n]],testData)
+					if ((min(ptmp) < -0.1) && (max(ptmp) > 0.1))
+					{
+						ptmp <- 1.0/(1.0+exp(-ptmp));
+					}
+					pmodel <- cbind(pmodel,ptmp);
+				}
+				tb <- table(object$classSet);
+				for (i in 1:length(pLS))
+				{
+					pupother <- pmodel[i,classPred[i]];
+					pdnother <- pmodel[i,classPred[i]];
+					pclass <- prbclas[i];
+					totup <- tb[classPred[i]];
+					totdn <- tb[classPred[i]];
+					if (classPred[i] < nm)
+					{
+						pupother <- pmodel[i,classPred[i]+1];
+						totup <- tb[classPred[i]+1];
+					}
+					if (classPred[i] > 1)
+					{
+						pdnother <- pmodel[i,classPred[i]-1];
+						totdn <- tb[classPred[i]-1];
+					}
+					pLS[i] <- pmodel[i,classPred[i]]*pclass+(totup*pupother+totdn*pdnother)/(totup+totdn)*(1.0-pclass);
+				}
 			}
-			altcheck <- (classPred < 0.50+object$hysteresis);
-			pLS[altcheck] <- classPred[altcheck]*pLS[altcheck];
-			pLS[altcheck] <- pLS[altcheck] + (1.0-classPred[altcheck])*palt[altcheck];
 		}
 		else
 		{
-			pmodel <- pLS;
-			prbclas <- attributes(classPred)$prob;
-#			print(prbclas)
-			classPred <- as.numeric(as.character(classPred))+1;
-#			print(classPred)
-			nm <- length(object$alternativeModel)
-			for (n in 1:nm)
+			if (class(object$classModel)[[1]] == "svm.formula")
 			{
-				ptmp <- rpredict(object$alternativeModel[[n]],testData)
-				if ((min(ptmp) < -0.1) && (max(ptmp) > 0.1))
+				tb <- sqrt(table(object$classSet)/length(object$classSet));
+				classPred <- predict(object$classModel,testData,probability = TRUE);
+				probal <- attributes(classPred)$probabilities;
+				pmodel <- pLS;
+				nm <- length(object$alternativeModel)
+				for (n in 1:nm)
 				{
-					ptmp <- 1.0/(1.0+exp(-ptmp));
+					ptmp <- rpredict(object$alternativeModel[[n]],testData)
+					if ((min(ptmp) < -0.1) && (max(ptmp) > 0.1))
+					{
+						ptmp <- 1.0/(1.0+exp(-ptmp));
+					}
+					pmodel <- cbind(pmodel,ptmp);
 				}
-				pmodel <- cbind(pmodel,ptmp);
-			}
-			tb <- table(object$classSet);
-			for (i in 1:length(pLS))
-			{
-				pupother <- pmodel[i,classPred[i]];
-				pdnother <- pmodel[i,classPred[i]];
-				pclass <- prbclas[i];
-				totup <- tb[classPred[i]];
-				totdn <- tb[classPred[i]];
-				if (classPred[i] < nm)
+				totclass <- nm+1;
+				for (i in 1:length(pLS))
 				{
-					pupother <- pmodel[i,classPred[i]+1];
-					totup <- tb[classPred[i]+1];
+					pLS[i] <- 0;
+					wts <- 0;
+					for (n in 1:totclass)
+					{	
+						wt <-  probal[i,as.character(n-1)]*tb[n];
+						pLS[i] <- pLS[i]+wt*pmodel[i,n];
+						wts <- wts + wt;
+					}
+					pLS[i] <- pLS[i]/wts;
 				}
-				if (classPred[i] > 1)
-				{
-					pdnother <- pmodel[i,classPred[i]-1];
-					totdn <- tb[classPred[i]-1];
-				}
-				pLS[i] <- pmodel[i,classPred[i]]*pclass+(totup*pupother+totdn*pdnother)/(totup+totdn)*(1.0-pclass);
 			}
 		}
 	}

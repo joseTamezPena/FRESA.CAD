@@ -1,17 +1,20 @@
-\name{HCLAS_KNN_CLASS}
-\alias{HCLAS_KNN_CLASS}
-\title{Binary Hierarchical Classification: Classifiers-KNN-Classifiers}
+\name{HCLAS_CLUSTER}
+\alias{HCLAS_CLUSTER}
+\title{Binary Hierarchical Classification: Classifiers-CLASS-Classifiers}
 \description{
-	Hierarchical use of Binary Classifier. Wrongly classified subjects are classified using a KNN method followed by the final classifier
+	Hierarchical use of Binary Classifier. Wrongly classified subjects are classified using a class method 
 }
 \usage{
-	HCLAS_KNN_CLASS(formula = formula, 
+	HCLAS_CLUSTER(formula = formula, 
 	                data=NULL,
 	                method=BSWiMS.model,
 	                hysteresis = 0.0,
+					classMethod=KNN_method,
+					classModel.Control=NULL,
 	                ...
 					)
 }
+
 \arguments{
 	\item{formula}{
 	the base formula to extract the outcome
@@ -24,6 +27,12 @@
 	}
 	\item{hysteresis}{
 	the hysteresis shift for detecting wrongly classified subjects
+	}
+	\item{classMethod}{
+	the function name of the class classifiers
+	}
+	\item{classModel.Control}{
+	the parameters to be passed to the class-classifiers
 	}
 	\item{...}{
 	parameters for the classification function
@@ -45,6 +54,12 @@
 	}
 	\item{selectedfeatures}{
 	The character vector of selected features
+	}
+	\item{hysteresis}{
+	The used hysteresis
+	}
+	\item{classSet}{
+	The discoverd class label of each sample
 	}
 }
 \author{Jose G. Tamez-Pena}
