@@ -643,12 +643,12 @@ predict.FRESA_HCLAS <- function(object,...)
 				palt <- rpredict(object$alternativeModel[[1]],testData);
 				if ((min(palt) < -0.1) && (max(palt) > 0.1))
 				{
-					palt <- 1.0/(1.0+exp(-palt));
+					palt <- 1.0/(1.0 + exp(-palt));
 				}
 				p1 <- classPred*pLS;
-				p2 <- classPred*(1.0-pLS);
-				p3 <- (1.0-classPred)*palt;
-				p4 <- (1.0-classPred)*(1.0-palt);
+				p2 <- classPred*(1.0 - pLS);
+				p3 <- (1.0 - classPred)*palt;
+				p4 <- (1.0 - classPred)*(1.0-palt);
 				pval <- cbind(p1,p2,p3,p4);
 				mv <- apply(pval,1,which.max);
 				pval <- cbind(pLS,pLS,palt,palt);
@@ -736,7 +736,7 @@ predict.FRESA_HCLAS <- function(object,...)
 						ptmp <- rpredict(object$alternativeModel[[n]],testData)
 						if ((min(ptmp) < -0.1) && (max(ptmp) > 0.1))
 						{
-							ptmp <- 1.0/(1.0+exp(-ptmp));
+							ptmp <- 1.0/(1.0 + exp(-ptmp));
 						}
 						pmodel <- cbind(pmodel,ptmp);
 					}
