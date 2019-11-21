@@ -2,7 +2,14 @@ rpredict <-	function(currentModel,DataSet,asFactor=FALSE,classLen=2,...)
 {
 	fclass <- class(currentModel);
 	fclass <- fclass[length(fclass)];
-	pred <- try(predict(currentModel,DataSet))
+	if (fclass == "numeric") 
+	{
+		pred <- rep(currentModel,nrow(DataSet));
+	}
+	else
+	{
+		pred <- try(predict(currentModel,DataSet))
+	}
 	if (asFactor && (classLen == 2))
 	{
 		if ( (fclass == "randomForest") || (fclass == "rpart") ) 

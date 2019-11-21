@@ -503,7 +503,7 @@ predict.FRESA_RIDGE <- function(object,...)
 }
 
 
-HCLAS_CLUSTER <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis = 0.0,classMethod=KNN_method,classModel.Control=NULL,...)
+HCLAS_CLUSTER <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis = 0.0,classMethod=KNN_method,classModel.Control=NULL,minsize=5,...)
 {
 	if (class(formula) == "character")
 	{
@@ -557,10 +557,14 @@ HCLAS_CLUSTER <- function(formula = formula, data=NULL,method=BSWiMS.model,hyste
 				inserted <- FALSE;
 				preData <- nextdata;
 				outcomedata <- preData[,Outcome];
-				hs <- hysteresis*(max(thePredict)-min(thePredict))
-				falseP <- (thePredict > (0.5 - hs)) & (outcomedata == 0);
-				falseN <- (thePredict < (0.5 + hs)) & (outcomedata == 1);
-				if ((sum(falseP) > 4) && (sum(falseN) > 4))
+				falseP <- (thePredict > (0.5 - hysteresis)) & (outcomedata == 0);
+				falseN <- (thePredict < (0.5 + hysteresis)) & (outcomedata == 1);
+				if ( sum(falseP | falseN) > (nrow(preData)/2) )
+				{
+					falseP <- (thePredict > 0.5) & (outcomedata == 0);
+					falseN <- (thePredict < 0.5) & (outcomedata == 1);
+				}
+				if ((sum(falseP) >= minsize) && (sum(falseN) >= minsize))
 				{
 					incorrectSet <- falseP | falseN;
 					nextdata <- preData[incorrectSet,];
@@ -591,6 +595,18 @@ HCLAS_CLUSTER <- function(formula = formula, data=NULL,method=BSWiMS.model,hyste
 						correctSet[[n]] <- rownames(preData[!incorrectSet,]);
 						cat("[",sum(incorrectSet),"]")
 						alternativeModel[[n]] <- alternativeM;
+					}
+				}
+				else
+				{
+					if ( ((sum(falseP) >= 2*minsize) || (sum(falseN) >= 2*minsize)) )
+					{
+						incorrectSet <- falseP | falseN;
+						inserted <- FALSE;
+						n <- n + 1;
+						correctSet[[n]] <- rownames(preData[!incorrectSet,]);
+						cat("(",sum(incorrectSet),")")
+						alternativeModel[[n]] <- sum(falseP)/sum(incorrectSet);
 					}
 				}
 			}
