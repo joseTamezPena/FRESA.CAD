@@ -549,7 +549,7 @@ HCLAS_CLUSTER <- function(formula = formula, data=NULL,method=BSWiMS.model,hyste
 		outcomedata <- data[,Outcome];
 		correct <- ((thePredict >= 0.5) == (outcomedata > 0));
 		accuracy <- sum(correct)/nrow(data);
-		if ((accuracy < 0.98) || (hysteresis < 0))
+		if (accuracy < 0.98)
 		{
 			nextdata <- data;
 			while (inserted)
@@ -557,8 +557,9 @@ HCLAS_CLUSTER <- function(formula = formula, data=NULL,method=BSWiMS.model,hyste
 				inserted <- FALSE;
 				preData <- nextdata;
 				outcomedata <- preData[,Outcome];
-				falseP <- (thePredict > (0.5 - hysteresis)) & (outcomedata == 0 );
-				falseN <- (thePredict < (0.5 + hysteresis)) & (outcomedata == 1 );
+				hs <- hysteresis*(max(thePredict)-min(thePredict))
+				falseP <- (thePredict > (0.5 - hs)) & (outcomedata == 0);
+				falseN <- (thePredict < (0.5 + hs)) & (outcomedata == 1);
 				if ((sum(falseP) > 4) && (sum(falseN) > 4))
 				{
 					incorrectSet <- falseP | falseN;
@@ -583,6 +584,10 @@ HCLAS_CLUSTER <- function(formula = formula, data=NULL,method=BSWiMS.model,hyste
 						selectedfeatures <- c(selectedfeatures,nselected);
 						selectedfeatures <- unique(selectedfeatures);
 						thePredict <- rpredict(alternativeM,nextdata);
+						if ((min(thePredict) < -0.1) && (max(thePredict) > 0.1))
+						{
+							thePredict <- 1.0/(1.0+exp(-thePredict));
+						}
 						correctSet[[n]] <- rownames(preData[!incorrectSet,]);
 						cat("[",sum(incorrectSet),"]")
 						alternativeModel[[n]] <- alternativeM;
