@@ -1,5 +1,6 @@
 \name{BESS}
 \alias{BESS}
+\alias{BESS_GSECTION}
 \title{CV BeSS fit}
 \description{
 	Fits a \code{BeSS::bess} object to the data, and return the selected features  

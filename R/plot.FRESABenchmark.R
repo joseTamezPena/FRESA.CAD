@@ -166,20 +166,20 @@ function(x,...)
 					else
 					{
 						pmcnemar[i-1,j-1] <- 0;
-						mcnemar[i-1,j-1] <- 5;
+						mcnemar[i-1,j-1] <- 4;
 					}
 					pmcnemar[j-1,i-1] <- pmcnemar[i-1,j-1];
 					mcnemar[j-1,i-1] <- mcnemar[i-1,j-1];
 				}
 			}
-			mcnemar[is.nan(mcnemar)] <- 6;
+			mcnemar[is.nan(mcnemar)] <- 4;
 			colnames(mcnemar) <- colnames(x$testPredictions)[-1]
 			rownames(mcnemar) <- colnames(x$testPredictions)[-1]
 			colnames(pmcnemar) <- colnames(x$testPredictions)[-1]
 			rownames(pmcnemar) <- colnames(x$testPredictions)[-1]
 			par(op);
 			par(mfrow = c(1,1),mar = c(2,2,2,2));
-			gplots::heatmap.2(mcnemar,trace = "none",mar = c(5,10),col=rev(heat.colors(8)),main = "p(Method A = Method B)",cexRow = 0.65,cexCol = 0.75,srtCol = 25,key.xlab="-log(p)",xlab="Method B", ylab="Method A")
+			gplots::heatmap.2(mcnemar,trace = "none",mar = c(5,10),col=rev(heat.colors(8)),main = "p(Method A = Method B)",cexRow = 0.65,cexCol = 0.65,srtCol = 25,key.xlab="-log(p)",xlab="Method B", ylab="Method A")
 			par(op);
 		}
 
@@ -206,7 +206,7 @@ function(x,...)
 			par(op);
 			par(mfrow = c(1,1),mar = c(2,2,2,2));
 			topf <- apply(AUCtable,1,mean)
-			gplots::heatmap.2(AUCtable[order(topf),],trace = "none",mar = c(5,10),col=rev(heat.colors(8)),Rowv=FALSE,dendrogram = "column",cexRow = 0.65,cexCol = 0.75,srtCol = 25,key.xlab="-log(p)",main = "p(ROC_AUC A > ROC_AUC B)",xlab="Method B",ylab="Method A")
+			gplots::heatmap.2(AUCtable[order(topf),order(topf)],trace = "none",mar = c(5,10),col=rev(heat.colors(8)),Rowv=FALSE,Colv=FALSE,dendrogram = "none",cexRow = 0.65,cexCol = 0.65,srtCol = 25,key.xlab="-log(p)",main = "p(ROC_AUC A > ROC_AUC B)",xlab="Method B",ylab="Method A")
 			par(op);
 		}
 		
@@ -345,11 +345,11 @@ function(x,...)
 					rss1 <- max(sum((x$testPredictions[,j]-x$testPredictions$Outcome)^2),1e-10);
 					rss2 <- max(sum((x$testPredictions[,i]-x$testPredictions$Outcome)^2),1e-10);
 					rss2 <- rss2/rss1;
-					pfttable[i-1,j-1] <-  pf(nrow(cp$testPredictions)*(rss2-1.0),1.0,nrow(cp$testPredictions),lower.tail = FALSE);
+					pfttable[i-1,j-1] <-  pf(nrow(x$testPredictions)*(rss2-1.0),1.0,nrow(x$testPredictions),lower.tail = FALSE);
 					fttable[i-1,j-1] <- -log10(max(pfttable[i-1,j-1],0.0001));
 				}
 			}
-			fttable[is.nan(fttable)] <- 0.0;
+			fttable[is.nan(fttable)] <- 4.0;
 			colnames(fttable) <- colnames(x$testPredictions)[-1]
 			rownames(fttable) <- colnames(x$testPredictions)[-1]
 			colnames(pfttable) <- colnames(x$testPredictions)[-1]
@@ -357,7 +357,7 @@ function(x,...)
 			par(op);
 			par(mfrow = c(1,1),mar = c(2,2,2,2));
 			topf <- apply(fttable,1,mean)
-			gplots::heatmap.2(fttable[order(topf),],trace = "none",mar = c(5,10),col=rev(heat.colors(8)),Rowv=FALSE,dendrogram = "column",cexRow = 0.65,cexCol = 0.75,srtCol = 25,key.xlab="-log(p)",main = "p(Method A > Method B)",xlab="Method B",ylab="Method A")
+			gplots::heatmap.2(fttable[order(topf),order(topf)],trace = "none",mar = c(5,10),col=rev(heat.colors(8)),Rowv=FALSE,Colv=FALSE,dendrogram = "none",cexRow = 0.65,cexCol = 0.65,srtCol = 25,key.xlab="-log(p)",main = "p(Method A > Method B)",xlab="Method B",ylab="Method A")
 			par(op);
 		}
 
@@ -472,11 +472,11 @@ function(x,...)
 					rss1 <- max(sum((x$testPredictions[,j]-x$testPredictions$Outcome)^2),1e-10);
 					rss2 <- max(sum((x$testPredictions[,i]-x$testPredictions$Outcome)^2),1e-10);
 					rss2 <- rss2/rss1;
-					pfttable[i-1,j-1] <-  pf(nrow(cp$testPredictions)*(rss2-1.0),1.0,nrow(cp$testPredictions),lower.tail = FALSE);
+					pfttable[i-1,j-1] <-  pf(nrow(x$testPredictions)*(rss2-1.0),1.0,nrow(x$testPredictions),lower.tail = FALSE);
 					fttable[i-1,j-1] <- -log10(max(pfttable[i-1,j-1],0.0001));
 				}
 			}
-			fttable[is.nan(fttable)] <- 0.0;
+			fttable[is.nan(fttable)] <- 4.0;
 			colnames(fttable) <- colnames(x$testPredictions)[-1]
 			rownames(fttable) <- colnames(x$testPredictions)[-1]
 			colnames(pfttable) <- colnames(x$testPredictions)[-1]
@@ -484,7 +484,7 @@ function(x,...)
 			par(op);
 			par(mfrow = c(1,1),mar = c(2,2,2,2));
 			topf <- apply(fttable,1,mean)
-			gplots::heatmap.2(fttable[order(topf),],trace = "none",mar = c(5,10),col=rev(heat.colors(8)),Rowv=FALSE,dendrogram = "column",cexRow = 0.65,cexCol = 0.75,srtCol = 25,key.xlab="-log(p)",main = "p(Method A > Method B)",xlab="Method B",ylab="Method A")
+			gplots::heatmap.2(fttable[order(topf),order(topf)],trace = "none",mar = c(5,10),col=rev(heat.colors(8)),Rowv=FALSE,Colv=FALSE,dendrogram = "none",cexRow = 0.65,cexCol = 0.65,srtCol = 25,key.xlab="-log(p)",main = "p(Method A > Method B)",xlab="Method B",ylab="Method A")
 			par(op);
 		}
 

@@ -111,13 +111,18 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 		if (sum(1*(maxMahadis == 0)) < h0)
 		{
 			auxdata <- intdata;
+			andata <- 0;
 		}
 		else
 		{
 			auxdata <- intdata[maxMahadis == 0,];
+			andata <- nrow(auxdata);
+		}
+		if (length(andata) == 0 ) 
+		{
+			andata <- 0;
 		}
 
-		andata <- nrow(auxdata);
 		if (andata >= h0)
 		{
 	#		print(andata);
@@ -278,8 +283,16 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 					mdist <- mahalanobis(intdata,bestmean[[k]],bestCov[[k]]);
 					inside <- (mdist < chithreshold);
 					ndata <- sum(!inside);
-					intdata <- intdata[!inside,];
-					maxMahadis <- 1*(mdist[!inside] < chithreshold_out);
+					if (ndata >= h0)
+					{
+						intdata <- intdata[!inside,];
+						maxMahadis <- 1*(mdist[!inside] < chithreshold_out);
+					}
+					else
+					{	
+						ndata <- 0;
+						maxMahadis <- rep(1,nrow(intdata));
+					}
 				}
 				else
 				{
@@ -298,6 +311,8 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 			bestCov[[k]] <- NULL;
 			robCov[[k]] <- NULL;
 			k <- k - 1;
+			ndata <- nrow(intdata);
+			maxMahadis <- numeric(ndata);
 		}
 		p.threshold <- 0.95*p.threshold;
 		minpvalThr <- minpvalThr/10.0;

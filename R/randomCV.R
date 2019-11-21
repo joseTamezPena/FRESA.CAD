@@ -118,91 +118,7 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
     }
   }
   
-  rpredict <-  function(currentModel,DataSet)
-  {
-	fclass <- class(currentModel);
-	fclass <- fclass[length(fclass)];
-	pred <- try(predict(currentModel,DataSet))
-	if (asFactor && (classLen == 2))
-	{
-		if ( (fclass == "randomForest") || (fclass == "rpart") ) 
-		{
-			pred <- try(predict(currentModel,DataSet,type="prob"))[,"1"];
-		}
-		else
-		{
-			if (fclass == "svm")
-			{
-				parameters <- list(...);
-				if 	(!is.null(parameters$probability))
-				{
-					if (parameters$probability)
-					{
-						pred <- try(predict(currentModel,DataSet,probability = TRUE));
-						pred <- attr(pred,"probabilities")[,"1"];
-					}
-				}
-			}
-		}
-	}
-	if (classLen == 2)
-	{
-		if (fclass == "FRESA_BESS")
-		{
-			pred <- try(predict(currentModel,DataSet,type = "response"));
-		}
-	}
-    if (inherits(pred, "try-error"))
-    {
-      pred <- numeric(nrow(DataSet));
-    }
-    else
-    {
-      if (class(pred) == "list")
-      {
-        if (is.null(pred$posterior))
-        {
-          if (is.null(pred$prob))
-          {
-            pred <-as.numeric(as.character(pred[[1]]));
-          }
-          else
-          {
-            pred <-as.numeric(pred$prob[,2]);
-          }
-        }
-        else
-        {
-          pred <-as.numeric(pred$posterior[,2]);
-        }
-      }
-      if (class(pred) == "factor")
-      {
-        pred <- as.numeric(as.character(pred));
-      }
-      if (class(pred) == "array")
-      {
-        pnames <- colnames(pred);
-        pred <- pnames[apply(pred[,,1],1,which.max)];
-        pred <- as.numeric(pred);
-      }
-      if (class(pred) == "matrix") 
-      {
-        if (ncol(pred)>1)
-        {
-          pnames <- colnames(pred);
-          pred <- pnames[apply(pred,1,which.max)];
-          pred <- as.numeric(pred);
-        }
-        else
-        {
-          pred <- as.vector(pred);
-        }
-      }
-    }
-    return (pred)
-  }
-  
+
   jaccard <-  function(featureSet)
   {
     Jaccard.SM <- 0;
@@ -563,9 +479,9 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
         #				print(selectedFeaturesSet);
         if ((length(selectedFeaturesSet[[rept]])>0) || is.null(featureSelectionFunction))
         {
-          pred <- rpredict(currentModel,testSet);
+          pred <- rpredict(currentModel,testSet,asFactor,classLen,...);
           ctestPredictions <- cbind(testSet[,theOutcome],rep(rept,nrow(testSet)),pred);
-          pred <- rpredict(currentModel,trainSet);
+          pred <- rpredict(currentModel,trainSet,asFactor,classLen,...);
           ctrainPredictions <- cbind(trainSet[,theOutcome],rep(rept,nrow(trainSet)),pred);
           rownames(ctestPredictions) <- rownames(testSet);
           rownames(ctrainPredictions) <- rownames(trainSet);

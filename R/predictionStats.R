@@ -246,6 +246,7 @@ predictionStats_binary <-  function(predictions, plotname="", center=FALSE,...)
       names(berror) <- c("est","lower","upper")
     }
     aucs <- cis[c(2,1,3)];
+	names(aucs) <- c("est","lower","upper")
     results <- list(accc = accc,berror = berror,
 					aucs = aucs,sensitivity = sensitivity,
 					specificity = specificity,
