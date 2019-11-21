@@ -11,6 +11,7 @@
 	                hysteresis = 0.0,
 					classMethod=KNN_method,
 					classModel.Control=NULL,
+					minsize=10,
 	                ...
 					)
 }
@@ -33,6 +34,9 @@
 	}
 	\item{classModel.Control}{
 	the parameters to be passed to the class-classifiers
+	}
+	\item{minsize}{
+	the minimum size of the discovered clusters
 	}
 	\item{...}{
 	parameters for the classification function

@@ -503,7 +503,7 @@ predict.FRESA_RIDGE <- function(object,...)
 }
 
 
-HCLAS_CLUSTER <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis = 0.0,classMethod=KNN_method,classModel.Control=NULL,minsize=5,...)
+HCLAS_CLUSTER <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis = 0.0,classMethod=KNN_method,classModel.Control=NULL,minsize=10,...)
 {
 	if (class(formula) == "character")
 	{
@@ -549,7 +549,7 @@ HCLAS_CLUSTER <- function(formula = formula, data=NULL,method=BSWiMS.model,hyste
 		outcomedata <- data[,Outcome];
 		correct <- ((thePredict >= 0.5) == (outcomedata > 0));
 		accuracy <- sum(correct)/nrow(data);
-		if (accuracy < 0.98)
+		if (sum(!correct) > minsize)
 		{
 			nextdata <- data;
 			while (inserted)
@@ -564,7 +564,7 @@ HCLAS_CLUSTER <- function(formula = formula, data=NULL,method=BSWiMS.model,hyste
 					falseP <- (thePredict > 0.5) & (outcomedata == 0);
 					falseN <- (thePredict < 0.5) & (outcomedata == 1);
 				}
-				if ((sum(falseP) >= minsize) && (sum(falseN) >= minsize))
+				if ((sum(falseP) >= (minsize/2)) && (sum(falseN) >= (minsize/2)))
 				{
 					incorrectSet <- falseP | falseN;
 					nextdata <- preData[incorrectSet,];
@@ -599,14 +599,14 @@ HCLAS_CLUSTER <- function(formula = formula, data=NULL,method=BSWiMS.model,hyste
 				}
 				else
 				{
-					if ( ((sum(falseP) >= 2*minsize) || (sum(falseN) >= 2*minsize)) )
+					if ( ((sum(falseP) >= minsize) || (sum(falseN) >= minsize)) )
 					{
 						incorrectSet <- falseP | falseN;
 						inserted <- FALSE;
 						n <- n + 1;
 						correctSet[[n]] <- rownames(preData[!incorrectSet,]);
 						cat("(",sum(incorrectSet),")")
-						alternativeModel[[n]] <- sum(falseP)/sum(incorrectSet);
+						alternativeModel[[n]] <- sum(falseN)/(sum(falseP)+sum(falseN));
 					}
 				}
 			}
@@ -677,9 +677,8 @@ predict.FRESA_HCLAS <- function(object,...)
 				{
 					palt[i] <- pval[i,mv[i]];
 				}
-				altcheck <- (classPred < (0.50 + object$hysteresis));
-				pLS[altcheck] <- classPred[altcheck]*pLS[altcheck];
-				pLS[altcheck] <- pLS[altcheck] + (1.0 - classPred[altcheck])*palt[altcheck];
+				altcheck <- (classPred < 0.50);
+				pLS[altcheck] <- classPred[altcheck]*pLS[altcheck] + (1.0 - classPred[altcheck])*palt[altcheck];
 			}
 			else
 			{
@@ -696,25 +695,20 @@ predict.FRESA_HCLAS <- function(object,...)
 					}
 					pmodel <- cbind(pmodel,ptmp);
 				}
-				tb <- table(object$classSet);
+				tb <- table(object$classSet)/length(object$classSet);
 				for (i in 1:length(pLS))
 				{
-					pupother <- pmodel[i,classPred[i]];
-					pdnother <- pmodel[i,classPred[i]];
-					pclass <- prbclas[i];
-					totup <- 0;
-					totdn <- 0;
-					if (classPred[i] < nm)
-					{
-						pupother <- pmodel[i,classPred[i] + 1];
-						totup <- tb[classPred[i] + 1];
-					}
+					wts <- prbclas[i];
+					pLS[i] <- pmodel[i,classPred[i]]*prbclas[i];
 					if (classPred[i] > 1)
 					{
-						pdnother <- pmodel[i,classPred[i] - 1];
-						totdn <- tb[classPred[i] - 1];
+						for (n in 1:(classPred[i]-1))
+						{
+							pLS[i] <- pLS[i]+pmodel[i,n]*(1.0-prbclas[i])/classPred[i];
+							wts <- wts + (1.0-prbclas[i])/classPred[i];
+						}
 					}
-					pLS[i] <- pmodel[i,classPred[i]]*pclass + (totup*pupother + totdn*pdnother)/(totup+totdn)*(1.0 - pclass);
+					pLS[i] <- pLS[i]/wts;
 				}
 			}
 		}
@@ -742,9 +736,8 @@ predict.FRESA_HCLAS <- function(object,...)
 					{
 						palt[i] <- pval[i,mv[i]];
 					}
-					altcheck <- (classPred < (0.50 + object$hysteresis));
-					pLS[altcheck] <- classPred[altcheck]*pLS[altcheck];
-					pLS[altcheck] <- pLS[altcheck] + (1.0 - classPred[altcheck])*palt[altcheck];
+					altcheck <- (classPred < 0.50);
+					pLS[altcheck] <- classPred[altcheck]*pLS[altcheck] + (1.0 - classPred[altcheck])*palt[altcheck];
 				}
 				else
 				{
