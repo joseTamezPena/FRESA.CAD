@@ -583,8 +583,7 @@ HCLAS_CLUSTER <- function(formula = formula, data=NULL,method=BSWiMS.model,hyste
 						selectedfeatures <- c(selectedfeatures,nselected);
 						selectedfeatures <- unique(selectedfeatures);
 						thePredict <- rpredict(alternativeM,nextdata);
-						correctSet[[n]] <- rownames(preData[!incorrectSet,])
-						kn <- 1 + as.integer(sqrt(sum(incorrectSet))+0.5);
+						correctSet[[n]] <- rownames(preData[!incorrectSet,]);
 						cat("[",sum(incorrectSet),"]")
 						alternativeModel[[n]] <- alternativeM;
 					}
@@ -596,7 +595,7 @@ HCLAS_CLUSTER <- function(formula = formula, data=NULL,method=BSWiMS.model,hyste
 				classData[,Outcome] <- rep(n,nrow(classData));
 				for (i in 1:n)
 				{
-					classData[correctSet[[i]],Outcome] <- i-1;
+					classData[correctSet[[i]],Outcome] <- i - 1;
 					allCorrectSet <- c(allCorrectSet,correctSet[[i]]);
 				}
 				if (is.null(classModel.Control))
@@ -657,24 +656,22 @@ predict.FRESA_HCLAS <- function(object,...)
 				{
 					palt[i] <- pval[i,mv[i]];
 				}
-				altcheck <- (classPred < 0.50+object$hysteresis);
+				altcheck <- (classPred < (0.50 + object$hysteresis));
 				pLS[altcheck] <- classPred[altcheck]*pLS[altcheck];
-				pLS[altcheck] <- pLS[altcheck] + (1.0-classPred[altcheck])*palt[altcheck];
+				pLS[altcheck] <- pLS[altcheck] + (1.0 - classPred[altcheck])*palt[altcheck];
 			}
 			else
 			{
 				pmodel <- pLS;
 				prbclas <- attributes(classPred)$prob;
-	#			print(prbclas)
-				classPred <- as.numeric(as.character(classPred))+1;
-	#			print(classPred)
+				classPred <- as.numeric(as.character(classPred)) + 1;
 				nm <- length(object$alternativeModel)
 				for (n in 1:nm)
 				{
 					ptmp <- rpredict(object$alternativeModel[[n]],testData)
 					if ((min(ptmp) < -0.1) && (max(ptmp) > 0.1))
 					{
-						ptmp <- 1.0/(1.0+exp(-ptmp));
+						ptmp <- 1.0/(1.0 + exp(-ptmp));
 					}
 					pmodel <- cbind(pmodel,ptmp);
 				}
@@ -684,19 +681,19 @@ predict.FRESA_HCLAS <- function(object,...)
 					pupother <- pmodel[i,classPred[i]];
 					pdnother <- pmodel[i,classPred[i]];
 					pclass <- prbclas[i];
-					totup <- tb[classPred[i]];
-					totdn <- tb[classPred[i]];
+					totup <- 0;
+					totdn <- 0;
 					if (classPred[i] < nm)
 					{
-						pupother <- pmodel[i,classPred[i]+1];
-						totup <- tb[classPred[i]+1];
+						pupother <- pmodel[i,classPred[i] + 1];
+						totup <- tb[classPred[i] + 1];
 					}
 					if (classPred[i] > 1)
 					{
-						pdnother <- pmodel[i,classPred[i]-1];
-						totdn <- tb[classPred[i]-1];
+						pdnother <- pmodel[i,classPred[i] - 1];
+						totdn <- tb[classPred[i] - 1];
 					}
-					pLS[i] <- pmodel[i,classPred[i]]*pclass+(totup*pupother+totdn*pdnother)/(totup+totdn)*(1.0-pclass);
+					pLS[i] <- pmodel[i,classPred[i]]*pclass + (totup*pupother + totdn*pdnother)/(totup+totdn)*(1.0 - pclass);
 				}
 			}
 		}
@@ -711,12 +708,12 @@ predict.FRESA_HCLAS <- function(object,...)
 					palt <- rpredict(object$alternativeModel[[1]],testData);
 					if ((min(palt) < -0.1) && (max(palt) > 0.1))
 					{
-						palt <- 1.0/(1.0+exp(-palt));
+						palt <- 1.0/(1.0 + exp(-palt));
 					}
 					p1 <- classPred*pLS;
-					p2 <- classPred*(1.0-pLS);
-					p3 <- (1.0-classPred)*palt;
-					p4 <- (1.0-classPred)*(1.0-palt);
+					p2 <- classPred*(1.0 - pLS);
+					p3 <- (1.0 - classPred)*palt;
+					p4 <- (1.0 - classPred)*(1.0 - palt);
 					pval <- cbind(p1,p2,p3,p4);
 					mv <- apply(pval,1,which.max);
 					pval <- cbind(pLS,pLS,palt,palt);
@@ -724,13 +721,12 @@ predict.FRESA_HCLAS <- function(object,...)
 					{
 						palt[i] <- pval[i,mv[i]];
 					}
-					altcheck <- (classPred < 0.50+object$hysteresis);
+					altcheck <- (classPred < (0.50 + object$hysteresis));
 					pLS[altcheck] <- classPred[altcheck]*pLS[altcheck];
-					pLS[altcheck] <- pLS[altcheck] + (1.0-classPred[altcheck])*palt[altcheck];
+					pLS[altcheck] <- pLS[altcheck] + (1.0 - classPred[altcheck])*palt[altcheck];
 				}
 				else
 				{
-					tb <- sqrt(table(object$classSet)/length(object$classSet));
 					classPred <- predict(object$classModel,testData,probability = TRUE);
 					probal <- attributes(classPred)$probabilities;
 					pmodel <- pLS;
@@ -751,7 +747,7 @@ predict.FRESA_HCLAS <- function(object,...)
 						wts <- 0;
 						for (n in 1:totclass)
 						{	
-							wt <-  probal[i,as.character(n-1)]*tb[n];
+							wt <-  probal[i,as.character(n-1)];
 							pLS[i] <- pLS[i]+wt*pmodel[i,n];
 							wts <- wts + wt;
 						}
