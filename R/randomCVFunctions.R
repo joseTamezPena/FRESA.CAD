@@ -40,6 +40,10 @@ correlated_RemoveToLimit <- function(data,unitPvalues,limit=0,thr=0.975,maxLoops
 		if (limit > 0)
 		{
 			slimit <- limit*nrow(data);
+			if (slimit < 2) 
+			{
+				slimit <- 2;
+			}
 			if (length(unitPvalues) > (10*slimit))
 			{
 				unitPvalues <- unitPvalues[1:(10*slimit)];

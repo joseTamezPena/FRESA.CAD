@@ -667,8 +667,7 @@ predict.FRESA_HCLAS <- function(object,...)
 				{
 					palt <- 1.0/(1.0 + exp(-palt));
 				}
-				altcheck <- (classPred < 0.50);
-				pLS[altcheck] <- classPred[altcheck]*pLS[altcheck] + (1.0 - classPred[altcheck])*(palt[altcheck] + 0.5*tb[2]*(1.0 - pLS[altcheck]))/(1.0 + 0.5*tb[2]);
+				pLS <- classPred*pLS + (1.0 - classPred)*(palt + tb[2]*(1.0 - pLS))/(1.0 + tb[2]);
 			}
 			else
 			{
@@ -690,19 +689,22 @@ predict.FRESA_HCLAS <- function(object,...)
 				{
 					wts <- prbclas[i];
 					pLS[i] <- pmodel[i,classPred[i]]*wts;
-					if (classPred[i] > 1)
+					for (n in 1:(nm + 1))
 					{
-						for (n in 1:(classPred[i]-1))
+						if (n != classPred[i])
 						{
-							wt <- (1.0-prbclas[i])*tb[n];
+							wt <- (1.0 - prbclas[i])*tb[n]*itotclas;
 							pLS[i] <- pLS[i] + pmodel[i,n]*wt;
 							wts <- wts + wt;
-							if (prbclas[i] > 0.5)
-							{
-								wt <- 0.5*prbclas[i]*tb[classPred[i]];
-								pLS[i] <- pLS[i] + wt*(1.0-pmodel[i,n]);
-								wts <- wts + wt;
-							}
+						}
+					}
+					if (classPred[i] > 1)
+					{
+						for (n in 1:(classPred[i] - 1))
+						{
+							wt <- prbclas[i]*tb[n + 1];
+							pLS[i] <- pLS[i] + wt*(1.0 - pmodel[i,n]);
+							wts <- wts + wt;
 						}
 					}
 					pLS[i] <- pLS[i]/wts;
@@ -714,7 +716,7 @@ predict.FRESA_HCLAS <- function(object,...)
 			if (class(object$classModel)[[1]] == "svm.formula")
 			{
 				classPred <- predict(object$classModel,testData,probability = TRUE);
-				probal <- attributes(classPred)$probabilities;
+				pclase <- attributes(classPred)$probabilities;
 				pmodel <- pLS;
 				nm <- length(object$alternativeModel)
 				for (n in 1:nm)
@@ -730,14 +732,20 @@ predict.FRESA_HCLAS <- function(object,...)
 				for (i in 1:length(pLS))
 				{
 					wm <- classPred[i];
-					wts <- probal[i,as.character(wm)];
-					pLS[i] <- pmodel[i,wm + 1]*wts;
+					wts <- 0;
+					pLS[i] <- 0;
+					for (n in 0:nm)
+					{	
+						wt <-  pclase[i,as.character(n)];
+						pLS[i] <- pLS[i]+wt*pmodel[i,(n + 1)];
+						wts <- wts + wt;
+					}
 					if (wm > 0)
 					{
 						for (n in 0:(wm - 1))
 						{	
-							wt <-  probal[i,as.character(n)];
-							pLS[i] <- pLS[i]+wt*pmodel[i,(n + 1)];
+							wt <-  pclase[i,wm+1]*tb[n + 2];
+							pLS[i] <- pLS[i]+wt*(1.0 - pmodel[i,(n + 1)]);
 							wts <- wts + wt;
 						}
 					}
