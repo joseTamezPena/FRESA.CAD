@@ -655,6 +655,7 @@ predict.FRESA_HCLAS <- function(object,...)
 	}
 	if (!is.null(object$classModel))
 	{
+		tb <- table(object$classSet)/length(object$classSet);
 		if (class(object$classModel)[[1]] == "FRESAKNN")
 		{
 			classPred <- predict(object$classModel,testData);
@@ -667,7 +668,7 @@ predict.FRESA_HCLAS <- function(object,...)
 					palt <- 1.0/(1.0 + exp(-palt));
 				}
 				altcheck <- (classPred < 0.50);
-				pLS[altcheck] <- classPred[altcheck]*pLS[altcheck] + (1.0 - classPred[altcheck])*palt[altcheck];
+				pLS[altcheck] <- classPred[altcheck]*pLS[altcheck] + (1.0 - classPred[altcheck])*(palt[altcheck] + 0.5*tb[2]*(1.0 - pLS[altcheck]))/(1.0 + 0.5*tb[2]);
 			}
 			else
 			{
@@ -688,14 +689,20 @@ predict.FRESA_HCLAS <- function(object,...)
 				for (i in 1:length(pLS))
 				{
 					wts <- prbclas[i];
-					pLS[i] <- pmodel[i,classPred[i]]*prbclas[i];
+					pLS[i] <- pmodel[i,classPred[i]]*wts;
 					if (classPred[i] > 1)
 					{
 						for (n in 1:(classPred[i]-1))
 						{
-							wt <- (1.0-prbclas[i])*itotclas;
+							wt <- (1.0-prbclas[i])*tb[n];
 							pLS[i] <- pLS[i] + pmodel[i,n]*wt;
 							wts <- wts + wt;
+							if (prbclas[i] > 0.5)
+							{
+								wt <- 0.5*prbclas[i]*tb[classPred[i]];
+								pLS[i] <- pLS[i] + wt*(1.0-pmodel[i,n]);
+								wts <- wts + wt;
+							}
 						}
 					}
 					pLS[i] <- pLS[i]/wts;
