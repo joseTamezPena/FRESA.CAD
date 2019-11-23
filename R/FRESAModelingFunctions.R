@@ -542,7 +542,7 @@ HCLAS_CLUSTER <- function(formula = formula, data=NULL,method=BSWiMS.model,hyste
 	if (length(selectedfeatures) > 0)
 	{
 		thePredict <- rpredict(orgModel,data);
-		if ((min(thePredict) < -0.1) && (max(thePredict) > 0.1))
+		if ((min(thePredict) < -0.1) || (max(thePredict) > 1.1 ))
 		{
 			thePredict <- 1.0/(1.0+exp(-thePredict));
 		}
@@ -588,7 +588,7 @@ HCLAS_CLUSTER <- function(formula = formula, data=NULL,method=BSWiMS.model,hyste
 						selectedfeatures <- c(selectedfeatures,nselected);
 						selectedfeatures <- unique(selectedfeatures);
 						thePredict <- rpredict(alternativeM,nextdata);
-						if ((min(thePredict) < -0.1) && (max(thePredict) > 0.1))
+						if ((min(thePredict) < -0.1) || (max(thePredict) > 1.1))
 						{
 							thePredict <- 1.0/(1.0+exp(-thePredict));
 						}
@@ -649,7 +649,7 @@ predict.FRESA_HCLAS <- function(object,...)
 	parameters <- list(...);
 	testData <- parameters[[1]];
 	pLS <- rpredict(object$original,testData);
-	if ((min(pLS) < -0.1) && (max(pLS) > 0.1))
+	if ((min(pLS) < -0.1) || (max(pLS) > 1.1))
 	{
 		pLS <- 1.0/(1.0+exp(-pLS));
 	}
@@ -663,7 +663,7 @@ predict.FRESA_HCLAS <- function(object,...)
 			{
 				classPred <- 1.0 - classPred;
 				palt <- rpredict(object$alternativeModel[[1]],testData);
-				if ((min(palt) < -0.1) && (max(palt) > 0.1))
+				if ((min(palt) < -0.1) || (max(palt) > 1.1))
 				{
 					palt <- 1.0/(1.0 + exp(-palt));
 				}
@@ -678,7 +678,7 @@ predict.FRESA_HCLAS <- function(object,...)
 				for (n in 1:nm)
 				{
 					ptmp <- rpredict(object$alternativeModel[[n]],testData)
-					if ((min(ptmp) < -0.1) && (max(ptmp) > 0.1))
+					if ((min(ptmp) < -0.1) || (max(ptmp) > 1.1))
 					{
 						ptmp <- 1.0/(1.0 + exp(-ptmp));
 					}
@@ -722,7 +722,7 @@ predict.FRESA_HCLAS <- function(object,...)
 				for (n in 1:nm)
 				{
 					ptmp <- rpredict(object$alternativeModel[[n]],testData)
-					if ((min(ptmp) < -0.1) && (max(ptmp) > 0.1))
+					if ((min(ptmp) < -0.1) || (max(ptmp) > 1.1))
 					{
 						ptmp <- 1.0/(1.0 + exp(-ptmp));
 					}
