@@ -16,7 +16,6 @@
   
 */
 
-
 #include "FRESAcommons.h"
 
 #define EPS 1e-4		
