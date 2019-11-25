@@ -643,6 +643,177 @@ HCLAS_CLUSTER <- function(formula = formula, data=NULL,method=BSWiMS.model,hyste
 	return(result);
 }
 
+HCLAS_EM_CLUSTER <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis = 0.0,classMethod=KNN_method,classModel.Control=NULL,minsize=10,...)
+{
+	if (class(formula) == "character")
+	{
+		formula <- formula(formula);
+	}
+	varlist <- attr(terms(formula,data=data),"variables")
+	dependent <- as.character(varlist[[2]])
+	Outcome = dependent[1];
+	if (length(dependent) == 3)
+	{
+		Outcome = dependent[3];
+	}
+
+
+	alternativeModel <- list();
+	correctSet <- NULL;
+	classModel <- NULL;
+	selectedfeatures <- colnames(data)[!(colnames(data) %in% Outcome)]
+	baseModel <- method(formula,data,...);
+	orgModel <- baseModel;
+	if (!is.null(baseModel$selectedfeatures))
+	{
+		selectedfeatures <- baseModel$selectedfeatures;
+	}
+	else
+	{
+		if (!is.null(baseModel$bagging))
+		{
+			selectedfeatures <- names(baseModel$bagging$frequencyTable);
+		}
+	}
+	accuracy <- 1.0;
+	changes <- 1;
+	n=0;
+	classData <- data;
+	classData[,Outcome] <- rep(0,nrow(classData));
+	if (length(selectedfeatures) > 0)
+	{
+		thePredict <- rpredict(baseModel,data);
+		if ((min(thePredict) < -0.1) || (max(thePredict) > 1.1 ))
+		{
+			thePredict <- 1.0/(1.0+exp(-thePredict));
+		}
+		outcomedata <- data[,Outcome];
+		correct <- ((thePredict >= 0.5) == (outcomedata > 0));
+		accuracy <- sum(correct)/nrow(data);
+		if (sum(!correct) > minsize)
+		{
+			outcomedata <- data[,Outcome];
+			falseP <- (thePredict > (0.5 - hysteresis)) & (outcomedata == 0);
+			falseN <- (thePredict < (0.5 + hysteresis)) & (outcomedata == 1);
+			if ( sum(falseP | falseN) > (nrow(data)/2) )
+			{
+				falseP <- (thePredict > 0.5) & (outcomedata == 0);
+				falseN <- (thePredict < 0.5) & (outcomedata == 1);
+			}
+			if ((sum(falseP) >= (minsize/2)) && (sum(falseN) >= (minsize/2)))
+			{
+				secondSet <- falseP | falseN;
+				firstSet <- !secondSet;
+				loops <- 0;
+				firstModel <- NULL;
+				secondModel <- NULL;
+				while ((changes > 0) && (loops < 10))
+				{
+					loops <- loops + 1;
+					n <- 0;
+					changes <- 0;
+					firstdata <- data[firstSet,];
+					seconddata <- data[secondSet,];
+					if ( (min(table(firstdata[,Outcome])) > (minsize/2)) && (min(table(seconddata[,Outcome])) > (minsize/2)) )
+					{
+						firstModel <- method(formula,firstdata,...);
+						secondModel <- method(formula,seconddata,...);
+						nselected <- character();
+						if (!is.null(secondModel$selectedfeatures))
+						{
+							nselected <- secondModel$selectedfeatures;
+						}
+						else
+						{
+							if (!is.null(secondModel$bagging))
+							{
+								nselected <- names(secondModel$bagging$frequencyTable);
+							}
+						}
+						if (length(nselected)>0)
+						{
+							n <- 1;
+							firstPredict <- rpredict(firstModel,data);
+							if ((min(firstPredict) < -0.1) || (max(firstPredict) > 1.1))
+							{
+								firstPredict <- 1.0/(1.0+exp(-firstPredict));
+							}
+							secondPredict <- rpredict(secondModel,data);
+							if ((min(secondPredict) < -0.1) || (max(secondPredict) > 1.1))
+							{
+								secondPredict <- 1.0/(1.0+exp(-secondPredict));
+							}
+							d1 <-  abs(firstPredict-outcomedata);
+							d2 <-  abs(secondPredict-outcomedata);
+							nfirstSet <- (d1 < (d2 + hysteresis));
+							changes <- sum(nfirstSet != firstSet);
+							firstSet <- nfirstSet;
+							secondSet <- (d2 < (d1 + hysteresis));
+						}
+					}
+					cat("(",changes,")");
+				}
+				cat("[",sum(secondSet),"]")
+				correctSet <- rownames(data[firstSet,]);
+				orgModel <- firstModel;
+				alternativeModel[[1]] <- secondModel;
+			}
+			if (n>0)
+			{
+				nselected <- character();
+				if (!is.null(firstModel$selectedfeatures))
+				{
+					nselected <- firstModel$selectedfeatures;
+				}
+				else
+				{
+					if (!is.null(firstModel$bagging))
+					{
+						nselected <- names(firstModel$bagging$frequencyTable);
+					}
+				}
+				selectedfeatures <- c(selectedfeatures,nselected);
+				selectedfeatures <- unique(selectedfeatures);
+				nselected <- character();
+				if (!is.null(secondModel$selectedfeatures))
+				{
+					nselected <- secondModel$selectedfeatures;
+				}
+				else
+				{
+					if (!is.null(secondModel$bagging))
+					{
+						nselected <- names(secondModel$bagging$frequencyTable);
+					}
+				}
+				selectedfeatures <- c(selectedfeatures,nselected);
+				selectedfeatures <- unique(selectedfeatures);
+				classData[,Outcome] <- rep(1,nrow(classData));
+				classData[correctSet,Outcome] <- 0;
+				if (is.null(classModel.Control))
+				{
+					classModel <- classMethod(formula(paste(Outcome,"~.")),classData[,c(Outcome,selectedfeatures)]);
+				}
+				else
+				{
+					classData[,Outcome] <- as.factor(classData[,Outcome]);
+					classModel <- do.call(classMethod,c(list(formula(paste(Outcome,"~.")),classData[,c(Outcome,selectedfeatures)]),classModel.Control));
+				}
+			}
+		}
+	}
+	result <- list(original = orgModel,
+					alternativeModel = alternativeModel,
+					classModel = classModel,
+					accuracy=accuracy,
+					selectedfeatures = selectedfeatures,
+					hysteresis=hysteresis,
+					classSet=classData[,Outcome],
+					baseModel = baseModel
+					)
+	class(result) <- "FRESA_HCLAS"
+	return(result);
+}
 
 predict.FRESA_HCLAS <- function(object,...) 
 {
