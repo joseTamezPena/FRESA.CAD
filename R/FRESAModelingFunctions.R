@@ -754,6 +754,12 @@ HCLAS_EM_CLUSTER <- function(formula = formula, data=NULL,method=BSWiMS.model,hy
 					cat("(",changes,")");
 				}
 				cat("[",sum(secondSet),"]")
+				if (n > 0)
+				{
+					d1 <-  abs(firstPredict-outcomedata);
+					d2 <-  abs(secondPredict-outcomedata);
+					firstSet <- (d1 < d2);
+				}
 				correctSet <- rownames(data[firstSet,]);
 				orgModel <- firstModel;
 				alternativeModel[[1]] <- secondModel;
@@ -869,13 +875,16 @@ predict.FRESA_HCLAS <- function(object,...)
 							wts <- wts + wt;
 						}
 					}
-					if (classPred[i] > 1)
+					if (is.null(object$baseModel))
 					{
-						for (n in 1:(classPred[i] - 1))
+						if (classPred[i] > 1)
 						{
-							wt <- prbclas[i]*tb[n + 1];
-							pLS[i] <- pLS[i] + wt*(1.0 - pmodel[i,n]);
-							wts <- wts + wt;
+							for (n in 1:(classPred[i] - 1))
+							{
+								wt <- prbclas[i]*tb[n + 1];
+								pLS[i] <- pLS[i] + wt*(1.0 - pmodel[i,n]);
+								wts <- wts + wt;
+							}
 						}
 					}
 					pLS[i] <- pLS[i]/wts;
@@ -911,13 +920,16 @@ predict.FRESA_HCLAS <- function(object,...)
 						pLS[i] <- pLS[i]+wt*pmodel[i,(n + 1)];
 						wts <- wts + wt;
 					}
-					if (wm > 0)
+					if (is.null(object$baseModel))
 					{
-						for (n in 0:(wm - 1))
-						{	
-							wt <-  pclase[i,wm+1]*tb[n + 2];
-							pLS[i] <- pLS[i]+wt*(1.0 - pmodel[i,(n + 1)]);
-							wts <- wts + wt;
+						if (wm > 0)
+						{
+							for (n in 0:(wm - 1))
+							{	
+								wt <-  pclase[i,wm+1]*tb[n + 2];
+								pLS[i] <- pLS[i]+wt*(1.0 - pmodel[i,(n + 1)]);
+								wts <- wts + wt;
+							}
 						}
 					}
 					pLS[i] <- pLS[i]/wts;
