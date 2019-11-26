@@ -522,7 +522,11 @@ HCLAS_CLUSTER <- function(formula = formula, data=NULL,method=BSWiMS.model,hyste
 	correctSet <- list();
 	classModel <- NULL;
 	selectedfeatures <- colnames(data)[!(colnames(data) %in% Outcome)]
-	orgModel <- method(formula,data,...);
+	orgModel <- try(method(formula,data,...));
+	if (inherits(orgModel, "try-error"))
+	{
+		orgModel <- 0.5;
+	}
 	if (!is.null(orgModel$selectedfeatures))
 	{
 		selectedfeatures <- orgModel$selectedfeatures;
@@ -542,10 +546,6 @@ HCLAS_CLUSTER <- function(formula = formula, data=NULL,method=BSWiMS.model,hyste
 	if (length(selectedfeatures) > 0)
 	{
 		thePredict <- rpredict(orgModel,data);
-		if ((min(thePredict) < -0.1) || (max(thePredict) > 1.1 ))
-		{
-			thePredict <- 1.0/(1.0 + exp(-thePredict));
-		}
 		outcomedata <- data[,Outcome];
 		correct <- ((thePredict >= 0.5) == (outcomedata > 0));
 		accuracy <- sum(correct)/nrow(data);
@@ -588,10 +588,6 @@ HCLAS_CLUSTER <- function(formula = formula, data=NULL,method=BSWiMS.model,hyste
 						selectedfeatures <- c(selectedfeatures,nselected);
 						selectedfeatures <- unique(selectedfeatures);
 						thePredict <- rpredict(alternativeM,nextdata);
-						if ((min(thePredict) < -0.1) || (max(thePredict) > 1.1))
-						{
-							thePredict <- 1.0/(1.0 + exp(-thePredict));
-						}
 						correctSet[[n]] <- rownames(preData[!incorrectSet,]);
 						cat("[",sum(incorrectSet),"]")
 						alternativeModel[[n]] <- alternativeM;
@@ -662,11 +658,16 @@ HCLAS_EM_CLUSTER <- function(formula = formula, data=NULL,method=BSWiMS.model,hy
 	correctSet <- NULL;
 	errorSet <- NULL;
 	classModel <- NULL;
-	lastModel <- NULL;
-	firstModel <- NULL;
-	secondModel <- NULL;
+	lastModel <- 0.5;
+	firstModel <- 0.5;
+	secondModel <- 0.5;
 	selectedfeatures <- colnames(data)[!(colnames(data) %in% Outcome)]
-	baseModel <- method(formula,data,...);
+	baseModel <- try(method(formula,data,...));
+	if (inherits(baseModel, "try-error"))
+	{
+		warning("Error. Setting prediction to 0.5\n")
+		baseModel <- 0.5;
+	}
 	orgModel <- baseModel;
 	if (!is.null(baseModel$selectedfeatures))
 	{
@@ -687,14 +688,10 @@ HCLAS_EM_CLUSTER <- function(formula = formula, data=NULL,method=BSWiMS.model,hy
 	if (length(selectedfeatures) > 0)
 	{
 		thePredict <- rpredict(baseModel,data);
-		if ((min(thePredict) < -0.1) || (max(thePredict) > 1.1 ))
-		{
-			thePredict <- 1.0/(1.0 + exp(-thePredict));
-		}
 		outcomedata <- data[,Outcome];
 		correct <- ((thePredict >= 0.5) == (outcomedata > 0));
 		accuracy <- sum(correct)/nrow(data);
-		if (sum(!correct) > minsize)
+		if (sum(1*(!correct),na.rm=TRUE) > minsize)
 		{
 			outcomedata <- data[,Outcome];
 			falseP <- (thePredict > (0.5 - hysteresis)) & (outcomedata == 0);
@@ -738,15 +735,7 @@ HCLAS_EM_CLUSTER <- function(formula = formula, data=NULL,method=BSWiMS.model,hy
 						{
 							n <- 1;
 							firstPredict <- rpredict(firstModel,data);
-							if ((min(firstPredict) < -0.1) || (max(firstPredict) > 1.1))
-							{
-								firstPredict <- 1.0/(1.0 + exp(-firstPredict));
-							}
 							secondPredict <- rpredict(secondModel,data);
-							if ((min(secondPredict) < -0.1) || (max(secondPredict) > 1.1))
-							{
-								secondPredict <- 1.0/(1.0 + exp(-secondPredict));
-							}
 							d1 <-  abs(firstPredict - outcomedata);
 							d2 <-  abs(secondPredict - outcomedata);
 							nfirstSet <- (d1 <= (d2 + hysteresis));
@@ -783,10 +772,10 @@ HCLAS_EM_CLUSTER <- function(formula = formula, data=NULL,method=BSWiMS.model,hy
 						herrorSet <- (d1 > (0.5 - hysteresis)) & (d2 > (0.5 - hysteresis));
 						errordata <- data[herrorSet,];
 						tb <- table(errordata[,Outcome]);
+						nselected <- character();
 						if ((length(tb) > 1) && (min(tb) > (minsize/2)))
 						{
 							lastModel <- method(formula,errordata,...);
-							nselected <- character();
 							if (!is.null(lastModel$selectedfeatures))
 							{
 								nselected <- lastModel$selectedfeatures;
@@ -824,32 +813,37 @@ HCLAS_EM_CLUSTER <- function(formula = formula, data=NULL,method=BSWiMS.model,hy
 					classData[errorSet,Outcome] <- 2;
 				}
 				nselected <- character();
-				if (!is.null(firstModel$selectedfeatures))
+				if (class(firstModel)[1] != "numeric")
 				{
-					nselected <- firstModel$selectedfeatures;
-				}
-				else
-				{
-					if (!is.null(firstModel$bagging))
+					if (!is.null(firstModel$selectedfeatures))
 					{
-						nselected <- names(firstModel$bagging$frequencyTable);
+						nselected <- firstModel$selectedfeatures;
 					}
+					else
+					{
+						if (!is.null(firstModel$bagging))
+						{
+							nselected <- names(firstModel$bagging$frequencyTable);
+						}
+					}
+					selectedfeatures <- c(selectedfeatures,nselected);
 				}
-				selectedfeatures <- c(selectedfeatures,nselected);
-				selectedfeatures <- unique(selectedfeatures);
 				nselected <- character();
-				if (!is.null(secondModel$selectedfeatures))
+				if (class(secondModel)[1] != "numeric")
 				{
-					nselected <- secondModel$selectedfeatures;
-				}
-				else
-				{
-					if (!is.null(secondModel$bagging))
+					if (!is.null(secondModel$selectedfeatures))
 					{
-						nselected <- names(secondModel$bagging$frequencyTable);
+						nselected <- secondModel$selectedfeatures;
 					}
+					else
+					{
+						if (!is.null(secondModel$bagging))
+						{
+							nselected <- names(secondModel$bagging$frequencyTable);
+						}
+					}
+					selectedfeatures <- c(selectedfeatures,nselected);
 				}
-				selectedfeatures <- c(selectedfeatures,nselected);
 				selectedfeatures <- unique(selectedfeatures);
 				if (is.null(classModel.Control))
 				{
@@ -885,10 +879,6 @@ predict.FRESA_HCLAS <- function(object,...)
 	parameters <- list(...);
 	testData <- parameters[[1]];
 	pLS <- rpredict(object$original,testData);
-	if ((min(pLS) < -0.1) || (max(pLS) > 1.1))
-	{
-		pLS <- 1.0/(1.0 + exp(-pLS));
-	}
 	if (!is.null(object$classModel))
 	{
 		tb <- table(object$classSet)/length(object$classSet);
@@ -899,10 +889,6 @@ predict.FRESA_HCLAS <- function(object,...)
 			{
 				classPred <- 1.0 - classPred;
 				palt <- rpredict(object$alternativeModel[[1]],testData);
-				if ((min(palt) < -0.1) || (max(palt) > 1.1))
-				{
-					palt <- 1.0/(1.0 + exp(-palt));
-				}
 				if (is.null(object$baseModel))
 				{
 					pLS <- classPred*pLS + (1.0 - classPred)*(palt + tb[2]*(1.0 - pLS))/(1.0 + tb[2]);
@@ -921,10 +907,6 @@ predict.FRESA_HCLAS <- function(object,...)
 				for (n in 1:nm)
 				{
 					ptmp <- rpredict(object$alternativeModel[[n]],testData)
-					if ((min(ptmp) < -0.1) || (max(ptmp) > 1.1))
-					{
-						ptmp <- 1.0/(1.0 + exp(-ptmp));
-					}
 					pmodel <- cbind(pmodel,ptmp);
 				}
 				itotclas <- 1.0/nm; 
@@ -968,10 +950,6 @@ predict.FRESA_HCLAS <- function(object,...)
 				for (n in 1:nm)
 				{
 					ptmp <- rpredict(object$alternativeModel[[n]],testData)
-					if ((min(ptmp) < -0.1) || (max(ptmp) > 1.1))
-					{
-						ptmp <- 1.0/(1.0 + exp(-ptmp));
-					}
 					pmodel <- cbind(pmodel,ptmp);
 				}
 				classPred <- as.numeric(as.character(classPred));
@@ -1007,7 +985,7 @@ predict.FRESA_HCLAS <- function(object,...)
 }
 
 
-filteredFit <- function(formula = formula, data=NULL, filtermethod=univariate_Wilcoxon, classmethod=e1071::svm,filtermethod.control=list(pvalue=0.05,limit=0.1),...)
+filteredFit <- function(formula = formula, data=NULL, filtermethod=univariate_Wilcoxon, fitmethod=e1071::svm,filtermethod.control=list(pvalue=0.05,limit=0.1),...)
 {
 	if (class(formula) == "character")
 	{
@@ -1031,10 +1009,15 @@ filteredFit <- function(formula = formula, data=NULL, filtermethod=univariate_Wi
 		fm <- do.call(filtermethod,c(list(data,Outcome),filtermethod.control));
 	}
 	usedFeatures <-  c(Outcome,names(fm));
-	fit <- classmethod(formula,data[,usedFeatures],...);
+	fit <- try(fitmethod(formula,data[,usedFeatures],...));
 	parameters <- list(...);
 	result <- list(fit=fit,filter=fm,selectedfeatures = names(fm),usedFeatures = usedFeatures,parameters=parameters,asFactor=(class(data[,Outcome])=="factor"),classLen=length(table(data[,Outcome])));
-	class(result) <- "FRESA_FILTERFIT";
+	class(result) <- c("FRESA_FILTERFIT");
+	if (inherits(fit, "try-error"))
+	{
+		warning("Fit error\n")
+		class(result) <- c("FRESA_FILTERFIT","try-error");
+	}
 	return (result)	
 }
 

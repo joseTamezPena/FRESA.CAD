@@ -8,7 +8,7 @@
     filteredFit(formula = formula, 
 	            data=NULL,
 	            filtermethod=univariate_Wilcoxon,
-	            classmethod=e1071::svm,
+	            fitmethod=e1071::svm,
 	            filtermethod.control=list(pvalue=0.05,limit=0.1),
 	            ...
 				)
@@ -23,7 +23,7 @@
 	\item{filtermethod}{
 	the method for feature selection
 	}
-	\item{classmethod}{
+	\item{fitmethod}{
 	the fit function to be used
 	}
 	\item{filtermethod.control}{

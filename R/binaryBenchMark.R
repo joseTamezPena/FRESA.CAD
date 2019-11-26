@@ -273,9 +273,9 @@ BinaryBenchmark <-	function(theData = NULL, theOutcome = "Class", reps = 100, tr
 			speTable <- rbind(speTable,cStats$specificity)
 			cidxTable <- rbind(cidxTable,cStats$cIndexCI)
 			preftest <- referenceCV[[i]]$medianTest[,2];
-			if ((min(preftest) < -0.5) && (max(preftest) > 0.5))
+			if ((min(preftest) < -0.1) || (max(preftest) > 1.1))
 			{
-				preftest <- 1.0/(1.0+exp(-preftest));
+				preftest <- 1.0/(1.0 + exp(-preftest));
 			}
 			reftest <- cbind(reftest,preftest);
 			cputimes[[i]] = mean(referenceCV[[i]]$theTimes[ elapcol ]);
@@ -299,9 +299,9 @@ BinaryBenchmark <-	function(theData = NULL, theOutcome = "Class", reps = 100, tr
 		speTable <- rbind(speTable,cStats$specificity)
 		cidxTable <- rbind(cidxTable,cStats$cIndexCI)
 		reftest <- referenceCV$medianTest[,2];
-		if ((min(reftest) < -0.5) && (max(reftest) > 0.5))
+		if ((min(reftest) < -0.1) || (max(reftest) > 1.1))
 		{
-			reftest <- 1.0/(1.0+exp(-reftest));
+			reftest <- 1.0/(1.0 + exp(-reftest));
 		}
 		TheCVEvaluations$Reference <- referenceCV;
 		times[[1]] <- referenceCV$theTimes;
@@ -389,9 +389,9 @@ BinaryBenchmark <-	function(theData = NULL, theOutcome = "Class", reps = 100, tr
 # Method Meta Ensemble	
 
 	lasstest <- rcvLASSO$medianTest[,2];
-	if (min(lasstest) < 0) 
+	if ((min(lasstest) < 0) || (max(lasstest) > 1.1)) 
 	{
-		lasstest <- 1.0/(1.0+exp(-lasstest));
+		lasstest <- 1.0/(1.0 + exp(-lasstest));
 	}
 
 	ens <- cbind(referenceCV$medianTest[,1],rowMeans(cbind(reftest,lasstest,rcvRF$medianTest[,2],rcvKNN$medianTest[,2],rcvSVM$medianTest[,2])));

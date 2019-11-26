@@ -38,6 +38,7 @@ rpredict <-	function(currentModel,DataSet,asFactor=FALSE,classLen=2,...)
 		{
 			pred <- try(predict(currentModel,DataSet,type = "response"));
 		}
+		else
 		if (fclass == "lm")
 		{
 			pred <- try(predict(currentModel,DataSet,type = "response"));
@@ -87,8 +88,25 @@ rpredict <-	function(currentModel,DataSet,asFactor=FALSE,classLen=2,...)
 			}
 			else
 			{
-				pred <- as.vector(pred);
+				pred <- as.numeric(pred);
 			}
+		}
+	}
+	if (classLen == 2)
+	{
+		if (class(pred) == "numeric")
+		{
+			pred[pred == Inf] <- 36;
+			pred[pred == -Inf] <- -36;
+			if ((min(pred,na.rm=TRUE) < -0.1) || (max(pred,na.rm=TRUE) > 1.1 ))
+			{
+				pred[pred < -36] <- -36;
+				pred[pred > 36] <- 36;
+				pred <- 1.0/(1.0 + exp(-pred));
+			}
+			pred[is.na(pred)] <- 0.5;
+			pred[is.nan(pred)] <- 0.5;
+			names(pred) <- rownames(DataSet);
 		}
 	}
 	return (pred)
