@@ -1,8 +1,9 @@
 \name{HCLAS_CLUSTER}
 \alias{HCLAS_CLUSTER}
+\alias{HCLAS_EM_CLUSTER}
 \title{Binary Hierarchical Classification: Classifiers-CLASS-Classifiers}
 \description{
-	Hierarchical use of Binary Classifier. Wrongly classified subjects are classified using a class method 
+	Hierarchical use of Binary Classifier. The method find clusters of subjects that can be classified by binary classifiers
 }
 \usage{
 	HCLAS_CLUSTER(formula = formula, 
@@ -21,7 +22,7 @@
 	the base formula to extract the outcome
 	}
 	\item{data}{
-	the data to be used for training the KNN method
+	the data to be used for training 
 	}
 	\item{method}{
 	the binary classification function
@@ -33,7 +34,7 @@
 	the function name of the class classifiers
 	}
 	\item{classModel.Control}{
-	the parameters to be passed to the class-classifiers
+	the parameters to be passed to the class classifiers
 	}
 	\item{minsize}{
 	the minimum size of the discovered clusters
@@ -45,13 +46,13 @@
 
 \value{
 	\item{original}{
-	The original model trained with all the dataset
+	The original model trained with all the dataset or the model of the first set.
 	}
 	\item{alternativeModel}{
-	The model used to classify the wrongly classified samples
+	The list of models used to classify the discovered data clusters
 	}
 	\item{classModel}{
-	The KNN model that identifies correct vs wrongly classified samples
+	The class model that identifies the data clusters
 	}
 	\item{accuracy}{
 	The original accuracy
