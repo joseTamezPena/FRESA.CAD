@@ -544,7 +544,7 @@ HCLAS_CLUSTER <- function(formula = formula, data=NULL,method=BSWiMS.model,hyste
 		thePredict <- rpredict(orgModel,data);
 		if ((min(thePredict) < -0.1) || (max(thePredict) > 1.1 ))
 		{
-			thePredict <- 1.0/(1.0+exp(-thePredict));
+			thePredict <- 1.0/(1.0 + exp(-thePredict));
 		}
 		outcomedata <- data[,Outcome];
 		correct <- ((thePredict >= 0.5) == (outcomedata > 0));
@@ -590,7 +590,7 @@ HCLAS_CLUSTER <- function(formula = formula, data=NULL,method=BSWiMS.model,hyste
 						thePredict <- rpredict(alternativeM,nextdata);
 						if ((min(thePredict) < -0.1) || (max(thePredict) > 1.1))
 						{
-							thePredict <- 1.0/(1.0+exp(-thePredict));
+							thePredict <- 1.0/(1.0 + exp(-thePredict));
 						}
 						correctSet[[n]] <- rownames(preData[!incorrectSet,]);
 						cat("[",sum(incorrectSet),"]")
@@ -660,7 +660,11 @@ HCLAS_EM_CLUSTER <- function(formula = formula, data=NULL,method=BSWiMS.model,hy
 
 	alternativeModel <- list();
 	correctSet <- NULL;
+	errorSet <- NULL;
 	classModel <- NULL;
+	lastModel <- NULL;
+	firstModel <- NULL;
+	secondModel <- NULL;
 	selectedfeatures <- colnames(data)[!(colnames(data) %in% Outcome)]
 	baseModel <- method(formula,data,...);
 	orgModel <- baseModel;
@@ -685,7 +689,7 @@ HCLAS_EM_CLUSTER <- function(formula = formula, data=NULL,method=BSWiMS.model,hy
 		thePredict <- rpredict(baseModel,data);
 		if ((min(thePredict) < -0.1) || (max(thePredict) > 1.1 ))
 		{
-			thePredict <- 1.0/(1.0+exp(-thePredict));
+			thePredict <- 1.0/(1.0 + exp(-thePredict));
 		}
 		outcomedata <- data[,Outcome];
 		correct <- ((thePredict >= 0.5) == (outcomedata > 0));
@@ -705,8 +709,6 @@ HCLAS_EM_CLUSTER <- function(formula = formula, data=NULL,method=BSWiMS.model,hy
 				secondSet <- falseP | falseN;
 				firstSet <- !secondSet;
 				loops <- 0;
-				firstModel <- NULL;
-				secondModel <- NULL;
 				while ((changes > 0) && (loops < 10))
 				{
 					loops <- loops + 1;
@@ -714,7 +716,9 @@ HCLAS_EM_CLUSTER <- function(formula = formula, data=NULL,method=BSWiMS.model,hy
 					changes <- 0;
 					firstdata <- data[firstSet,];
 					seconddata <- data[secondSet,];
-					if ( (min(table(firstdata[,Outcome])) > (minsize/2)) && (min(table(seconddata[,Outcome])) > (minsize/2)) )
+					tb1 <- table(firstdata[,Outcome]);
+					tb2 <- table(seconddata[,Outcome]);
+					if ((length(tb1) > 1) && (length(tb2) > 1) && (min(tb1) > (minsize/2)) && (min(tb2) > (minsize/2)))
 					{
 						firstModel <- method(formula,firstdata,...);
 						secondModel <- method(formula,seconddata,...);
@@ -730,25 +734,35 @@ HCLAS_EM_CLUSTER <- function(formula = formula, data=NULL,method=BSWiMS.model,hy
 								nselected <- names(secondModel$bagging$frequencyTable);
 							}
 						}
-						if (length(nselected)>0)
+						if (length(nselected) > 0)
 						{
 							n <- 1;
 							firstPredict <- rpredict(firstModel,data);
 							if ((min(firstPredict) < -0.1) || (max(firstPredict) > 1.1))
 							{
-								firstPredict <- 1.0/(1.0+exp(-firstPredict));
+								firstPredict <- 1.0/(1.0 + exp(-firstPredict));
 							}
 							secondPredict <- rpredict(secondModel,data);
 							if ((min(secondPredict) < -0.1) || (max(secondPredict) > 1.1))
 							{
-								secondPredict <- 1.0/(1.0+exp(-secondPredict));
+								secondPredict <- 1.0/(1.0 + exp(-secondPredict));
 							}
-							d1 <-  abs(firstPredict-outcomedata);
-							d2 <-  abs(secondPredict-outcomedata);
-							nfirstSet <- (d1 < (d2 + hysteresis));
+							d1 <-  abs(firstPredict - outcomedata);
+							d2 <-  abs(secondPredict - outcomedata);
+							nfirstSet <- (d1 <= (d2 + hysteresis));
 							changes <- sum(nfirstSet != firstSet);
 							firstSet <- nfirstSet;
-							secondSet <- (d2 < (d1 + hysteresis));
+							secondSet <- (d2 <= (d1 + hysteresis));
+						}
+					}
+					else
+					{
+						if ((nrow(seconddata) > minsize))
+						{
+							n <- 1;
+							secondModel <- sum(seconddata[,Outcome])/nrow(seconddata);
+							secondPredict <- rpredict(secondModel,data);
+							cat("{",sum(nrow(seconddata)),"}")
 						}
 					}
 					cat("(",changes,")");
@@ -756,40 +770,59 @@ HCLAS_EM_CLUSTER <- function(formula = formula, data=NULL,method=BSWiMS.model,hy
 				cat("[",sum(secondSet),"]")
 				if (n > 0)
 				{
-					d1 <-  abs(firstPredict-outcomedata);
-					d2 <-  abs(secondPredict-outcomedata);
+					d1 <-  abs(firstPredict - outcomedata);
+					d2 <-  abs(secondPredict - outcomedata);
 					firstSet <- (d1 < d2);
-					correctSet <- rownames(data[firstSet,]);
+					correctSet <- firstSet;
 					alternativeModel[[1]] <- secondModel;
 					orgModel <- firstModel;
-					# errorset <- (d1 > 0.5) & (d2 > 0.5);
-					# if (sum(errorset) > minsize)
-					# {
-						# errordata <- data[errorset,];
-						# if (min(table(errordata[,Outcome])) > (minsize/2))
-						# {
-							# lastModel <- method(formula,errordata,...);
-							# nselected <- character();
-							# if (!is.null(lastModel$selectedfeatures))
-							# {
-								# nselected <- lastModel$selectedfeatures;
-							# }
-							# else
-							# {
-								# if (!is.null(lastModel$bagging))
-								# {
-									# nselected <- names(lastModel$bagging$frequencyTable);
-								# }
-							# }
-							# if (length(nselected)>0)
-							# {
-							# }
-						# }
-					# }
+					errorSet <- (d1 > 0.5) & (d2 > 0.5);
+					if (sum(errorSet) > minsize)
+					{
+						cat("%",sum(errorSet),"%")
+						herrorSet <- (d1 > (0.5 - hysteresis)) & (d2 > (0.5 - hysteresis));
+						errordata <- data[herrorSet,];
+						tb <- table(errordata[,Outcome]);
+						if ((length(tb) > 1) && (min(tb) > (minsize/2)))
+						{
+							lastModel <- method(formula,errordata,...);
+							nselected <- character();
+							if (!is.null(lastModel$selectedfeatures))
+							{
+								nselected <- lastModel$selectedfeatures;
+							}
+							else
+							{
+								if (!is.null(lastModel$bagging))
+								{
+									nselected <- names(lastModel$bagging$frequencyTable);
+								}
+							}
+							if (length(nselected)>0)
+							{
+								n = n + 1;
+								alternativeModel[[n]] <- lastModel;
+							}
+						}
+						else
+						{
+							n = n + 1;
+							alternativeModel[[n]] <- sum(errordata[,Outcome])/nrow(errordata);
+						}
+					}
 				}
 			}
-			if (n>0)
+			if (n > 0)
 			{
+				classData[,Outcome] <- rep(1,nrow(classData));
+				classData[correctSet,Outcome] <- 0;
+				if (n > 1)
+				{
+					cat("|",sum(errorSet),"|")
+					selectedfeatures <- c(selectedfeatures,nselected);
+					selectedfeatures <- unique(selectedfeatures);
+					classData[errorSet,Outcome] <- 2;
+				}
 				nselected <- character();
 				if (!is.null(firstModel$selectedfeatures))
 				{
@@ -818,8 +851,6 @@ HCLAS_EM_CLUSTER <- function(formula = formula, data=NULL,method=BSWiMS.model,hy
 				}
 				selectedfeatures <- c(selectedfeatures,nselected);
 				selectedfeatures <- unique(selectedfeatures);
-				classData[,Outcome] <- rep(1,nrow(classData));
-				classData[correctSet,Outcome] <- 0;
 				if (is.null(classModel.Control))
 				{
 					classModel <- classMethod(formula(paste(Outcome,"~.")),classData[,c(Outcome,selectedfeatures)]);
@@ -856,7 +887,7 @@ predict.FRESA_HCLAS <- function(object,...)
 	pLS <- rpredict(object$original,testData);
 	if ((min(pLS) < -0.1) || (max(pLS) > 1.1))
 	{
-		pLS <- 1.0/(1.0+exp(-pLS));
+		pLS <- 1.0/(1.0 + exp(-pLS));
 	}
 	if (!is.null(object$classModel))
 	{
