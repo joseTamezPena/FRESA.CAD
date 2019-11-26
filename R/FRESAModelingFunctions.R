@@ -759,10 +759,10 @@ HCLAS_EM_CLUSTER <- function(formula = formula, data=NULL,method=BSWiMS.model,hy
 					d1 <-  abs(firstPredict-outcomedata);
 					d2 <-  abs(secondPredict-outcomedata);
 					firstSet <- (d1 < d2);
+					correctSet <- rownames(data[firstSet,]);
+					orgModel <- firstModel;
+					alternativeModel[[1]] <- secondModel;
 				}
-				correctSet <- rownames(data[firstSet,]);
-				orgModel <- firstModel;
-				alternativeModel[[1]] <- secondModel;
 			}
 			if (n>0)
 			{
@@ -806,6 +806,10 @@ HCLAS_EM_CLUSTER <- function(formula = formula, data=NULL,method=BSWiMS.model,hy
 					classModel <- do.call(classMethod,c(list(formula(paste(Outcome,"~.")),classData[,c(Outcome,selectedfeatures)]),classModel.Control));
 				}
 			}
+			else
+			{
+				alternativeModel <- list();
+			}
 		}
 	}
 	result <- list(original = orgModel,
@@ -844,7 +848,14 @@ predict.FRESA_HCLAS <- function(object,...)
 				{
 					palt <- 1.0/(1.0 + exp(-palt));
 				}
-				pLS <- classPred*pLS + (1.0 - classPred)*(palt + tb[2]*(1.0 - pLS))/(1.0 + tb[2]);
+				if (is.null(object$baseModel))
+				{
+					pLS <- classPred*pLS + (1.0 - classPred)*(palt + tb[2]*(1.0 - pLS))/(1.0 + tb[2]);
+				}
+				else
+				{
+					pLS <- classPred*pLS + (1.0 - classPred)*palt;
+				}
 			}
 			else
 			{
