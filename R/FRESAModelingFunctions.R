@@ -760,8 +760,32 @@ HCLAS_EM_CLUSTER <- function(formula = formula, data=NULL,method=BSWiMS.model,hy
 					d2 <-  abs(secondPredict-outcomedata);
 					firstSet <- (d1 < d2);
 					correctSet <- rownames(data[firstSet,]);
-					orgModel <- firstModel;
 					alternativeModel[[1]] <- secondModel;
+					orgModel <- firstModel;
+					# errorset <- (d1 > 0.5) & (d2 > 0.5);
+					# if (sum(errorset) > minsize)
+					# {
+						# errordata <- data[errorset,];
+						# if (min(table(errordata[,Outcome])) > (minsize/2))
+						# {
+							# lastModel <- method(formula,errordata,...);
+							# nselected <- character();
+							# if (!is.null(lastModel$selectedfeatures))
+							# {
+								# nselected <- lastModel$selectedfeatures;
+							# }
+							# else
+							# {
+								# if (!is.null(lastModel$bagging))
+								# {
+									# nselected <- names(lastModel$bagging$frequencyTable);
+								# }
+							# }
+							# if (length(nselected)>0)
+							# {
+							# }
+						# }
+					# }
 				}
 			}
 			if (n>0)
