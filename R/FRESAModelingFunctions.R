@@ -669,6 +669,7 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 		baseModel <- 0.5;
 	}
 	orgModel <- baseModel;
+	firstModel <- baseModel;
 	if (!is.null(baseModel$selectedfeatures))
 	{
 		selectedfeatures <- baseModel$selectedfeatures;
@@ -739,28 +740,39 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 							secondPredict <- rpredict(secondModel,data);
 							d1 <-  abs(firstPredict - outcomedata);
 							d2 <-  abs(secondPredict - outcomedata);
-							nfirstSet <- (d1 <= (d2 + hysteresis/loops));
+							nfirstSet <- (d1 <= (d2 + hysteresis));
 							changes <- sum(nfirstSet != firstSet);
 							firstSet <- nfirstSet;
-							secondSet <- (d2 <= (d1 + hysteresis/loops));
+							secondSet <- (d2 <= (d1 + hysteresis));
 							
 						}
 					}
 					else
 					{
-						if ((nrow(seconddata) > minsize))
+						if ((sum(secondSet) > minsize))
 						{
 							n <- 1;
 							secondModel <- sum(seconddata[,Outcome])/nrow(seconddata);
 							secondPredict <- rpredict(secondModel,data);
 							cat("{",sum(nrow(seconddata)),"}")
 						}
+						else
+						{
+							secondModel <- 0.5;
+						}
+					}
+					if (sum(secondSet) == 0)
+					{
+						changes <- 0;
+						secondModel <- 0.5;
 					}
 					cat("(",changes,")");
 				}
 #				cat("[",sum(secondSet),"]")
 				if (n > 0)
 				{
+					firstPredict <- rpredict(firstModel,data);
+					secondPredict <- rpredict(secondModel,data);
 					d1 <-  abs(firstPredict - outcomedata);
 					d2 <-  abs(secondPredict - outcomedata);
 					firstSet <- (d1 <= d2);
@@ -812,12 +824,11 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 						classData[,Outcome] <- as.factor(classData[,Outcome]);
 						classModel <- do.call(classMethod,c(list(formula(paste(Outcome,"~.")),classData[,c(Outcome,pselectedfeatures)]),classModel.Control));
 					}
-					firstSet <- (predict(classModel,data) < 0.5);
+					firstSet <- (as.numeric(as.character(predict(classModel,data))) <= 0.5);
 #					plot(data[,selectedfeatures],col = (1*firstSet+1))
 					firstdata <- data[firstSet,];
-					seconddata <- data[!firstSet,];
 					tb1 <- table(firstdata[,Outcome]);
-					tb2 <- table(seconddata[,Outcome]);
+					firstModel <- 0.5;
 					if ((length(tb1) > 1) && (min(tb1) > (minsize/2)))
 					{
 						firstModel <- method(formula,firstdata,...);
@@ -828,24 +839,22 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 						{
 							firstModel <- sum(firstdata[,Outcome])/nrow(firstdata);
 						}
-						else
-						{
-							firstModel <- 0.5;
-						}
 					}
-					if ((length(tb2) > 1) && (min(tb2) > (minsize/2)))
+					secondModel <- 0.5;
+					if (sum(!firstSet) > 0)
 					{
-						secondModel <- method(formula,seconddata,...);
-					}
-					else
-					{
-						if (sum(!firstSet) > 0) 
+						seconddata <- data[!firstSet,];
+						tb2 <- table(seconddata[,Outcome]);
+						if ((length(tb2) > 1) && (min(tb2) > (minsize/2)))
 						{
-							secondModel <- sum(seconddata[,Outcome])/nrow(seconddata);
+							secondModel <- method(formula,seconddata,...);
 						}
 						else
 						{
-							secondModel <- 0.5;
+							if (sum(!firstSet) > 0) 
+							{
+								secondModel <- sum(seconddata[,Outcome])/nrow(seconddata);
+							}
 						}
 					}
 
@@ -864,7 +873,7 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 					if (sum(errorSet) > minsize)
 					{
 						cat("%",sum(errorSet),"%")
-						herrorSet <- (d1 > (0.5 - hysteresis)) & (d2 > (0.5 - hysteresis));
+						herrorSet <- (d1 >= (0.5 - hysteresis)) & (d2 >= (0.5 - hysteresis));
 						errordata <- data[herrorSet,];
 						tb <- table(errordata[,Outcome]);
 						if ((length(tb) > 1) && (min(tb) > (minsize/2)))
