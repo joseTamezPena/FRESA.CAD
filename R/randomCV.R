@@ -14,9 +14,7 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
     assign("theDataSet",theData,FRESAcacheEnv);
     assign("theDataOutcome",theOutcome,FRESAcacheEnv);
   }
-  dataTable <- table(theData[,theOutcome]);
-  theClasses <- as.numeric(names(dataTable));
-  classLen <- length(theClasses);
+  
   
   survpredict <- function(currentModel,Dataset,TestDataset,selectedFeatures)
   {
@@ -186,6 +184,9 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
     theformula <- formula(paste(theOutcome,"~ ."));
   }
   
+  dataTable <- table(theData[,theOutcome]);
+  theClasses <- as.numeric(names(dataTable));
+  classLen <- length(theClasses);
   
   selectedFeaturesSet <- list();
   testClases <- ((classLen < 10) && (min(dataTable) >= 5));

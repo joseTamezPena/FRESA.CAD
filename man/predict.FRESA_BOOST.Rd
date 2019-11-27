@@ -1,15 +1,15 @@
-\name{predict.FRESA_HCLAS}
-\alias{predict.FRESA_HCLAS}
+\name{predict.FRESA_HLCM}
+\alias{predict.FRESA_HLCM}
 \title{Predicts BOOST_BSWiMS models}
 \description{
 	This function predicts the outcome from a BOOST_BSWiMS model
 }
 \usage{
-	\method{predict}{FRESA_HCLAS}(object,...)
+	\method{predict}{FRESA_HLCM}(object,...)
 }
 \arguments{
 	\item{object}{
-		An object of class FRESA_HCLAS 
+		An object of class FRESA_HLCM 
 	}
 	\item{...}{
 		A list with: testdata=testdata

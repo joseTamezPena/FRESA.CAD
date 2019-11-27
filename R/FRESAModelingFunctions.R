@@ -503,7 +503,7 @@ predict.FRESA_RIDGE <- function(object,...)
 }
 
 
-HCLAS_CLUSTER <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis = 0.0,classMethod=KNN_method,classModel.Control=NULL,minsize=10,...)
+HLCM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis = 0.0,classMethod=KNN_method,classModel.Control=NULL,minsize=10,...)
 {
 	if (class(formula) == "character")
 	{
@@ -635,11 +635,11 @@ HCLAS_CLUSTER <- function(formula = formula, data=NULL,method=BSWiMS.model,hyste
 					hysteresis=hysteresis,
 					classSet=classData[,Outcome]
 					)
-	class(result) <- "FRESA_HCLAS"
+	class(result) <- "FRESA_HLCM"
 	return(result);
 }
 
-HCLAS_EM_CLUSTER <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis = 0.0,classMethod=KNN_method,classModel.Control=NULL,minsize=10,...)
+HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis = 0.0,classMethod=KNN_method,classModel.Control=NULL,minsize=10,...)
 {
 	if (class(formula) == "character")
 	{
@@ -706,6 +706,7 @@ HCLAS_EM_CLUSTER <- function(formula = formula, data=NULL,method=BSWiMS.model,hy
 				secondSet <- falseP | falseN;
 				firstSet <- !secondSet;
 				loops <- 0;
+				firstPredict <- thePredict;
 				while ((changes > 0) && (loops < 10))
 				{
 					loops <- loops + 1;
@@ -742,6 +743,7 @@ HCLAS_EM_CLUSTER <- function(formula = formula, data=NULL,method=BSWiMS.model,hy
 							changes <- sum(nfirstSet != firstSet);
 							firstSet <- nfirstSet;
 							secondSet <- (d2 <= (d1 + hysteresis/loops));
+							
 						}
 					}
 					else
@@ -756,23 +758,115 @@ HCLAS_EM_CLUSTER <- function(formula = formula, data=NULL,method=BSWiMS.model,hy
 					}
 					cat("(",changes,")");
 				}
-				cat("[",sum(secondSet),"]")
+#				cat("[",sum(secondSet),"]")
 				if (n > 0)
 				{
 					d1 <-  abs(firstPredict - outcomedata);
 					d2 <-  abs(secondPredict - outcomedata);
-					firstSet <- (d1 < d2);
+					firstSet <- (d1 <= d2);
+
+					nselected <- character();
+					pselectedfeatures <- selectedfeatures;
+					if (class(firstModel)[1] != "numeric")
+					{
+						if (!is.null(firstModel$selectedfeatures))
+						{
+							nselected <- firstModel$selectedfeatures;
+						}
+						else
+						{
+							if (!is.null(firstModel$bagging))
+							{
+								nselected <- names(firstModel$bagging$frequencyTable);
+							}
+						}
+						pselectedfeatures <- c(pselectedfeatures,nselected);
+					}
+					nselected <- character();
+					if (class(secondModel)[1] != "numeric")
+					{
+						if (!is.null(secondModel$selectedfeatures))
+						{
+							nselected <- secondModel$selectedfeatures;
+						}
+						else
+						{
+							if (!is.null(secondModel$bagging))
+							{
+								nselected <- names(secondModel$bagging$frequencyTable);
+							}
+						}
+						pselectedfeatures <- c(pselectedfeatures,nselected);
+					}
+					pselectedfeatures <- unique(pselectedfeatures);
+					classData[,Outcome] <- 1*(d1 > d2);
+#					cat("{",sum(classData[,Outcome]),"}")
+#					plot(data[,selectedfeatures],col = (1*firstSet+1))
+
+					if (is.null(classModel.Control))
+					{
+						classModel <- classMethod(formula(paste(Outcome,"~.")),classData[,c(Outcome,pselectedfeatures)]);
+					}
+					else
+					{
+						classData[,Outcome] <- as.factor(classData[,Outcome]);
+						classModel <- do.call(classMethod,c(list(formula(paste(Outcome,"~.")),classData[,c(Outcome,pselectedfeatures)]),classModel.Control));
+					}
+					firstSet <- (predict(classModel,data) < 0.5);
+#					plot(data[,selectedfeatures],col = (1*firstSet+1))
+					firstdata <- data[firstSet,];
+					seconddata <- data[!firstSet,];
+					tb1 <- table(firstdata[,Outcome]);
+					tb2 <- table(seconddata[,Outcome]);
+					if ((length(tb1) > 1) && (min(tb1) > (minsize/2)))
+					{
+						firstModel <- method(formula,firstdata,...);
+					}
+					else
+					{
+						if (sum(firstSet) > 0) 
+						{
+							firstModel <- sum(firstdata[,Outcome])/nrow(firstdata);
+						}
+						else
+						{
+							firstModel <- 0.5;
+						}
+					}
+					if ((length(tb2) > 1) && (min(tb2) > (minsize/2)))
+					{
+						secondModel <- method(formula,seconddata,...);
+					}
+					else
+					{
+						if (sum(!firstSet) > 0) 
+						{
+							secondModel <- sum(seconddata[,Outcome])/nrow(seconddata);
+						}
+						else
+						{
+							secondModel <- 0.5;
+						}
+					}
+
+					firstPredict <- rpredict(firstModel,data);
+					secondPredict <- rpredict(secondModel,data);
+					d1 <-  abs(firstPredict - outcomedata);
+					d2 <-  abs(secondPredict - outcomedata);
+
+
+#					cat("[",sum(!firstSet),"]")
 					correctSet <- firstSet;
 					alternativeModel[[1]] <- secondModel;
 					baseModel <- firstModel;
-					errorSet <- (d1 > 0.5) & (d2 > 0.5);
+					errorSet <- (d1 >= 0.5) & (d2 >= 0.5);
+					nselected <- character();
 					if (sum(errorSet) > minsize)
 					{
 						cat("%",sum(errorSet),"%")
 						herrorSet <- (d1 > (0.5 - hysteresis)) & (d2 > (0.5 - hysteresis));
 						errordata <- data[herrorSet,];
 						tb <- table(errordata[,Outcome]);
-						nselected <- character();
 						if ((length(tb) > 1) && (min(tb) > (minsize/2)))
 						{
 							lastModel <- method(formula,errordata,...);
@@ -803,6 +897,7 @@ HCLAS_EM_CLUSTER <- function(formula = formula, data=NULL,method=BSWiMS.model,hy
 			}
 			if (n > 0)
 			{
+				cat("[",sum(!firstSet),"]")
 				classData[,Outcome] <- rep(1,nrow(classData));
 				classData[correctSet,Outcome] <- 0;
 				if (n > 1)
@@ -870,11 +965,11 @@ HCLAS_EM_CLUSTER <- function(formula = formula, data=NULL,method=BSWiMS.model,hy
 					classSet=classData[,Outcome],
 					baseModel = baseModel
 					)
-	class(result) <- "FRESA_HCLAS"
+	class(result) <- "FRESA_HLCM"
 	return(result);
 }
 
-predict.FRESA_HCLAS <- function(object,...) 
+predict.FRESA_HLCM <- function(object,...) 
 {
 	parameters <- list(...);
 	testData <- parameters[[1]];

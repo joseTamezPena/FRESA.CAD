@@ -1,12 +1,12 @@
-\name{HCLAS_CLUSTER}
-\alias{HCLAS_CLUSTER}
-\alias{HCLAS_EM_CLUSTER}
-\title{Binary Hierarchical Classification: Classifiers-CLASS-Classifiers}
+\name{HLCM}
+\alias{HLCM}
+\alias{HLCM_EM}
+\title{Latent class based modeling of binary outcomes}
 \description{
-	Hierarchical use of Binary Classifier. The method find clusters of subjects that can be classified by binary classifiers
+	Modeling a binary outcome via the the discovery of latent clusters. Each discovered latent cluster is modeled by the user provided fit function. Discovered clusters will be modeled by KNN or SVM.
 }
 \usage{
-	HCLAS_CLUSTER(formula = formula, 
+	HLCM(formula = formula, 
 	                data=NULL,
 	                method=BSWiMS.model,
 	                hysteresis = 0.0,
@@ -22,7 +22,7 @@
 	the base formula to extract the outcome
 	}
 	\item{data}{
-	the data to be used for training 
+	the data to be used for training the method
 	}
 	\item{method}{
 	the binary classification function
@@ -31,10 +31,10 @@
 	the hysteresis shift for detecting wrongly classified subjects
 	}
 	\item{classMethod}{
-	the function name of the class classifiers
+	the function name for modeling the discovered latent clusters
 	}
 	\item{classModel.Control}{
-	the parameters to be passed to the class classifiers
+	the parameters to be passed to the latent-class fitting function
 	}
 	\item{minsize}{
 	the minimum size of the discovered clusters
@@ -46,13 +46,13 @@
 
 \value{
 	\item{original}{
-	The original model trained with all the dataset or the model of the first set.
+	The original model trained with all the dataset
 	}
 	\item{alternativeModel}{
-	The list of models used to classify the discovered data clusters
+	The model used to classify the wrongly classified samples
 	}
 	\item{classModel}{
-	The class model that identifies the data clusters
+	The method that models the latent class
 	}
 	\item{accuracy}{
 	The original accuracy
@@ -64,7 +64,7 @@
 	The used hysteresis
 	}
 	\item{classSet}{
-	The discoverd class label of each sample
+	The discovered class label of each sample
 	}
 }
 \author{Jose G. Tamez-Pena}
