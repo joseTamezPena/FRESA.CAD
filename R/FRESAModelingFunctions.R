@@ -738,10 +738,10 @@ HCLAS_EM_CLUSTER <- function(formula = formula, data=NULL,method=BSWiMS.model,hy
 							secondPredict <- rpredict(secondModel,data);
 							d1 <-  abs(firstPredict - outcomedata);
 							d2 <-  abs(secondPredict - outcomedata);
-							nfirstSet <- (d1 <= (d2 + hysteresis));
+							nfirstSet <- (d1 <= (d2 + hysteresis/loops));
 							changes <- sum(nfirstSet != firstSet);
 							firstSet <- nfirstSet;
-							secondSet <- (d2 <= (d1 + hysteresis));
+							secondSet <- (d2 <= (d1 + hysteresis/loops));
 						}
 					}
 					else
@@ -764,7 +764,7 @@ HCLAS_EM_CLUSTER <- function(formula = formula, data=NULL,method=BSWiMS.model,hy
 					firstSet <- (d1 < d2);
 					correctSet <- firstSet;
 					alternativeModel[[1]] <- secondModel;
-					orgModel <- firstModel;
+					baseModel <- firstModel;
 					errorSet <- (d1 > 0.5) & (d2 > 0.5);
 					if (sum(errorSet) > minsize)
 					{
@@ -878,7 +878,15 @@ predict.FRESA_HCLAS <- function(object,...)
 {
 	parameters <- list(...);
 	testData <- parameters[[1]];
-	pLS <- rpredict(object$original,testData);
+	if (is.null(object$baseModel))
+	{
+		pLS <- rpredict(object$original,testData);
+	}
+	else
+	{
+		pLS <- rpredict(object$baseModel,testData);
+	}
+
 	if (!is.null(object$classModel))
 	{
 		tb <- table(object$classSet)/length(object$classSet);
