@@ -142,10 +142,10 @@ backVarElimination_Bin <- function (object,pvalue=0.05,Outcome="Class",data,star
 	result <- list(back.model=model,
 	loops=loops,
 	reclas.info=modelReclas,
-	back.formula=formula(bk$backfrm),
+	back.formula=bk$backfrm,
 	lastRemoved=changes2,
 	at.opt.model=beforeFSCmodel,
-	string.formula=bk$backfrm,
+#	string.formula=bk$backfrm,
 	beforeFSC.formula=formula(beforeFSC.formula));
 	return (result);
 }

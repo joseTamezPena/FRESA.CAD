@@ -832,6 +832,7 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 						pselectedfeatures <- c(pselectedfeatures,nselected);
 					}
 					pselectedfeatures <- unique(pselectedfeatures);
+#					print(pselectedfeatures);
 
 					cat("<",sum(firstSet))
 					classData[,Outcome] <- 1*(!firstSet);
@@ -841,11 +842,11 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 					classData[,Outcome] <- as.factor(classData[,Outcome]);
 					if (is.null(classModel.Control))
 					{
-						classModel <- classMethod(formula(paste(Outcome,"~.")),classData[,c(Outcome,pselectedfeatures)]);
+						classModel <- classMethod(formula(paste(Outcome,"~.")),classData[,unique(c(Outcome,pselectedfeatures))]);
 					}
 					else
 					{
-						classModel <- do.call(classMethod,c(list(formula(paste(Outcome,"~.")),classData[,c(Outcome,pselectedfeatures)]),classModel.Control));
+						classModel <- do.call(classMethod,c(list(formula(paste(Outcome,"~.")),classData[,unique(c(Outcome,pselectedfeatures))]),classModel.Control));
 					}
 					nfirstSet <- (as.numeric(as.character(predict(classModel,data))) < 0.5);
 					cat("|",sum(nfirstSet),">")

@@ -217,7 +217,7 @@ function(formula=formula,data=NULL,type=c("Auto","LM","LOGIT","COX"),testType=c(
 		isInferior <- FALSE;
 		while ( ( !isInferior || (infraction < 0.975) ) && (cycles<maxCycles) && (size>1))
 		{
-			isInferior <-  TRUE;
+#			isInferior <-  TRUE;
 			infraction <- 1.0;
 			ordinalFormulas <- NULL;
 			if ((testType=="zIDI") || (testType=="zNRI") )
@@ -264,7 +264,14 @@ function(formula=formula,data=NULL,type=c("Auto","LM","LOGIT","COX"),testType=c(
 				{
 					forward.model <- ForwardSelection.Model.Bin(size=size,fraction=fraction,pvalue,loops,acovariates,Outcome,variableList,data,maxTrainModelSize,type,timeOutcome,selectionType=testType,featureSize=featureSize);
 					update.model <- forward.model$update.model;
-					BSWiMS.model <- bootstrapVarElimination_Bin(object=update.model$final.model,pvalue=forward.model$theZthr,Outcome=Outcome,data,startOffset=startOffset,type=type,selectionType=testType,loops=elimination.bootstrap.steps,print=print,plots=plots);
+					if (elimination.bootstrap.steps>1)
+					{
+						BSWiMS.model <- bootstrapVarElimination_Bin(object=update.model$final.model,pvalue=forward.model$theZthr,Outcome=Outcome,data,startOffset=startOffset,type=type,selectionType=testType,loops=elimination.bootstrap.steps,print=print,plots=plots);
+					}
+					else
+					{
+						BSWiMS.model <- backVarElimination_Bin(object=update.model$final.model,pvalue=forward.model$theZthr,Outcome=Outcome,data=data,startOffset=startOffset,type=type,selectionType=testType);
+					}
 				}
 				if (length(forward.model$var.names)>0)
 				{
@@ -299,17 +306,24 @@ function(formula=formula,data=NULL,type=c("Auto","LM","LOGIT","COX"),testType=c(
 							}
 						}
 					}
-					else
-					{
-						BSWiMS.model <- backVarElimination_Bin(object=update.model$final.model,pvalue=forward.model$theZthr,Outcome=Outcome,data=stdata,startOffset=startOffset,type=type,selectionType=testType);
-					}
+#					else
+#					{
+#						BSWiMS.model <- backVarElimination_Bin(object=update.model$final.model,pvalue=forward.model$theZthr,Outcome=Outcome,data=data,startOffset=startOffset,type=type,selectionType=testType);
+#					}
 				}
 			}
 			else
 			{
 				forward.model <- ForwardSelection.Model.Res(size=size,fraction=fraction,pvalue=pvalue,loops=loops,covariates=acovariates,Outcome=Outcome,variableList=variableList,data=data,maxTrainModelSize=maxTrainModelSize,type=type,testType=testType,timeOutcome=timeOutcome,featureSize=featureSize);
 				update.model <- forward.model$update.model;
-				BSWiMS.model <- bootstrapVarElimination_Res(object=update.model$final.model,pvalue=forward.model$p.thresholds,Outcome=Outcome,data=data,startOffset=startOffset,type=type,testType=testType,loops=elimination.bootstrap.steps,setIntersect=setIntersect,print=print,plots=plots);
+				if (elimination.bootstrap.steps>1)
+				{
+					BSWiMS.model <- bootstrapVarElimination_Res(object=update.model$final.model,pvalue=forward.model$p.thresholds,Outcome=Outcome,data=data,startOffset=startOffset,type=type,testType=testType,loops=elimination.bootstrap.steps,setIntersect=setIntersect,print=print,plots=plots);
+				}
+				else
+				{
+					BSWiMS.model <- backVarElimination_Res(object=update.model$final.model,pvalue=forward.model$p.thresholds,Outcome=Outcome,data=data,startOffset=startOffset,type=type,testType=testType,setIntersect=setIntersect);
+				}
 				if (print)
 				{
 					cat("Final Formula:",BSWiMS.model$back.formula,"\n");
@@ -346,10 +360,10 @@ function(formula=formula,data=NULL,type=c("Auto","LM","LOGIT","COX"),testType=c(
 							}
 						}
 					}
-					else
-					{
-						BSWiMS.model <- backVarElimination_Res(object=update.model$final.model,pvalue=forward.model$p.thresholds,Outcome=Outcome,data=data,startOffset=startOffset,type=type,testType=testType,setIntersect=setIntersect);
-					}
+#					else
+#					{
+#						BSWiMS.model <- backVarElimination_Res(object=update.model$final.model,pvalue=forward.model$p.thresholds,Outcome=Outcome,data=data,startOffset=startOffset,type=type,testType=testType,setIntersect=setIntersect);
+#					}
 				}
 			}
 			if (is.null(firstModel))
@@ -361,29 +375,32 @@ function(formula=formula,data=NULL,type=c("Auto","LM","LOGIT","COX"),testType=c(
 				firstModel <- BSWiMS.model;
 				fforward.model <- forward.model;
 				fupdate.model <- update.model;
-				sdOutcome <- BSWiMS.model$bootCV$outcomeSD;
 				isInferior <- (length(attr(terms(formula(firstModel$back.formula)),"term.labels"))==0);
 				selectedVariableList <- rownames(variableList[as.numeric(rownames(forward.model$ranked.var)),]);
-				if ((testType=="zIDI") || (testType=="zNRI"))
+				if (!is.null(BSWiMS.model$bootCV))
 				{
-					IIRMetricPDF <- (firstModel$bootCV$sensitivity + firstModel$bootCV$specificity)/2;
-					IIRMetricPDF <- IIRMetricPDF;
-					if (!isInferior) 
+					sdOutcome <- BSWiMS.model$bootCV$outcomeSD;
+					if ((testType=="zIDI") || (testType=="zNRI"))
 					{
-						isInferior <- ( (sum(0.5 <= IIRMetricPDF)/length(IIRMetricPDF)) < 0.5 );
+						IIRMetricPDF <- (firstModel$bootCV$sensitivity + firstModel$bootCV$specificity)/2;
+						IIRMetricPDF <- IIRMetricPDF;
+						if (!isInferior) 
+						{
+							isInferior <- ( (sum(0.5 <= IIRMetricPDF)/length(IIRMetricPDF)) < 0.5 );
+						}
 					}
-				}
-				else
-				{
-					IIRMetricPDF <- firstModel$bootCV$testSampledRMSE;
-					IIRMetricPDF <- IIRMetricPDF;
-					if (print)
+					else
 					{
-						cat(length(IIRMetricPDF),": Sup std Outcome",sdOutcome,":",(sum(sdOutcome >= IIRMetricPDF)/length(IIRMetricPDF)),"\n");
-					}
-					if (!isInferior) 
-					{
-						isInferior <- ( (sum(sdOutcome >= IIRMetricPDF)/length(IIRMetricPDF)) < 0.5);
+						IIRMetricPDF <- firstModel$bootCV$testSampledRMSE;
+						IIRMetricPDF <- IIRMetricPDF;
+						if (print)
+						{
+							cat(length(IIRMetricPDF),": Sup std Outcome",sdOutcome,":",(sum(sdOutcome >= IIRMetricPDF)/length(IIRMetricPDF)),"\n");
+						}
+						if (!isInferior) 
+						{
+							isInferior <- ( (sum(sdOutcome >= IIRMetricPDF)/length(IIRMetricPDF)) < 0.5);
+						}
 					}
 				}
 				if (isInferior)
