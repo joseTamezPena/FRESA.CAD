@@ -1,5 +1,16 @@
-uniRankVar <-
-function(variableList,formula,Outcome,data,categorizationType=c("Raw","Categorical","ZCategorical","RawZCategorical","RawTail","RawZTail","Tail","RawRaw"),type=c("LOGIT","LM","COX"),rankingTest=c("zIDI","zNRI","IDI","NRI","NeRI","Ztest","AUC","CStat","Kendall"),cateGroups=c(0.1,0.9),raw.dataFrame=NULL,description=".",uniType=c("Binary","Regression"),FullAnalysis=TRUE,acovariates=NULL,timeOutcome=NULL) 
+uniRankVar <-function(variableList,
+formula,
+Outcome,
+data,
+categorizationType=c("Raw","Categorical","ZCategorical","RawZCategorical","RawTail","RawZTail","Tail","RawRaw"),
+type=c("LOGIT","LM","COX"),
+rankingTest=c("zIDI","zNRI","IDI","NRI","NeRI","Ztest","AUC","CStat","Kendall"),
+cateGroups=c(0.1,0.9),
+raw.dataFrame=NULL,description=".",
+uniType=c("Binary","Regression"),
+FullAnalysis=TRUE,
+acovariates=NULL,
+timeOutcome=NULL)
 {
 
 	if (is.null(timeOutcome)) timeOutcome="";
@@ -19,7 +30,7 @@ function(variableList,formula,Outcome,data,categorizationType=c("Raw","Categoric
 	Name <- colnamesList;
 	parent <- colnamesList;
 	descripList <- colnamesList;
-	
+
 	if (FullAnalysis || (categorizationType != "Raw"))
 	{
 		varinserted <- 0;
@@ -32,7 +43,7 @@ function(variableList,formula,Outcome,data,categorizationType=c("Raw","Categoric
 		{
 			descripList <- as.vector(variableList[,description]);
 		}
-		
+
 		if (uniType=="Binary")
 		{
 			caserawsample <- subset(raw.dataFrame,get(Outcome)  == 1);
@@ -87,7 +98,7 @@ function(variableList,formula,Outcome,data,categorizationType=c("Raw","Categoric
 		cohortZKSP <- numeric(maxsize);
 		cohortZKSD <- numeric(maxsize);
 
-		
+
 		caseMean <- numeric(maxsize);
 		caseStd <- numeric(maxsize);
 		caseKSD <- numeric(maxsize);
@@ -110,14 +121,14 @@ function(variableList,formula,Outcome,data,categorizationType=c("Raw","Categoric
 		pearson.r <- numeric(maxsize);
 		kendall.p <- numeric(maxsize);
 		cStatCorr <- numeric(maxsize);
-		
+
 		t.Rawvalue <- numeric(maxsize);
 		t.Zvalue <- numeric(maxsize);
 		wilcox.Zvalue <- numeric(maxsize);
 		Sensitivity <- numeric(maxsize);
 		Specificity <- numeric(maxsize);
 
-		
+
 		frm1 <- formula;
 		ftmp <- formula(frm1);
 
@@ -156,7 +167,7 @@ function(variableList,formula,Outcome,data,categorizationType=c("Raw","Categoric
 				dummy <-  rnorm(nrow(baseData));
 				coxframe <- cbind(baseData,dummy);
 				colnames(coxframe) <- c(colnames(baseData),"dummy")
-				
+
 				bmodel <- modelFitting(ftmp,coxframe,type,fitFRESA=FALSE)
 				basepredict <- predict.fitFRESA(bmodel,coxframe, 'prob');
 				baseResiduals <- residualForFRESA(bmodel,coxframe,Outcome);
@@ -175,12 +186,12 @@ function(variableList,formula,Outcome,data,categorizationType=c("Raw","Categoric
 			basepredict <- predict.fitFRESA(bmodel,data, 'prob');
 		}
 #		cat("Start Ranking\n");
-		
+
 	#	if (!FullAnalysis)
 	#	{
 	#		rankingTest="Ztest";
 	#	}
-		
+
 		casesOutcome <- (data[,Outcome]==1)
 		controlOutcome <- (data[,Outcome]==0)
 		for (j in 1:size)
@@ -265,19 +276,19 @@ function(variableList,formula,Outcome,data,categorizationType=c("Raw","Categoric
 						meCa <- mean(caseZsample[,colnamesList[j]],na.rm = TRUE);
 						stdCa <- sd(caseZsample[,colnamesList[j]],na.rm = TRUE);
 						kstZCa <- ks.test(caseZsample[,colnamesList[j]],"pnorm",meCa,stdCa);
-						
+
 						meCo <- mean(controlZsample[,colnamesList[j]],na.rm = TRUE);
 						stdCo <- sd(controlZsample[,colnamesList[j]],na.rm = TRUE);
 						kstZCo <- ks.test(controlZsample[,colnamesList[j]],"pnorm",meCo,stdCo);
-						
+
 						meCa <- mean(caserawsample[,colnamesList[j]],na.rm = TRUE);
 						stdCa <- sd(caserawsample[,colnamesList[j]],na.rm = TRUE);
 						kstCa <- ks.test(caserawsample[,colnamesList[j]],"pnorm",meCa,stdCa);
-						
+
 						meCo <- mean(controlrawsample[,colnamesList[j]],na.rm = TRUE);
 						stdCo <- sd(controlrawsample[,colnamesList[j]],na.rm = TRUE);
 						kstCo <- ks.test(controlrawsample[,colnamesList[j]],"pnorm",meCo,stdCo);
-						
+
 						rtt <- try(t.test(controlrawsample[,colnamesList[j]],caserawsample[,colnamesList[j]],na.action=na.exclude));
 						ztt <- try(t.test(controlZsample[,colnamesList[j]],caseZsample[,colnamesList[j]],na.action=na.exclude));
 					}
@@ -287,7 +298,7 @@ function(variableList,formula,Outcome,data,categorizationType=c("Raw","Categoric
 						if (categorizationType != "Raw")
 						{
 							zthr = sprintf("[,'%s'] < %5.3f )",colnamesList[j],qnorm(cateGroups[1]));
-							
+
 #							cat(zthr,"\n")
 
 							caseCount1 <- eval(parse(text = paste("sum(caseZsample",zthr)));
@@ -322,7 +333,7 @@ function(variableList,formula,Outcome,data,categorizationType=c("Raw","Categoric
 						Raw =
 						{
 							categories=1;
-							catlist[1] <- colnamesList[j];				
+							catlist[1] <- colnamesList[j];
 						},
 						RawRaw =
 						{
@@ -330,7 +341,7 @@ function(variableList,formula,Outcome,data,categorizationType=c("Raw","Categoric
 							for (jj in j:size)
 							{
 								catlist <- append(catlist,sprintf("I(%s*%s)",colnamesList[j],colnamesList[jj]));
-							}							
+							}
 							categories = length(catlist);
 #							if (j<5) print(catlist);
 						},
@@ -427,7 +438,7 @@ function(variableList,formula,Outcome,data,categorizationType=c("Raw","Categoric
 
 							zthr = sprintf("%5.3f",qnorm(cateGroups[1]));
 
-							catlist[1] <- colnamesList[j];				
+							catlist[1] <- colnamesList[j];
 							for (n in 1:categories)
 							{
 
@@ -468,13 +479,13 @@ function(variableList,formula,Outcome,data,categorizationType=c("Raw","Categoric
 							catvar = paste(catvar,"))");
 							catlist <- append(catlist,catvar);
 							categories = categories+2;
-						},			
+						},
 						RawZTail =
 						{
 							categories = 1;
 							catlist[1] <- colnamesList[j];
 #							print(catlist);
-#							cat(colnamesList[j],"\n");					
+#							cat(colnamesList[j],"\n");
 
 							if (!is.null(sizecaseZsample))
 							{
@@ -491,7 +502,7 @@ function(variableList,formula,Outcome,data,categorizationType=c("Raw","Categoric
 									catvar = paste(catvar,"))");
 									catlist <- append(catlist,catvar);
 									categories = categories+1;
-								}				
+								}
 
 
 								zthr = sprintf("%5.3f",qnorm(1.0-cateGroups[1]));
@@ -509,16 +520,16 @@ function(variableList,formula,Outcome,data,categorizationType=c("Raw","Categoric
 									categories = categories+1;
 								}
 							}
-						},			
+						},
 						RawTail =
 						{
 							categories = 1;
-							catlist[1] <- colnamesList[j];				
+							catlist[1] <- colnamesList[j];
 							if (!is.null(sizecaseZsample))
 							{
 								zthr = sprintf("%5.3f",qnorm(cateGroups[1]));
 								f1 = caseCount1/sizecaseZsample;
-								f2 = controlCount1/sizecontrolZsample; 
+								f2 = controlCount1/sizecontrolZsample;
 								if ((f1>f2)&&(f1>0.1))   # will add only if fraction is greater
 								{
 									catvar = paste("I(",colnamesList[j]);
@@ -527,7 +538,7 @@ function(variableList,formula,Outcome,data,categorizationType=c("Raw","Categoric
 									catvar = paste(catvar,")");
 									catlist <- append(catlist,catvar);
 									categories = categories+1;
-								}				
+								}
 
 
 								zthr = sprintf("%5.3f",qnorm(1.0-cateGroups[1]));
@@ -582,9 +593,9 @@ function(variableList,formula,Outcome,data,categorizationType=c("Raw","Categoric
 										catlist[1] <- catvar;
 										categories = categories+1;
 									}
-								}							
+								}
 							}
-						},			
+						},
 						{
 							categories = 1;
 							catlist[1] <- colnamesList[j];
@@ -603,13 +614,13 @@ function(variableList,formula,Outcome,data,categorizationType=c("Raw","Categoric
 				catlist[1] <- colnamesList[j];
 				if (FullAnalysis)
 				{
-					medf = table(datacolumn)[1];			
-					stddf = table(datacolumn)[2];			
+					medf = table(datacolumn)[1];
+					stddf = table(datacolumn)[2];
 					if (uniType=="Binary")
 					{
 						meCa <- table(caseZsample[,colnamesList[j]])[1];
 						stdCa <- table(caseZsample[,colnamesList[j]])[2];
-						
+
 						meCo <- table(controlZsample[,colnamesList[j]])[1];
 						stdCo <- table(controlZsample[,colnamesList[j]])[2];
 					}
@@ -627,7 +638,7 @@ function(variableList,formula,Outcome,data,categorizationType=c("Raw","Categoric
 				{
 					mdata <- data;
 				}
-				
+
 				for (n in 1:categories)
 				{
 					termName <- str_replace_all(catlist[n]," ","");
@@ -640,7 +651,7 @@ function(variableList,formula,Outcome,data,categorizationType=c("Raw","Categoric
 					frmg <- paste( formula,paste("+",termName));
 #					if (j<5) cat(catlist[n],":",frmg,"\n")
 					ftmg <- formula(frmg);
-					if (type=="COX") 
+					if (type=="COX")
 					{
 						zcol=4;
 					}
@@ -648,7 +659,7 @@ function(variableList,formula,Outcome,data,categorizationType=c("Raw","Categoric
 					{
 						zcol=3;
 					}
-					
+
 					lmodel <- modelFitting(ftmg,mdata,type,fitFRESA=FALSE)
 					sen=0;
 					spe=0;
@@ -656,7 +667,7 @@ function(variableList,formula,Outcome,data,categorizationType=c("Raw","Categoric
 					{
 						modcoef <- summary(lmodel)$coefficients;
 						sizecoef <- length(lmodel$coef);
-						if ((uniType=="Binary") && FullAnalysis) 
+						if ((uniType=="Binary") && FullAnalysis)
 						{
 							sen = sum( 1.0*(lmodel$linear.predictors>0) & casesOutcome )/sizecaseZsample;
 							spe = sum( 1.0*(lmodel$linear.predictors<0) & controlOutcome )/sizecontrolZsample;
@@ -673,9 +684,9 @@ function(variableList,formula,Outcome,data,categorizationType=c("Raw","Categoric
 						descrip[varinserted] <- descripList[j];
 						if ((uniType=="Binary")&&(FullAnalysis))
 						{
-							caseMean[varinserted] <- meCa; 
+							caseMean[varinserted] <- meCa;
 							caseStd[varinserted] <- stdCa;
-							if (!is.na(kstCa[[1]])) 
+							if (!is.na(kstCa[[1]]))
 							{
 								caseKSD[varinserted] <- kstCa$statistic;
 								caseKSP[varinserted] <- kstCa$p.value;
@@ -689,7 +700,7 @@ function(variableList,formula,Outcome,data,categorizationType=c("Raw","Categoric
 								caseZKSP[varinserted] <- NA;
 								caseZKSD[varinserted] <- NA;
 							}
-							controlMean[varinserted] <- meCo; 
+							controlMean[varinserted] <- meCo;
 							controlStd[varinserted] <- stdCo;
 							if (!is.na(kstCo[[1]]))
 							{
@@ -738,11 +749,11 @@ function(variableList,formula,Outcome,data,categorizationType=c("Raw","Categoric
 								wilcox.Zvalue[varinserted] <- NA;
 							}
 						}
-					
+
 					if (FullAnalysis)
 					{
 
-						cohortMean[varinserted] <- medf; 
+						cohortMean[varinserted] <- medf;
 						cohortStd[varinserted] <- stddf;
 						if (!is.na(kstdf[[1]]))
 						{
@@ -758,8 +769,8 @@ function(variableList,formula,Outcome,data,categorizationType=c("Raw","Categoric
 							cohortZKSP[varinserted] <- NA;
 							cohortZKSD[varinserted] <- NA;
 						}
-						
-						if (!is.na(kendcor[[1]])) 
+
+						if (!is.na(kendcor[[1]]))
 						{
 							kendall.r[varinserted] <- kendcor$estimate;
 							kendall.p[varinserted] <- kendcor$p.value;
@@ -776,8 +787,8 @@ function(variableList,formula,Outcome,data,categorizationType=c("Raw","Categoric
 							cStatCorr[varinserted] <- NA;
 						}
 					}
-					
-					if (is.null(sizecoef) || is.na(lmodel$coef[sizecoef])) 
+
+					if (is.null(sizecoef) || is.na(lmodel$coef[sizecoef]))
 					{
 						if (FullAnalysis)
 						{
@@ -822,7 +833,7 @@ function(variableList,formula,Outcome,data,categorizationType=c("Raw","Categoric
 								{
 									ROCAUC[varinserted] <- pROC::roc( dataoutcome, spredict,plot=FALSE,auc=TRUE,quiet = TRUE)$auc[1];
 								}
-								else 
+								else
 								{
 									ROCAUC[varinserted] <- NA;
 								}
@@ -858,7 +869,7 @@ function(variableList,formula,Outcome,data,categorizationType=c("Raw","Categoric
 		}
 	}
 #	cat(" Finished unitable \n");
-	
+
 	if (FullAnalysis)
 	{
 		if (uniType=="Binary")
@@ -938,7 +949,7 @@ function(variableList,formula,Outcome,data,categorizationType=c("Raw","Categoric
 	}
 	else
 	{
-		if (is.null(acovariates)) 
+		if (is.null(acovariates))
 		{
 			acovariates <- "1";
 		}
@@ -994,7 +1005,7 @@ function(variableList,formula,Outcome,data,categorizationType=c("Raw","Categoric
 	row.names(orderframe) <- orderframe$Name;
 
 
-	
+
 	result <- list(orderframe=orderframe,
 					variableList=variableList,
 					formula=formula,
@@ -1010,8 +1021,8 @@ function(variableList,formula,Outcome,data,categorizationType=c("Raw","Categoric
 					acovariates=acovariates,
 					timeOutcome=timeOutcome
 					)
-	
+
 
 	return (result);
-	
+
 }

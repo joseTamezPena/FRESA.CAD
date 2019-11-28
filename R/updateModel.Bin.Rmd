@@ -1,0 +1,340 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+
+VarFrequencyTable = topvar ################var
+UPM_pvalue=c(pvalue,pvalue) #################var
+zthrs=output$Zthr #####################var
+
+#cat("Outcome: ",Outcome,"covariates: ",covariates,"pvalue: ",UPM_pvalue,"VarFrequencyTable: ",VarFrequencyTable,
+ #   "variableList: ",variableList,"data: ",data,"type: ",type,"lastTopVariable: ",lastTopVariable,
+  #  "selectionType: ",seltype,"maxTrainModelSize: ",maxTrainModelSize,"zthrs: ",zthrs)
+
+#Outcome,
+Outcome
+#covariates="1",
+covariates
+#pvalue=c(0.025,0.05),
+UPM_pvalue
+#VarFrequencyTable,
+VarFrequencyTable
+#variableList,
+variableList$ZUni
+#data,
+head(data)
+#type=c("LM","LOGIT","COX"),
+type
+#lastTopVariable= 0,
+lastTopVariable <- 0 
+#timeOutcome="Time",
+timeOutcome
+#selectionType=c("zIDI","zNRI"),
+seltype
+#maxTrainModelSize=0,
+maxTrainModelSize <- 20
+#zthrs=NULL)
+zthrs[1]
+
+
+```
+
+```{r}
+	if (length(covariates)>1){ #usualmente es 1 osea es falso
+		for (i in 2:length(covariates)){	
+			acovariates <- paste(acovariates,"+",covariates[i])
+		}
+	}
+	covariates <- acovariates;
+	
+	vnames <- as.vector(variableList[,1]); #variableList$Name
+	topvarID <- as.numeric(names(VarFrequencyTable));
+#	print(topvarID);
+	
+	if (maxTrainModelSize == 0){ #falso usualmente es 20
+		maxTrainModelSize = as.integer(ncol(data)/2);
+	}
+
+	nvars <- length(VarFrequencyTable);
+	baseForm = Outcome;
+	theoutcome <- data[,Outcome];
+	
+if (type == "COX"){ #usualente falso
+		baseForm = paste("Surv(",timeOutcome,",",Outcome,")",sep="");
+	}
+#lastTopVariable<-0		################var
+	vnames_model <- vector();
+	model_zmin <- vector();
+
+
+```
+
+# filtra las features para obtener solo las que tienen una frecuencia mayor a 5% de la variable mas usada
+```{r}
+
+	topfreq <- as.integer(0.05*VarFrequencyTable[1]+0.5); #check only features with a 5% bootstrap frequency relative to the top
+	if (lastTopVariable < 1) {
+		lastTopVariable = sum(1*(VarFrequencyTable > topfreq)); #numero de variables que tienen una frecuencia mayor a la del 5% de la variable mas usada (en este caso como el 5%=1 son las variables que son usadas mas de 1 vez)
+	}
+	if (lastTopVariable > length(VarFrequencyTable)) lastTopVariable = length(VarFrequencyTable);
+#	cat("Top Freq: ",VarFrequencyTable[1],"All Selected Features: ",nvars,"To be tested: ",lastTopVariable,"\n");
+#	print(variableList[topvarID,1]);
+
+
+```
+
+
+```{r}
+
+bestmodel <- NULL;
+	ftmp <- NULL;
+	frm1 <- NULL;
+	error <- 1.0;
+	tol = 1.0e-8; # if error less than tol exit
+
+#UPM_pvalue=c(pvalue,pvalue) #################var
+#zthrs=output$Zthr #####################var
+	if (lastTopVariable>0){ # casi siempre es verdadero(en este caso es 20)
+#		frm1 = paste(baseForm,"~",covariates,"+",vnames[topvarID[1]]);
+		frm1 = paste(baseForm,"~",covariates); #modelo con clase e interseccion
+
+#		vnames_model <- append(vnames_model,vnames[topvarID[1]]);
+		model_zmin <- append(model_zmin,NA); 
+#		topvarID[1] = 0;
+		termsinserted = 0;
+		indexlastinserted = 1;
+		ftmp <- formula(frm1);
+		bestmodel <- modelFitting(ftmp,data,type,TRUE)
+		
+		
+	
+```
+
+```{r}
+	if ( !inherits(bestmodel, "try-error")){ #try catch a la hora de crear bestmodel puede dar error
+			bestpredict <- predict.fitFRESA(bestmodel,data,'prob');
+
+			for (pidx in 1:length(UPM_pvalue)){ # por cada pvalue (que en este caso los dos son iguales)
+			  pidx <-1 #similar el for
+				cthr_a <- abs(qnorm(UPM_pvalue[pidx]));	#cual es el zcore dado un % de 0.05 (en una distribucion normal) = -1.64
+				i = 1;
+				#mientras que i sea menor al numero de variables toptop y el error sea mayor a la tolerancia 
+				while ((i<=lastTopVariable)&&(error>tol)){ 
+				  #si los terminos insertados son menor quel numero de vars, el nuevo cthr_a es el zcore dado un % de 0.05/nvars-inserted (es un valor incremental ya que inserted va creciendo) 
+					if (termsinserted<nvars) cthr_a <- abs(qnorm(UPM_pvalue[pidx]/(nvars-termsinserted))); #usualmente es verdadero
+					if (is.null(zthrs)){ #usualmente es falso, casi siempre se le pasan los thresholds
+						cthr <- cthr_a; 
+					}else{ ##usualmente es verdadero, casi siempre se le pasan los thresholds
+						lobs <- termsinserted+1;
+						if (lobs>length(zthrs)) lobs <- length(zthrs); #usualmente falso (lobs es 1 y el lenght es el numero de features (es para evitar un index out of bounds)
+						cthr <- zthrs[lobs];
+						if (cthr<cthr_a) cthr <- cthr_a;
+					} #si la variable a analizar tiene una frecuencia >0 #y# su ID >0 #y# los terminos insertados son menores a maxtrainmodelsize  
+					if ((VarFrequencyTable[i]>0) && (topvarID[i]>0) && (termsinserted < maxTrainModelSize)){ #usualmente es verdadero
+						frma <- paste(frm1,"+",vnames[topvarID[i]]);
+						ftmp <- formula(frma);
+						newmodel <- modelFitting(ftmp,data,type,TRUE);
+						if ( !inherits(newmodel, "try-error")){ # protejer en caso de que el fitting de error
+							curpredict <- predict.fitFRESA(newmodel,data,'prob');
+							iprob_t <- .Call("improveProbCpp",bestpredict,curpredict,theoutcome); #algun comparativo del mejor modelo contra el ith modelo
+							if (seltype=="zIDI") { #usualmente es zIDI
+								zmin <- iprob_t$z.idi;
+							} else{
+								zmin <- iprob_t$z.nri;
+							}
+							if (!is.nan(zmin) && !is.na(zmin)){ #usualmente es verdadero
+								error <- mean(abs(curpredict-theoutcome)); #error promedio entre prediccion - el ground truth
+								if (zmin>cthr){ #si es mayor la evaluacion que ese control threshold(dado por los zthrs que se obtienen haciendo foward seleccion)
+									bestpredict <-curpredict;
+									bestmodel <- newmodel;
+									frm1 <- frma;
+									vnames_model <- append(vnames_model,vnames[topvarID[i]]);
+									model_zmin <- append(model_zmin,zmin);
+									termsinserted = termsinserted + 1;
+									if (indexlastinserted <= i) { #si el valor de
+										indexlastinserted = i+1;
+									}
+									topvarID[i] = 0;
+								}# salida de la comparacion definitiva entre modelos
+							}#salida comparacion si zmin es null
+						}#salida trycatch
+					}#salida de condiciones de entrada al ciclo
+					i = i+1;
+				}#end while
+#				cat (pidx," :",frm1,"\n")
+			}#end pvalue for
+}
+		ftmp <- formula(frm1);
+	}
+```
+
+
+
+```{r}
+	if (length(vnames_model)==0){ # usualemente falso (pero es en caso que no encontro ninguna feature cool)
+		frm1 = paste(baseForm,"~",covariates,"+",vnames[topvarID[1]]);
+		ftmp <- formula(frm1);
+		bestmodel <- modelFitting(ftmp,data,type,TRUE)
+	}
+	else
+	{
+		bestmodel <- modelFitting(ftmp,data,type,TRUE)
+	}
+#	print(summary(bestmodel));
+
+	
+######################### Boosting step #######################
+weakclassifiers <- as.vector(output$formula.list)
+weakmodelsmisclass <-vector(mode = "list", length = length(weakclassifiers))
+
+i=1
+
+###########get the misclassified of every weakclassifier
+for (weakformula in weakclassifiers){
+  weakclassifier <- modelFitting(weakformula,data,type,TRUE) 
+  if (!inherits(weakclassifier, "try-error")){ # protejer en caso de que el fitting de error
+						weakpredict <- predict.fitFRESA(weakclassifier,data,'prob');
+						weakpredict <- round(weakpredict)
+						samplenames <- names(weakpredict)
+						goodclassified <- weakpredict == theoutcome #goodclassified
+						misclassified <- goodclassified[goodclassified==FALSE]
+						#rm(weakpredict,weakpredict,goodclassified,misclassified)
+						misclassified <- names(misclassified)
+		        misclassified <- as.vector(misclassified)
+						weakmodelsmisclass[[i]] <- misclassified
+						i<-i+1
+  }
+	  
+}
+
+###once we got the weakclassifier and the misclassified samples of each, we start to construct our strong boosted classifier
+
+ weakmodelsmisclass <- weakmodelsmisclass[order(sapply(weakmodelsmisclass,length),decreasing=F)] #order the list (here is choosing the model with the least error, an since every sample has the same weight we choose the model with least misclassified samples)
+# for (variable in vector) {
+#   
+ #}
+ boostingweights <- rep.int(1/length(samplenames),length(samplenames))#fill the N initial weights=1/N
+ 
+firstboostclassifier <-  modelFitting(weakclassifiers[1],data,type,TRUE)
+firsterrorclassifier <- length(weakmodelsmisclass[[1]])/length(samplenames) #get the error %
+firstclasifierweight <- 1/2 * log((1-firsterrorclassifier)/firsterrorclassifier)
+#### calculate new weigths 
+
+misclassweight <-  1/length(weakmodelsmisclass[[1]]) *2  #class of the weight 
+fractionmcw <- as.character(fractions(misclassweight, cycles = 10, max.denominator = 2000)) # fraction to perfom some cool thing 
+goodclassweight <- 1/(length(samplenames)-length(weakmodelsmisclass[[1]]))*2
+fractiongcw <- as.character( fractions(goodclassweight, cycles = 10, max.denominator = 2000)) # fraction to perfom some cool thing 
+    #### calculate easiest comon divisor 
+  fracc1 <- unlist((strsplit(fractionmcw, split="/")))
+  fracc1 <- as.numeric(fracc1)
+  fracc2 <- unlist((strsplit(fractiongcw, split="/")))
+  fracc2 <- as.numeric(fracc2)
+  
+ fractionmcw <- fracc1[1] * fracc2[2]
+ fractiongcw <- fracc2[1] * fracc1[2]
+
+ firstList <- list(sample.weights = boostingweights, 
+                   fraction.weights=c(fractionmcw,fractiongcw),
+                     classifier= firstboostclassifier,
+                     classifier.error=firsterrorclassifier,
+                     classifier.missclassified=weakmodelsmisclass[[1]],
+                     classifier.weight=firstclasifierweight)
+BoostingList <- list(firstList)
+##aqui empieza a poner los nuevos pesos para escoger al classifier mas apto para boostear
+boostingweights =  rep.int(goodclassweight,length(samplenames)) #todos con weight goodclassified
+names(boostingweights) <- samplenames #le pongo nombres para poder ahcer lo siguiente 
+boostingweights[weakmodelsmisclass[[1]]] <- misclassweight # a los misclasificados les pongo su respectivo peso
+#####justo aqui termina la primera ronda de boosting y empieza la nueva, guarda los valores importantes de esta ronda 
+
+
+#########calculate differences
+ weighteddifferences <- vector();
+for (i in 2:length(weakclassifiers)){
+#  difference <- sum(1*(weakmodelsmisclass[[1]] %in% weakmodelsmisclass[[i]]))
+   difference <- sum(boostingweights[weakmodelsmisclass[[i]]]) #sum the weights of the misclassified
+  weighteddifferences[i-1] <- difference
+}
+ 
+indexnewmodel=which.min(weighteddifferences)
+vectorweakclassifiers <- unlist(weakclassifiers, use.names=FALSE)
+
+for (i in 1:4) {
+boostclassifier <-  modelFitting(weakclassifiers[indexnewmodel],data,type,TRUE)
+numberofmisclass <- length(weakmodelsmisclass[[indexnewmodel]])
+errorclassifier <- numberofmisclass/length(samplenames) #get the error %
+clasifierweight <- 1/2 * log((1-errorclassifier)/errorclassifier) #get the aplha of the classifier
+
+
+  if(i==1){
+    
+  }
+ else{
+   #BoostingList[[i-1]]$classifier.missclassified=
+     previousmisclass <- which(samplenames %in% weakmodelsmisclass[[1]])#quiero los samples malclassificados por el la iteracion anterior
+    #BoostingList[[i-1]]$fraction.weights
+  boostingweights =  rep.int(fractiongcw,length(samplenames)) #todos con weight goodclassified
+names(boostingweights) <- samplenames #le pongo nombres para poder ahcer lo siguiente 
+   boostingweights[previousmisclass]=fractionmcw
+ #### calculate new weigths 
+  boostingweights[weakmodelsmisclass[[i]]] <- boostingweights[weakmodelsmisclass[[i]]]/numberofmisclass *2 
+  
+  boostingweights[weakmodelsmisclass[[i]]] <- boostingweights[weakmodelsmisclass[[i]]]/numberofmisclass *2 
+  
+misclassweight <-  1/numberofmisclass *2  #class of the weight 
+fractionmcw <- as.character(fractions(misclassweight, cycles = 10, max.denominator = 2000)) # fraction to perfom some cool thing 
+goodclassweight <- 1/(length(samplenames)-numberofmisclass)*2
+fractiongcw <- as.character(fractions(goodclassweight, cycles = 10, max.denominator = 2000)) # fraction to perfom some cool thing 
+    #### calculate easiest comon divisor 
+  fracc1 <- unlist((strsplit(fractionmcw, split="/")))
+  fracc1 <- as.numeric(fracc1)
+  fracc2 <- unlist((strsplit(fractiongcw, split="/")))
+  fracc2 <- as.numeric(fracc2)
+  
+ fractionmcw <- paste(fracc1[1] * fracc2[2], fracc1[2] * fracc2[2], sep="/")
+ fractiongcw <- paste(fracc2[1] * fracc1[2], fracc2[2] * fracc1[2], sep="/")
+ 
+##aqui empieza a poner los nuevos pesos para escoger al classifier mas apto para boostear
+boostingweights =  rep.int(goodclassweight,length(samplenames)) #todos con weight goodclassified
+names(boostingweights) <- samplenames #le pongo nombres para poder ahcer lo siguiente 
+boostingweights[weakmodelsmisclass[[1]]] <- misclassweight # a los misclasificados les pongo su respectivo peso
+ }
+ithtList <- list(sample.weights = boostingweights, 
+                   fraction.weights=c(fractionmcw,fractiongcw),
+                     classifier= boostclassifier,
+                     classifier.error=firsterrorclassifier,
+                     classifier.missclassified=weakmodelsmisclass[[1]],
+                     classifier.weight=firstclasifierweight)
+BoostingList <- list(ithtList)
+ 
+ }
+
+
+########################3
+		FS_bestformula <- as.character(ftmp);
+		FS_bestformula <- paste(FS_bestformula[2],"~",FS_bestformula[3]);
+    match(FS_bestformula, weakclassifiers)
+    
+		
+		
+	}
+
+	environment(bestmodel$formula) <- globalenv()
+	environment(bestmodel$terms) <- globalenv()
+	
+  result <- list(final.model=bestmodel,
+	var.names=vnames_model,
+	formula=frm1,
+	z.selectionType=model_zmin
+	);
+  
+	return (result);
+}
+
+```
+
