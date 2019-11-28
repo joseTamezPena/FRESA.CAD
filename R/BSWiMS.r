@@ -72,7 +72,8 @@ NumberofRepeats=1)
 	rankingTest="Ztest"
 	timeOutcome = NULL;
 	Outcome = NULL;
-	if (length(dependent)==3){
+	if (length(dependent)==3)
+	{
 		timeOutcome = dependent[2];
 		Outcome = dependent[3];
 		type = "COX";
@@ -145,12 +146,10 @@ NumberofRepeats=1)
 		rownames(variableList) <- variableList$Name;
 #		print(variableList[1:10,]);
 		unirank <- unirank$orderframe;
-#		if (is.null(unitPvalues))
+		unitPvalues <- (1.0-pnorm(variableList$ZUni));
+		names(unitPvalues) <- variableList$Name;
+		if (size==0)
 		{
-			unitPvalues <- (1.0-pnorm(variableList$ZUni));
-			names(unitPvalues) <- variableList$Name;
-		}
-		if (size==0){
 			featureSize <- max(featureSize,nrow(variableList));
 			unitPvalues <- p.adjust(unitPvalues,"BH");
 			unitPvalues <- unitPvalues[unitPvalues < 4*pvalue]; # 4 times the pvalue
@@ -264,7 +263,6 @@ NumberofRepeats=1)
 								}
 							}
 						}
-						#ssssssssssssssssss
 						else
 						{
 							ordinalFormulas <- append(ordinalFormulas,oupdate.model$formula);
