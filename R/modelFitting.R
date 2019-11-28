@@ -149,8 +149,8 @@ function (model.formula,data,type = c("LOGIT", "LM","COX","SVM"),fitFRESA=TRUE,.
 				}
 				else
 				{
-					warning("More features than data rows. Skiping fitting\n");
-#					cat("More features than data rows. Skiping fitting\n");
+					warning("More features than data rows. Skipping fitting\n");
+#					cat("More features than data rows. Skipping fitting\n");
 					if (type=="COX")
 					{
 						fittedModel$coefficients <- numeric(2*ncol(modelMat))

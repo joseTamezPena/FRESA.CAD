@@ -15,42 +15,51 @@ function(x,...)
 	if (class(x)[2] == "Binary")
 	{
 
+		args.legend = list(bg = "white",x="bottomright")
+		mar = par("mar")
+		if (mar[4] >= 8)
+		{
+			args.legend = list(bg = "white",x="bottomright",inset=c(-0.25,0),cex=0.75)
+		}
+
 		x$errorciTable[is.na(x$errorciTable)] <- 0;
-		bpBER <- barPlotCiError(as.matrix(x$errorciTable),metricname = "Balanced Error",thesets = x$thesets,themethod = x$theMethod,main = paste(prefix,"Balanced Error"),offsets = c(0.5,1),scoreDirection = "<",ho=0.5,args.legend = list(bg = "white",x = "topright"),col = terrain.colors(length(x$theMethod)),...);
+		bpBER <- barPlotCiError(as.matrix(x$errorciTable),metricname = "Balanced Error",thesets = x$thesets,themethod = x$theMethod,main = paste(prefix,"Balanced Error"),offsets = c(0.5,1),scoreDirection = "<",ho=0.5,args.legend = args.legend,col = terrain.colors(length(x$theMethod)),...);
 		testBalancedError <- bpBER$ciTable$mean;
 		testBalancedErrormin <- min(bpBER$ciTable$low95);
 		testBalancedErrormax <- max(bpBER$ciTable$top95);
 
 		x$accciTable[is.na(x$accciTable)] <- 0;
-		bpACC <- barPlotCiError(as.matrix(x$accciTable),metricname = "Accuracy",thesets = x$thesets,themethod = x$theMethod,main =  paste(prefix,"Accuracy"),offsets = c(0.5,1),args.legend = list(bg = "white",x = "bottomright"),col = terrain.colors(length(x$theMethod)),...);
+		bpACC <- barPlotCiError(as.matrix(x$accciTable),metricname = "Accuracy",thesets = x$thesets,themethod = x$theMethod,main =  paste(prefix,"Accuracy"),offsets = c(0.5,1),args.legend = args.legend,col = terrain.colors(length(x$theMethod)),...);
 		testACC <- bpACC$ciTable$mean;
 		testACCmin <- min(bpACC$ciTable$low95);
 		testACCmax <- max(bpACC$ciTable$top95);
 
 		x$aucTable[is.na(x$aucTable)] <- 0;
-		bpAUC <- barPlotCiError(as.matrix(x$aucTable),metricname = "AUC",thesets = x$thesets,themethod = x$theMethod,main = paste(prefix,"ROC AUC"),offsets = c(0.5,1),ho=0.5,args.legend = list(bg = "white",x = "bottomright"),col = terrain.colors(length(x$theMethod)),...);
+		bpAUC <- barPlotCiError(as.matrix(x$aucTable),metricname = "AUC",thesets = x$thesets,themethod = x$theMethod,main = paste(prefix,"ROC AUC"),offsets = c(0.5,1),ho=0.5,args.legend = args.legend,col = terrain.colors(length(x$theMethod)),...);
 		testAUC <- bpAUC$ciTable$mean;
 		testAUCmin <- min(bpAUC$ciTable$low95);
 		testAUCmax <- max(bpAUC$ciTable$top95);
 
 		x$cidxTable[is.na(x$cidxTable)] <- 0;
-		bpCIDX <- barPlotCiError(as.matrix(x$cidxTable),metricname = "CIndex",thesets = x$thesets,themethod = x$theMethod,main = paste(prefix,"Concordance"),offsets = c(0.5,1),ho=0.5,args.legend = list(bg = "white",x = "bottomright"),col = terrain.colors(length(x$theMethod)),...);
+		bpCIDX <- barPlotCiError(as.matrix(x$cidxTable),metricname = "CIndex",thesets = x$thesets,themethod = x$theMethod,main = paste(prefix,"Concordance"),offsets = c(0.5,1),ho=0.5,args.legend = args.legend,col = terrain.colors(length(x$theMethod)),...);
 		testCIDX <- bpCIDX$ciTable$mean;
 		testCIDXmin <- min(bpCIDX$ciTable$low95);
 		testCIDXmax <- max(bpCIDX$ciTable$top95);
 
 		x$senTable[is.na(x$senTable)] <- 0;
-		bpSEN <- barPlotCiError(as.matrix(x$senTable),metricname = "Sensitivity",thesets = x$thesets,themethod = x$theMethod,main = paste(prefix,"Sensitivity"),offsets = c(0.5,1),args.legend = list(bg = "white",x = "bottomright"),col = terrain.colors(length(x$theMethod)),...);
+		bpSEN <- barPlotCiError(as.matrix(x$senTable),metricname = "Sensitivity",thesets = x$thesets,themethod = x$theMethod,main = paste(prefix,"Sensitivity"),offsets = c(0.5,1),args.legend = args.legend,col = terrain.colors(length(x$theMethod)),...);
 		testSEN <- bpSEN$ciTable$mean;
 		testSENmin <- min(bpSEN$ciTable$low95);
 		testSENmax <- max(bpSEN$ciTable$top95);
 
 		x$speTable[is.na(x$speTable)] <- 0;
-		bpSPE <- barPlotCiError(as.matrix(x$speTable),metricname = "Specificity",thesets = x$thesets,themethod = x$theMethod,main = paste(prefix,"Specificity"),offsets = c(0.5,1),args.legend = list(bg = "white",x = "bottomright"),col = terrain.colors(length(x$theMethod)),...);
+		bpSPE <- barPlotCiError(as.matrix(x$speTable),metricname = "Specificity",thesets = x$thesets,themethod = x$theMethod,main = paste(prefix,"Specificity"),offsets = c(0.5,1),args.legend = args.legend,col = terrain.colors(length(x$theMethod)),...);
 		testSPE <- bpSPE$ciTable$mean;
 		testSPEmin <- min(bpSPE$ciTable$low95);
 		testSPEmax <- max(bpSPE$ciTable$top95);
 		brnames <- names(testBalancedError);
+		
+
 		
 		metrics <- rbind(BER = testBalancedError,
 							ACC = testACC[brnames],
@@ -135,12 +144,73 @@ function(x,...)
 						AUC = c(min(testAUCmin,testFilAUCmin),max(testAUCmax,testFilAUCmax)),
 						SEN = c(min(testSENmin,testFilSENmin),max(testSENmax,testFilSENmax)),
 						SPE = c(min(testSPEmin,testFilSPEmin),max(testSPEmax,testFilSPEmax)),
-						CIDX = c(min(testFilCIDXmin,testFilCIDXmin),max(testFilCIDXmax,testFilCIDXmax))
+						CIDX = c(min(testCIDXmin,testFilCIDXmin),max(testCIDXmax,testFilCIDXmax))
 						);
 		}
+		mcnemar <- matrix(0,ncol = ncol(x$testPredictions)-1,nrow=ncol(x$testPredictions)-1)
+		pmcnemar <- matrix(1,ncol = ncol(x$testPredictions)-1,nrow=ncol(x$testPredictions)-1)
+		if ((ncol(x$testPredictions)-1) > 2)
+		{
+			for (i in 2:(ncol(x$testPredictions)-1))
+			{
+				for (j in (i+1):ncol(x$testPredictions))
+				{
+					th1 <- 0.5*((min(x$testPredictions[,i]) >= 0.0) && (max(x$testPredictions[,i]) <= 1.0));
+					th2 <- 0.5*((min(x$testPredictions[,j]) >= 0.0) && (max(x$testPredictions[,j]) <= 1.0));
+					tb <- table((x$testPredictions[,i] > th1),(x$testPredictions[,j] > th2))
+					if (length(tb) > 3)
+					{
+						pmcnemar[i-1,j-1] <- epiR::epi.kappa(tb)$mcnemar$p.value;
+						mcnemar[i-1,j-1] <- -log10(max(pmcnemar[i-1,j-1],0.0001));
+					}
+					else
+					{
+						pmcnemar[i-1,j-1] <- 0;
+						mcnemar[i-1,j-1] <- 4;
+					}
+					pmcnemar[j-1,i-1] <- pmcnemar[i-1,j-1];
+					mcnemar[j-1,i-1] <- mcnemar[i-1,j-1];
+				}
+			}
+			mcnemar[is.nan(mcnemar)] <- 4;
+			colnames(mcnemar) <- colnames(x$testPredictions)[-1]
+			rownames(mcnemar) <- colnames(x$testPredictions)[-1]
+			colnames(pmcnemar) <- colnames(x$testPredictions)[-1]
+			rownames(pmcnemar) <- colnames(x$testPredictions)[-1]
+			par(op);
+			par(mfrow = c(1,1),mar = c(2,2,2,2));
+			gplots::heatmap.2(mcnemar,trace = "none",mar = c(5,10),col=rev(heat.colors(8)),main = "p(Method A = Method B)",cexRow = 0.65,cexCol = 0.65,srtCol = 25,key.xlab="-log(p)",xlab="Method B", ylab="Method A")
+			par(op);
+		}
 
+		AUCtable <- matrix(0,ncol = ncol(x$testPredictions)-1,nrow=ncol(x$testPredictions)-1)
+		pAUCtable <- matrix(1,ncol = ncol(x$testPredictions)-1,nrow=ncol(x$testPredictions)-1)
+		if ((ncol(x$testPredictions)-1) > 2)
+		{
+			for (i in 2:ncol(x$testPredictions))
+			{
+				for (j in 2:ncol(x$testPredictions))
+				{
+					roct <- roc.test(roc(x$testPredictions$Outcome,x$testPredictions[,i],quiet = TRUE),
+									roc(x$testPredictions$Outcome,x$testPredictions[,j],quiet = TRUE),
+									alternative="less")
+					pAUCtable[i-1,j-1] <-  roct$p.value;
+					AUCtable[i-1,j-1] <- -log10(max(pAUCtable[i-1,j-1],0.0001));
+				}
+			}
+			AUCtable[is.nan(AUCtable)] <- 0.0;
+			colnames(AUCtable) <- colnames(x$testPredictions)[-1]
+			rownames(AUCtable) <- colnames(x$testPredictions)[-1]
+			colnames(pAUCtable) <- colnames(x$testPredictions)[-1]
+			rownames(pAUCtable) <- colnames(x$testPredictions)[-1]
+			par(op);
+			par(mfrow = c(1,1),mar = c(2,2,2,2));
+			topf <- apply(AUCtable,1,mean)
+			gplots::heatmap.2(AUCtable[order(topf),order(topf)],trace = "none",mar = c(5,10),col=rev(heat.colors(8)),Rowv=FALSE,Colv=FALSE,dendrogram = "none",cexRow = 0.65,cexCol = 0.65,srtCol = 25,key.xlab="-log(p)",main = "p(ROC_AUC A > ROC_AUC B)",xlab="Method B",ylab="Method A")
+			par(op);
+		}
 		
-		result <- list(metrics = metrics, barPlotsCI = barPlotsCI,metrics_filter=metrics_filter,barPlotsCI_filter=barPlotsCI_filter, minMaxMetrics = minMaxMetrics);
+		result <- list(metrics = metrics, barPlotsCI = barPlotsCI,metrics_filter=metrics_filter,barPlotsCI_filter=barPlotsCI_filter, minMaxMetrics = minMaxMetrics,mcnemar=pmcnemar,AUCtable=pAUCtable);
 	}
 	if (class(x)[2] == "Ordinal")
 	{
@@ -264,8 +334,35 @@ function(x,...)
 						SEN =c(min(testSENmin,testFilSENmin),max(testSENmax,testFilSENmax)),
 						AUC =c(min(testAUCmin,testFilAUCmin),max(testAUCmax,testFilAUCmax))
 						);
+		fttable <- matrix(0,ncol = ncol(x$testPredictions)-1,nrow=ncol(x$testPredictions)-1)
+		pfttable <- matrix(1,ncol = ncol(x$testPredictions)-1,nrow=ncol(x$testPredictions)-1)
+		if ((ncol(x$testPredictions)-1) > 2)
+		{
+			for (i in 2:ncol(x$testPredictions))
+			{
+				for (j in 2:ncol(x$testPredictions))
+				{
+					rss1 <- max(sum((x$testPredictions[,j]-x$testPredictions$Outcome)^2),1e-10);
+					rss2 <- max(sum((x$testPredictions[,i]-x$testPredictions$Outcome)^2),1e-10);
+					rss2 <- rss2/rss1;
+					pfttable[i-1,j-1] <-  pf(nrow(x$testPredictions)*(rss2-1.0),1.0,nrow(x$testPredictions),lower.tail = FALSE);
+					fttable[i-1,j-1] <- -log10(max(pfttable[i-1,j-1],0.0001));
+				}
+			}
+			fttable[is.nan(fttable)] <- 4.0;
+			colnames(fttable) <- colnames(x$testPredictions)[-1]
+			rownames(fttable) <- colnames(x$testPredictions)[-1]
+			colnames(pfttable) <- colnames(x$testPredictions)[-1]
+			rownames(pfttable) <- colnames(x$testPredictions)[-1]
+			par(op);
+			par(mfrow = c(1,1),mar = c(2,2,2,2));
+			topf <- apply(fttable,1,mean)
+			gplots::heatmap.2(fttable[order(topf),order(topf)],trace = "none",mar = c(5,10),col=rev(heat.colors(8)),Rowv=FALSE,Colv=FALSE,dendrogram = "none",cexRow = 0.65,cexCol = 0.65,srtCol = 25,key.xlab="-log(p)",main = "p(Method A > Method B)",xlab="Method B",ylab="Method A")
+			par(op);
+		}
 
-		result <- list(metrics = metrics, barPlotsCI = barPlotsCI,metrics_filter=metrics_filter,barPlotsCI_filter=barPlotsCI_filter, minMaxMetrics = minMaxMetrics);
+
+		result <- list(metrics = metrics, barPlotsCI = barPlotsCI,metrics_filter=metrics_filter,barPlotsCI_filter=barPlotsCI_filter, minMaxMetrics = minMaxMetrics,fttable=pfttable);
 	}
 	if (class(x)[2] == "Regression")
 	{
@@ -362,11 +459,259 @@ function(x,...)
 						Pearson = c(min(c(testPearsonmin,testFilPearsonmin)),max(c(testPearsonmax,testFilPearsonmax))),
 						Bias = c(min(c(testBiasmin,testFilBiasmin)),max(c(testBiasmax,testFilBiasmax)))
 						);
+						
 
-		result <- list(metrics = metrics, barPlotsCI = barPlotsCI,metrics_filter=metrics_filter,barPlotsCI_filter=barPlotsCI_filter, minMaxMetrics = minMaxMetrics);
+		fttable <- matrix(0,ncol = ncol(x$testPredictions)-1,nrow=ncol(x$testPredictions)-1)
+		pfttable <- matrix(1,ncol = ncol(x$testPredictions)-1,nrow=ncol(x$testPredictions)-1)
+		if ((ncol(x$testPredictions)-1) > 2)
+		{
+			for (i in 2:ncol(x$testPredictions))
+			{
+				for (j in 2:ncol(x$testPredictions))
+				{
+					rss1 <- max(sum((x$testPredictions[,j]-x$testPredictions$Outcome)^2),1e-10);
+					rss2 <- max(sum((x$testPredictions[,i]-x$testPredictions$Outcome)^2),1e-10);
+					rss2 <- rss2/rss1;
+					pfttable[i-1,j-1] <-  pf(nrow(x$testPredictions)*(rss2-1.0),1.0,nrow(x$testPredictions),lower.tail = FALSE);
+					fttable[i-1,j-1] <- -log10(max(pfttable[i-1,j-1],0.0001));
+				}
+			}
+			fttable[is.nan(fttable)] <- 4.0;
+			colnames(fttable) <- colnames(x$testPredictions)[-1]
+			rownames(fttable) <- colnames(x$testPredictions)[-1]
+			colnames(pfttable) <- colnames(x$testPredictions)[-1]
+			rownames(pfttable) <- colnames(x$testPredictions)[-1]
+			par(op);
+			par(mfrow = c(1,1),mar = c(2,2,2,2));
+			topf <- apply(fttable,1,mean)
+			gplots::heatmap.2(fttable[order(topf),order(topf)],trace = "none",mar = c(5,10),col=rev(heat.colors(8)),Rowv=FALSE,Colv=FALSE,dendrogram = "none",cexRow = 0.65,cexCol = 0.65,srtCol = 25,key.xlab="-log(p)",main = "p(Method A > Method B)",xlab="Method B",ylab="Method A")
+			par(op);
+		}
+
+		result <- list(metrics = metrics, barPlotsCI = barPlotsCI,metrics_filter=metrics_filter,barPlotsCI_filter=barPlotsCI_filter, minMaxMetrics = minMaxMetrics,fttable=pfttable);
 
 
 	}
+
+	if (class(x)[2] == "Survival.COX")
+	{
+
+		args.legend = list(bg = "white",x="bottomright")
+		mar = par("mar")
+		if (mar[4] >= 8)
+		{
+			args.legend = list(bg = "white",x="bottomright",inset=c(-0.25,0),cex=0.75)
+		}
+
+		x$errorciTable[is.na(x$errorciTable)] <- 0;
+		bpBER <- barPlotCiError(as.matrix(x$errorciTable),metricname = "Balanced Error",thesets = x$thesets,themethod = x$theMethod,main = paste(prefix,"Balanced Error"),offsets = c(0.5,1),scoreDirection = "<",ho=0.5,args.legend = args.legend,col = terrain.colors(length(x$theMethod)),...);
+		testBalancedError <- bpBER$ciTable$mean;
+		testBalancedErrormin <- min(bpBER$ciTable$low95);
+		testBalancedErrormax <- max(bpBER$ciTable$top95);
+
+		x$accciTable[is.na(x$accciTable)] <- 0;
+		bpACC <- barPlotCiError(as.matrix(x$accciTable),metricname = "Accuracy",thesets = x$thesets,themethod = x$theMethod,main =  paste(prefix,"Accuracy"),offsets = c(0.5,1),args.legend = args.legend,col = terrain.colors(length(x$theMethod)),...);
+		testACC <- bpACC$ciTable$mean;
+		testACCmin <- min(bpACC$ciTable$low95);
+		testACCmax <- max(bpACC$ciTable$top95);
+
+		x$aucTable[is.na(x$aucTable)] <- 0;
+		bpAUC <- barPlotCiError(as.matrix(x$aucTable),metricname = "AUC",thesets = x$thesets,themethod = x$theMethod,main = paste(prefix,"ROC AUC"),offsets = c(0.5,1),ho=0.5,args.legend = args.legend,col = terrain.colors(length(x$theMethod)),...);
+		testAUC <- bpAUC$ciTable$mean;
+		testAUCmin <- min(bpAUC$ciTable$low95);
+		testAUCmax <- max(bpAUC$ciTable$top95);
+
+		x$senTable[is.na(x$senTable)] <- 0;
+		bpSEN <- barPlotCiError(as.matrix(x$senTable),metricname = "Sensitivity",thesets = x$thesets,themethod = x$theMethod,main = paste(prefix,"Sensitivity"),offsets = c(0.5,1),args.legend = args.legend,col = terrain.colors(length(x$theMethod)),...);
+		testSEN <- bpSEN$ciTable$mean;
+		testSENmin <- min(bpSEN$ciTable$low95);
+		testSENmax <- max(bpSEN$ciTable$top95);
+
+		x$speTable[is.na(x$speTable)] <- 0;
+		bpSPE <- barPlotCiError(as.matrix(x$speTable),metricname = "Specificity",thesets = x$thesets,themethod = x$theMethod,main = paste(prefix,"Specificity"),offsets = c(0.5,1),args.legend = args.legend,col = terrain.colors(length(x$theMethod)),...);
+		testSPE <- bpSPE$ciTable$mean;
+		testSPEmin <- min(bpSPE$ciTable$low95);
+		testSPEmax <- max(bpSPE$ciTable$top95);
+		brnames <- names(testBalancedError);
+		
+		x$CIRisksTable[is.na(x$CIRisksTable)] <- 0;
+		bpCIRisks <- barPlotCiError(as.matrix(x$CIRisksTable),metricname = "CIndexRisks",thesets = x$thesets,themethod = x$theMethod,main = paste(prefix,"Concordance"),offsets = c(0.5,1),ho=0.5,args.legend = args.legend,col = terrain.colors(length(x$theMethod)),...);
+		testCIRisks <- bpCIRisks$ciTable$mean;
+		testCIRisksmin <- min(bpCIRisks$ciTable$low95);
+		testCIRisksmax <- max(bpCIRisks$ciTable$top95);
+		
+		x$CIFollowUPTable[is.na(x$CIFollowUPTable)] <- 0;
+		bpCIFollowUP <- barPlotCiError(as.matrix(x$CIFollowUPTable),metricname = "CIndexFollowUP",thesets = x$thesets,themethod = x$theMethod,main = paste(prefix,"Concordance"),offsets = c(0.5,1),ho=0.5,args.legend = args.legend,col = terrain.colors(length(x$theMethod)),...);
+		testCIFollowUP <- bpCIFollowUP$ciTable$mean;
+		testCIFollowUPmin <- min(bpCIFollowUP$ciTable$low95);
+		testCIFollowUPmax <- max(bpCIFollowUP$ciTable$top95);
+
+		metrics <- rbind(BER = testBalancedError,
+							ACC = testACC[brnames],
+							AUC = testAUC[brnames],
+							SEN = testSEN[brnames],
+							SPE = testSPE[brnames],
+							CIRisks = testCIRisks[brnames],
+							CIFollowUp = testCIFollowUP[brnames]
+						);
+		barPlotsCI <- list(BER=bpBER,
+							ACC=bpACC,
+							AUC=bpAUC,
+							SEN=bpSEN,
+							SPE=bpSPE,
+							CIRisks = bpCIRisks[brnames],
+							CIFollowUp = bpCIFollowUP[brnames]
+							);
+
+		metrics_filter <- NULL;
+		barPlotsCI_filter <- NULL;
+		minMaxMetrics <- NULL;
+							
+		if (!is.null(x$errorciTable_filter))
+		{
+			par(op)
+			barplot(x$jaccard[order(-x$jaccard)],las = 2,cex.axis = 1,cex.names = 0.7,main = paste(prefix,"Jaccard Index"),ylab = "Jaccard")
+			unsize <- x$featsize
+			unsize[unsize == 0] <- 1;
+			barplot(unsize[order(unsize)],las = 2,cex.axis = 1,cex.names = 0.7,log = "y",main = paste(prefix,"Number of Features"),ylab = "# of Features")
+			par(op)
+			x$errorciTable_filter[is.na(x$errorciTable_filter)] <- 0;
+			bpBER_filter <- barPlotCiError(as.matrix(x$errorciTable_filter),metricname = "Balanced Error",thesets = x$theFiltersets,themethod = x$theClassMethod,main = paste(prefix,"Balanced Error"),scoreDirection = "<",ho=0.5,args.legend = list(bg = "white",x = "topleft"),col = terrain.colors(length(x$theClassMethod)),...)
+			testFilBalancedError <- apply(bpBER_filter$ciTable$mean,2,median);
+			testFilBalancedErrormax <- max(apply(bpBER_filter$ciTable$top95,2,max));
+			testFilBalancedErrormin <- min(apply(bpBER_filter$ciTable$low95,2,min))
+
+			x$accciTable_filter[is.na(x$accciTable_filter)] <- 0;
+			bpACC_filter <- barPlotCiError(as.matrix(x$accciTable_filter),metricname = "Accuracy",thesets = x$theFiltersets,themethod = x$theClassMethod,main = paste(prefix,"Accuracy"),offsets = c(0.5,1),args.legend = list(bg = "white",x = "bottomleft"),col = terrain.colors(length(x$theClassMethod)),...)
+			testFilACC <- apply(bpACC_filter$ciTable$mean,2,median);
+			testFilACCmin <- min(apply(bpACC_filter$ciTable$low95,2,min));
+			testFilACCmax <- max(apply(bpACC_filter$ciTable$top95,2,max));
+
+			x$aucTable_filter[is.na(x$aucTable_filter)] <- 0;
+			bpAUC_filter <- barPlotCiError(as.matrix(x$aucTable_filter),metricname = "AUC",thesets = x$theFiltersets,themethod = x$theClassMethod,main = paste(prefix,"ROC AUC"),offsets = c(0.5,1),ho=0.5,args.legend = list(bg = "white",x = "bottomleft"),col = terrain.colors(length(x$theClassMethod)),...)
+			testFilAUC <- apply(bpAUC_filter$ciTable$mean,2,median);
+			testFilAUCmin <- min(apply(bpAUC_filter$ciTable$low95,2,min));
+			testFilAUCmax <- max(apply(bpAUC_filter$ciTable$top95,2,max));
+
+			x$senciTable_filter[is.na(x$senciTable_filter)] <- 0;
+			bpSEN_filter <- barPlotCiError(as.matrix(x$senciTable_filter),metricname = "Sensitivity",thesets = x$theFiltersets,themethod = x$theClassMethod,main = paste(prefix,"Sensitivity"),offsets = c(0.5,1),args.legend = list(bg = "white",x = "bottomleft"),col = terrain.colors(length(x$theClassMethod)),...)
+			testFilSEN <- apply(bpSEN_filter$ciTable$mean,2,median);
+			testFilSENmin <- min(apply(bpSEN_filter$ciTable$low95,2,min));
+			testFilSENmax <- max(apply(bpSEN_filter$ciTable$top95,2,max));
+
+			x$speciTable_filter[is.na(x$speciTable_filter)] <- 0;
+			bpSPE_filter <- barPlotCiError(as.matrix(x$speciTable_filter),metricname = "Specificity",thesets = x$theFiltersets,themethod = x$theClassMethod,main = paste(prefix,"Specificity"),offsets = c(0.5,1),args.legend = list(bg = "white",x = "bottomleft"),col = terrain.colors(length(x$theClassMethod)),...)
+			testFilSPE <- apply(bpSPE_filter$ciTable$mean,2,median);
+			testFilSPEmin <- min(apply(bpSPE_filter$ciTable$low95,2,min));
+			testFilSPEmax <- max(apply(bpSPE_filter$ciTable$top95,2,max));
+			brnames <- names(testFilBalancedError);
+
+			x$CIRisksTable_filter[is.na(x$CIRisksTable_filter)] <- 0;
+			bpCIRisks_filter <- barPlotCiError(as.matrix(x$CIRisksTable_filter),metricname = "CIRisks",thesets = x$theFiltersets,themethod = x$theClassMethod,main = paste(prefix,"Concordance"),offsets = c(0.5,1),ho=0.5,args.legend = list(bg = "white",x = "bottomleft"),col = terrain.colors(length(x$theClassMethod)),...)
+			testFilCIRisks <- apply(bpCIRisks_filter$ciTable$mean,2,median);
+			testFilCIRisksmin <- min(apply(bpCIRisks_filter$ciTable$low95,2,min));
+			testFilCIRisksmax <- max(apply(bpCIRisks_filter$ciTable$top95,2,max));
+
+			x$CIFollowUPTable_filter[is.na(x$CIFollowUPTable_filter)] <- 0;
+			bpCIFollowUP_filter <- barPlotCiError(as.matrix(x$CIFollowUPTable_filter),metricname = "CIFollowUP",thesets = x$theFiltersets,themethod = x$theClassMethod,main = paste(prefix,"Concordance"),offsets = c(0.5,1),ho=0.5,args.legend = list(bg = "white",x = "bottomleft"),col = terrain.colors(length(x$theClassMethod)),...)
+			testFilCIFollowUP <- apply(bpCIFollowUP_filter$ciTable$mean,2,median);
+			testFilCIFollowUPmin <- min(apply(bpCIFollowUP_filter$ciTable$low95,2,min));
+			testFilCIFollowUPmax <- max(apply(bpCIFollowUP_filter$ciTable$top95,2,max));
+
+			metrics_filter <- rbind(BER = testFilBalancedError,
+								ACC = testFilACC[brnames],
+								AUC = testFilAUC[brnames],
+								SEN = testFilSEN[brnames],
+								SPE = testFilSPE[brnames],
+								CIRisks = testFilCIRisks[brnames],
+								CIFollowUp = testFilCIFollowUP[brnames]
+								);
+
+			barPlotsCI_filter <- list(BER=bpBER_filter,
+									ACC=bpACC_filter,
+									SEN=bpSEN_filter,
+									AUC=bpAUC_filter,
+									SPE=bpSPE_filter,
+									CIRisks = bpCIRisks_filter,
+									CIFollowUp = bpCIFollowUP_filter
+								);
+
+			minMaxMetrics <- list(BER = c(min(testBalancedErrormin,testFilBalancedErrormin),max(testBalancedErrormax,testFilBalancedErrormax)),
+						ACC = c(min(testACCmin,testFilACCmin),max(testACCmax,testFilACCmax)),
+						AUC = c(min(testAUCmin,testFilAUCmin),max(testAUCmax,testFilAUCmax)),
+						SEN = c(min(testSENmin,testFilSENmin),max(testSENmax,testFilSENmax)),
+						SPE = c(min(testSPEmin,testFilSPEmin),max(testSPEmax,testFilSPEmax)),
+						CIDX = c(min(testFilCIDXmin,testFilCIDXmin),max(testFilCIDXmax,testFilCIDXmax)),
+						CIRisks =  c(min(testCIRisksmin,testFilCIRisksmin),max(testCIRisksmax,testFilCIRisksmax)),
+						CIFollowUp =  c(min(testCIFollowUPmin,testFilCIFollowUPmin),max(testCIFollowUPmax,testFilCIFollowUPmax))
+						);
+		}
+		# mcnemar <- matrix(0,ncol = ncol(x$testPredictions)-1,nrow=ncol(x$testPredictions)-1)
+		# pmcnemar <- matrix(1,ncol = ncol(x$testPredictions)-1,nrow=ncol(x$testPredictions)-1)
+		# if ((ncol(x$testPredictions)-1) > 2)
+		# {
+		# 	for (i in 2:(ncol(x$testPredictions)-1))
+		# 	{
+		# 		for (j in (i+1):ncol(x$testPredictions))
+		# 		{
+		# 			th1 <- 0.5*((min(x$testPredictions[,i]) >= 0.0) && (max(x$testPredictions[,i]) <= 1.0));
+		# 			th2 <- 0.5*((min(x$testPredictions[,j]) >= 0.0) && (max(x$testPredictions[,j]) <= 1.0));
+		# 			tb <- table((x$testPredictions[,i] > th1),(x$testPredictions[,j] > th2))
+		# 			if (length(tb) > 3)
+		# 			{
+		# 				pmcnemar[i-1,j-1] <- epiR::epi.kappa(tb)$mcnemar$p.value;
+		# 				mcnemar[i-1,j-1] <- -log10(max(pmcnemar[i-1,j-1],0.0001));
+		# 			}
+		# 			else
+		# 			{
+		# 				pmcnemar[i-1,j-1] <- 0;
+		# 				mcnemar[i-1,j-1] <- 5;
+		# 			}
+		# 			pmcnemar[j-1,i-1] <- pmcnemar[i-1,j-1];
+		# 			mcnemar[j-1,i-1] <- mcnemar[i-1,j-1];
+		# 		}
+		# 	}
+		# 	mcnemar[is.nan(mcnemar)] <- 6;
+		# 	colnames(mcnemar) <- colnames(x$testPredictions)[-1]
+		# 	rownames(mcnemar) <- colnames(x$testPredictions)[-1]
+		# 	colnames(pmcnemar) <- colnames(x$testPredictions)[-1]
+		# 	rownames(pmcnemar) <- colnames(x$testPredictions)[-1]
+		# 	par(op);
+		# 	par(mfrow = c(1,1),mar = c(2,2,2,2));
+		# 	gplots::heatmap.2(mcnemar,trace = "none",mar = c(5,10),col=rev(heat.colors(8)),main = "p(Method A = Method B)",cexRow = 0.65,cexCol = 0.75,srtCol = 25,key.xlab="-log(p)",xlab="Method B", ylab="Method A")
+		# 	par(op);
+		# }
+
+		# AUCtable <- matrix(0,ncol = ncol(x$testPredictions)-1,nrow=ncol(x$testPredictions)-1)
+		# pAUCtable <- matrix(1,ncol = ncol(x$testPredictions)-1,nrow=ncol(x$testPredictions)-1)
+		# if ((ncol(x$testPredictions)-1) > 2)
+		# {
+		# 	for (i in 2:ncol(x$testPredictions))
+		# 	{
+		# 		for (j in 2:ncol(x$testPredictions))
+		# 		{
+		# 			roct <- roc.test(roc(x$testPredictions$Outcome,x$testPredictions[,i],quiet = TRUE),
+		# 							roc(x$testPredictions$Outcome,x$testPredictions[,j],quiet = TRUE),
+		# 							alternative="less")
+		# 			pAUCtable[i-1,j-1] <-  roct$p.value;
+		# 			AUCtable[i-1,j-1] <- -log10(max(pAUCtable[i-1,j-1],0.0001));
+		# 		}
+		# 	}
+		# 	AUCtable[is.nan(AUCtable)] <- 0.0;
+		# 	colnames(AUCtable) <- colnames(x$testPredictions)[-1]
+		# 	rownames(AUCtable) <- colnames(x$testPredictions)[-1]
+		# 	colnames(pAUCtable) <- colnames(x$testPredictions)[-1]
+		# 	rownames(pAUCtable) <- colnames(x$testPredictions)[-1]
+		# 	par(op);
+		# 	par(mfrow = c(1,1),mar = c(2,2,2,2));
+		# 	topf <- apply(AUCtable,1,mean)
+		# 	gplots::heatmap.2(AUCtable[order(topf),],trace = "none",mar = c(5,10),col=rev(heat.colors(8)),Rowv=FALSE,dendrogram = "column",cexRow = 0.65,cexCol = 0.75,srtCol = 25,key.xlab="-log(p)",main = "p(ROC_AUC A > ROC_AUC B)",xlab="Method B",ylab="Method A")
+		# 	par(op);
+		# }
+		
+		result <- list(metrics = metrics, barPlotsCI = barPlotsCI,metrics_filter=metrics_filter,barPlotsCI_filter=barPlotsCI_filter, minMaxMetrics = minMaxMetrics);#,mcnemar=pmcnemar,AUCtable=pAUCtable);
+	}
+
 	par(op);
 	return (result);
 }

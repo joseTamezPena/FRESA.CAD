@@ -5,12 +5,18 @@ FRESAScale <- function(data,refFrame=NULL,method=c("Norm","Order","OrderLogit","
 		refFrame <- data;
 	}
 
-	usedFeatures <- colnames(refFrame);
-
-	outs <- sapply(refFrame,table);
-	outl <- numeric(length(outs));
-	for (i in 1:length(outs)) outl[i] <- length(outs[[i]]);
-	usedFeatures <- usedFeatures[outl > 10];
+	if (!is.null(refMean))
+	{
+		usedFeatures <- names(refMean);
+	}
+	else
+	{
+		usedFeatures <- colnames(refFrame);
+		outs <- sapply(refFrame,table);
+		outl <- numeric(length(outs));
+		for (i in 1:length(outs)) outl[i] <- length(outs[[i]]);
+		usedFeatures <- usedFeatures[outl > 10];
+	}
 	method <- match.arg(method);
 	switch(method,
 			Norm =

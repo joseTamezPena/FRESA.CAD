@@ -294,15 +294,15 @@ NumberofRepeats=1)
 								curCount <- sum(firstMedAUC <= curAUC)
 								supchance <- sum(0.5 <= curAUC)/length(curAUC);
 								infraction <- 1.0 - 0.5*firstCount/length(IIRMetricPDF)-0.5*curCount/length(curAUC);
-								simTest <- ks.test(IIRMetricPDF,curAUC)$p.value
+								simTest <- ks.test(IIRMetricPDF + rnorm(length(IIRMetricPDF),0,1e-10),curAUC + rnorm(length(curAUC),0,1e-10))$p.value
 								if (print)
 								{
 #									hist(IIRMetricPDF)
 #									hist(curAUC)
 									cat(BSWiMS.model$back.formula,": Base AUC: ",firstMedAUC,"Current Blind AUC: ",currentMedAUC," Inferior Count:",firstCount," Tests:",length(IIRMetricPDF)," Fraction:",infraction," KStest:",simTest,"\n");
 								}
-								if (supchance < 0.975) infraction <- 1.0;
-								isInferior <- (infraction > 0.90);
+								if (supchance < 0.75) infraction <- 1.0;
+								isInferior <- (infraction > 0.975);
 								if ( !isInferior && (cycles < 3) && (simTest > 0.05) )
 								{
 									IIRMetricPDF <- c(IIRMetricPDF,curAUC[sample(length(curAUC),(1.0-infraction)*length(curAUC))]);
@@ -343,13 +343,13 @@ NumberofRepeats=1)
 								curCount <- sum(firstMedRMS >= curRMS);
 								supchance <- sum(sdOutcome >= curRMS)/length(curRMS);
 								infraction <- 1.0 - 0.5*firstCount/length(IIRMetricPDF) - 0.5*curCount/length(curRMS);
-								simTest <- ks.test(IIRMetricPDF,curRMS)$p.value
+								simTest <- ks.test(IIRMetricPDF + rnorm(length(IIRMetricPDF),0,1e-10),curRMS + rnorm(length(curRMS),0,1e-10))$p.value
 								if (print)
 								{
 									cat("Sd:", sdOutcome,"(",supchance,")",BSWiMS.model$back.formula,": Base: ",firstMedRMS,"(",max(IIRMetricPDF),") Current: ",BSWiMS.model$bootCV$testRMSE,"(",min(BSWiMS.model$bootCV$testSampledRMSE),") Inferior Count:",firstCount," Tests:",length(firstModel$bootCV$testSampledRMSE)," Fraction:",infraction,"\n");
 								}
-								if (supchance < 0.975) infraction <- 1.0;
-								isInferior <- (infraction > 0.90);
+								if (supchance < 0.75) infraction <- 1.0;
+								isInferior <- (infraction > 0.975);
 								if ( !isInferior && (cycles < 3) && (simTest > 0.05) )
 								{
 									IIRMetricPDF <- c(IIRMetricPDF,curRMS[sample(length(curRMS),(1.0-infraction)*length(curRMS))]);
@@ -378,6 +378,7 @@ NumberofRepeats=1)
 				if ((testType=="zIDI") || (testType=="zNRI"))
 				{
 					IIRMetricPDF <- (firstModel$bootCV$sensitivity + firstModel$bootCV$specificity)/2;
+					IIRMetricPDF <- IIRMetricPDF;
 					if (!isInferior)
 					{
 						isInferior <- ( (sum(0.5 <= IIRMetricPDF)/length(IIRMetricPDF)) < 0.5 );
@@ -386,6 +387,7 @@ NumberofRepeats=1)
 				else
 				{
 					IIRMetricPDF <- firstModel$bootCV$testSampledRMSE;
+					IIRMetricPDF <- IIRMetricPDF;
 					if (print)
 					{
 						cat(length(IIRMetricPDF),": Sup std Outcome",sdOutcome,":",(sum(sdOutcome >= IIRMetricPDF)/length(IIRMetricPDF)),"\n");
@@ -557,7 +559,8 @@ NumberofRepeats=1)
 		bagging=bagg,
 		formula.list=formula.list,
 		forward.selection.list=forward.selection.list,
-		oridinalModels=oridinalModels
+		oridinalModels=oridinalModels,
+		equivalent=equivalent
 	);
 	class(result) <- c("fitFRESA","BSWiMS");
 

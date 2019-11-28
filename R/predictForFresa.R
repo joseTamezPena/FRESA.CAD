@@ -438,8 +438,26 @@ function (object,...)
 				}
 				else
 				{
-					out <- predict(object$bagging$bagged.model,...);
-					attr(out,"model") <- "bagged";
+					if (object$equivalent)
+					{
+						if (object$bagging$bagged.model$type == "LOGIT")
+						{
+							pred <- ensemblePredict(object$formula.list,object$BSWiMS.model$bootCV$data,testData,"prob",object$bagging$bagged.model$type)
+						}
+						else
+						{
+							pred <- ensemblePredict(object$formula.list,object$BSWiMS.model$bootCV$data,testData,predictType,object$bagging$bagged.model$type)
+						}						
+						out <- as.numeric(pred$ensemblePredict)
+						names(out) <- rownames(testData);
+						attr(out,"MeanEnsemblePredict") <- pred$wPredict;
+						attr(out,"model") <- "Ensemble";
+					}
+					else
+					{
+						out <- predict(object$bagging$bagged.model,...);
+						attr(out,"model") <- "bagged";
+					}
 				}
 			}
 			else

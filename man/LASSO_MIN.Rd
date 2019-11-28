@@ -2,6 +2,8 @@
 \alias{GLMNET}
 \alias{LASSO_MIN}
 \alias{LASSO_1SE}
+\alias{GLMNET_ELASTICNET_MIN}
+\alias{GLMNET_RIDGE_MIN}
 \title{GLMNET fit with feature selection"}
 \description{
 	Fits a \code{glmnet::cv.glmnet} object to the data, and sets the prediction to use the features that created the minimum CV error or one SE. 
