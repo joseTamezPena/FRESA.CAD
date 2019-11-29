@@ -376,6 +376,7 @@ NumberofRepeats=1)
 #					}
 				}
 			}
+
 			if (is.null(firstModel))
 			{
 				if (print)
@@ -420,60 +421,65 @@ NumberofRepeats=1)
 			}
 			if (!isInferior) #removing the models variables
 			{
-				cat("+");
-				if (print) cat(cycles,":",size,":",nrow(variableList),":",metric,":",infraction,":",BSWiMS.model$back.formula,"\n");
+
 
 #				formula.list <- append(formula.list,BSWiMS.model$back.formula);
 				termslist <- attr(terms(formula(BSWiMS.model$back.formula)),"term.labels");
-				if (equivalent)
+				isInferior <- (length(termslist)==0);
+				if (!isInferior)
 				{
-#					print(variableList[as.integer(names(forward.model$ranked.var)),]);
-					equmod <- reportEquivalentVariables(BSWiMS.model$back.model,pvalue = 0.25*pvalue,
-							  data=data,
-							  variableList = variableList[as.integer(names(forward.model$ranked.var)),],
-							  Outcome = Outcome,
-							  timeOutcome = timeOutcome,
-							  type = type, osize=nfeat,
-							  method="BH");
-					formula.list <- append(formula.list,equmod$formula.list);
-					if (print) print(equmod$formula.list);
-					equiMaxFreq <- equiMaxFreq+max(equmod$bagged$frequencyTable);
-					addedEquFreq <- addedEquFreq + 1;
-					termslist <- attr(terms(formula(equmod$bagged$formula)),"term.labels");
-				}
-				else
-				{
-					formula.list <- append(formula.list,BSWiMS.model$back.formula);
-				}
-				forward.selection.list <- append(forward.selection.list,forward.model$formula.list);
-				if (!is.null(oridinalModels))
-				{
-#					print(ordinalFormulas);
-					oridinalModels$formulas <- append(oridinalModels$formulas,ordinalFormulas);
-					for (fn in 1:length(ordinalFormulas))
+					cat("+");
+					if (print) cat(cycles,":",size,":",nrow(variableList),":",metric,":",infraction,":",BSWiMS.model$back.formula,"\n");
+					if (equivalent)
 					{
-						termslist <- append(termslist,attr(terms(formula(ordinalFormulas[fn])),"term.labels"));
+	#					print(variableList[as.integer(names(forward.model$ranked.var)),]);
+						equmod <- reportEquivalentVariables(BSWiMS.model$back.model,pvalue = 0.25*pvalue,
+								  data=data,
+								  variableList = variableList[as.integer(names(forward.model$ranked.var)),],
+								  Outcome = Outcome,
+								  timeOutcome = timeOutcome,
+								  type = type, osize=nfeat,
+								  method="BH");
+						formula.list <- append(formula.list,equmod$formula.list);
+						if (print) print(equmod$formula.list);
+						equiMaxFreq <- equiMaxFreq+max(equmod$bagged$frequencyTable);
+						addedEquFreq <- addedEquFreq + 1;
+						termslist <- attr(terms(formula(equmod$bagged$formula)),"term.labels");
 					}
-					termslist <- unique(termslist);
-				}
+					else
+					{
+						formula.list <- append(formula.list,BSWiMS.model$back.formula);
+					}
+					forward.selection.list <- append(forward.selection.list,forward.model$formula.list);
+					if (!is.null(oridinalModels))
+					{
+	#					print(ordinalFormulas);
+						oridinalModels$formulas <- append(oridinalModels$formulas,ordinalFormulas);
+						for (fn in 1:length(ordinalFormulas))
+						{
+							termslist <- append(termslist,attr(terms(formula(ordinalFormulas[fn])),"term.labels"));
+						}
+						termslist <- unique(termslist);
+					}
 
-				selectedVariableList <- unique(c(selectedVariableList,rownames(variableList[as.numeric(rownames(forward.model$ranked.var)),])));
+					selectedVariableList <- unique(c(selectedVariableList,rownames(variableList[as.numeric(rownames(forward.model$ranked.var)),])));
 
-				if (cycles == max(as.integer(maxCycles/3),5))
-				{
-					included <- rownames(variableList) %in% selectedVariableList;
-					variableList <- variableList[included,]
-					size <- nrow(variableList);
-				}
-				else
-				{
-					size <- size - length(termslist);
-				}
+					if (cycles == max(as.integer(maxCycles/3),5))
+					{
+						included <- rownames(variableList) %in% selectedVariableList;
+						variableList <- variableList[included,]
+						size <- nrow(variableList);
+					}
+					else
+					{
+						size <- size - length(termslist);
+					}
 
-				included <- rownames(variableList) %in% termslist;
-#				print(included);
-				variableList <- variableList[!included,]
-				size <- min(c(size,nrow(variableList)));
+					included <- rownames(variableList) %in% termslist;
+	#				print(included);
+					variableList <- variableList[!included,]
+					size <- min(c(size,nrow(variableList)));
+				}
 			}
 			else
 			{
@@ -485,6 +491,10 @@ NumberofRepeats=1)
 					included <- rownames(variableList) %in% termslist;
 					variableList <- variableList[!included,]
 					size <- min(c(size,nrow(variableList)));
+				}
+				else
+				{
+					isInferior <- TRUE;
 				}
 				if (cycles == 0)
 				{
