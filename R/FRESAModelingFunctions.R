@@ -834,7 +834,7 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 					{
 						cat("%",sum(errorSet),"%")
 						herrorSet <- (d1 >= (0.5 - hysteresis)) & (d2 >= (0.5 - hysteresis));
-						errordata <- data[herrorSet,selectedfeatures];
+						errordata <- data[herrorSet,c(Outcome,selectedfeatures)];
 						tb <- table(errordata[,Outcome]);
 						if ((length(tb) > 1) && (min(tb) > (minsize/2)))
 						{
