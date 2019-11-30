@@ -737,7 +737,7 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 				firstSet <- trueP | trueN;
 				loops <- 0;
 				firstPredict <- thePredict;
-				while ((changes > 0) && (loops < 10))
+				while ((changes > 0) && (loops < 15))
 				{
 #					cat("#",sum(secondSet),"#")
 					loops <- loops + 1;
@@ -770,10 +770,12 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 							secondPredict <- rpredict(secondModel,data);
 							d1 <-  abs(firstPredict - outcomedata);
 							d2 <-  abs(secondPredict - outcomedata);
-							nfirstSet <- (d1 <= (0.5 + hysteresis/loops)) & (d1 <= (d2 + hysteresis/loops));
+							nfirstSet <- (d1 <= (0.5 + hysteresis));
 							changes <- sum(nfirstSet != firstSet);
 							firstSet <- nfirstSet;
-							secondSet <- (d2 <= (0.5 + hysteresis/loops)) & (d2 <= (d1 + hysteresis/loops));
+							nsecondSet <- (d2 <= (0.5 + hysteresis));
+							changes <- changes + sum(nsecondSet != secondSet);
+							secondSet <- nsecondSet;
 							if (loops == 1)
 							{
 								sselectedfeatures <- unique(c(fselectedfeatures,nselected));
@@ -821,13 +823,13 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 					secondPredict <- rpredict(secondModel,data);
 					d1 <-  abs(firstPredict - outcomedata);
 					d2 <-  abs(secondPredict - outcomedata);
-					firstSet <- (d1 <= 0.5) & (d1 < d2);
+					firstSet <- (d1 <= 0.5) & (d1 <= d2);
 
 #					cat("[",sum(!firstSet),"]")
 					correctSet <- firstSet;
 					alternativeModel[[1]] <- secondModel;
 					baseModel <- firstModel;
-					errorSet <- (d1 > 0.5) & (d2 > 0.5);
+					errorSet <- (d1 >= 0.5) & (d2 >= 0.5);
 					cat("<",sum(d1 > 0.5),",",sum(d2 > 0.5),",",sum(errorSet),">") 
 					nselected <- character();
 					if (sum(errorSet) > minsize)
