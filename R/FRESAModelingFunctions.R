@@ -579,12 +579,12 @@ HLCM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis = 0
 				inserted <- FALSE;
 				preData <- nextdata;
 				outcomedata <- preData[,Outcome];
-				falseP <- (thePredict > (0.5 - hysteresis)) & (outcomedata == 0);
-				falseN <- (thePredict < (0.5 + hysteresis)) & (outcomedata == 1);
+				falseP <- (thePredict >= (0.5 - hysteresis)) & (outcomedata == 0);
+				falseN <- (thePredict <= (0.5 + hysteresis)) & (outcomedata == 1);
 				if ( sum(falseP | falseN) > (nrow(preData)/2) )
 				{
-					falseP <- (thePredict > 0.5) & (outcomedata == 0);
-					falseN <- (thePredict < 0.5) & (outcomedata == 1);
+					falseP <- (thePredict >= 0.5) & (outcomedata == 0);
+					falseN <- (thePredict <= 0.5) & (outcomedata == 1);
 				}
 				if ((sum(falseP) >= (minsize/2)) && (sum(falseN) >= (minsize/2)))
 				{
@@ -718,18 +718,18 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 		if (sum(1*(!correct),na.rm=TRUE) > minsize)
 		{
 			outcomedata <- data[,Outcome];
-			falseP <- (thePredict > (0.5 - hysteresis)) & (outcomedata == 0);
-			falseN <- (thePredict < (0.5 + hysteresis)) & (outcomedata == 1);
+			falseP <- (thePredict >= (0.5 - hysteresis)) & (outcomedata == 0);
+			falseN <- (thePredict <= (0.5 + hysteresis)) & (outcomedata == 1);
 			if ( sum(falseP | falseN) > (nrow(data)/2) )
 			{
-				falseP <- (thePredict > 0.5) & (outcomedata == 0);
-				falseN <- (thePredict < 0.5) & (outcomedata == 1);
+				falseP <- (thePredict >= 0.5) & (outcomedata == 0);
+				falseN <- (thePredict <= 0.5) & (outcomedata == 1);
 			}
 			if ((sum(falseP) >= (minsize/2)) && (sum(falseN) >= (minsize/2)))
 			{
 				secondSet <- falseP | falseN;
-				trueP <- (thePredict > (0.5 - hysteresis)) & (outcomedata == 1);
-				trueN <- (thePredict < (0.5 + hysteresis)) & (outcomedata == 0);
+				trueP <- (thePredict >= (0.5 - hysteresis)) & (outcomedata == 1);
+				trueN <- (thePredict <= (0.5 + hysteresis)) & (outcomedata == 0);
 				firstSet <- trueP | trueN;
 				loops <- 0;
 				firstPredict <- thePredict;
@@ -766,10 +766,10 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 							secondPredict <- rpredict(secondModel,data);
 							d1 <-  abs(firstPredict - outcomedata);
 							d2 <-  abs(secondPredict - outcomedata);
-							nfirstSet <- (d1 <= (d2+ hysteresis/loops)) | (abs(thePredict - outcomedata) < 0.5) ;
+							nfirstSet <- (d1 <= (d2 + hysteresis));
 							changes <- sum(nfirstSet != firstSet);
 							firstSet <- nfirstSet;
-							nsecondSet <- (d2 <= (d1 + hysteresis/loops)) | (abs(thePredict - outcomedata) >= 0.5) ;
+							nsecondSet <- (d2 <= (d1 + hysteresis));
 							changes <- changes + sum(nsecondSet != secondSet);
 							secondSet <- nsecondSet;
 						}
@@ -848,7 +848,7 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 			}
 			if (n > 0)
 			{
-#				cat("[",sum(!firstSet),"]")
+				cat("[",sum(!firstSet),"]")
 				classData[,Outcome] <- rep(1,nrow(classData));
 				classData[correctSet,Outcome] <- 0;
 				if (n > 1)
