@@ -930,14 +930,7 @@ predict.FRESA_HLCM <- function(object,...)
 {
 	parameters <- list(...);
 	testData <- parameters[[1]];
-	if (is.null(object$baseModel))
-	{
-		pLS <- rpredict(object$original,testData);
-	}
-	else
-	{
-		pLS <- rpredict(object$baseModel,testData);
-	}
+	pLS <- rpredict(object$original,testData);
 
 	if (!is.null(object$classModel))
 	{
@@ -951,16 +944,27 @@ predict.FRESA_HLCM <- function(object,...)
 				palt <- rpredict(object$alternativeModel[[1]],testData);
 				if (is.null(object$baseModel))
 				{
-					pLS <- classPred*pLS + (1.0 - classPred)*(palt + tb[2]*(1.0 - pLS))/(1.0 + tb[2]);
+					pLS <- classPred*pLS + (1.0 - classPred)*(palt + tb["1"]*(1.0 - pLS))/(1.0 + tb["1"]);
 				}
 				else
 				{
-					pLS <- classPred*pLS + (1.0 - classPred)*palt;
+					ppos <- rpredict(object$baseModel,testData);
+					pLS <- classPred*(tb["0"]*pLS + ppos)/(1.0 + tb["0"]) + (1.0 - classPred)*(palt + tb["1"]*(1.0 - pLS))/(1.0 + tb["1"]);
 				}
 			}
 			else
 			{
-				pmodel <- pLS;
+			
+				ppos <- NULL;
+				if (is.null(object$baseModel))
+				{
+					pmodel <- pLS;
+				}
+				else
+				{
+					ppos <- rpredict(object$baseModel,testData);
+					pmodel <- (ppos + pLS*tb["0"])/(1.0 + tb["0"]);
+				}
 				prbclas <- attributes(classPred)$prob;
 				classPred <- as.numeric(as.character(classPred)) + 1;
 				nm <- length(object$alternativeModel)
@@ -969,7 +973,10 @@ predict.FRESA_HLCM <- function(object,...)
 					ptmp <- rpredict(object$alternativeModel[[n]],testData)
 					pmodel <- cbind(pmodel,ptmp);
 				}
-				itotclas <- 1.0/nm; 
+				if (!is.null(ppos))
+				{
+					pmodel[,2] <- (pmodel[,2] + (1.0 - pLS)*tb["1"])/(1.0 + tb["1"]);
+				}
 				for (i in 1:length(pLS))
 				{
 					wts <- prbclas[i];
@@ -978,7 +985,7 @@ predict.FRESA_HLCM <- function(object,...)
 					{
 						if (n != classPred[i])
 						{
-							wt <- (1.0 - prbclas[i])*tb[n]*itotclas;
+							wt <- (1.0 - prbclas[i])*tb[as.character(n-1)];
 							pLS[i] <- pLS[i] + pmodel[i,n]*wt;
 							wts <- wts + wt;
 						}
@@ -989,7 +996,7 @@ predict.FRESA_HLCM <- function(object,...)
 						{
 							for (n in 1:(classPred[i] - 1))
 							{
-								wt <- prbclas[i]*tb[n + 1];
+								wt <- prbclas[i]*tb[as.character(n)];
 								pLS[i] <- pLS[i] + wt*(1.0 - pmodel[i,n]);
 								wts <- wts + wt;
 							}
