@@ -612,7 +612,7 @@ HLCM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis = 0
 						nextdata <- preData[incorrectSet,];
 						alternativeModel[[n]] <- alternativeM;
 						thePredict <- rpredict(alternativeM,nextdata);
-						toterror <- sum((thePredict > 0.5) != (nextdata[,Outcome] > 0));
+						toterror <- sum(abs(thePredict - nextdata[,Outcome]) >= (0.5 - hysteresis));
 						inserted <- TRUE;
 					}
 				}
@@ -624,7 +624,7 @@ HLCM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis = 0
 						n <- n + 1;
 						correctSet[[n]] <- rownames(preData[!incorrectSet,]);
 						cat("(",sum(incorrectSet),")")
-						alternativeModel[[n]] <- 0.5*(sum(preData[incorrectSet,Outcome])/nrow(preData[incorrectSet,]));
+						alternativeModel[[n]] <- (sum(preData[incorrectSet,Outcome])/nrow(preData[incorrectSet,]));
 					}
 				}
 #				cat("<",nrow(nextdata),">")
@@ -709,7 +709,6 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 	classData <- data;
 	classData[,Outcome] <- rep(0,nrow(classData));
 	sselectedfeatures <- colnames(data);
-	fselectedfeatures <- colnames(data);
 	if (length(selectedfeatures) > 0)
 	{
 		thePredict <- rpredict(baseModel,data);
@@ -740,8 +739,10 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 					loops <- loops + 1;
 					n <- 0;
 					changes <- 0;
-					firstdata <- data[firstSet,unique(c(Outcome,fselectedfeatures))];
+					firstdata <- data[firstSet,unique(c(Outcome,sselectedfeatures))];
 					seconddata <- data[secondSet,unique(c(Outcome,sselectedfeatures))];
+#					firstdata <- data[firstSet,];
+#					seconddata <- data[secondSet,];
 					tb1 <- table(firstdata[,Outcome]);
 					tb2 <- table(seconddata[,Outcome]);
 					if ((length(tb1) > 1) && (length(tb2) > 1) && (min(tb1) > minsize) && (min(tb2) > minsize))
@@ -775,7 +776,7 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 							secondSet <- nsecondSet;
 							if (loops == 1) 
 							{
-								sselectedfeatures <- nselected;
+								sselectedfeatures <- c(selectedfeatures,nselected);
 								nselected <- character();
 								if (!is.null(firstModel$selectedfeatures))
 								{
@@ -788,7 +789,7 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 										nselected <- names(firstModel$bagging$frequencyTable);
 									}
 								}
-								fselectedfeatures <- nselected;
+								sselectedfeatures <- unique(c(sselectedfeatures,nselected));
 							}
 						}
 					}
