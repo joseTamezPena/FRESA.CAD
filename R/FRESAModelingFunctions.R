@@ -55,7 +55,7 @@ KNN_method <- function(formula = formula, data=NULL, ...)
 	if (is.null(parameters$kn))
 	{
 		tb <- table(data[,baseformula[2]]);
-		kn <- 1+as.integer(sqrt(min(tb))+0.5);
+		kn <- 2*(as.integer(min(sqrt(nrow(data)/2),min(tb))/2)) + 1;
 	}
 	else
 	{
@@ -114,31 +114,31 @@ predict.FRESAKNN <- function(object, ...)
 	if (length(table(object$classData))==2)
 	{
 		prop <- attributes(knnclass);
-		knnclass <- abs(prop$prob-1*(knnclass == "0"))
-		if (object$kn > 2)
+		knnclass <- abs(prop$prob - 1*(knnclass == "0"))
+		if (object$kn > 3)
 		{
-			knnclass_1 <- try(class::knn(trainframe,testframe,factor(object$classData),object$kn-1,prob=TRUE))
+			knnclass_1 <- try(class::knn(trainframe,testframe,factor(object$classData),object$kn - 2,prob=TRUE))
 			prop_1 <- attributes(knnclass_1);
-			knnclass_2 <- try(class::knn(trainframe,testframe,factor(object$classData),object$kn+1,prob=TRUE))
+			knnclass_2 <- try(class::knn(trainframe,testframe,factor(object$classData),object$kn + 2,prob=TRUE))
 			prop_2 <- attributes(knnclass_2);
-			knnclass <- (knnclass + 0.5*abs(prop_1$prob-1*(knnclass_1 == "0")) + 0.5*abs(prop_2$prob-1*(knnclass_2 == "0")))/2.0;
+			knnclass <- (knnclass + 0.5*abs(prop_1$prob - 1*(knnclass_1 == "0")) + 0.5*abs(prop_2$prob - 1*(knnclass_2 == "0")))/2.0;
 		}
 	}
 	else
 	{
 		prop <- attributes(knnclass)$prob;
-		if (object$kn > 2)
+		if (object$kn > 3)
 		{
-			knnclass_1 <- try(class::knn(trainframe,testframe,factor(object$classData),object$kn-1,prob=TRUE))
+			knnclass_1 <- try(class::knn(trainframe,testframe,factor(object$classData),object$kn - 2,prob=TRUE))
 			prop_1 <- attributes(knnclass_1)$prob;
 			testclass <- as.character(knnclass_1) == as.character(knnclass)
 			prop[testclass] <- 0.75*prop[testclass] + 0.25*prop_1[testclass];
-			prop[!testclass] <- 0.75*prop[!testclass] + 0.25*(1.0-prop_1[!testclass]);
-			knnclass_1 <- try(class::knn(trainframe,testframe,factor(object$classData),object$kn+2,prob=TRUE))
+			prop[!testclass] <- 0.75*prop[!testclass] + 0.25*(1.0 - prop_1[!testclass]);
+			knnclass_1 <- try(class::knn(trainframe,testframe,factor(object$classData),object$kn + 2,prob=TRUE))
 			prop_1 <- attributes(knnclass_1)$prob;
 			testclass <- as.character(knnclass_1) == as.character(knnclass)
 			prop[testclass] <- 0.75*prop[testclass] + 0.25*prop_1[testclass];
-			prop[!testclass] <- 0.75*prop[!testclass] + 0.25*(1.0-prop_1[!testclass]);
+			prop[!testclass] <- 0.75*prop[!testclass] + 0.25*(1.0 - prop_1[!testclass]);
 			attr(knnclass,"prob") <- prop;
 		}
 	}
@@ -571,21 +571,17 @@ HLCM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis = 0
 		outcomedata <- data[,Outcome];
 		correct <- ((thePredict >= 0.5) == (outcomedata > 0));
 		accuracy <- sum(correct)/nrow(data);
-		if (sum(!correct) > minsize)
+		toterror <-sum(!correct);
+		if (toterror > minsize)
 		{
 			nextdata <- data;
-			while (inserted)
+			while ((inserted) && (toterror > minsize))
 			{
 				inserted <- FALSE;
 				preData <- nextdata;
 				outcomedata <- preData[,Outcome];
 				falseP <- (thePredict >= (0.5 - hysteresis)) & (outcomedata == 0);
 				falseN <- (thePredict <= (0.5 + hysteresis)) & (outcomedata == 1);
-				if ( sum(falseP | falseN) > (nrow(preData)/2) )
-				{
-					falseP <- (thePredict >= 0.5) & (outcomedata == 0);
-					falseN <- (thePredict <= 0.5) & (outcomedata == 1);
-				}
 				if ((sum(falseP) >= (minsize/2)) && (sum(falseN) >= (minsize/2)))
 				{
 					incorrectSet <- falseP | falseN;
@@ -605,37 +601,40 @@ HLCM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis = 0
 					}
 					if (length(nselected)>0)
 					{
-						inserted <- TRUE;
 						n <- n + 1;
 						selectedfeatures <- c(selectedfeatures,nselected);
 						selectedfeatures <- unique(selectedfeatures);
-						thePredict <- rpredict(alternativeM,nextdata);
-						correctSet[[n]] <- rownames(preData[!incorrectSet,]);
+#						nextPredict <- rpredict(alternativeM,preData);
+						pcorrect <- ((thePredict >= 0.5) == (outcomedata > 0));
+						incorrectSet <- !pcorrect;
 						cat("[",sum(incorrectSet),"]")
+						correctSet[[n]] <- rownames(preData[pcorrect,]);
+						nextdata <- preData[incorrectSet,];
 						alternativeModel[[n]] <- alternativeM;
+						thePredict <- rpredict(alternativeM,nextdata);
+						toterror <- sum((thePredict > 0.5) != (nextdata[,Outcome] > 0));
+						inserted <- TRUE;
 					}
 				}
-				else
+				if (!inserted)
 				{
-					if ( ((sum(falseP) >= minsize) || (sum(falseN) >= minsize)) )
+					incorrectSet <- ((thePredict >= 0.5) != (outcomedata > 0));
+					if (sum(incorrectSet) > minsize) 
 					{
-						incorrectSet <- falseP | falseN;
-						inserted <- FALSE;
 						n <- n + 1;
 						correctSet[[n]] <- rownames(preData[!incorrectSet,]);
 						cat("(",sum(incorrectSet),")")
-						alternativeModel[[n]] <- sum(falseN)/(sum(falseP)+sum(falseN));
+						alternativeModel[[n]] <- 0.5*(sum(preData[incorrectSet,Outcome])/nrow(preData[incorrectSet,]));
 					}
 				}
+#				cat("<",nrow(nextdata),">")
 			}
 			if (n>0)
 			{
-				allCorrectSet <- correctSet[[1]];
 				classData[,Outcome] <- rep(n,nrow(classData));
 				for (i in 1:n)
 				{
 					classData[correctSet[[i]],Outcome] <- i - 1;
-					allCorrectSet <- c(allCorrectSet,correctSet[[i]]);
 				}
 				if (is.null(classModel.Control))
 				{
@@ -709,6 +708,8 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 	n=0;
 	classData <- data;
 	classData[,Outcome] <- rep(0,nrow(classData));
+	sselectedfeatures <- colnames(data);
+	fselectedfeatures <- colnames(data);
 	if (length(selectedfeatures) > 0)
 	{
 		thePredict <- rpredict(baseModel,data);
@@ -739,8 +740,8 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 					loops <- loops + 1;
 					n <- 0;
 					changes <- 0;
-					firstdata <- data[firstSet,];
-					seconddata <- data[secondSet,];
+					firstdata <- data[firstSet,unique(c(Outcome,fselectedfeatures))];
+					seconddata <- data[secondSet,unique(c(Outcome,sselectedfeatures))];
 					tb1 <- table(firstdata[,Outcome]);
 					tb2 <- table(seconddata[,Outcome]);
 					if ((length(tb1) > 1) && (length(tb2) > 1) && (min(tb1) > minsize) && (min(tb2) > minsize))
@@ -772,6 +773,23 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 							nsecondSet <- (d2 <= (d1 + hysteresis));
 							changes <- changes + sum(nsecondSet != secondSet);
 							secondSet <- nsecondSet;
+							if (loops == 1) 
+							{
+								sselectedfeatures <- nselected;
+								nselected <- character();
+								if (!is.null(firstModel$selectedfeatures))
+								{
+									nselected <- firstModel$selectedfeatures;
+								}
+								else
+								{
+									if (!is.null(firstModel$bagging))
+									{
+										nselected <- names(firstModel$bagging$frequencyTable);
+									}
+								}
+								fselectedfeatures <- nselected;
+							}
 						}
 					}
 					else
