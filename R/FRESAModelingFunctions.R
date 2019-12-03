@@ -974,8 +974,8 @@ predict.FRESA_HLCM <- function(object,...)
 				else
 				{
 					ppos <- rpredict(object$baseModel,testData);
-#					pLS <- classPred*(tb["0"]*pLS + ppos)/(1.0 + tb["0"]) + (1.0 - classPred)*(palt + tb["1"]*(1.0 - pLS))/(1.0 + tb["1"]);
-					pLS <- classPred*ppos + (1.0 - classPred)*palt;
+					pLS <- classPred*(tb["0"]*pLS + ppos)/(1.0 + tb["0"]) + (1.0 - classPred)*(palt + tb["1"]*(1.0 - pLS))/(1.0 + tb["1"]);
+#					pLS <- classPred*ppos + (1.0 - classPred)*palt;
 				}
 			}
 			else
@@ -989,8 +989,8 @@ predict.FRESA_HLCM <- function(object,...)
 				else
 				{
 					ppos <- rpredict(object$baseModel,testData);
-#					pmodel <- (ppos + pLS*tb["0"])/(1.0 + tb["0"]);
-					pmodel <- ppos;
+					pmodel <- (ppos + pLS*tb["0"])/(1.0 + tb["0"]);
+#					pmodel <- ppos;
 				}
 				prbclas <- attributes(classPred)$prob;
 				classPred <- as.numeric(as.character(classPred)) + 1;
@@ -1000,10 +1000,10 @@ predict.FRESA_HLCM <- function(object,...)
 					ptmp <- rpredict(object$alternativeModel[[n]],testData)
 					pmodel <- cbind(pmodel,ptmp);
 				}
-#				if (!is.null(ppos))
-#				{
-#					pmodel[,2] <- (pmodel[,2] + (1.0 - pLS)*tb["1"])/(1.0 + tb["1"]);
-#				}
+				if (!is.null(ppos))
+				{
+					pmodel[,2] <- (pmodel[,2] + (1.0 - pLS)*tb["1"])/(1.0 + tb["1"]);
+				}
 				for (i in 1:length(pLS))
 				{
 					wts <- prbclas[i];
