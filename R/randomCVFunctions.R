@@ -33,16 +33,24 @@ correlated_Remove <- function(data= NULL,fnames= NULL,thr=0.999)
 
 correlated_RemoveToLimit <- function(data,unitPvalues,limit=0,thr=0.975,maxLoops=50,minCorr=0.80)
 {
-	if ((limit > 0) && (thr < 1.0))
+	if ((limit >= 0) && (thr < 1.0))
 	{
 		ntest <- 0;
 		cthr <- thr;
 		if (limit > 0)
 		{
-			slimit <- limit*nrow(data);
+			slimit <- limit;
+			if (limit <= 1)
+			{
+				slimit <- limit*nrow(data);
+			}
 			if (slimit < 2) 
 			{
 				slimit <- 2;
+			}
+			if (slimit >= nrow(data))
+			{
+				slimit = nrow(data) - 1;
 			}
 			if (length(unitPvalues) > (10*slimit))
 			{
@@ -58,6 +66,10 @@ correlated_RemoveToLimit <- function(data,unitPvalues,limit=0,thr=0.975,maxLoops
 			{
 				unitPvalues <- unitPvalues[1:slimit];
 			}
+		}
+		else
+		{
+			unitPvalues <- unitPvalues[correlated_Remove(data,names(unitPvalues),cthr)];
 		}
 	}
 	return (unitPvalues);
