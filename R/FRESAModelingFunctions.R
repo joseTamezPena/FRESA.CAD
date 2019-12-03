@@ -55,7 +55,7 @@ KNN_method <- function(formula = formula, data=NULL, ...)
 	if (is.null(parameters$kn))
 	{
 		tb <- table(data[,baseformula[2]]);
-		kn <- 2*(as.integer(sqrt(2*min(tb))/2)) + 1;
+		kn <- 2*(as.integer((sqrt(min(tb)) + 1)/2 + 0.5)) + 1;
 	}
 	else
 	{
@@ -736,8 +736,10 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 					loops <- loops + 1;
 					n <- 0;
 					changes <- 0;
-					firstdata <- data[firstSet,unique(c(Outcome,sselectedfeatures))];
-					seconddata <- data[secondSet,unique(c(Outcome,sselectedfeatures))];
+#					firstdata <- data[firstSet,unique(c(Outcome,sselectedfeatures))];
+#					seconddata <- data[secondSet,unique(c(Outcome,sselectedfeatures))];
+					firstdata <- data[firstSet,];
+					seconddata <- data[secondSet,];
 					tb1 <- table(firstdata[,Outcome]);
 					tb2 <- table(seconddata[,Outcome]);
 					if ((length(tb1) > 1) && (length(tb2) > 1) && (min(tb1) > minsize) && (min(tb2) > minsize))
