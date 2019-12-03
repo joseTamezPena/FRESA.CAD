@@ -1005,6 +1005,7 @@ predict.FRESA_HLCM <- function(object,...)
 				if (!is.null(ppos))
 				{
 					pmodel[,2] <- (pmodel[,2] + 0.25*(pLS < 0.5)*tb["1"])/(1.0 + 0.25*tb["1"]);
+					pmodel[,3] <- (pmodel[,3] + 0.25*(pLS < 0.5)*tb["2"])/(1.0 + 0.25*tb["2"]);
 				}
 				for (i in 1:length(pLS))
 				{
@@ -1025,7 +1026,7 @@ predict.FRESA_HLCM <- function(object,...)
 						{
 							for (n in 1:(classPred[i] - 1))
 							{
-								wt <- 0.25*(1.0-prbclas[i])*tb[as.character(n)]/classPred[i];
+								wt <- 0.25*prbclas[i]*tb[as.character(n)]/n;
 								pLS[i] <- pLS[i] + wt*(pmodel[i,n] < 0.5);
 								wts <- wts + wt;
 							}
@@ -1073,7 +1074,7 @@ predict.FRESA_HLCM <- function(object,...)
 						{
 							for (n in 0:(wm - 1))
 							{	
-								wt <-  pclase[i,wm+1]*tb[n + 2];
+								wt <-  0.25*(1.0-pclase[i,n+1])/(n + 1);
 								pLS[i] <- pLS[i] + wt*(pmodel[i,(n + 1)] < 0.5);
 								wts <- wts + wt;
 							}
