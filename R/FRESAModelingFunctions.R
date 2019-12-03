@@ -565,6 +565,8 @@ HLCM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis = 0
 	n=0;
 	classData <- data;
 	classData[,Outcome] <- numeric(nrow(classData));
+	classKey <- numeric(nrow(classData));
+	names(classKey) <- rownames(data);
 	if (length(selectedfeatures) > 0)
 	{
 		thePredict <- rpredict(orgModel,data);
@@ -642,6 +644,7 @@ HLCM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis = 0
 						classData[,Outcome] <- as.factor(classData[,Outcome]);
 						classModel[[i]] <- do.call(classMethod,c(list(formula(paste(Outcome,"~.")),classData[,c(Outcome,selectedfeatures)]),classModel.Control));
 					}
+					classKey[correctSet[[i]]] <- classKey[correctSet[[i]]] + 2^(i-1);
 				}
 			}
 		}
@@ -652,7 +655,7 @@ HLCM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis = 0
 					accuracy=accuracy,
 					selectedfeatures = selectedfeatures,
 					hysteresis=hysteresis,
-					classSet=classData[,Outcome]
+					classSet=classKey
 					)
 	class(result) <- "FRESA_HLCM"
 	return(result);
