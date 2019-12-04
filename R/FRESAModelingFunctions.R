@@ -569,6 +569,9 @@ HLCM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis = 0
 	classData[,Outcome] <- numeric(nrow(classData));
 	classKey <- numeric(nrow(classData));
 	names(classKey) <- rownames(data);
+	errorfreq <- numeric();
+	classfreq <- numeric();
+	baseClass <- numeric();
 	if (length(selectedfeatures) > 0)
 	{
 		thePredict <- rpredict(orgModel,data);
@@ -576,19 +579,29 @@ HLCM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis = 0
 		correct <- ((thePredict >= 0.5) == (outcomedata > 0));
 		accuracy <- sum(correct)/nrow(data);
 		toterror <- sum(!correct);
+		baseClass <- c(baseClass,0);
+		correctSet[[n+1]] <- rownames(data[correct,]);
+		classfreq <- c(classfreq,length(correctSet[[n+1]]));
+		errorfreq <- c(errorfreq,toterror);
 		if (toterror > minsize)
 		{
 			nextdata <- data;
-			while ((inserted) && (toterror > minsize) && ((toterror < nrow(nextdata) - 1)))
+			while (inserted && (toterror > minsize) && (toterror < (nrow(nextdata) - 1)))
 			{
 				inserted <- FALSE;
 				preData <- nextdata;
 				outcomedata <- preData[,Outcome];
 				falseP <- (thePredict >= (0.5 - hysteresis)) & (outcomedata == 0);
 				falseN <- (thePredict <= (0.5 + hysteresis)) & (outcomedata == 1);
+				incorrectSet <- falseP | falseN;
+				if (sum(incorrectSet) > nrow(nextdata)/2)
+				{
+					falseP <- (thePredict >= 0.5) & (outcomedata == 0);
+					falseN <- (thePredict <= 0.5) & (outcomedata == 1);
+					incorrectSet <- falseP | falseN;
+				}
 				if ((sum(falseP) >= (minsize/2)) && (sum(falseN) >= (minsize/2)))
 				{
-					incorrectSet <- falseP | falseN;
 					nextdata <- preData[incorrectSet,];
 					alternativeM <- method(formula,nextdata,...);
 					nselected <- character();
@@ -600,40 +613,44 @@ HLCM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis = 0
 					{
 						if (!is.null(alternativeM$bagging))
 						{
-							nselected <- names(alternativeM$bagging$frequencyTable);
+								nselected <- names(alternativeM$bagging$frequencyTable);
 						}
 					}
 					if (length(nselected)>0)
 					{
 						n <- n + 1;
+						baseClass <- c(baseClass,n+1);
 						selectedfeatures <- c(selectedfeatures,nselected);
 						selectedfeatures <- unique(selectedfeatures);
-						cat("[",sum(incorrectSet),"]")
-						correctSet[[n]] <- rownames(preData[(thePredict >= 0.5) == (outcomedata > 0),]);
-						nextdata <- preData[incorrectSet,];
+						cat("[",sum(incorrectSet),"]");
 						alternativeModel[[n]] <- alternativeM;
 						thePredict <- rpredict(alternativeM,nextdata);
-						toterror <- sum(abs(thePredict - nextdata[,Outcome]) >= (0.5 - hysteresis));
+						correct <- ((thePredict >= 0.5) == (nextdata[,Outcome] > 0));
+						correctSet[[n+1]] <- rownames(nextdata[correct,]);
+						classfreq <- c(classfreq,length(correctSet[[n+1]]));
+						toterror <- sum(abs(thePredict - nextdata[,Outcome]) > 0.5 );
+						errorfreq <- c(errorfreq,toterror);
 						inserted <- TRUE;
-					}
+					}	
 				}
-				if (!inserted)
+			}
+			if ( !inserted )
+			{
+				cat("<",sum(incorrectSet),">")
+				if (sum(incorrectSet) > minsize) 
 				{
-					incorrectSet <- ((thePredict >= 0.5) != (outcomedata > 0));
-#					cat("<",sum(incorrectSet),">")
-					if (sum(incorrectSet) > minsize) 
-					{
-						n <- n + 1;
-						correctSet[[n]] <- rownames(preData[!incorrectSet,]);
-						cat("(",sum(incorrectSet),")")
-						alternativeModel[[n]] <- (sum(preData[incorrectSet,Outcome])/nrow(preData[incorrectSet,]));
-					}
+					n <- n + 1;
+					baseClass <- c(baseClass,n);
+					cat("(",sum(incorrectSet),")")
+					alternativeModel[[n]] <- (sum(preData[incorrectSet,Outcome])/nrow(preData[incorrectSet,]));
+					correctSet[[n+1]] <- rownames(preData[incorrectSet,]);
+					classfreq <- c(classfreq,length(correctSet[[n+1]]));
+					errorfreq <- c(errorfreq,0);
 				}
-#				cat("<",nrow(nextdata),">")
 			}
 			if (n > 0)
 			{
-				for (i in 1:n)
+				for (i in 1:(n+1))
 				{
 					classData[,Outcome] <- data[,Outcome];
 					classData[correctSet[[i]],Outcome] <- classData[correctSet[[i]],Outcome] + 2;
@@ -651,13 +668,18 @@ HLCM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis = 0
 			}
 		}
 	}
+	errorfreq <- errorfreq/nrow(data);
+	classfreq <- classfreq/nrow(data);
 	result <- list(original = orgModel,
 					alternativeModel = alternativeModel,
 					classModel = classModel,
-					accuracy=accuracy,
+					accuracy = accuracy,
 					selectedfeatures = selectedfeatures,
-					hysteresis=hysteresis,
-					classSet=classKey
+					hysteresis = hysteresis,
+					classSet = classKey,
+					errorfreq = errorfreq,
+					classfreq = classfreq,
+					baseClass = baseClass
 					)
 	class(result) <- "FRESA_HLCM"
 	return(result);
@@ -677,7 +699,8 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 		Outcome = dependent[3];
 	}
 
-
+	errorfreq <- numeric();
+	classfreq <- numeric();
 	alternativeModel <- list();
 	correctSet <- NULL;
 	firstSet <- NULL;
@@ -711,6 +734,7 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 	classData <- data;
 	classData[,Outcome] <- rep(0,nrow(classData));
 	sselectedfeatures <- colnames(data);
+	baseClass <- numeric();
 	if (length(selectedfeatures) > 0)
 	{
 		thePredict <- rpredict(orgModel,data);
@@ -814,6 +838,9 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 					alternativeModel[[1]] <- firstModel;
 					alternativeModel[[2]] <- secondModel;
 					errorSet <- (d1 >= 0.5) & (d2 >= 0.5);
+					errorfreq <- c(sum(!originalSet),sum(!firstSet),sum(!secondSet),0);
+					classfreq <- c(sum(originalSet),sum(firstSet),sum(secondSet),sum(errorSet));
+					baseClass <- c(0,0,0,0);
 					cat("<",sum(originalSet),",",sum(firstSet),",",sum(secondSet),",",sum(errorSet),">") 
 					nselected <- character();
 					if (sum(errorSet) > minsize)
@@ -894,7 +921,6 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 					selectedfeatures <- c(selectedfeatures,nselected);
 				}
 				selectedfeatures <- unique(selectedfeatures);
-				classData[,Outcome] <- numeric(nrow(classData));
 				classData[,Outcome] <- 2*originalSet + outcomedata;
 				classData[,Outcome] <- as.factor(classData[,Outcome]);
 				if (is.null(classModel.Control))
@@ -905,7 +931,6 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 				{
 					classModel[[1]] <- do.call(classMethod,c(list(formula(paste(Outcome,"~.")),classData[,c(Outcome,selectedfeatures)]),classModel.Control));
 				}
-				classData[,Outcome] <- numeric(nrow(classData));
 				classData[,Outcome] <- 2*firstSet + outcomedata;
 				classData[,Outcome] <- as.factor(classData[,Outcome]);
 				if (is.null(classModel.Control))
@@ -918,7 +943,6 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 				}
 				if (n > 1)
 				{
-					classData[,Outcome] <- numeric(nrow(classData));
 					classData[,Outcome] <- 2*secondSet + outcomedata;
 					classData[,Outcome] <- as.factor(classData[,Outcome]);
 					if (is.null(classModel.Control))
@@ -931,7 +955,6 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 					}
 					if ( n > 2)
 					{
-						classData[,Outcome] <- numeric(nrow(classData));
 						classData[,Outcome] <- 2*errorSet + outcomedata;
 						classData[,Outcome] <- as.factor(classData[,Outcome]);
 						if (is.null(classModel.Control))
@@ -956,13 +979,18 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 			}
 		}
 	}
+	errorfreq <- errorfreq/nrow(data);
+	classfreq <- classfreq/nrow(data);
 	result <- list(original = orgModel,
 					alternativeModel = alternativeModel,
 					classModel = classModel,
 					accuracy = accuracy,
 					selectedfeatures = selectedfeatures,
 					hysteresis = hysteresis,
-					classSet = classData[,Outcome]
+					classSet = classData[,Outcome],
+					errorfreq = errorfreq,
+					classfreq = classfreq,
+					baseClass = baseClass
 					)
 	class(result) <- "FRESA_HLCM"
 	return(result);
@@ -1000,23 +1028,32 @@ predict.FRESA_HLCM <- function(object,...)
 			}
 		}
 		pmodel <- pLS;
-		nm <- length(object$alternativeModel)
+		nm <- length(object$alternativeModel);
 		for (n in 1:nm)
 		{
-			ptmp <- rpredict(object$alternativeModel[[n]],testData)
+			ptmp <- rpredict(object$alternativeModel[[n]],testData);
 			pmodel <- cbind(pmodel,ptmp);
 		}
-		nm <- length(object$classModel)
+		nm <- length(object$classModel);
 		for (i in 1:length(pLS))
 		{
-			wts <- prbclas[i,1];
-			pLS[i] <- 1.0*prbclas[i,1]*pmodel[i,1];
+			nwt <- object$classfreq[1]*(1.0 - prbclas[i,1]);
+			wts <- prbclas[i,1] + nwt;
+			pLS[i] <- prbclas[i,1]*pmodel[i,1] + nwt*(pmodel[i,1] < 0.5);
 			if (nm > 1)
 			{
 				for (n in 2:nm)
 				{
-					wts <- wts + prbclas[i,n];
-					pLS[i] <- pLS[i] + prbclas[i,n]*pmodel[i,n];
+					if ((object$baseClass[n] == 0) || (object$baseClass[n] > nm))
+					{
+						nwt <- object$classfreq[n]*(1.0 - prbclas[i,n]);
+					}
+					else
+					{
+						nwt <- object$classfreq[n]*prbclas[i,object$baseClass[n]];
+					}
+					wts <- wts + prbclas[i,n] + nwt;
+					pLS[i] <- pLS[i] + prbclas[i,n]*pmodel[i,n] + nwt*(pmodel[i,n] < 0.5);
 				}
 			}
 			if (wts > 0) pLS[i] <- pLS[i]/wts;
