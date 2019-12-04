@@ -55,7 +55,7 @@ KNN_method <- function(formula = formula, data=NULL, ...)
 	if (is.null(parameters$kn))
 	{
 		tb <- table(data[,baseformula[2]]);
-		kn <- 2*(as.integer(sqrt(min(tb)/2 + 0.5)) + 1;
+		kn <- 2*(as.integer(sqrt(min(tb))/2 + 0.5)) + 1;
 	}
 	else
 	{
