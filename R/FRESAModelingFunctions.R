@@ -773,23 +773,6 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 							nsecondSet <- (d2 <= (d1 + hysteresis));
 							changes <- changes + sum(nsecondSet != secondSet);
 							secondSet <- nsecondSet;
-							if (loops == 1) 
-							{
-								sselectedfeatures <- c(selectedfeatures,nselected);
-								nselected <- character();
-								if (!is.null(firstModel$selectedfeatures))
-								{
-									nselected <- firstModel$selectedfeatures;
-								}
-								else
-								{
-									if (!is.null(firstModel$bagging))
-									{
-										nselected <- names(firstModel$bagging$frequencyTable);
-									}
-								}
-								sselectedfeatures <- unique(c(sselectedfeatures,nselected));
-							}
 						}
 					}
 					else
@@ -818,16 +801,18 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 				{
 					firstPredict <- rpredict(firstModel,data);
 					secondPredict <- rpredict(secondModel,data);
+					d0 <-  abs(thePredict - outcomedata);
 					d1 <-  abs(firstPredict - outcomedata);
 					d2 <-  abs(secondPredict - outcomedata);
 					firstSet <- (d1 < 0.5);
 					secondSet <- (d2 < 0.5);
+					originalSet <- (d0 < 0.5);
 
 #					cat("[",sum(!firstSet),"]")
 					alternativeModel[[1]] <- firstModel;
 					alternativeModel[[2]] <- secondModel;
-					errorSet <- (d1 >= (0.5 - hysteresis)) & (d2 >= (0.5 - hysteresis));
-					cat("<",sum(firstSet),",",sum(secondSet),",",sum(errorSet),">") 
+					errorSet <- (d1 >= 0.5) & (d2 >= 0.5);
+					cat("<",sum(originalSet),",",sum(firstSet),",",sum(secondSet),",",sum(errorSet),">") 
 					nselected <- character();
 					if (sum(errorSet) > minsize)
 					{
@@ -852,7 +837,6 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 							{
 								n = 3;
 								alternativeModel[[3]] <- lastModel;
-								selectedfeatures <- nselected;
 							}
 						}
 						else
@@ -1003,24 +987,24 @@ predict.FRESA_HLCM <- function(object,...)
 				prbclas[,n] <- attributes(classPred)$probabilities[,"1"];
 			}
 		}
-		pmodel <- pLS;
+		pmodel <- 1*(pLS >= 0.5);
 		nm <- length(object$alternativeModel)
 		for (n in 1:nm)
 		{
-			ptmp <- rpredict(object$alternativeModel[[n]],testData)
+			ptmp <- 1*(rpredict(object$alternativeModel[[n]],testData) >= 0.5)
 			pmodel <- cbind(pmodel,ptmp);
 		}
 		nm <- length(object$classModel)
 		for (i in 1:length(pLS))
 		{
-			wts <- prbclas[i,1];
-			pLS[i] <- prbclas[i,1]*pmodel[i,1];
+			wts <- prbclas[i,1] + 0.5*(1.0 - prbclas[i,1]);
+			pLS[i] <- 1.0*prbclas[i,1]*pmodel[i,1] + 0.5*(1.0 - prbclas[i,1])*(1.0 - pmodel[i,1]);
 			if (nm > 1)
 			{
 				for (n in 2:nm)
 				{
-					wts <- wts + prbclas[i,n];
-					pLS[i] <- pLS[i] + prbclas[i,n]*pmodel[i,n];
+					wts <- wts + prbclas[i,n] + 0.5*(1.0 - prbclas[i,n]);
+					pLS[i] <- pLS[i] + prbclas[i,n]*pmodel[i,n] + 0.5*(1.0 - prbclas[i,n])*(1.0 - pmodel[i,n]);
 				}
 			}
 			pLS[i] <- pLS[i]/wts;
