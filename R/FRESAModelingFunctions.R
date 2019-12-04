@@ -55,7 +55,7 @@ KNN_method <- function(formula = formula, data=NULL, ...)
 	if (is.null(parameters$kn))
 	{
 		tb <- table(data[,baseformula[2]]);
-		kn <- 2*(as.integer((sqrt(min(tb)) + 1)/2 + 0.5)) + 1;
+		kn <- 2*(as.integer(sqrt(min(tb)/2 + 0.5)) + 1;
 	}
 	else
 	{
@@ -714,6 +714,7 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 		thePredict <- rpredict(orgModel,data);
 		outcomedata <- data[,Outcome];
 		correct <- ((thePredict >= 0.5) == (outcomedata > 0));
+		originalSet <- correct;
 		accuracy <- sum(correct)/nrow(data);
 		if (sum(1*(!correct),na.rm=TRUE) > minsize)
 		{
@@ -729,7 +730,6 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 			trueP <- (thePredict >= (0.5 - hysteresis)) & (outcomedata == 1);
 			trueN <- (thePredict <= (0.5 + hysteresis)) & (outcomedata == 0);
 			firstSet <- trueP | trueN;
-			originalSet <- (thePredict >= 0.5) == (outcomedata == 1);
 			if ((sum(falseP) >= (minsize/2)) && (sum(falseN) >= (minsize/2)))
 			{
 				loops <- 0;
@@ -820,8 +820,8 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 					secondPredict <- rpredict(secondModel,data);
 					d1 <-  abs(firstPredict - outcomedata);
 					d2 <-  abs(secondPredict - outcomedata);
-					firstSet <- (d1 < 0.5) & (d1 <= (d2 + hysteresis));
-					secondSet <- (d2 < 0.5) & (d2 <= (d1 + hysteresis));
+					firstSet <- (d1 < 0.5);
+					secondSet <- (d2 < 0.5);
 
 #					cat("[",sum(!firstSet),"]")
 					alternativeModel[[1]] <- firstModel;
@@ -1013,9 +1013,9 @@ predict.FRESA_HLCM <- function(object,...)
 		nm <- length(object$classModel)
 		for (i in 1:length(pLS))
 		{
-			pLS[i] <- 0;
-			wts <- 0;
-			for (n in 1:nm)
+			wts <- prbclas[i,1];
+			pLS[i] <- prbclas[i,1]*pmodel[i,1];
+			for (n in 2:nm)
 			{
 				wts <- wts + prbclas[i,n];
 				pLS[i] <- pLS[i] + prbclas[i,n]*pmodel[i,n];
