@@ -113,6 +113,7 @@ predict.FRESAKNN <- function(object, ...)
 	if (inherits(knnclass, "try-error")) knnclass <- numeric(nrow(testframe));
 	if (length(table(object$classData))==2)
 	{
+		classk <- knnclass;
 		prop <- attributes(knnclass);
 		knnclass <- abs(prop$prob - 1*(knnclass == "0"))
 		if (object$kn > 3)
@@ -123,6 +124,7 @@ predict.FRESAKNN <- function(object, ...)
 			prop_2 <- attributes(knnclass_2);
 			knnclass <- (knnclass + 0.5*abs(prop_1$prob - 1*(knnclass_1 == "0")) + 0.5*abs(prop_2$prob - 1*(knnclass_2 == "0")))/2.0;
 		}
+		attr(knnclass,"class") <- as.character(classk);
 	}
 	else
 	{
@@ -139,8 +141,8 @@ predict.FRESAKNN <- function(object, ...)
 			testclass_2 <- as.character(knnclass_1) == as.character(knnclass)
 			prop[testclass_2] <- 0.75*prop[testclass_2] + 0.25*prop_2[testclass_2];
 #			prop[!testclass_2] <- 0.75*prop[!testclass_2] + 0.25*(1.0 - prop_2[!testclass_2]);
-			attr(knnclass,"prob") <- prop;
 		}
+		attr(knnclass,"prob") <- prop;
 	}
 	return(knnclass);
 }
@@ -629,12 +631,12 @@ HLCM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis = 0
 				}
 #				cat("<",nrow(nextdata),">")
 			}
-			if (n>0)
+			if (n > 0)
 			{
 				for (i in 1:n)
 				{
-					classData[,Outcome] <- numeric(nrow(classData));
-					classData[correctSet[[i]],Outcome] <- 1;
+					classData[,Outcome] <- data[,Outcome];
+					classData[correctSet[[i]],Outcome] <- classData[correctSet[[i]],Outcome] + 2;
 					if (is.null(classModel.Control))
 					{
 						classModel[[i]] <- classMethod(formula(paste(Outcome,"~.")),classData[,c(Outcome,selectedfeatures)]);
@@ -893,7 +895,7 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 				}
 				selectedfeatures <- unique(selectedfeatures);
 				classData[,Outcome] <- numeric(nrow(classData));
-				classData[originalSet,Outcome] <- 1;
+				classData[,Outcome] <- 2*originalSet + outcomedata;
 				classData[,Outcome] <- as.factor(classData[,Outcome]);
 				if (is.null(classModel.Control))
 				{
@@ -904,7 +906,7 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 					classModel[[1]] <- do.call(classMethod,c(list(formula(paste(Outcome,"~.")),classData[,c(Outcome,selectedfeatures)]),classModel.Control));
 				}
 				classData[,Outcome] <- numeric(nrow(classData));
-				classData[firstSet,Outcome] <- 1;
+				classData[,Outcome] <- 2*firstSet + outcomedata;
 				classData[,Outcome] <- as.factor(classData[,Outcome]);
 				if (is.null(classModel.Control))
 				{
@@ -917,7 +919,7 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 				if (n > 1)
 				{
 					classData[,Outcome] <- numeric(nrow(classData));
-					classData[secondSet,Outcome] <- 1;
+					classData[,Outcome] <- 2*secondSet + outcomedata;
 					classData[,Outcome] <- as.factor(classData[,Outcome]);
 					if (is.null(classModel.Control))
 					{
@@ -930,7 +932,7 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 					if ( n > 2)
 					{
 						classData[,Outcome] <- numeric(nrow(classData));
-						classData[errorSet,Outcome] <- 1;
+						classData[,Outcome] <- 2*errorSet + outcomedata;
 						classData[,Outcome] <- as.factor(classData[,Outcome]);
 						if (is.null(classModel.Control))
 						{
@@ -979,35 +981,45 @@ predict.FRESA_HLCM <- function(object,...)
 		{
 			if (class(object$classModel[[n]]) == "FRESAKNN")
 			{
-				prbclas[,n] <- predict(object$classModel[[n]],testData);
+				classPred <- predict(object$classModel[[n]],testData);
+				if (class(classPred) == "factor")
+				{
+					nclass <- as.numeric(as.character(classPred));
+					prbclas[,n] <- attributes(classPred)$prob*(nclass > 1) + (1.0 - attributes(classPred)$prob)*(nclass < 2);
+				}
+				else
+				{
+					nclass <- as.numeric(attributes(classPred)$class);
+					prbclas[,n] <- classPred*(nclass > 1) + classPred*(nclass < 2);
+				}
 			}
 			else
 			{
 				classPred <- predict(object$classModel[[n]],testData,probability = TRUE);
-				prbclas[,n] <- attributes(classPred)$probabilities[,"1"];
+				prbclas[,n] <- max(attributes(classPred)$probabilities[,"3"],attributes(classPred)$probabilities[,"2"]) ;
 			}
 		}
-		pmodel <- 1*(pLS >= 0.5);
+		pmodel <- pLS;
 		nm <- length(object$alternativeModel)
 		for (n in 1:nm)
 		{
-			ptmp <- 1*(rpredict(object$alternativeModel[[n]],testData) >= 0.5)
+			ptmp <- rpredict(object$alternativeModel[[n]],testData)
 			pmodel <- cbind(pmodel,ptmp);
 		}
 		nm <- length(object$classModel)
 		for (i in 1:length(pLS))
 		{
-			wts <- prbclas[i,1] + 0.5*(1.0 - prbclas[i,1]);
-			pLS[i] <- 1.0*prbclas[i,1]*pmodel[i,1] + 0.5*(1.0 - prbclas[i,1])*(1.0 - pmodel[i,1]);
+			wts <- prbclas[i,1];
+			pLS[i] <- 1.0*prbclas[i,1]*pmodel[i,1];
 			if (nm > 1)
 			{
 				for (n in 2:nm)
 				{
-					wts <- wts + prbclas[i,n] + 0.5*(1.0 - prbclas[i,n]);
-					pLS[i] <- pLS[i] + prbclas[i,n]*pmodel[i,n] + 0.5*(1.0 - prbclas[i,n])*(1.0 - pmodel[i,n]);
+					wts <- wts + prbclas[i,n];
+					pLS[i] <- pLS[i] + prbclas[i,n]*pmodel[i,n];
 				}
 			}
-			pLS[i] <- pLS[i]/wts;
+			if (wts > 0) pLS[i] <- pLS[i]/wts;
 		}
 		attr(pLS,"probabilities") <- prbclas;
 	}
