@@ -1015,10 +1015,13 @@ predict.FRESA_HLCM <- function(object,...)
 		{
 			wts <- prbclas[i,1];
 			pLS[i] <- prbclas[i,1]*pmodel[i,1];
-			for (n in 2:nm)
+			if (nm > 1)
 			{
-				wts <- wts + prbclas[i,n];
-				pLS[i] <- pLS[i] + prbclas[i,n]*pmodel[i,n];
+				for (n in 2:nm)
+				{
+					wts <- wts + prbclas[i,n];
+					pLS[i] <- pLS[i] + prbclas[i,n]*pmodel[i,n];
+				}
 			}
 			pLS[i] <- pLS[i]/wts;
 		}
