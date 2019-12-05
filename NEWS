@@ -2,7 +2,7 @@ Changes from FRESA.CAD 3.1.1 to FRESA.CAD version 3.3.0
 	Enhancements:
 		Benchmarking Survival Models: CoxBenchmark
 		Clustering algorithms: GMVECluster and clusterISODATA
-		Boosting BSWiMS: BOOST_BSWiMS
+		Latent Class Classification: HLCM and HLCM_EM
 		Hybrid Learning methods: ClustClass and GMVEBSWiMS
 		Longitudinal Features: trajectoriesPolyFeatures
 		Train prediction Wrappers for: BeSS and glmnet objects

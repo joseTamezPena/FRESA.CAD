@@ -1012,19 +1012,28 @@ predict.FRESA_HLCM <- function(object,...)
 				classPred <- predict(object$classModel[[n]],testData);
 				if (class(classPred) == "factor")
 				{
+#					print(table(object$classModel[[n]]$classData))
+					object$classModel[[n]]$classData <- as.integer(as.numeric(as.character(object$classModel[[n]]$classData))/2);
+#					print(table(object$classModel[[n]]$classData))
+					classPred2 <- as.numeric(predict(object$classModel[[n]],testData));
+#					print(table(classPred2))
 					nclass <- as.numeric(as.character(classPred));
 					prbclas[,n] <- attributes(classPred)$prob*(nclass > 1) + (1.0 - attributes(classPred)$prob)*(nclass < 2);
+					condone <- (classPred2 >= 0.5) & (classPred2 > prbclas[,n]);
+					prbclas[condone,n] <- classPred2[condone];
+					condtwo <- (classPred2 < 0.5) & (classPred2 < prbclas[,n]);
+					prbclas[condtwo,n] <- classPred2[condtwo];
 				}
 				else
 				{
 					nclass <- as.numeric(attributes(classPred)$class);
-					prbclas[,n] <- classPred*(nclass > 1) + classPred*(nclass < 2);
+					prbclas[,n] <- classPred*(nclass == 3) + (1.0 - classPred)*(nclass == 2);
 				}
 			}
 			else
 			{
 				classPred <- predict(object$classModel[[n]],testData,probability = TRUE);
-				prbclas[,n] <- max(attributes(classPred)$probabilities[,"3"],attributes(classPred)$probabilities[,"2"]) ;
+				prbclas[,n] <- attributes(classPred)$probabilities[,"3"] + attributes(classPred)$probabilities[,"2"];
 			}
 		}
 		pmodel <- pLS;
