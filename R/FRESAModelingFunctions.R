@@ -1007,7 +1007,7 @@ predict.FRESA_HLCM <- function(object,...)
 		prbclas <- matrix(0,nrow=nrow(testData),ncol=length(object$classModel));
 		for (n in 1:length(object$classModel))
 		{
-			if (class(object$classModel[[n]]) == "FRESAKNN")
+			if (class(object$classModel[[n]])[1] == "FRESAKNN")
 			{
 				classPred <- predict(object$classModel[[n]],testData);
 				if (class(classPred) == "factor")
@@ -1033,7 +1033,16 @@ predict.FRESA_HLCM <- function(object,...)
 			else
 			{
 				classPred <- predict(object$classModel[[n]],testData,probability = TRUE);
-				prbclas[,n] <- attributes(classPred)$probabilities[,"3"] + attributes(classPred)$probabilities[,"2"];
+				classnames <- colnames(attributes(classPred)$probabilities)
+				prbclas[,n] <- 0;
+				if ("2" %in% classnames)
+				{
+					prbclas[,n] <- attributes(classPred)$probabilities[,"2"];
+				}
+				if ("3" %in% classnames)
+				{
+					prbclas[,n] <- prbclas[,n] + attributes(classPred)$probabilities[,"3"];
+				}
 			}
 		}
 		pmodel <- pLS;
