@@ -882,9 +882,22 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 				if (sumsecond > minsize)
 				{
 					n <- 2;
+					alternativeModel[[1]] <- firstModel;
 					alternativeModel[[2]] <- sum(data[secondSet,Outcome])/sumsecond;
 					cat("{",sumsecond,"}")
-					errorSet <- numeric(nrow(data)) == 1;
+					firstPredict <- rpredict(firstModel,data);
+					secondPredict <- rpredict(secondModel,data);
+					d0 <-  abs(thePredict - outcomedata);
+					d1 <-  abs(firstPredict - outcomedata);
+					d2 <-  abs(secondPredict - outcomedata);
+					firstSet <- (d1 < 0.5);
+					secondSet <- (d2 < 0.5);
+					originalSet <- (d0 < 0.5);
+					errorSet <- (d1 >= 0.5) & (d2 >= 0.5);
+					errorfreq <- c(sum(!originalSet),sum(!firstSet),sum(!secondSet),0);
+					classfreq <- c(sum(originalSet),sum(firstSet),sum(secondSet),sum(errorSet));
+					baseClass <- c(0,0,0,0);
+					cat("<<",sum(originalSet),",",sum(firstSet),",",sum(secondSet),",",sum(errorSet),">>") 
 				}
 			}
 			if (n > 0)
