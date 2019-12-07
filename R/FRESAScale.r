@@ -86,8 +86,11 @@ FRESAScale <- function(data,refFrame=NULL,method=c("Norm","Order","OrderLogit","
 				data <- rankInverseNormalDataFrame(usedFeatures,data,refFrame,strata); 			
 			}
 		)
-	names(refMean) <- usedFeatures;
-	names(refDisp) <- usedFeatures;
+	if (!is.null(refMean))
+	{	
+		names(refMean) <- usedFeatures;
+		names(refDisp) <- usedFeatures;
+	}
 
 	result <- list(scaledData=data,refMean=refMean,refDisp=refDisp,strata=strata,method=method);
 	return (result);
