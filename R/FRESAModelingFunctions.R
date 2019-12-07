@@ -884,6 +884,7 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 					n <- 2;
 					alternativeModel[[2]] <- sum(data[secondSet,Outcome])/sumsecond;
 					cat("{",sumsecond,"}")
+					errorSet <- numeric(nrow(data)) == 1;
 				}
 			}
 			if (n > 0)
