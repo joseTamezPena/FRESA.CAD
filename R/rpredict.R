@@ -12,7 +12,7 @@ rpredict <-	function(currentModel,DataSet,asFactor=FALSE,classLen=2,...)
 	}
 	if (asFactor && (classLen == 2))
 	{
-		if ( (fclass == "randomForest") || (fclass == "rpart") ) 
+		if ( (fclass == "randomForest") || (fclass == "rpart")  || (fclass == "train.formula")) 
 		{
 			pred <- try(predict(currentModel,DataSet,type="prob"))[,"1"];
 		}
