@@ -357,7 +357,14 @@ predict.FRESA_BESS <- function(object,...)
 			colnames(newdata) <- c("y",paste("xbest",object$selectedfeatures,sep=""))
 			object$fit$bestmodel$formula <- formula(paste("y~",paste(colnames(newdata)[-1],collapse = " + ")))
 			object$fit$bestmodel$terms <- terms(object$fit$bestmodel$formula)
-			pLS <- predict(object$fit$bestmodel,newdata,type=type);
+			if (class(object$fit$bestmodel) != "coxph")
+			{
+				pLS <- predict(object$fit$bestmodel,newdata,type=type);
+			}
+			else
+			{
+				pLS <- predict(object$fit$bestmodel,newdata);
+			}
 		}
 	}
 	if (is.null(pLS))
@@ -463,16 +470,23 @@ predict.FRESA_NAIVEBAYES <- function(object,...)
 		testData <- testData[,!(colnames(testData) %in% object$outcome)];
 	}
 	pLS <- as.numeric(as.character(predict(object$fit,testData)));
-	if (object$numClases == 2)
+	if (is.null(parameters$probability))
 	{
-		prop <- predict(object$fit,testData,type = "prob");
-		pLS <- prop[,"1"];
-		pLS[is.nan(pLS)] <- 0.5;
-		pLS[is.na(pLS)] <- 0.5;
+		if (object$numClases == 2)
+		{
+			prop <- predict(object$fit,testData,type = "prob");
+			pLS <- prop[,"1"];
+			pLS[is.nan(pLS)] <- 0.5;
+			pLS[is.na(pLS)] <- 0.5;
+		}
+		else
+		{
+			attr(pLS,"prob") <- predict(object$fit,testData,type = "prob");
+		}
 	}
 	else
 	{
-		attr(pLS,"prob") <- predict(object$fit,testData,type = "prob");
+		attr(pLS,"probabilities") <- predict(object$fit,testData,type = "prob");
 	}
 	if (!is.null(object$pcaobj))
 	{
