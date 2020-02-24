@@ -51,7 +51,9 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 	robCov <- list();
 	pvals <- numeric();
 	## the list of possible volume fractions
-	alphalist <- c(0.025,0.050,0.075,0.100,0.150,0.250,0.375,0.500);
+	alphalist <- c(0.050,0.100,0.200,0.300,0.400,0.500,0.600,0.700,0.800,0.900,0.950);
+	alphalist2 <- c(0.10,0.25,0.50,0.75,0.90);
+	hlist <- as.integer(alphalist*ndata+0.5);
 	p1 <- p + 1;
 	minpvalThr <- 0.001;
 	globalcov <- cov(intdata);
@@ -105,7 +107,6 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 			if (k == 1)
 			{
 				thedataCpy <- intdata;
-				globalcov <- 0.75*globalcov+0.25*diag(diag(cov(intdata)));
 			}
 		}
 
@@ -185,57 +186,71 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 			Ellipsoidvol <- numeric(JClusters);
 			cat("\\");
 			bcorrection <- 1;
-			for ( alpha in alphalist )
+			for (h in hlist)
 			{
-				h <- as.integer(alpha*ndata+0.5);
-				if (h >= p1) 
+				if ((h >= p1) && (h < andata))
 				{
+					alpha <- h/andata;
 					for (i in 1:JClusters)
 					{
 						Ellipsoidvol[i] <- mdistlist[[i]][h]*detcovmat[i];
 					}
 					minEllipVol <- which.min(Ellipsoidvol)[1];
 					mincentroid <- colmean[[minEllipVol]];
-					minCov <- covmat[[minEllipVol]];
-					mdist <- mdistlist[[minEllipVol]];
-					correction <- mdist[h]/qchisq(alpha,p);
-					minCov <- minCov*correction;
-					mdist <- mahalanobis(intdata,mincentroid,minCov);
-					inside <- (mdist < chithreshold);
-					if (!is.na(sum(inside)))
+					minCovA <- covmat[[minEllipVol]];
+					mdistA <- mdistlist[[minEllipVol]];
+					for ( palpha in alphalist2 )
 					{
-						ptsinside <- sum(inside)
-						if (ptsinside >= h0)
+						if (palpha >= alpha)
 						{
-							auxdata <- intdata[inside,];
-							newCentroid <- apply(auxdata,2,mean);
-							newCovariance <- cov(auxdata);
-							distanceupdate <- mahalanobis(auxdata,newCentroid,newCovariance);
-							dstamples <- ptsinside;
-							if (dstamples > 100)
-							{	
-								dstamples <- 100; # no more than 100 samples for p-value estimation
-								distanceupdate <- distanceupdate[sample(nrow(auxdata),dstamples)];
-							}
-							dsample <- p.threshold*( 1:dstamples - 0.5)/dstamples;
-							distanceupdate <- distanceupdate[order(distanceupdate)];
-							correction <- distanceupdate[dstamples]/chithreshold;
-							disTheoretical <- qchisq(dsample,p);
-							kst <- ks.test(disTheoretical,distanceupdate/correction + rnorm(dstamples,0,1e-10));
-							if ((kst$statistic < 0.5*minD) || (kst$p.value > maxp))
+							correction <- mdistA[h]/qchisq(palpha,p);
+							minCov <- minCovA*correction;
+#							cat("(",minEllipVol,":",h,":",palpha,":",correction,":",det(minCov),")");
+							mdist <- try(mahalanobis(intdata,mincentroid,minCov));
+							if (!inherits(mdist, "try-error"))
 							{
-#								plot(disTheoretical,distanceupdate);
-								 bcorrection <- correction;
-								 bestmean[[k]] <- newCentroid;
-								 bestCov[[k]] <- newCovariance*correction;
-								 minD <- kst$statistic;
-								 pvals[k] <- kst$p.value;
-								 atalpha <- alpha;
-								 if (maxp < kst$p.value) 
-								 {
-									maxp <- kst$p.value;
-								 }
-								 optsinside <- ptsinside;
+								inside <- (mdist < chithreshold);
+								if (!is.na(sum(inside)))
+								{
+									ptsinside <- sum(inside)
+									if (ptsinside >= h0)
+									{
+										auxdata <- intdata[inside,];
+										newCentroid <- apply(auxdata,2,mean);
+										newCovariance <- cov(auxdata);
+										distanceupdate <- try(mahalanobis(auxdata,newCentroid,newCovariance));
+										if (!inherits(distanceupdate, "try-error"))
+										{
+											dstamples <- ptsinside;
+											if (dstamples > 100)
+											{	
+												dstamples <- 100; # no more than 100 samples for p-value estimation
+												distanceupdate <- distanceupdate[sample(nrow(auxdata),dstamples)];
+											}
+											dsample <- p.threshold*( 1:dstamples - 0.5)/dstamples;
+											distanceupdate <- distanceupdate[order(distanceupdate)];
+											correction <- distanceupdate[dstamples]/chithreshold;
+											disTheoretical <- qchisq(dsample,p);
+											kst <- ks.test(disTheoretical,distanceupdate/correction + rnorm(dstamples,0,1e-10));
+#											if ((kst$statistic < 0.25*minD) || (kst$p.value > maxp))
+											if (kst$p.value > maxp)
+											{
+				#								plot(disTheoretical,distanceupdate);
+												 bcorrection <- correction;
+												 bestmean[[k]] <- newCentroid;
+												 bestCov[[k]] <- newCovariance*correction;
+												 minD <- kst$statistic;
+												 pvals[k] <- kst$p.value;
+												 atalpha <- palpha;
+												 if (maxp < kst$p.value) 
+												 {
+													maxp <- kst$p.value;
+												 }
+												 optsinside <- ptsinside;
+											}
+										}
+									}
+								}
 							}
 						}
 					}

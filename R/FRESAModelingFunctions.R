@@ -1159,7 +1159,7 @@ predict.FRESA_FILTERFIT <- function(object,...)
 	return (pLS);
 }
 
-ClustClass <- function(formula = formula, data=NULL, filtermethod=univariate_Wilcoxon, clustermethod=GMVECluster, classmethod=LASSO_1SE,filtermethod.control=list(pvalue=0.1,limit=0.1),clustermethod.control=list(p.threshold = 0.90,p.samplingthreshold = 0.5),classmethod.control=list(family = "binomial"))
+ClustClass <- function(formula = formula, data=NULL, filtermethod=univariate_Wilcoxon, clustermethod=GMVECluster, classmethod=LASSO_1SE,filtermethod.control=list(pvalue=0.1,limit=0.1),clustermethod.control=list(p.threshold = 0.95,p.samplingthreshold = 0.5),classmethod.control=list(family = "binomial"))
 {
 	if (class(formula) == "character")
 	{
@@ -1261,7 +1261,7 @@ predict.CLUSTER_CLASS <- function(object,...)
 	return (pLS);
 }
 
-GMVEBSWiMS <- function(formula = formula, data=NULL, GMVE.control = list(p.threshold = 0.90,p.samplingthreshold = 0.5), ...)
+GMVEBSWiMS <- function(formula = formula, data=NULL, GMVE.control = list(p.threshold = 0.95,p.samplingthreshold = 0.5), ...)
 {
 	if (class(formula) == "character")
 	{
