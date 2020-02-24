@@ -576,7 +576,7 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
   medianSurvTrain <- NULL;
   jaccard.sm <- NULL;
   featureFrequency <- NULL;
-  if (!is.null(testPredictions))
+  if ((!is.null(testPredictions) && length(rownames(testPredictions)) > 3 ))
   {
     if (ncol(testPredictions) == 3)
     {
