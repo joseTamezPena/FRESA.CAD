@@ -1110,7 +1110,7 @@ predict.FRESA_HLCM <- function(object,...)
 }
 
 
-filteredFit <- function(formula = formula, data=NULL, filtermethod=univariate_Wilcoxon, fitmethod=e1071::svm,filtermethod.control=list(pvalue=0.05,limit=0.1),...)
+filteredFit <- function(formula = formula, data=NULL, filtermethod=univariate_Wilcoxon, fitmethod=e1071::svm,filtermethod.control=list(pvalue=0.10,limit=0.1),...)
 {
 	if (class(formula) == "character")
 	{
@@ -1159,7 +1159,7 @@ predict.FRESA_FILTERFIT <- function(object,...)
 	return (pLS);
 }
 
-ClustClass <- function(formula = formula, data=NULL, filtermethod=univariate_Wilcoxon, clustermethod=NULL, classmethod=LASSO_1SE,filtermethod.control=list(pvalue=0.05,limit=0.1),clustermethod.control=NULL,classmethod.control=list(family = "binomial"))
+ClustClass <- function(formula = formula, data=NULL, filtermethod=univariate_Wilcoxon, clustermethod=GMVECluster, classmethod=LASSO_1SE,filtermethod.control=list(pvalue=0.1,limit=0.1),clustermethod.control=list(p.threshold = 0.90,p.samplingthreshold = 0.5),classmethod.control=list(family = "binomial"))
 {
 	if (class(formula) == "character")
 	{
@@ -1261,7 +1261,7 @@ predict.CLUSTER_CLASS <- function(object,...)
 	return (pLS);
 }
 
-GMVEBSWiMS <- function(formula = formula, data=NULL, GMVE.control = list(p.threshold = 0.85,p.samplingthreshold = 0.5), ...)
+GMVEBSWiMS <- function(formula = formula, data=NULL, GMVE.control = list(p.threshold = 0.90,p.samplingthreshold = 0.5), ...)
 {
 	if (class(formula) == "character")
 	{
@@ -1288,23 +1288,18 @@ GMVEBSWiMS <- function(formula = formula, data=NULL, GMVE.control = list(p.thres
 	fm <- NULL;
 	baseClass <- BSWiMS.model(formula,data,...);
 #	barplot(baseClass$bagging$frequencyTable);
-	error <- sum(1*(baseClass$bagging$bagged.model$linear.predictors > 0.5) != outcomedata)/totsamples;
+	error <- sum(1*(baseClass$bagging$bagged.model$linear.predictors > 0.0) != outcomedata)/totsamples;
+#	cat(error)
 
 	models <- list();
 	selectedfeatures <- names(baseClass$bagging$frequencyTable);
+	fm <- unique(c(selectedfeatures,names(univariate_Wilcoxon(data,Outcome,pvalue=0.05,limit=0.1))));
+#			print(fm)
+	fm <- correlated_Remove(data,fm,thr=0.95);
+	selectedfeatures <- fm;
 	
-	if (length(baseClass$bagging$frequencyTable) > 0)
-	{
-		if (length(baseClass$BSWiMS.model$back.model$coefficients) >= 2)
-		{
-			fm <- names(baseClass$BSWiMS.model$back.model$coefficients)[-1];
-		}
-		else
-		{
-			fm <- unique(c(selectedfeatures,as.character(baseClass$univariate$Name)[1:2]));
-			fm <- correlated_Remove(data,fm,thr=0.85);
-		}
-		
+	if (length(fm) > 0)
+	{		
 		if (length(fm) > (totsamples/10)) # we will keep the number of selected features small
 		{
 			fm <- fm[1:(totsamples/10)];

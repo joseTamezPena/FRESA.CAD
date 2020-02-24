@@ -56,6 +56,7 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 	minpvalThr <- 0.001;
 	globalcov <- cov(intdata);
 	vvar <- diag(globalcov);
+	globalcov <- diag(vvar);
 	minvvar <- vvar/(ndata*ndata);
 	gmincov <- diag(minvvar);
 	minminVar <- det(gmincov);
@@ -84,7 +85,7 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 		detcovmat <- numeric();
 		JClusters <- 0;
 		bestmean[[k]] <- apply(intdata,2,mean);
-		bestCov[[k]] <- cov(intdata);
+		bestCov[[k]] <- diag(diag(cov(intdata)));
 		robCov[[k]] <- list(centroid=bestmean[[k]],cov=bestCov[[k]]);
 
 		if (jitter)
@@ -104,7 +105,7 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 			if (k == 1)
 			{
 				thedataCpy <- intdata;
-				globalcov <- 0.75*globalcov+0.25*cov(intdata);
+				globalcov <- 0.75*globalcov+0.25*diag(diag(cov(intdata)));
 			}
 		}
 
