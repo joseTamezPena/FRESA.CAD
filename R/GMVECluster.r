@@ -75,7 +75,7 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 		
 		chithreshold <- qchisq(p.threshold,p);
 		chithreshold2 <- qchisq(p.threshold/5,p);
-		chithreshold3 <- qchisq(p.threshold/2,p);
+		chithreshold3 <- qchisq(0.75*p.threshold,p);
 		chithreshold_out <- qchisq(0.5*(0.999+p.threshold),p);
 
 		k <- k + 1;
