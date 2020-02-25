@@ -1159,7 +1159,7 @@ predict.FRESA_FILTERFIT <- function(object,...)
 	return (pLS);
 }
 
-ClustClass <- function(formula = formula, data=NULL, filtermethod=univariate_Wilcoxon, clustermethod=GMVECluster, classmethod=LASSO_1SE,filtermethod.control=list(pvalue=0.1,limit=0.1),clustermethod.control=list(p.threshold = 0.95,p.samplingthreshold = 0.5),classmethod.control=list(family = "binomial"))
+ClustClass <- function(formula = formula, data=NULL, filtermethod=univariate_Wilcoxon, clustermethod=GMVECluster, classmethod=LASSO_1SE,filtermethod.control=list(pvalue=0.1,limit=10),clustermethod.control=list(p.threshold = 0.95,p.samplingthreshold = 0.5),classmethod.control=list(family = "binomial"))
 {
 	if (class(formula) == "character")
 	{
@@ -1293,20 +1293,15 @@ GMVEBSWiMS <- function(formula = formula, data=NULL, GMVE.control = list(p.thres
 
 	models <- list();
 	selectedfeatures <- names(baseClass$bagging$frequencyTable);
-	fm <- unique(c(selectedfeatures,names(univariate_Wilcoxon(data,Outcome,pvalue=0.05,limit=0.1))));
+	fm <- selectedfeatures
 #			print(fm)
-	fm <- correlated_Remove(data,fm,thr=0.95);
-	selectedfeatures <- fm;
-	
 	if (length(fm) > 0)
 	{		
-		if (length(fm) > (totsamples/10)) # we will keep the number of selected features small
-		{
-			fm <- fm[1:(totsamples/10)];
-		}
-#		print(fm)
 		if (error > 0.025) # more than 2.5% of error
 		{
+			fm <- names(univariate_Wilcoxon(data,Outcome,pvalue=0.05,limit=10));
+			selectedfeatures <- unique(fm,selectedfeatures);
+	#		print(fm)
 			if (is.null(GMVE.control))
 			{
 				clus <- GMVECluster(as.data.frame(data[,fm]));
@@ -1325,6 +1320,8 @@ GMVEBSWiMS <- function(formula = formula, data=NULL, GMVE.control = list(p.thres
 					if (min(tb[i,]) > minSamples)
 					{
 							models[[i]] <- BSWiMS.model(formula,subset(data,clus$cluster == classlabels[i]),...);
+							selectedfeatures <- unique(selectedfeatures,names(models[[i]]$bagging$frequencyTable));
+
 					}
 					else
 					{
