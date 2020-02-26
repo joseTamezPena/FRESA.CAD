@@ -36,6 +36,7 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 	ndata <- nrow(intdata);
 	ClusterLabels <- numeric(ndata);
 	p <- ncol(intdata);
+	proot <- 1.0/(2.0*p);
 	if (ndata > samples)
 	{
 		intdata <- dataset[sample(ndata,samples),]
@@ -52,7 +53,7 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 	pvals <- numeric();
 	## the list of possible volume fractions
 	alphalist <- c(0.050,0.100,0.200,0.300,0.400,0.500,0.600,0.700,0.800,0.900,0.950);
-	alphalist2 <- c(0.10,0.25,0.50,0.75,0.90);
+	alphalist2 <- c(0.50,0.60,0.70,0.80,0.90);
 	hlist <- as.integer(alphalist*ndata+0.5);
 	p1 <- p + 1;
 	minpvalThr <- 0.001;
@@ -133,7 +134,7 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 			for (i in sampling.rate*(1:as.integer(andata/sampling.rate)))
 			{
 				datao <- as.numeric(auxdata[i,]);
-#				names(datao) <- colnames(auxdata);
+				names(datao) <- colnames(auxdata);
 #				jmean <- matrix(rep(datao,p1),ncol=p,nrow=p1,byrow=TRUE);
 				smdist <- mahalanobis(intdata,datao,globalcov);
 				qdata <- intdata[(smdist > 0) & (smdist < samplingthreshold),];
@@ -159,8 +160,12 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 										mdistlist[[JClusters]] <- mdist[order(mdist)];
 										colmean[[JClusters]] <- jmean;
 										covmat[[JClusters]] <- jcov;
-										detcovmat[JClusters] <- jcovDet^(1.0/(2.0*p));
+										detcovmat[JClusters] <- jcovDet^proot;
 									}
+								}
+								else
+								{
+									cat("|",jcovDet,"|")
 								}
 							}
 						}						
@@ -222,9 +227,9 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 										if (!inherits(distanceupdate, "try-error"))
 										{
 											dstamples <- ptsinside;
-											if (dstamples > 100)
+											if (dstamples > 250)
 											{	
-												dstamples <- 100; # no more than 100 samples for p-value estimation
+												dstamples <- 250; # no more than 100 samples for p-value estimation
 												distanceupdate <- distanceupdate[sample(nrow(auxdata),dstamples)];
 											}
 											dsample <- p.threshold*( 1:dstamples - 0.5)/dstamples;
@@ -232,20 +237,23 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 											correction <- distanceupdate[dstamples]/chithreshold;
 											disTheoretical <- qchisq(dsample,p);
 											kst <- ks.test(disTheoretical,distanceupdate/correction + rnorm(dstamples,0,1e-10));
-#											if ((kst$statistic < 0.25*minD) || (kst$p.value > maxp))
-											if (kst$p.value > maxp)
+											if ((kst$statistic < 0.75*minD) || (kst$p.value > maxp))
+#											if (kst$p.value > maxp)
 											{
 				#								plot(disTheoretical,distanceupdate);
 												 bcorrection <- correction;
 												 bestmean[[k]] <- newCentroid;
 												 bestCov[[k]] <- newCovariance*correction;
-												 minD <- kst$statistic;
 												 pvals[k] <- kst$p.value;
-												 atalpha <- palpha;
-												 if (maxp < kst$p.value) 
+												 if (minD > kst$statistic) 
+												 {
+													minD <- kst$statistic;
+												 }
+												 if (kst$p.value > maxp)
 												 {
 													maxp <- kst$p.value;
 												 }
+												 atalpha <- palpha;
 												 optsinside <- ptsinside;
 											}
 										}
