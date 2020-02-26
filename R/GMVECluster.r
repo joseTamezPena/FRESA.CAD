@@ -305,7 +305,7 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 					robCov[[k]] <- list(centroid=bestmean[[k]],cov=bestCov[[k]]);
 #					cat(sprintf("|(%4.2f) S:%4d|",correction,nrow(cludata)));
 					mdist <- mahalanobis(intdata,bestmean[[k]],bestCov[[k]]);
-					inside <- (mdist < chithreshold);
+					inside <- (mdist < chithreshold3);
 					ndata <- sum(!inside);
 					if (ndata >= h0)
 					{
