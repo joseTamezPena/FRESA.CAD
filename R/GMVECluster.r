@@ -133,8 +133,8 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 			for (i in sampling.rate*(1:as.integer(andata/sampling.rate)))
 			{
 				datao <- as.numeric(auxdata[i,]);
-				names(datao) <- colnames(auxdata);
-				jmean <- matrix(datao,ncol=p,nrow=p1,byrow=TRUE);
+#				names(datao) <- colnames(auxdata);
+#				jmean <- matrix(rep(datao,p1),ncol=p,nrow=p1,byrow=TRUE);
 				smdist <- mahalanobis(intdata,datao,globalcov);
 				qdata <- intdata[(smdist > 0) & (smdist < samplingthreshold),];
 	#			print(nrow(qdata))
@@ -144,19 +144,20 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 					{
 						for (j in 1:tryouts)
 						{
-							sdata <-  as.matrix(rbind(datao,qdata[sample(nrow(qdata),p),])) - jmean;
-							jcov <- (t(sdata) %*% sdata)/p;
+							sdata <-  qdata[sample(nrow(qdata),p1),];
+							jmean <- apply(sdata,2,mean);
+							jcov <- cov(sdata);
 							jcovDet <- try(det(jcov));
 							if ( !inherits(jcovDet, "try-error") && !is.nan(jcovDet) && !is.na(jcovDet) )
 							{
 								if (jcovDet > minminVar)
 								{
-									mdist <- try(mahalanobis(intdata,datao,jcov));
+									mdist <- try(mahalanobis(intdata,jmean,jcov));
 									if (!inherits(mdist, "try-error"))
 									{
 										JClusters <- JClusters + 1;
 										mdistlist[[JClusters]] <- mdist[order(mdist)];
-										colmean[[JClusters]] <- datao;
+										colmean[[JClusters]] <- jmean;
 										covmat[[JClusters]] <- jcov;
 										detcovmat[JClusters] <- jcovDet^(1.0/(2.0*p));
 									}
