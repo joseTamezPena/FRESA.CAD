@@ -74,7 +74,7 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 	{
 		
 		chithreshold <- qchisq(p.threshold,p);
-		chithreshold3 <- qchisq(0.90*p.threshold,p);
+		chithreshold3 <- qchisq(0.75*p.threshold,p);
 		chithreshold_out <- qchisq(0.5*(0.999+p.threshold),p);
 
 		k <- k + 1;
@@ -329,7 +329,7 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 			ndata <- nrow(intdata);
 			maxMahadis <- numeric(ndata);
 		}
-		p.threshold <- 0.95*p.threshold;
+		p.threshold <- 0.99*p.threshold;
 		minpvalThr <- minpvalThr/10.0;
 		andata <- ndata;
 		if (verbose) 
