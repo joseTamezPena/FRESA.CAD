@@ -7,12 +7,13 @@
 \usage{
 	ClustClass(formula = formula,
 	            data=NULL,
-				filtermethod=univariate_Wilcoxon,
-				clustermethod=NULL,
-				classmethod=LASSO_1SE,
-				filtermethod.control=list(pvalue=0.05,limit=0.1),
-				clustermethod.control=NULL,
-				classmethod.control=list(family = "binomial")
+	            filtermethod=univariate_Wilcoxon,
+	            clustermethod=GMVECluster,
+	            classmethod=LASSO_1SE,
+	            filtermethod.control=list(pvalue=0.1,limit=10),
+	            clustermethod.control= list(p.threshold = 0.95, 
+	                                   p.samplingthreshold = 0.5),
+	            classmethod.control=list(family = "binomial")
 	            )
 
 }

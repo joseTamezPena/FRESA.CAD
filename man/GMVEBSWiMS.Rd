@@ -7,7 +7,7 @@
 \usage{
    GMVEBSWiMS(formula = formula,
             data=NULL,
-            GMVE.control = list(p.threshold = 0.85,p.samplingthreshold = 0.5),
+            GMVE.control = list(p.threshold = 0.95,p.samplingthreshold = 0.5),
             ...
    )
 

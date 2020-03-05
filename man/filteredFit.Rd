@@ -9,7 +9,7 @@
 	            data=NULL,
 	            filtermethod=univariate_Wilcoxon,
 	            fitmethod=e1071::svm,
-	            filtermethod.control=list(pvalue=0.05,limit=0.1),
+	            filtermethod.control=list(pvalue=0.10,limit=0.1),
 	            ...
 				)
 }
