@@ -1301,7 +1301,6 @@ GMVEBSWiMS <- function(formula = formula, data=NULL, GMVE.control = list(p.thres
 		{
 			fm <- names(univariate_Wilcoxon(data,Outcome,pvalue=0.05,limit=10));
 			selectedfeatures <- unique(fm,selectedfeatures);
-	#		print(fm)
 			if (is.null(GMVE.control))
 			{
 				clus <- GMVECluster(as.data.frame(data[,fm]));

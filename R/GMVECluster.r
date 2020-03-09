@@ -24,12 +24,24 @@
 #' @importFrom 
 #' @export
 
-GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthreshold = 0.50,sampling.rate = 3,jitter=TRUE,tryouts=25,verbose=FALSE)
+GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthreshold = 0.50,sampling.rate = 3,jitter=TRUE,tryouts=25,pca=TRUE,verbose=FALSE)
 {
 
   if (!requireNamespace("robustbase", quietly = TRUE)) {
 	  install.packages("robustbase", dependencies = TRUE)
 	  }
+
+	scaleparm <- NULL;
+	pcaobj <- NULL;
+	if (pca && (nrow(dataset) > 2*ncol(dataset)))
+	{
+		scaleparm <- FRESAScale(dataset,method="OrderLogit");
+		pcaobj <- prcomp(scaleparm$scaledData);
+		dataset <- as.data.frame(pcaobj$x);
+		colnames(dataset) <- colnames(pcaobj$x);
+		dataset <- dataset[,summary(pcaobj)$importance[3,] < 0.8]
+	}
+
 	  
 	intdata <- dataset
 	features <- colnames(dataset);
@@ -366,7 +378,9 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 		robCov = robCov,
 		pvals = pvals,
 		k = k,
-		features = features
+		features = features,
+		pcaobj=pcaobj,
+		scaleparm=scaleparm
 	  )
 	 class(result) <- "GMVE"
 	 return (result);
