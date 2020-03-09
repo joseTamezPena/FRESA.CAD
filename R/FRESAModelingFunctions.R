@@ -1356,7 +1356,7 @@ predict.GMVE_BSWiMS <- function(object,...)
 	{
 		if (length(object$models) > 1)
 		{
-			pLS <- nearestCentroid(testData[,object$features],object$cluster$centers,object$cluster$covariances,0)
+			pLS <- predict(object$cluster,testData)$classification
 			tb <- table(pLS);
 			index <- as.numeric(names(tb));
 			for (i in 1:nrow(tb))

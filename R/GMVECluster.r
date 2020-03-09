@@ -390,6 +390,11 @@ predict.GMVE <- function(object,...)
 {
 	parameters <- list(...);
 	testData <- parameters[[1]];
+	if (!is.null(object$pcaobj))
+	{
+		testData <- FRESAScale(testData,method=object$scaleparm$method,refMean=object$scaleparm$refMean,refDisp=object$scaleparm$refDisp)$scaledData;
+		testData <- predict(object$pcaobj,testData);
+	}
 	thr <- 0;
 	if (length(parameters) > 1)
 	{
