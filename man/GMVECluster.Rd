@@ -7,12 +7,13 @@
 \usage{
 	GMVECluster(dataset, 
 	            p.threshold=0.975,
-				samples=10000,
-				p.samplingthreshold=0.50,
-				sampling.rate = 3,
-				jitter=TRUE,
-				tryouts=25,
-				verbose=FALSE)
+	            samples=10000,
+	            p.samplingthreshold=0.50,
+	            sampling.rate = 3,
+	            jitter=TRUE,
+	            tryouts=25,
+	            pca=TRUE,
+	            verbose=FALSE)
 
 }
 \arguments{
@@ -36,6 +37,9 @@
 	}
 	\item{tryouts}{
 		The number of cluster candidates that will be analyed per sampled point
+	}
+	\item{pca}{
+		If TRUE, it will use the PCA transform for dimension reduction
 	}
 	\item{verbose}{
 		If true it will print the clustering evolution

@@ -380,7 +380,8 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 		k = k,
 		features = features,
 		pcaobj=pcaobj,
-		scaleparm=scaleparm
+		scaleparm=scaleparm,
+		dataset=dataset
 	  )
 	 class(result) <- "GMVE"
 	 return (result);
