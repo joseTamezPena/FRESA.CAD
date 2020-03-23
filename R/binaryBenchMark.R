@@ -324,7 +324,8 @@ BinaryBenchmark <-	function(theData = NULL, theOutcome = "Class", reps = 100, tr
 	TheCVEvaluations$RF <- rcvRF;
 	times$RF <- rcvRF$theTimes
 	selFrequency <- cbind(selFrequency,numeric(ncol(theData)));
-	selFrequency[names(rcvRF$featureFrequency),ncol(selFrequency)] <- rcvRF$featureFrequency;
+	freq <- rcvRF$featureFrequency[names(rcvRF$featureFrequency) %in% rownames(selFrequency)];
+	selFrequency[names(freq),ncol(selFrequency)] <- freq;
 	theFiltersets <- c(referenceFilterName,"RF");
 	jaccard_filter$RF <- rcvRF$jaccard;
 

@@ -193,7 +193,7 @@ function(x,...)
 				{
 					roct <- roc.test(roc(x$testPredictions$Outcome,x$testPredictions[,i],quiet = TRUE),
 									roc(x$testPredictions$Outcome,x$testPredictions[,j],quiet = TRUE),
-									alternative="less")
+									alternative="less",progress='none')
 					pAUCtable[i-1,j-1] <-  roct$p.value;
 					AUCtable[i-1,j-1] <- -log10(max(pAUCtable[i-1,j-1],0.0001));
 				}

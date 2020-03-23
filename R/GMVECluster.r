@@ -24,18 +24,31 @@
 #' @importFrom 
 #' @export
 
-GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthreshold = 0.50,sampling.rate = 3,jitter=TRUE,tryouts=25,verbose=FALSE)
+GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthreshold = 0.50,sampling.rate = 3,jitter=TRUE,tryouts=25,pca=TRUE,verbose=FALSE)
 {
 
   if (!requireNamespace("robustbase", quietly = TRUE)) {
 	  install.packages("robustbase", dependencies = TRUE)
 	  }
+
+	scaleparm <- NULL;
+	pcaobj <- NULL;
+	if (pca && (nrow(dataset) > 2*ncol(dataset)))
+	{
+		scaleparm <- FRESAScale(dataset,method="OrderLogit");
+		pcaobj <- prcomp(scaleparm$scaledData);
+		dataset <- as.data.frame(pcaobj$x);
+		colnames(dataset) <- colnames(pcaobj$x);
+		dataset <- dataset[,summary(pcaobj)$importance[3,] < 0.8]
+	}
+
 	  
 	intdata <- dataset
 	features <- colnames(dataset);
 	ndata <- nrow(intdata);
 	ClusterLabels <- numeric(ndata);
 	p <- ncol(intdata);
+	proot <- 1.0/(2.0*p);
 	if (ndata > samples)
 	{
 		intdata <- dataset[sample(ndata,samples),]
@@ -51,11 +64,14 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 	robCov <- list();
 	pvals <- numeric();
 	## the list of possible volume fractions
-	alphalist <- c(0.025,0.050,0.075,0.100,0.150,0.250,0.375,0.500);
+	alphalist <- c(0.050,0.100,0.200,0.300,0.400,0.500,0.600,0.700,0.800,0.900,0.950);
+	alphalist2 <- c(0.50,0.60,0.70,0.80,0.90);
+	hlist <- as.integer(alphalist*ndata+0.5);
 	p1 <- p + 1;
 	minpvalThr <- 0.001;
 	globalcov <- cov(intdata);
 	vvar <- diag(globalcov);
+	globalcov <- diag(vvar);
 	minvvar <- vvar/(ndata*ndata);
 	gmincov <- diag(minvvar);
 	minminVar <- det(gmincov);
@@ -71,8 +87,7 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 	{
 		
 		chithreshold <- qchisq(p.threshold,p);
-		chithreshold2 <- qchisq(p.threshold/5,p);
-		chithreshold3 <- qchisq(p.threshold/2,p);
+		chithreshold3 <- qchisq(0.75*p.threshold,p);
 		chithreshold_out <- qchisq(0.5*(0.999+p.threshold),p);
 
 		k <- k + 1;
@@ -84,7 +99,7 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 		detcovmat <- numeric();
 		JClusters <- 0;
 		bestmean[[k]] <- apply(intdata,2,mean);
-		bestCov[[k]] <- cov(intdata);
+		bestCov[[k]] <- diag(diag(cov(intdata)));
 		robCov[[k]] <- list(centroid=bestmean[[k]],cov=bestCov[[k]]);
 
 		if (jitter)
@@ -104,7 +119,6 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 			if (k == 1)
 			{
 				thedataCpy <- intdata;
-				globalcov <- 0.75*globalcov+0.25*cov(intdata);
 			}
 		}
 
@@ -133,7 +147,7 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 			{
 				datao <- as.numeric(auxdata[i,]);
 				names(datao) <- colnames(auxdata);
-				jmean <- matrix(datao,ncol=p,nrow=p1,byrow=TRUE);
+#				jmean <- matrix(rep(datao,p1),ncol=p,nrow=p1,byrow=TRUE);
 				smdist <- mahalanobis(intdata,datao,globalcov);
 				qdata <- intdata[(smdist > 0) & (smdist < samplingthreshold),];
 	#			print(nrow(qdata))
@@ -143,22 +157,27 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 					{
 						for (j in 1:tryouts)
 						{
-							sdata <-  as.matrix(rbind(datao,qdata[sample(nrow(qdata),p),])) - jmean;
-							jcov <- (t(sdata) %*% sdata)/p;
+							sdata <-  qdata[sample(nrow(qdata),p1),];
+							jmean <- apply(sdata,2,mean);
+							jcov <- cov(sdata);
 							jcovDet <- try(det(jcov));
 							if ( !inherits(jcovDet, "try-error") && !is.nan(jcovDet) && !is.na(jcovDet) )
 							{
 								if (jcovDet > minminVar)
 								{
-									mdist <- try(mahalanobis(intdata,datao,jcov));
+									mdist <- try(mahalanobis(intdata,jmean,jcov));
 									if (!inherits(mdist, "try-error"))
 									{
 										JClusters <- JClusters + 1;
 										mdistlist[[JClusters]] <- mdist[order(mdist)];
-										colmean[[JClusters]] <- datao;
+										colmean[[JClusters]] <- jmean;
 										covmat[[JClusters]] <- jcov;
-										detcovmat[JClusters] <- jcovDet^(1.0/(2.0*p));
+										detcovmat[JClusters] <- jcovDet^proot;
 									}
+								}
+								else
+								{
+									cat("|",jcovDet,"|")
 								}
 							}
 						}						
@@ -184,57 +203,74 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 			Ellipsoidvol <- numeric(JClusters);
 			cat("\\");
 			bcorrection <- 1;
-			for ( alpha in alphalist )
+			for (h in hlist)
 			{
-				h <- as.integer(alpha*ndata+0.5);
-				if (h >= p1) 
+				if ((h >= p1) && (h < andata))
 				{
+					alpha <- h/andata;
 					for (i in 1:JClusters)
 					{
 						Ellipsoidvol[i] <- mdistlist[[i]][h]*detcovmat[i];
 					}
 					minEllipVol <- which.min(Ellipsoidvol)[1];
 					mincentroid <- colmean[[minEllipVol]];
-					minCov <- covmat[[minEllipVol]];
-					mdist <- mdistlist[[minEllipVol]];
-					correction <- mdist[h]/qchisq(alpha,p);
-					minCov <- minCov*correction;
-					mdist <- mahalanobis(intdata,mincentroid,minCov);
-					inside <- (mdist < chithreshold);
-					if (!is.na(sum(inside)))
+					minCovA <- covmat[[minEllipVol]];
+					mdistA <- mdistlist[[minEllipVol]];
+					for ( palpha in alphalist2 )
 					{
-						ptsinside <- sum(inside)
-						if (ptsinside >= h0)
+						if (palpha >= alpha)
 						{
-							auxdata <- intdata[inside,];
-							newCentroid <- apply(auxdata,2,mean);
-							newCovariance <- cov(auxdata);
-							distanceupdate <- mahalanobis(auxdata,newCentroid,newCovariance);
-							dstamples <- ptsinside;
-							if (dstamples > 100)
-							{	
-								dstamples <- 100; # no more than 100 samples for p-value estimation
-								distanceupdate <- distanceupdate[sample(nrow(auxdata),dstamples)];
-							}
-							dsample <- p.threshold*( 1:dstamples - 0.5)/dstamples;
-							distanceupdate <- distanceupdate[order(distanceupdate)];
-							correction <- distanceupdate[dstamples]/chithreshold;
-							disTheoretical <- qchisq(dsample,p);
-							kst <- ks.test(disTheoretical,distanceupdate/correction + rnorm(dstamples,0,1e-10));
-							if ((kst$statistic < 0.5*minD) || (kst$p.value > maxp))
+							correction <- mdistA[h]/qchisq(palpha,p);
+							minCov <- minCovA*correction;
+#							cat("(",minEllipVol,":",h,":",palpha,":",correction,":",det(minCov),")");
+							mdist <- try(mahalanobis(intdata,mincentroid,minCov));
+							if (!inherits(mdist, "try-error"))
 							{
-#								plot(disTheoretical,distanceupdate);
-								 bcorrection <- correction;
-								 bestmean[[k]] <- newCentroid;
-								 bestCov[[k]] <- newCovariance*correction;
-								 minD <- kst$statistic;
-								 pvals[k] <- kst$p.value;
-								 atalpha <- alpha;
-								 if (maxp < kst$p.value) 
-								 {
-									maxp <- kst$p.value;
-								 }
-								 optsinside <- ptsinside;
+								inside <- (mdist < chithreshold);
+								if (!is.na(sum(inside)))
+								{
+									ptsinside <- sum(inside)
+									if (ptsinside >= h0)
+									{
+										auxdata <- intdata[inside,];
+										newCentroid <- apply(auxdata,2,mean);
+										newCovariance <- cov(auxdata);
+										distanceupdate <- try(mahalanobis(auxdata,newCentroid,newCovariance));
+										if (!inherits(distanceupdate, "try-error"))
+										{
+											dstamples <- ptsinside;
+											if (dstamples > 250)
+											{	
+												dstamples <- 250; # no more than 100 samples for p-value estimation
+												distanceupdate <- distanceupdate[sample(nrow(auxdata),dstamples)];
+											}
+											dsample <- p.threshold*( 1:dstamples - 0.5)/dstamples;
+											distanceupdate <- distanceupdate[order(distanceupdate)];
+											correction <- distanceupdate[dstamples]/chithreshold;
+											disTheoretical <- qchisq(dsample,p);
+											kst <- ks.test(disTheoretical,distanceupdate/correction + rnorm(dstamples,0,1e-10));
+											if ((kst$statistic < 0.75*minD) || (kst$p.value > maxp))
+#											if (kst$p.value > maxp)
+											{
+				#								plot(disTheoretical,distanceupdate);
+												 bcorrection <- correction;
+												 bestmean[[k]] <- newCentroid;
+												 bestCov[[k]] <- newCovariance*correction;
+												 pvals[k] <- kst$p.value;
+												 if (minD > kst$statistic) 
+												 {
+													minD <- kst$statistic;
+												 }
+												 if (kst$p.value > maxp)
+												 {
+													maxp <- kst$p.value;
+												 }
+												 atalpha <- palpha;
+												 optsinside <- ptsinside;
+											}
+										}
+									}
+								}
 							}
 						}
 					}
@@ -281,7 +317,7 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 					robCov[[k]] <- list(centroid=bestmean[[k]],cov=bestCov[[k]]);
 #					cat(sprintf("|(%4.2f) S:%4d|",correction,nrow(cludata)));
 					mdist <- mahalanobis(intdata,bestmean[[k]],bestCov[[k]]);
-					inside <- (mdist < chithreshold);
+					inside <- (mdist < chithreshold3);
 					ndata <- sum(!inside);
 					if (ndata >= h0)
 					{
@@ -314,7 +350,7 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 			ndata <- nrow(intdata);
 			maxMahadis <- numeric(ndata);
 		}
-		p.threshold <- 0.95*p.threshold;
+		p.threshold <- 0.99*p.threshold;
 		minpvalThr <- minpvalThr/10.0;
 		andata <- ndata;
 		if (verbose) 
@@ -342,7 +378,10 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 		robCov = robCov,
 		pvals = pvals,
 		k = k,
-		features = features
+		features = features,
+		pcaobj=pcaobj,
+		scaleparm=scaleparm,
+		dataset=dataset
 	  )
 	 class(result) <- "GMVE"
 	 return (result);
@@ -352,6 +391,11 @@ predict.GMVE <- function(object,...)
 {
 	parameters <- list(...);
 	testData <- parameters[[1]];
+	if (!is.null(object$pcaobj))
+	{
+		testData <- FRESAScale(testData,method=object$scaleparm$method,refMean=object$scaleparm$refMean,refDisp=object$scaleparm$refDisp)$scaledData;
+		testData <- predict(object$pcaobj,testData);
+	}
 	thr <- 0;
 	if (length(parameters) > 1)
 	{
