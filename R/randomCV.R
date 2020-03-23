@@ -22,11 +22,14 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
     fclass <- class(currentModel)
     if (length(fclass)>1) fclass <- fclass[1];
     
+    
     if(length(selectedFeatures)>=nrow(theSurvData))
     {
       selectedFeatures <- head(selectedFeatures, nrow(theSurvData)-1)
       warning("The number of selected features is bigger than the number of observations, the top will be used.")
     }
+
+    numberCoeficients <- length(selectedFeatures)
     
     if(length(selectedFeatures)==0)
     {
@@ -45,18 +48,22 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
       formulaCox <- as.formula(paste(paste(baseformula[2],"~"), paste(selectedFeatures, collapse='+')));
       cox <- try(survival::coxph(formula=formulaCox, data=theSurvData));
       #changing the coef to the ones with lasso
-      cox$coefficients <- currentModel$coef;
+      cox$coefficients <- currentModel$coef[1:numberCoeficients];
     }
     if (fclass == "fitFRESA")
     {
       #Creating lasso object
       # theSurvData <- testSet
       # selectedFeatures <- selectedFeaturesSet[[1]];
+      # infinitos <- currentModel$bagging$bagged.model$coefficients[is.infinite(currentModel$bagging$bagged.model$coefficients)];
+      # if(length(infinitos)>0){
+      #   cat(infinitos)
+      # }
       baseformula <- as.character(theformula);
       formulaCox <- as.formula(paste(paste(baseformula[2],"~"), paste(selectedFeatures, collapse='+')));
       cox <- try(survival::coxph(formula=formulaCox,data=theSurvData));
       #changing the coef to the ones with lasso
-      cox$coefficients<-currentModel$bagging$bagged.model$coefficients[-c(1)];
+      cox$coefficients<-currentModel$bagging$bagged.model$coefficients[-c(1)][1:numberCoeficients];
       #cox$coefficients<-currentModel$BSWiMS.model$back.model$coefficients[-c(1)]
     }
     if(fclass=="FRESA_BESS")
@@ -66,7 +73,7 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
       cox <- try(survival::coxph(formula=formulaCox,data=theSurvData));
       #changing the coef to the ones with lasso
       names(currentModel$fit$bestmodel$coefficients)<-selectedFeatures;
-      cox$coefficients<-currentModel$fit$bestmodel$coefficients;
+      cox$coefficients<-currentModel$fit$bestmodel$coefficients[1:numberCoeficients];
     }
     if(fclass=="coxph.null")
     {
@@ -98,21 +105,21 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
         return (survPreds)
       }
       else{
-        warning("Cox Fit Error");
-        return(list(martingaleResid=rep(NA,nrow(theSurvData)),
-                    linearPredictors=rep(NA,nrow(theSurvData)),
-                    followUpTimes=rep(NA,nrow(theSurvData)),
-                    risks = list(fit=rep(NA,nrow(theSurvData)),se.fit=rep(NA,nrow(theSurvData))),
-                    hr = rep(NA,nrow(theSurvData))));
+        warning("Cox Fit Follow-up Times Error");
+        return(list(martingaleResid=rep(0,nrow(theSurvData)),
+                    linearPredictors=rep(0,nrow(theSurvData)),
+                    followUpTimes=rep(0,nrow(theSurvData)),
+                    risks = list(fit=rep(0,nrow(theSurvData)),se.fit=rep(0,nrow(theSurvData))),
+                    hr = rep(0,nrow(theSurvData))));
       }
     }
     else{
       warning("Cox Fit Error");
-      return(list(martingaleResid=rep(NA,nrow(theSurvData)),
-                  linearPredictors=rep(NA,nrow(theSurvData)),
-                  followUpTimes=rep(NA,nrow(theSurvData)),
-                  risks = list(fit=rep(NA,nrow(theSurvData)),se.fit=rep(NA,nrow(theSurvData))),
-                  hr = rep(NA,nrow(theSurvData))));
+        return(list(martingaleResid=rep(0,nrow(theSurvData)),
+                    linearPredictors=rep(0,nrow(theSurvData)),
+                    followUpTimes=rep(0,nrow(theSurvData)),
+                    risks = list(fit=rep(0,nrow(theSurvData)),se.fit=rep(0,nrow(theSurvData))),
+                    hr = rep(0,nrow(theSurvData))));
     }
   }
   
@@ -576,7 +583,7 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
   medianSurvTrain <- NULL;
   jaccard.sm <- NULL;
   featureFrequency <- NULL;
-  if (!is.null(testPredictions))
+  if (!is.null(testPredictions) && length(rownames(testPredictions))>3)
   {
     if (ncol(testPredictions) == 3)
     {
@@ -635,7 +642,7 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
   medianSurvTrain[,2] = theData[,theOutcome]
   
   # #Surv medians and boxsta
-  if (!is.null(survTestPredictions))
+  if (!is.null(survTestPredictions) && length(rownames(survTestPredictions))>3)
   {
     if (ncol(survTestPredictions) == 7)
     {

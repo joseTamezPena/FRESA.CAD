@@ -1,42 +1,61 @@
 predictionStats_survival <-  function(predictions, plotname="",...)
 {
-  if (!requireNamespace("survminer", quietly = TRUE)) {
-    install.packages("survminer", dependencies = TRUE)
-  }
+	if(!sum(predictions[,4] == 0) == length(predictions[,4]))
+	{
+		if (!requireNamespace("survminer", quietly = TRUE)) {
+			install.packages("survminer", dependencies = TRUE)
+		}
 
-  data <- data.frame(times=predictions[,1],preds=predictions[,5])
-  CIFollowUp <- concordance95ci(datatest = data, followUp = TRUE)
-  data <- data.frame(times=predictions[,1],preds=-predictions[,6])
-  CIRisk <- concordance95ci(datatest = data, followUp = FALSE)
-  newData <- data.frame(times=predictions[,1],status=predictions[,2],preds=predictions[,6]);
-  Curves <- survival::survfit(survival::Surv(times, status) ~ preds>=median(preds),newData)
-  
-  function (fit, scale, k = 2, ...) 
-  {
-    edf <- sum(!is.na(fit$coefficients))
-    loglik <- fit$loglik[length(fit$loglik)]
-    c(edf, -2 * loglik + k * edf)
-  }
-  
-  #Curves <- survival::survfitBSWiMS <- survival::survfit(Surv(predictions[,1], predictions[,2]) ~ predictions[,6]>=median(predictions[,6]))
-  if(plotname!="")
-  {
-
-      graph <- survminer::ggsurvplot(Curves, data=newData, conf.int = TRUE, legend.labs=c("Low Risk", "High Risk"),
+		data <- data.frame(times=predictions[,1],preds=predictions[,5])
+		CIFollowUp <- concordance95ci(datatest = data, followUp = TRUE)
+		data <- data.frame(times=predictions[,1],preds=-predictions[,6])
+		CIRisk <- concordance95ci(datatest = data, followUp = FALSE)
+		newData <- data.frame(times=predictions[,1],status=predictions[,2],preds=predictions[,6]);
+		Curves <- survival::survfit(survival::Surv(times, status) ~ preds>=median(preds),newData)
+		
+		function (fit, scale, k = 2, ...) 
+		{
+			edf <- sum(!is.na(fit$coefficients))
+			loglik <- fit$loglik[length(fit$loglik)]
+			c(edf, -2 * loglik + k * edf)
+		}
+		
+		#Curves <- survival::survfitBSWiMS <- survival::survfit(Surv(predictions[,1], predictions[,2]) ~ predictions[,6]>=median(predictions[,6]))
+		if(plotname!="")
+		{
+			 graph <- survminer::ggsurvplot(Curves, data=newData, conf.int = TRUE, legend.labs=c("Low Risk", "High Risk"),
                         palette = c("#00bbff", "#ff0000"),
                         ggtheme = ggplot2::theme_bw() + ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5, face = "bold", size = 30)),
                         title = plotname,
                         risk.table = TRUE,
                         tables.height = 0.2,
                         tables.theme = survminer::theme_cleantable())
-      print(graph)
-    #plot(Curves,main=plotname)
-  }
-  
-  LogRank <- survival::survdiff(Surv(predictions[,1], predictions[,2]) ~ predictions[,6]>=median(predictions[,6]))
-  LogRank <- cbind(LogRank$chisq,  1 - pchisq(LogRank$chisq, length(LogRank$n) - 1));
-  colnames(LogRank) <- cbind("chisq","pvalue");
-  return( list(CIFollowUp=CIFollowUp, CIRisk = CIRisk, LogRank = LogRank, Curves = Curves) );
+      		print(graph)
+			# graph <- try(survminer::ggsurvplot(Curves, data=newData, conf.int = TRUE, legend.labs=c("Low Risk", "High Risk"),
+			# 					palette = c("#00bbff", "#ff0000"),
+			# 					ggtheme = ggplot2::theme_bw() + ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5, face = "bold", size = 30)),
+			# 					title = plotname,
+			# 					risk.table = TRUE,
+			# 					tables.height = 0.2,
+			# 					tables.theme = survminer::theme_cleantable()))
+			# # if (!inherits(graph, "try-error"))
+			# {
+			# 	print(graph)
+			# }
+			# else{
+			# 	warning("Survplot failed");
+			# }
+			#plot(Curves,main=plotname)
+		}
+		
+		LogRank <- survival::survdiff(Surv(predictions[,1], predictions[,2]) ~ predictions[,6]>=median(predictions[,6]))
+		LogRank <- cbind(LogRank$chisq,  1 - pchisq(LogRank$chisq, length(LogRank$n) - 1));
+		colnames(LogRank) <- cbind("chisq","pvalue");
+		return( list(CIFollowUp=CIFollowUp, CIRisk = CIRisk, LogRank = LogRank, Curves = Curves) );
+	}
+	else{
+		return( list(CIFollowUp=rep(0,nrow(predictions)), CIRisk = rep(0,nrow(predictions)), LogRank = rep(0,nrow(predictions)), Curves = NULL) );
+	}
 }
 
 concordance95ci <- function(datatest,nss=4000,followUp=FALSE)
