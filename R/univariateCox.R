@@ -20,13 +20,20 @@ univariate_cox <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="BH
   if (length(unitPvalues) > 1)
   {
     #		unitPvalues <- unitPvalues[correlated_Remove(data,names(unitPvalues))];
-    unitPvalues <- correlated_RemoveToLimit(data,unitPvalues,limit,...);
+    unitPvalues <- try(correlated_RemoveToLimit(data,unitPvalues,limit,...));
+    if (!inherits(unitPvalues, "try-error"))
+		{
+      return(unitPvalues);
+    }
+    else{
+      return(top);
+    }
   }
   else
   {
-    unitPvalues <- top;
+    return(top);
   }
-  return(unitPvalues);
+  
 }
 
 MultUnivariateCox <- function(varlist = NULL,data = NULL,Outcome = NULL,...)
