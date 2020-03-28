@@ -4,8 +4,8 @@ testType=c("Auto","zIDI","zNRI","Binomial","Wilcox","tStudent","Ftest"),
 pvalue=0.05,
 variableList=NULL,
 size=0,
-loops=32,
-elimination.bootstrap.steps=100,
+loops=20,
+elimination.bootstrap.steps=200,
 fraction=1.0,
 maxTrainModelSize=20,
 maxCycles=20,
@@ -308,7 +308,7 @@ NumberofRepeats=1)
 									cat(BSWiMS.model$back.formula,": Base AUC: ",firstMedAUC,"Current Blind AUC: ",currentMedAUC," Inferior Count:",firstCount," Tests:",length(IIRMetricPDF)," Fraction:",infraction," KStest:",simTest,"\n");
 								}
 								if (supchance < 0.75) infraction <- 1.0;
-								isInferior <- (infraction > 0.975);
+								isInferior <- (infraction > 0.95);
 								if ( !isInferior && (cycles < 3) && (simTest > 0.05) )
 								{
 									IIRMetricPDF <- c(IIRMetricPDF,curAUC[sample(length(curAUC),(1.0-infraction)*length(curAUC))]);
@@ -362,7 +362,7 @@ NumberofRepeats=1)
 									cat("Sd:", sdOutcome,"(",supchance,")",BSWiMS.model$back.formula,": Base: ",firstMedRMS,"(",max(IIRMetricPDF),") Current: ",BSWiMS.model$bootCV$testRMSE,"(",min(BSWiMS.model$bootCV$testSampledRMSE),") Inferior Count:",firstCount," Tests:",length(firstModel$bootCV$testSampledRMSE)," Fraction:",infraction,"\n");
 								}
 								if (supchance < 0.75) infraction <- 1.0;
-								isInferior <- (infraction > 0.975);
+								isInferior <- (infraction > 0.95);
 								if ( !isInferior && (cycles < 3) && (simTest > 0.05) )
 								{
 									IIRMetricPDF <- c(IIRMetricPDF,curRMS[sample(length(curRMS),(1.0-infraction)*length(curRMS))]);
