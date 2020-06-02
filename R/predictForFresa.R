@@ -434,7 +434,7 @@ function (object,...)
 				if (is.null(object$bagging) || is.null(object$bagging$bagged.model))
 				{
 					out <- predict(object$forward.model$final.model,...);
-					attributes(out) <- list(model="forward.update");
+					attr(out,"model") <- "forward.update";
 				}
 				else
 				{
@@ -463,7 +463,7 @@ function (object,...)
 			else
 			{
 				out <- predict(object$oridinalModels,...)[,1];
-				attributes(out) <- list(model="ordinal");
+				attr(out,"model") <- "ordinal";
 			}
 		},
 		{

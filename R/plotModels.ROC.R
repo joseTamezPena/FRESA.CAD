@@ -132,11 +132,18 @@ function(modelPredictions,number.of.models=0,specificities=c(0.975,0.95,0.90,0.8
 		{
 			rout <- pROC::roc(as.vector(modelPredictions[,1]),modelPredictions[,2],direction="<",quiet = TRUE);
 			specificities=seq(0, 1, .05);	
-			ci.sp.obj <- pROC::ci.sp(rout , sensitivities=seq(0, 1, .05), boot.n=100,progress= 'none',quiet = TRUE)
-			blindSen <- pROC::ci.se(rout , specificities=seq(0, 1, .05), boot.n=100,progress= 'none',quiet = TRUE)
-			pROC::plot.roc(rout,grid=c(0.1, 0.1),grid.col=c("gray", "gray"),print.auc=FALSE,quiet = TRUE,...) 
-			plot(ci.sp.obj, type="s", col="gray")
-			plot(blindSen, type="s", col="light gray")
+			if (nrow(modelPredictions) < 2000)
+			{
+				ci.sp.obj <- pROC::ci.sp(rout , sensitivities=seq(0, 1, .05), boot.n=100,progress= 'none',quiet = TRUE)
+				blindSen <- pROC::ci.se(rout , specificities=seq(0, 1, .05), boot.n=100,progress= 'none',quiet = TRUE)
+				pROC::plot.roc(rout,grid=c(0.1, 0.1),grid.col=c("gray", "gray"),print.auc=FALSE,quiet = TRUE,...) 
+				plot(ci.sp.obj, type="s", col="gray")
+				plot(blindSen, type="s", col="light gray")
+			}
+			else
+			{
+				pROC::plot.roc(rout,grid=c(0.1, 0.1),grid.col=c("gray", "gray"),print.auc=FALSE,quiet = TRUE,...) 
+			}
 			auclist <- rout$auc;
 			thres = 0.5
 			if (min(modelPredictions[,2])<0) 
