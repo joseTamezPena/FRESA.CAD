@@ -58,7 +58,7 @@ predictionStats_survival <-  function(predictions, plotname="",...)
 	}
 }
 
-concordance95ci <- function(datatest,nss=4000,followUp=FALSE)
+concordance95ci <- function(datatest,nss=1000,followUp=FALSE)
 {
   sz <- nrow(datatest)
   sesci <- c(0,0,0);
@@ -120,7 +120,7 @@ predictionStats_ordinal <-  function(predictions,plotname="",...)
     return(results);
 }
 
-metric95ci <- function(metric,nss=4000,ssize=0)
+metric95ci <- function(metric,nss=1000,ssize=0)
 {
 	sz <- length(metric);
 	if (ssize == 0)
@@ -142,7 +142,7 @@ metric95ci <- function(metric,nss=4000,ssize=0)
 	return (metricci);
 }
 
-corcen95ci <- function(dataTable,nss=4000)
+corcen95ci <- function(dataTable,nss=1000)
 {
 	sz <- nrow(dataTable);
 	metricci <- c(0.5,0.5,0.5);
@@ -205,7 +205,7 @@ predictionStats_binary <-  function(predictions, plotname="", center=FALSE,...)
 	}
 	else
 	{
-		cstatCI <- corcen95ci(predictions);
+		cstatCI <- corcen95ci(predictions,200 + 800*(nrow(predictions) < 1000) );
 	}
 	if (any(is.na(predictions[,2])))
 	{	
@@ -242,7 +242,7 @@ predictionStats_binary <-  function(predictions, plotname="", center=FALSE,...)
 			rownames(pm$predictionTable) <- c("0","1")
 		}
     }
-	class95ci <- ClassMetric95ci(cbind(predictions[,1],predictions[,2] >= 0));
+	class95ci <- ClassMetric95ci(cbind(predictions[,1],predictions[,2] >= 0),200 + 800*(nrow(predictions) < 1000) );
 
 #    print(pm$predictionTable)
     if (length(pm$predictionTable) > 2 )
