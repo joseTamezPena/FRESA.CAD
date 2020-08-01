@@ -1,4 +1,4 @@
-nearestNeighborImpute <- function(tobeimputed,referenceSet=NULL,catgoricColums=NULL,distol=1.05)
+nearestNeighborImpute <- function(tobeimputed,referenceSet=NULL,catgoricCol=NULL,distol=1.05)
 {	
 	if (is.null(referenceSet))
 	{
@@ -9,16 +9,16 @@ nearestNeighborImpute <- function(tobeimputed,referenceSet=NULL,catgoricColums=N
 		rowsnotin <- !(rownames(referenceSet) %in% rownames(tobeimputed))
 		trainset <- rbind(referenceSet[rowsnotin,colnames(tobeimputed)],tobeimputed);
 	}
-	trainset <- trainset[complete.cases(trainset),]
 	imputeddata <- tobeimputed;
 	medianvalues <-  as.numeric(apply(trainset,2,median, na.rm = TRUE));
 	IQRvalues <-  as.numeric(apply(trainset,2,IQR, na.rm = TRUE));
 	sdvalues <-  as.numeric(apply(trainset,2,sd, na.rm = TRUE));
+#	trainset <- trainset[complete.cases(trainset),]
 	IQRvalues[IQRvalues==0] <- sdvalues[IQRvalues==0];
 	IQRvalues[IQRvalues==0] <- 1;
-	if (!is.null(catgoricColums))
+	if (!is.null(catgoricCol))
 	{
-		IQRvalues[colnames(tobeimputed) %in% catgoricColums] <- 0.001;
+		IQRvalues[colnames(tobeimputed) %in% catgoricCol] <- 0.00001;
 	}
 	for (i in 1:nrow(imputeddata))
 	{
@@ -34,9 +34,14 @@ nearestNeighborImpute <- function(tobeimputed,referenceSet=NULL,catgoricColums=N
 			else
 			{
 				redtrain <- trainset[,!nacol];
+				datatrain <- as.data.frame(trainset[,nacol]);
+				theCompleteCases <- complete.cases(datatrain)
+				datatrain <- as.data.frame(datatrain[theCompleteCases,])
+				redtrain <- redtrain[theCompleteCases,]
 				redimputed <- as.numeric(imputeddata[i,!nacol]);
 				distance <- abs(sweep(redtrain,2,redimputed,"-"))
 				distance <- sweep(distance,2,IQRvalues[!nacol],"/");
+				
 				if (sum(!nacol) > 1)
 				{
 					distance <- apply(distance,1,mean, na.rm = TRUE);
@@ -44,7 +49,7 @@ nearestNeighborImpute <- function(tobeimputed,referenceSet=NULL,catgoricColums=N
 				distance <- as.numeric(distance);
 				mindistance <- distol*min(distance);
 				wsmaller <- (distance<=mindistance);
-				utrainset <- trainset[wsmaller,nacol];
+				utrainset <- datatrain[wsmaller,];
 				if (sum(wsmaller)==1)
 				{
 					imputeddata[i,nacol] <- as.numeric(utrainset);

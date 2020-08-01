@@ -7,7 +7,7 @@
 \usage{
 	nearestNeighborImpute(tobeimputed,
 	                      referenceSet=NULL,
-						  catgoricColums=NULL,
+						  catgoricCol=NULL,
 	                      distol=1.05
 	                     )
 
@@ -19,7 +19,7 @@
 	\item{referenceSet}{
 		An optional data frame with a set of complete observations. This data frame will be added to the search set
 	}
-	\item{catgoricColums}{
+	\item{catgoricCol}{
 		An optional list of columns names that should be consider categorical
 	}
 	\item{distol}{
