@@ -561,10 +561,17 @@ NumberofRepeats=1)
 #		print(frma);
 		oridinalModels$formula <- frma;
 		oridinalModels$polr <- try(MASS::polr(frma,data));
+#		environment(oridinalModels$polr$formula) <- globalenv();
+#		environment(oridinalModels$formula) <- globalenv();
+
 		if (inherits(oridinalModels$polr, "try-error"))
 		{
 			cat(frma,"\n");
 			warning (paste(frma,": No ordinal model\n"));
+		}
+		else
+		{
+			environment(oridinalModels$polr$terms) <- globalenv();		
 		}
 	}
 	else

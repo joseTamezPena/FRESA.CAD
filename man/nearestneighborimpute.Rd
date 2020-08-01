@@ -7,6 +7,7 @@
 \usage{
 	nearestNeighborImpute(tobeimputed,
 	                      referenceSet=NULL,
+						  catgoricColums=NULL,
 	                      distol=1.05
 	                     )
 
@@ -17,6 +18,9 @@
 	}
 	\item{referenceSet}{
 		An optional data frame with a set of complete observations. This data frame will be added to the search set
+	}
+	\item{catgoricColums}{
+		An optional list of columns names that should be consider categorical
 	}
 	\item{distol}{
 		The tolerance used to define if a particular set of row observations is similar to the minimum distance 

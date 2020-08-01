@@ -1,4 +1,4 @@
-nearestNeighborImpute <- function(tobeimputed,referenceSet=NULL,distol=1.05)
+nearestNeighborImpute <- function(tobeimputed,referenceSet=NULL,catgoricColums=NULL,distol=1.05)
 {	
 	if (is.null(referenceSet))
 	{
@@ -13,7 +13,13 @@ nearestNeighborImpute <- function(tobeimputed,referenceSet=NULL,distol=1.05)
 	imputeddata <- tobeimputed;
 	medianvalues <-  as.numeric(apply(trainset,2,median, na.rm = TRUE));
 	IQRvalues <-  as.numeric(apply(trainset,2,IQR, na.rm = TRUE));
+	sdvalues <-  as.numeric(apply(trainset,2,sd, na.rm = TRUE));
+	IQRvalues[IQRvalues==0] <- sdvalues[IQRvalues==0];
 	IQRvalues[IQRvalues==0] <- 1;
+	if (!is.null(catgoricColums))
+	{
+		IQRvalues[colnames(tobeimputed) %in% catgoricColums] <- 0.001;
+	}
 	for (i in 1:nrow(imputeddata))
 	{
 		nacol <- is.na(imputeddata[i,]);

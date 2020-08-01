@@ -34,7 +34,7 @@
 #include <map> 
 #include <cmath> 
  
-#define HAVE_UINTPTR_T 
+// #define HAVE_UINTPTR_T 
 #define CSTACK_DEFNS 7 
 #define ARMA_NO_DEBUG 
 #define ARMA_USE_BLAS 
