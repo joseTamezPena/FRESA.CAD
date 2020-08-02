@@ -37,7 +37,7 @@ nearestNeighborImpute <- function(tobeimputed,referenceSet=NULL,catgoricCol=NULL
 		{	
 			if (useorder)
 			{
-				if (sum(imputeddata[i,catgoricCol] == catvalues) > 0)
+				if (sum(abs(imputeddata[i,catgoricCol] - catvalues)) == 0)
 				{
 					if (i>1)
 					{
@@ -57,7 +57,7 @@ nearestNeighborImpute <- function(tobeimputed,referenceSet=NULL,catgoricCol=NULL
 				{
 					redtrain <- trainset[,!nacol];
 					datatrain <- as.data.frame(trainset[,nacol]);
-					theCompleteCases <- complete.cases(redtrain)
+					theCompleteCases <- complete.cases(datatrain)
 					datatrain <- as.data.frame(datatrain[theCompleteCases,])
 					redtrain <- redtrain[theCompleteCases,]
 					redimputed <- as.numeric(imputeddata[i,!nacol]);
