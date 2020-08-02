@@ -16,9 +16,9 @@ nearestNeighborImpute <- function(tobeimputed,referenceSet=NULL,catgoricCol=NULL
 #	trainset <- trainset[complete.cases(trainset),]
 	IQRvalues[IQRvalues==0] <- sdvalues[IQRvalues==0];
 	IQRvalues[IQRvalues==0] <- 1;
+	catvalues <- NULL
 	if (!is.null(catgoricCol))
 	{
-		IQRvalues[colnames(tobeimputed) %in% catgoricCol] <- 0.01;
 		catvalues <- imputeddata[1,catgoricCol]
 	}
 	else
@@ -62,12 +62,13 @@ nearestNeighborImpute <- function(tobeimputed,referenceSet=NULL,catgoricCol=NULL
 					redtrain <- redtrain[theCompleteCases,]
 					redimputed <- as.numeric(imputeddata[i,!nacol]);
 					distance <- abs(sweep(redtrain,2,redimputed,"-"))
+					distance <- sweep(distance,2,IQRvalues[!nacol],"/");
+					distance[distance > 1.0] <- 1.0
 					if (!is.null(catgoricCol))
 					{
 						colnames(distance) <- colnames(redtrain)
-						distance[,catgoricCol] <- 1.0*(distance[,catgoricCol] > 0)
+						distance[,catgoricCol] <- 100.0*(distance[,catgoricCol] > 0)
 					}
-					distance <- sweep(distance,2,IQRvalues[!nacol],"/");
 					
 					if (sum(!nacol) > 1)
 					{
