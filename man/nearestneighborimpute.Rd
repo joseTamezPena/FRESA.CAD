@@ -8,7 +8,8 @@
 	nearestNeighborImpute(tobeimputed,
 	                      referenceSet=NULL,
 						  catgoricCol=NULL,
-	                      distol=1.05
+	                      distol=1.05,
+						  useorder=TRUE
 	                     )
 
 }
@@ -24,6 +25,10 @@
 	}
 	\item{distol}{
 		The tolerance used to define if a particular set of row observations is similar to the minimum distance 
+		
+	}
+	\item{useorder}{
+		Impute using the last observation on startified by categorical data	
 	}
 }
 \details{
