@@ -37,7 +37,7 @@ nearestNeighborImpute <- function(tobeimputed,referenceSet=NULL,catgoricCol=NULL
 		{	
 			if (useorder)
 			{
-				if (sum(imputeddata[i,catgoricCol] == catvalues) == 0)
+				if (sum(imputeddata[i,catgoricCol] == catvalues) > 0)
 				{
 					if (i>1)
 					{
