@@ -433,10 +433,10 @@ if (!requireNamespace("naivebayes", quietly = TRUE)) {
 	pcaobj <- NULL;
 	scaleparm <- NULL;
 	numclases <- length(table(data[,baseformula[2]]))
-	if (pca && (nrow(data) > 2*ncol(data)))
+	if (pca && (nrow(data) > 2*ncol(data)) && (ncol(data) > 3))
 	{
 		outcome <- data[,baseformula[2]];
-		data <- data[,!(colnames(data) %in% baseformula[2])];
+		data <- as.data.frame(data[,!(colnames(data) %in% baseformula[2])]);
 		scaleparm <- FRESAScale(data,method="OrderLogit");
 		pcaobj <- prcomp(scaleparm$scaledData);
 		data <- as.data.frame(cbind(as.numeric(as.character(outcome)),pcaobj$x));
@@ -467,7 +467,7 @@ predict.FRESA_NAIVEBAYES <- function(object,...)
 	}
 	else
 	{
-		testData <- testData[,!(colnames(testData) %in% object$outcome)];
+		testData <- as.data.frame(testData[,!(colnames(testData) %in% object$outcome)]);
 	}
 	pLS <- as.numeric(as.character(predict(object$fit,testData)));
 	if (is.null(parameters$probability))

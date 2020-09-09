@@ -381,7 +381,7 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
       {
         fnames <- !(colnames(trainSet) %in% c(varsmod));
         cols <- sum(fnames);
-        if (cols>0)
+        if (cols>1)
         {
           stdg <- apply(trainSet[,fnames],2,sd,na.rm = TRUE);
           stdg <- min(stdg);
@@ -552,6 +552,16 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
       rownames(ctrainPredictions) <- rownames(theData[sampleTrain,]);
       testPredictions <- rbind(testPredictions,ctestPredictions);
       trainPredictions <- rbind(trainPredictions,ctrainPredictions);
+    }
+    
+    if ((!is.null(testPredictions) && length(rownames(testPredictions)) > 3 ))
+    {
+      boxstaTest <- try(boxplot(as.numeric(as.character(testPredictions[,3]))~rownames(testPredictions),plot = FALSE));
+      if (!inherits(boxstaTest, "try-error"))
+      {
+        medianTest <- cbind(theData[boxstaTest$names,theOutcome],boxstaTest$stats[3,])
+        cat(rept," Tested:",nrow(medianTest),". MAD:",mean(abs(medianTest[,1]-medianTest[,2])),"\n");
+      }
     }
   }
   #	cat("done ",nrow(testPredictions),":",ncol(testPredictions),"\n");
