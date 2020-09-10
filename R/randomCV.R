@@ -1,4 +1,4 @@
-randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL, trainFraction = 0.5, repetitions = 100,trainSampleSets=NULL,featureSelectionFunction=NULL,featureSelection.control=NULL,asFactor=FALSE,addNoise=FALSE,classSamplingType=c("Augmented","NoAugmented","Proportional"),...)
+randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL, trainFraction = 0.5, repetitions = 100,trainSampleSets=NULL,featureSelectionFunction=NULL,featureSelection.control=NULL,asFactor=FALSE,addNoise=FALSE,classSamplingType=c("Augmented","NoAugmented","Proportional","Balanced"),...)
 {
   classSamplingType <- match.arg(classSamplingType);
   if (is.null(theData))
@@ -208,6 +208,10 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
   {
     ssubsets <- list();
     samplePerClass <- as.integer((nrow(theData)/classLen)*trainFraction);
+    if (classSamplingType == "Balanced")
+    {
+      samplePerClass <- as.integer(min(dataTable)*trainFraction);
+    }
     jind <- 1;
     for (s in theClasses)
     {
@@ -389,7 +393,7 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
           {
             stdg <- 1.0e-5;
           }
-          noiselevel <- 0.05*stdg;
+          noiselevel <- 0.01*stdg;
           rows <- nrow(trainSet);
           trainSet[,fnames] <- trainSet[,fnames]+as.data.frame(matrix(noiselevel*rnorm(rows*cols),nrow=rows,ncol=cols));
         }
@@ -560,7 +564,8 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
       if (!inherits(boxstaTest, "try-error"))
       {
         medianTest <- cbind(theData[boxstaTest$names,theOutcome],boxstaTest$stats[3,])
-        cat(rept," Tested:",nrow(medianTest),". MAD:",mean(abs(medianTest[,1]-medianTest[,2])),"\n");
+        tb <- table(rownames(testPredictions));
+        cat(rept," Tested:",nrow(medianTest),"Min Tests:",min(tb),"Max Tests:",max(tb),"Mean Tests:",mean(tb),". MAD:",mean(abs(medianTest[,1]-medianTest[,2])),"\n");
       }
     }
   }

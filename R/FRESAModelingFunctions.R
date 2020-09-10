@@ -423,7 +423,7 @@ predict.FRESA_SVM <- function(object,...)
 		return(pLS);
 }
 
-NAIVE_BAYES <- function(formula = formula, data=NULL,pca=TRUE,...)
+NAIVE_BAYES <- function(formula = formula, data=NULL,pca=TRUE,normalize=TRUE,...)
 {
 if (!requireNamespace("naivebayes", quietly = TRUE)) {
 	 install.packages("naivebayes", dependencies = TRUE)
@@ -437,8 +437,15 @@ if (!requireNamespace("naivebayes", quietly = TRUE)) {
 	{
 		outcome <- data[,baseformula[2]];
 		data <- as.data.frame(data[,!(colnames(data) %in% baseformula[2])]);
-		scaleparm <- FRESAScale(data,method="OrderLogit");
-		pcaobj <- prcomp(scaleparm$scaledData);
+		if (normalize)
+		{
+			scaleparm <- FRESAScale(data,method="OrderLogit");
+			pcaobj <- prcomp(scaleparm$scaledData);
+		}
+		else
+		{
+			pcaobj <- prcomp(data);
+		}
 		data <- as.data.frame(cbind(as.numeric(as.character(outcome)),pcaobj$x));
 		colnames(data) <- c(baseformula[2],colnames(pcaobj$x));
 		data[,baseformula[2]] <- as.factor(data[,baseformula[2]])
@@ -462,7 +469,10 @@ predict.FRESA_NAIVEBAYES <- function(object,...)
 	testData <- parameters[[1]];
 	if (!is.null(object$pcaobj))
 	{
-		testData <- FRESAScale(testData,method=object$scaleparm$method,refMean=object$scaleparm$refMean,refDisp=object$scaleparm$refDisp)$scaledData;
+		if (!is.null(object$scaleparm))
+		{
+			testData <- FRESAScale(testData,method=object$scaleparm$method,refMean=object$scaleparm$refMean,refDisp=object$scaleparm$refDisp)$scaledData;
+		}
 		testData <- predict(object$pcaobj,testData);
 	}
 	else
