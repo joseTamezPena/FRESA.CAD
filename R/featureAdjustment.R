@@ -67,7 +67,7 @@ if (!requireNamespace("MASS", quietly = TRUE)) {
 					{ 
 						model <- MASS::rlm(ftmp,data=cstrataref,na.action=na.exclude,method = "MM")
 			            sw <- sum(model$w);
-						dgf = sw-1.0;
+						dgf = sw-length(model$coef)+1;
 						m1 <- sum(model$w*cstrataref[,colnamesList[i]],na.rm = TRUE)/sw
 						rss1 <- sum(model$w*(cstrataref[,colnamesList[i]]^2),na.rm = TRUE)/sw-m1*m1
 						m2 <- sum(model$w*model$residuals,na.rm = TRUE)/sw
@@ -79,7 +79,7 @@ if (!requireNamespace("MASS", quietly = TRUE)) {
 					GLS =
 					{
 						model <- eval(parse(text=paste("try(nlme::gls(formula(",ftm1,"),cstrataref,na.action=na.exclude,correlation = nlme::corAR1(0.9,form = ~ 1 | ",correlationGroup,")))")))
-						dgf = nrow(cstrataref)-1;
+						dgf = nrow(cstrataref)-length(model$coef)+1;
 						rss1 <- var(cstrataref[,colnamesList[i]],na.rm = TRUE)
 						rss2 <- var(model$residuals,na.rm = TRUE);
 						f1 = rss1/rss2;
