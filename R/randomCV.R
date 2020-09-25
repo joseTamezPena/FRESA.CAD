@@ -235,6 +235,7 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
   {
     repetitions <- trainSampleSets$repetitions
   }
+  MADERROR <- numeric(repetitions);
   for (rept in 1:repetitions)
   {
     #		cat(ncol(theData),":",nrow(theData),"\n")
@@ -387,15 +388,24 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
         cols <- sum(fnames);
         if (cols>1)
         {
-          stdg <- apply(trainSet[,fnames],2,sd,na.rm = TRUE);
-          stdg <- min(stdg);
-          if (stdg == 0)
-          {
-            stdg <- 1.0e-5;
-          }
-          noiselevel <- 0.01*stdg;
+          sdg <- apply(trainSet[,fnames],2,sd,na.rm = TRUE);
+          iqrg <- apply(trainSet[,fnames],2,IQR,na.rm = TRUE);
+          rangeg <- apply(trainSet[,fnames],2,max,na.rm = TRUE)-apply(trainSet[,fnames],2,min,na.rm = TRUE);
+          iqrg[iqrg == 0] <- sdg[iqrg == 0];
+          iqrg[iqrg == 0] <- rangeg[iqrg == 0];
+          iqrg[iqrg == 0] <- 1.0e-10;
           rows <- nrow(trainSet);
-          trainSet[,fnames] <- trainSet[,fnames]+as.data.frame(matrix(noiselevel*rnorm(rows*cols),nrow=rows,ncol=cols));
+          iqrg <- iqrg/(2*rows);
+#          print(iqrg);
+#          print(summary(trainSet[,fnames]));
+          for (nf in names(iqrg))
+          {
+#            cat(nf,":",iqrg[nf],"\n");
+            noise <- as.numeric(rnorm(rows,0,iqrg[nf]));
+#           print(noise);
+            trainSet[,nf] <- trainSet[,nf]+noise;
+          }
+#          print(summary(trainSet[,fnames]));
         }
       }
       if ((testClases) && (asFactor))
@@ -557,7 +567,7 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
       testPredictions <- rbind(testPredictions,ctestPredictions);
       trainPredictions <- rbind(trainPredictions,ctrainPredictions);
     }
-    
+    MADERROR[rept] = 0;
     if ((!is.null(testPredictions) && length(rownames(testPredictions)) > 3 ))
     {
       boxstaTest <- try(boxplot(as.numeric(as.character(testPredictions[,3]))~rownames(testPredictions),plot = FALSE));
@@ -565,7 +575,11 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
       {
         medianTest <- cbind(theData[boxstaTest$names,theOutcome],boxstaTest$stats[3,])
         tb <- table(rownames(testPredictions));
-        cat(rept," Tested:",nrow(medianTest),"Min Tests:",min(tb),"Max Tests:",max(tb),"Mean Tests:",mean(tb),". MAD:",mean(abs(medianTest[,1]-medianTest[,2])),"\n");
+        MADERROR[rept] = mean(abs(medianTest[,1]-medianTest[,2]));
+        if ((rept %% 10) == 0)
+        {
+          cat(rept," Tested:",nrow(medianTest),"Min Tests:",min(tb),"Max Tests:",max(tb),"Mean Tests:",mean(tb),". MAD:",MADERROR[rept],"\n");
+        }
       }
     }
   }
@@ -742,6 +756,7 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
                   featureFrequency = featureFrequency,
                   jaccard = jaccard.sm,
                   theTimes = theTimes,
+                  MADERROR = MADERROR,
                   repetitions=repetitions
   );
   class(results) <- "RandomHOCV"
