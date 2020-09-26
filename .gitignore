@@ -76,3 +76,10 @@ src-x64/Makevars
 src-x64/Makevars.win
 src-x64/rankInverseNormalCpp.cpp
 src-x64/regresionFeatureSelectionCpp.cpp
+*.o
+src-i386/FRESACAD_init.cpp
+src-i386/FRESAcommons.cpp
+src-i386/FRESAcommons.h
+src-x64/FRESACAD_init.cpp
+src-x64/FRESAcommons.cpp
+src-x64/FRESAcommons.h
