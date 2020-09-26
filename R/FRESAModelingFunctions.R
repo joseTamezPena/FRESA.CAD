@@ -312,11 +312,11 @@ BESS <- function(formula = formula, data=NULL, method="sequential", ic.type="BIC
 		tb <- table(data[,baseformula[2]]);
 		if (length(tb)>2)
 		{
-			result <- list(fit=BeSS::bess(as.matrix(data[,usedFeatures]),as.vector(data[,baseformula[2]]), method=method, family = "gaussian", epsilon = 1e-12,ic.type=ic.type,...),formula = formula,usedFeatures=usedFeatures);
+			result <- list(fit=BeSS::bess(as.matrix(data[,usedFeatures]),as.vector(data[,baseformula[2]]), method=method, family = "gaussian", epsilon = 1e-12,...),ic.type=ic.type,formula = formula,usedFeatures=usedFeatures);
 		}
 		else
 		{
-			result <- list(fit=BeSS::bess(as.matrix(data[,usedFeatures]),as.vector(data[,baseformula[2]]), method=method, family = "binomial", epsilon = 0,ic.type=ic.type,...), formula = formula,usedFeatures=usedFeatures);
+			result <- list(fit=BeSS::bess(as.matrix(data[,usedFeatures]),as.vector(data[,baseformula[2]]), method=method, family = "binomial", epsilon = 0,...),ic.type=ic.type, formula = formula,usedFeatures=usedFeatures);
 
 		}
 		bessCoefficients <- result$fit$bestmodel$coefficients[-1];
