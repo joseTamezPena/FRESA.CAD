@@ -1,5 +1,6 @@
 Changes from FRESA.CAD 3.1.1 to FRESA.CAD version 3.3.0
 	Enhancements:
+		nearestNeighborImpute now can handle longitudinal datasets
 		Benchmarking Survival Models: CoxBenchmark
 		Clustering algorithms: GMVECluster and clusterISODATA
 		Latent Class Classification: HLCM and HLCM_EM
@@ -9,6 +10,7 @@ Changes from FRESA.CAD 3.1.1 to FRESA.CAD version 3.3.0
 	Bugs:
 	-Try added to prediction, to avoid crashing errors.
 	Minor Changes:
+	-FRESAScale OrderLogit function nows retunrs values form -2 to 2.
 	-ENS changed to ensemble
 	-Removed par(mfrow = c(1,1)) from code, so user has the freedom to collate plots
 	

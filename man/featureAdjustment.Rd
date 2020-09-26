@@ -12,7 +12,7 @@
 	                  strata = NA,
 	                  data,
 	                  referenceframe,
-	                  type = c("LM", "GLS"),
+	                  type = c("LM", "GLS", "RLM"),
 	                  pvalue = 0.05,
 	                  correlationGroup = "ID")
 }
@@ -33,7 +33,7 @@
 		A data frame similar to \code{data}, but with only the control population
 	}
 	\item{type}{
-		Fit type: linear fitting ("LM"), or generalized least squares fitting ("GLS")
+		Fit type: linear fitting ("LM"), generalized least squares fitting ("GLS") or Robust ("RLM")
 	}
 	\item{pvalue}{
 		The maximum \emph{p}-value, associated to the \emph{F}-test, for the model to be allowed to reduce variability
