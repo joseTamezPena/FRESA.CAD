@@ -14,8 +14,8 @@ Utilities include functions for: univariate/longitudinal analysis, data conditio
     \tabular{ll}{
         Package: \tab FRESA.CAD\cr
         Type: \tab Package\cr
-        Version: \tab 3.2.1\cr
-        Date: \tab 2020-09-25\cr
+        Version: \tab 3.3.0\cr
+        Date: \tab 2020-09-29\cr
         License: \tab LGPL (>= 2)\cr
     }
     Purpose: The design of diagnostic or prognostic multivariate models via the selection of significantly discriminant features.
@@ -31,7 +31,7 @@ Utilities include functions for: univariate/longitudinal analysis, data conditio
 }
 \references{Pencina, M. J., D'Agostino, R. B., & Vasan, R. S. (2008). Evaluating the added predictive ability of a new marker: from area under the ROC curve to reclassification and beyond. \emph{Statistics in medicine} \bold{27}(2), 157-172.}
 \author{
-Jose Gerardo Tamez-Pena, Antonio Martinez-Torteya and Israel Alanis
+Jose Gerardo Tamez-Pena, Antonio Martinez-Torteya, Israel Alanis and Jorge Orozco 
 Maintainer: <jose.tamezpena@tec.mx>
 }
 \examples{
