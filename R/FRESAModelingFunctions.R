@@ -551,7 +551,7 @@ predict.FRESA_RIDGE <- function(object,...)
 }
 
 
-HLCM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis = 0.0,classMethod=KNN_method,classModel.Control=NULL,minsize=10,...)
+HLCM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis = 0.1,classMethod=KNN_method,classModel.Control=NULL,minsize=10,...)
 {
 	if (class(formula) == "character")
 	{
@@ -709,7 +709,7 @@ HLCM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis = 0
 	return(result);
 }
 
-HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis = 0.0,classMethod=KNN_method,classModel.Control=NULL,minsize=10,...)
+HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis = 0.1,classMethod=KNN_method,classModel.Control=NULL,minsize=10,...)
 {
 	if (class(formula) == "character")
 	{
