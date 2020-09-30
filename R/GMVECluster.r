@@ -27,6 +27,7 @@
 GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthreshold = 0.50,sampling.rate = 3,jitter=TRUE,tryouts=25,pca=TRUE,verbose=FALSE)
 {
 
+#	print(colnames(dataset));
   if (!requireNamespace("robustbase", quietly = TRUE)) {
 	  install.packages("robustbase", dependencies = TRUE)
 	  }
@@ -39,11 +40,14 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 		pcaobj <- prcomp(scaleparm$scaledData);
 		dataset <- as.data.frame(pcaobj$x);
 		colnames(dataset) <- colnames(pcaobj$x);
-		dataset <- as.data.frame(dataset[,summary(pcaobj)$importance[3,] < 0.8])
+#		print(summary(pcaobj)$importance[3,]);
+		ncp <- c(1:max(c(min(3,ncol(dataset)),sum(summary(pcaobj)$importance[3,] <= 0.975))));
+		dataset <- as.data.frame(dataset[,ncp]);
 	}
 
 	  
 	intdata <- dataset
+#	print(colnames(intdata));
 	features <- colnames(dataset);
 	ndata <- nrow(intdata);
 	ClusterLabels <- numeric(ndata);

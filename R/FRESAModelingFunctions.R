@@ -1298,14 +1298,16 @@ GMVEBSWiMS <- function(formula = formula, data=NULL, GMVE.control = list(p.thres
 
 	models <- list();
 	selectedfeatures <- names(baseClass$bagging$frequencyTable);
+#	print(selectedfeatures);
 	fm <- selectedfeatures
 #			print(fm)
 	if (length(fm) > 0)
 	{		
 		if (error > 0.025) # more than 2.5% of error
 		{
-			fm <- names(univariate_Wilcoxon(data,Outcome,pvalue=0.05,limit=10));
-			selectedfeatures <- unique(fm,selectedfeatures);
+			fm <- unique(fm,names(univariate_Wilcoxon(data,Outcome,pvalue=0.05,limit=10)));
+			selectedfeatures <- fm;
+#			print(selectedfeatures);
 			if (is.null(GMVE.control))
 			{
 				clus <- GMVECluster(as.data.frame(data[,fm]));
