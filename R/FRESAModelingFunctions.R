@@ -158,12 +158,12 @@ GLMNET <- function(formula = formula, data=NULL,coef.thr=0.001,s="lambda.min",..
 	isSurv <- FALSE;
 	baseformula <- as.character(formula);
 	usedFeatures <- colnames(data)[!(colnames(data) %in% baseformula[2])]
-	if (length(usedFeatures)<5) #if less than 5 features, just use a lm fit.
-	{
-		warning("Less than five features. Returning a lm model");
-		result <- lm(formula,data);
-	}
-	else
+#	if (length(usedFeatures)<5) #if less than 5 features, just use a lm fit.
+#	{
+#		warning("Less than five features. Returning a lm model");
+#		result <- lm(formula,data);
+#	}
+#	else
 	{
 		if (sum(str_count(baseformula,"Surv")) > 0)
 		{
@@ -1201,9 +1201,11 @@ ClustClass <- function(formula = formula, data=NULL, filtermethod=univariate_Wil
 		clus <- do.call(clustermethod,c(list(data[,names(fm)]),clustermethod.control));
 	}
 	selectedfeatures <- names(fm);
+#	print(selectedfeatures)
 	tb <- table(clus$classification);
 	classlabels <- as.numeric(names(tb));
 	models <- list();
+	data <- data[,c(Outcome,selectedfeatures)];
 	if (length(classlabels) > 1)
 	{
 			tb <- table(clus$classification,outcomedata);

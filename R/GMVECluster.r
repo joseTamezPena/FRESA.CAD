@@ -41,7 +41,7 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 		dataset <- as.data.frame(pcaobj$x);
 		colnames(dataset) <- colnames(pcaobj$x);
 #		print(summary(pcaobj)$importance[3,]);
-		ncp <- c(1:max(c(min(3,ncol(dataset)),sum(summary(pcaobj)$importance[3,] <= 0.975))));
+		ncp <- c(1:max(c(min(3,ncol(dataset)),sum(summary(pcaobj)$importance[3,] <= 0.95))));
 		dataset <- as.data.frame(dataset[,ncp]);
 	}
 
