@@ -37,7 +37,7 @@ predict.FRESAsignature <- function(object, ...)
 	if (!is.null(parameters$method)) method=parameters$method;
 	controlDistances <- signatureDistance(object$fit$controlTemplate,testframe,method);
 	caseDistances <- signatureDistance(object$fit$caseTamplate,testframe,method);
-	distance <- controlDistances-caseDistances;
+	distance <- 2.0*(controlDistances-caseDistances);
 	return (distance);
 }
 

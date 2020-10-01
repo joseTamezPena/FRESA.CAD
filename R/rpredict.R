@@ -98,7 +98,7 @@ rpredict <-	function(currentModel,DataSet,asFactor=FALSE,classLen=2,...)
 		{
 			pred[pred == Inf] <- 36;
 			pred[pred == -Inf] <- -36;
-			if ((min(pred,na.rm=TRUE) < -0.1) || (max(pred,na.rm=TRUE) > 1.1 ))
+			if ((min(pred,na.rm=TRUE) < -0.01) || (max(pred,na.rm=TRUE) > 1.01 ))
 			{
 				pred[pred < -36] <- -36;
 				pred[pred > 36] <- 36;

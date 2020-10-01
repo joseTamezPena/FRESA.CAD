@@ -15,7 +15,7 @@ function (template, data=NULL, method = c("pearson","spearman","kendall","RSS","
 	method <- match.arg(method)
 	theQuant <- c(0.025,0.16,0.25,0.5,0.75,0.84,0.975);
 	
-	if (class(template) == "list")
+	if (class(template)[1] == "list")
 	{
 		theQuant <- template$quant;
 		template <- template$template;
@@ -23,7 +23,7 @@ function (template, data=NULL, method = c("pearson","spearman","kendall","RSS","
 
 	wvalues <- 1.0/abs(qnorm(theQuant));
 	
-	if (class(template)=="matrix")
+	if (class(template)[1]=="matrix")
 	{
 		vnames <- colnames(template);
 	}
@@ -34,36 +34,47 @@ function (template, data=NULL, method = c("pearson","spearman","kendall","RSS","
 	datasubset <- as.matrix(data[,vnames]);
 	
 	medianv <- as.integer((length(theQuant) + 1)/2);
-	if (class(template) == "matrix")
+	if (class(template)[1] == "matrix")
 	{
 		tem <- template[medianv,];
+		
+#		cat("median:")
+#		print(tem)
 		wts <- 0.0;
 		ld <- numeric(length(tem));
 		for (i in 1:(medianv - 1))
 		{
-			wts <- wts + 1.0;
-			ld <- ld + wvalues[i]*(tem - template[i,]);
+			wts <- wts + theQuant[i];
+			ld <- ld + theQuant[i]*wvalues[i]*(tem - template[i,]);
 		}
 		ld <- ld/wts;
 		mv <- min(ld[ld > 0]);
 		if (is.numeric(mv))	{ ld[ld == 0] <- mv }
 		else { ld[ld == 0] <- 1.0; }
-		qld <- tem - template[medianv - 1,];
+		qld <- (tem - template[medianv - 1,])*wvalues[medianv - 1];
 		qld[qld == 0] <- ld[qld == 0];
 
 		wts <- 0;
 		ud <- numeric(length(tem));
 		for (i in (medianv + 1):length(wvalues))
 		{
-			wts <- wts + 1.0;
-			ud <- ud + wvalues[i]*(template[i,] - tem);
+			wts <- wts + (1.0-theQuant[i]);
+			ud <- ud + (1.0-theQuant[i])*wvalues[i]*(template[i,] - tem);
 		}
 		ud <- ud/wts;
 		mv <- min(ud[ud > 0]);
 		if (is.numeric(mv))	{ ud[ud == 0] <- mv; }
 		else { ud[ud == 0] <- 1.0; }
-		qud <- template[medianv + 1,] - tem;
+		qud <- (template[medianv + 1,] - tem)*wvalues[medianv + 1];
 		qud[qud == 0] <- ud[qud == 0];
+#		cat("ld:")
+#		print(ld)
+#		cat("qld:")
+#		print(qld)
+#		cat("ud:")
+#		print(ud)
+#		cat("qud:")
+#		print(qud)
 	}
 	else
 	{
@@ -82,7 +93,7 @@ function (template, data=NULL, method = c("pearson","spearman","kendall","RSS","
 				md <- sqrt(sum(pmax(md/ud,-md/ld)^2,na.rm=TRUE));
 				return (md)
 			}
-			metric <- apply(datasubset,1,RSSDistance,tem,ld,ud);
+			metric <- apply(datasubset,1,RSSDistance,tem,ld,ud)/sqrt(ncol(template));
 		},
 		MAN = 
 		{ 
@@ -92,11 +103,11 @@ function (template, data=NULL, method = c("pearson","spearman","kendall","RSS","
 				md <- sum(pmax(md/ud,-md/ld),na.rm=TRUE);
 				return (md)
 			}
-			metric <- apply(datasubset,1,manDistance,tem,qld,qud);
+			metric <- apply(datasubset,1,manDistance,tem,qld,qud)/ncol(template);
 	  },
 		{
-			corDistance <- function (x,template,method) {md <- 1.0-cor(x,template,method=method,use="pairwise.complete.obs"); return (md)}
-			if (class(template)=="matrix")
+			corDistance <- function (x,template,method) {md <- 2.0*(1.0-cor(x,template,method=method,use="pairwise.complete.obs")); return (md)}
+			if (class(template)[1]=="matrix")
 			{
 				metric <- numeric(nrow(datasubset));
 				swts <- 0;

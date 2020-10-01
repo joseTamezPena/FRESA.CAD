@@ -71,7 +71,7 @@ function(modelPredictions,number.of.models=0,specificities=c(0.975,0.95,0.90,0.8
 	}
 	else
 	{
-		if (class(modelPredictions) == "data.frame")
+		if (class(modelPredictions)[1] == "data.frame")
 		{ 
 			if (!is.null(modelPredictions$Model)) modelPredictions$Model <- NULL;
 		}
