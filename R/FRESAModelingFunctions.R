@@ -391,7 +391,7 @@ TUNED_SVM <- function(formula = formula, data=NULL,gamma = 10^(-5:-1), cost = 10
 	if (!requireNamespace("e1071", quietly = TRUE)) {
 		install.packages("e1071", dependencies = TRUE)
 		}
-	obj <- e1071::tune.svm(formula, data=data,gamma = gamma, cost = cost);
+	obj <- e1071::tune.svm(formula, data=data,gamma = gamma, cost = cost,...);
 	fit <- e1071::svm(formula, data=data,gamma=obj$best.parameters$gamma,cost=obj$best.parameters$cost,...);
 	
 	parameters <- list(...);
