@@ -6,11 +6,11 @@ function (template, data=NULL, method = c("pearson","spearman","kendall","RSS","
 #the template is a named numeric vector
 #the data is a colnamed data frame
 #methods:
-# RSS: Root Sum Square
-# MAN: Manhattan distance
-# pearson: 1-Pearson correlation coefficient
-# spearman: 1-spearman correlation coefficient
-# kendall: 1-kendall correlation coefficient
+# RSS: Normalized Root Sum Square
+# MAN: Normalized Manhattan distance
+# pearson: 2*(1-Pearson correlation coefficient)
+# spearman: 2*(1-spearman correlation coefficient)
+# kendall: 2*(1-kendall correlation coefficient)
 
 	method <- match.arg(method)
 	theQuant <- c(0.025,0.16,0.25,0.5,0.75,0.84,0.975);
