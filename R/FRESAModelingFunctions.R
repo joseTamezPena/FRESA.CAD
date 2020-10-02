@@ -37,8 +37,11 @@ predict.FRESAsignature <- function(object, ...)
 	if (!is.null(parameters$method)) method=parameters$method;
 	controlDistances <- signatureDistance(object$fit$controlTemplate,testframe,method);
 	caseDistances <- signatureDistance(object$fit$caseTamplate,testframe,method);
-	distance <- 2.0*(controlDistances-caseDistances);
-	return (distance);
+	controlp <- 2*pnorm(controlDistances, lower.tail = FALSE);
+	casep <- 2*pnorm(caseDistances, lower.tail = FALSE);
+	controlp[controlp==0] <- 1e-10;
+	distancep <- casep/(controlp+casep);
+	return (distancep);
 }
 
 KNN_method <- function(formula = formula, data=NULL, ...)
