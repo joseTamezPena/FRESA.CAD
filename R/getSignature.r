@@ -48,7 +48,7 @@ CVDistance <- function (casesample,controlsample,CVFolds,totRepeats,target)
 	if (target=="Control") 
 	{
 		distance = controlDistance;
-		cAUC <- pROC::roc(outcomes,distance,auc=TRUE,direction="<")$auc
+		cAUC <- pROC::roc(outcomes,distance,auc=TRUE,direction="<",quiet = TRUE)$auc
 		cont <- distance[outcomes==0];
 		case <- distance[outcomes==1];
 		zdis <- (mean(case,trim=trimvalue,na.rm=TRUE)-mean(cont,trim=trimvalue,na.rm=TRUE))/(1.0e-10+sqrt((var(case,na.rm=TRUE)+var(cont,na.rm=TRUE))/2));
@@ -58,7 +58,7 @@ CVDistance <- function (casesample,controlsample,CVFolds,totRepeats,target)
 		if (target=="Case") 
 		{
 			distance = caseDistance;
-			cAUC <- pROC::roc(outcomes,distance,auc=TRUE,direction=">")$auc
+			cAUC <- pROC::roc(outcomes,distance,auc=TRUE,direction=">",quiet = TRUE)$auc
 			cont <- distance[outcomes==0];
 			case <- distance[outcomes==1];
 			zdis <- (mean(cont,trim=trimvalue,na.rm=TRUE)-mean(case,trim=trimvalue,na.rm=TRUE))/(1.0e-10+sqrt((var(case,na.rm=TRUE)+var(cont,na.rm=TRUE))/2));
@@ -68,7 +68,7 @@ CVDistance <- function (casesample,controlsample,CVFolds,totRepeats,target)
 			distance = controlDistance-caseDistance;
 			sen <- sum((distance>=0)*outcomes)/sum(outcomes);
 			spe <- sum((distance<0)*(outcomes==0))/sum(outcomes==0);
-			cAUC <- (0.75*(sen+spe)/2+0.25*pROC::roc(outcomes,distance,auc=TRUE,direction="<")$auc);
+			cAUC <- (0.75*(sen+spe)/2+0.25*pROC::roc(outcomes,distance,auc=TRUE,direction="<",quiet = TRUE)$auc);
 #			cat("Sen",sen,"Spe",spe,"AUC",pROC::roc(outcomes,distance,auc=TRUE,direction="<")$auc,"(",sum(outcomes),":",sum(outcomes==0),")\n")
 			cont <- distance[outcomes==0];
 			case <- distance[outcomes==1];

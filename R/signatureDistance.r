@@ -48,11 +48,7 @@ function (template, data=NULL, method = c("pearson","spearman","kendall","RSS","
 			ld <- ld + theQuant[i]*wvalues[i]*(tem - template[i,]);
 		}
 		ld <- ld/wts;
-		mv <- min(ld[ld > 0]);
-		if (is.numeric(mv))	{ ld[ld == 0] <- mv }
-		else { ld[ld == 0] <- 1.0; }
 		qld <- (tem - template[medianv - 1,])*wvalues[medianv - 1];
-		qld[qld == 0] <- ld[qld == 0];
 
 		wts <- 0;
 		ud <- numeric(length(tem));
@@ -62,11 +58,16 @@ function (template, data=NULL, method = c("pearson","spearman","kendall","RSS","
 			ud <- ud + (1.0-theQuant[i])*wvalues[i]*(template[i,] - tem);
 		}
 		ud <- ud/wts;
-		mv <- min(ud[ud > 0]);
-		if (is.numeric(mv))	{ ud[ud == 0] <- mv; }
-		else { ud[ud == 0] <- 1.0; }
 		qud <- (template[medianv + 1,] - tem)*wvalues[medianv + 1];
+
+		ld[ld == 0] <- 0.33*ud[ld == 0];
+		ld[ld == 0] <- 0.33;
+		qld[qld == 0] <- ld[qld == 0];
+
+		ud[ud == 0] <- 0.33*ld[ud == 0];
+		ud[ud == 0] <- 0.33;
 		qud[qud == 0] <- ud[qud == 0];
+
 #		cat("ld:")
 #		print(ld)
 #		cat("qld:")
@@ -80,9 +81,13 @@ function (template, data=NULL, method = c("pearson","spearman","kendall","RSS","
 	{
 		tem <- template;
 		ld <- sd(template);
+		ld[ld == 0] <- 0.33;
+
 		ud <- ld;
-		qld <- IQR(template)/2;
+		qld <- IQR(template)/abs(qnorm(0.25))/2;
+		qld[qld == 0] <- ld[qld == 0];
 		qud <- qld;
+
 	}
 	switch(method, 
 		RSS = 
