@@ -111,7 +111,7 @@ function (template, data=NULL, method = c("pearson","spearman","kendall","RSS","
 			metric <- apply(datasubset,1,manDistance,tem,qld,qud)/ncol(template);
 	  },
 		{
-			corDistance <- function (x,template,method) {md <- 4.0*(1.0-cor(x,template,method=method,use="pairwise.complete.obs")); return (md)}
+			corDistance <- function (x,template,method) {md <- 3.0*(1.0-cor(x,template,method=method,use="pairwise.complete.obs")); return (md)}
 			if (class(template)[1]=="matrix")
 			{
 				metric <- numeric(nrow(datasubset));

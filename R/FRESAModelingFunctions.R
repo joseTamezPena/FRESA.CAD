@@ -39,8 +39,9 @@ predict.FRESAsignature <- function(object, ...)
 	caseDistances <- signatureDistance(object$fit$caseTamplate,testframe,method);
 	controlp <- 2*pnorm(controlDistances, lower.tail = FALSE);
 	casep <- 2*pnorm(caseDistances, lower.tail = FALSE);
-	controlp[controlp==0] <- 1e-10;
-	distancep <- casep/(controlp+casep);
+	distancep <- (casep + (1.0-controlp))/2;
+	attr(distancep,"controlDistances") <- controlDistances;
+	attr(distancep,"caseDistances") <- caseDistances;
 	return (distancep);
 }
 
