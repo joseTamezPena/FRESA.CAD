@@ -11,8 +11,8 @@ CVsignature <- function(formula = formula, data=NULL, ...)
 	{
 		parameters <- list(...);
 		target="All";
-		CVFolds=0;
-		repeats=9;
+		CVFolds <- 0;
+		repeats <- 9;
 		distanceFunction=signatureDistance;
 		method="pearson";
 		if (!is.null(parameters$target)) target=parameters$target;
@@ -32,16 +32,36 @@ CVsignature <- function(formula = formula, data=NULL, ...)
 predict.FRESAsignature <- function(object, ...) 
 {
 	parameters <- list(...);
+	wts <- NULL;
 	testframe <- parameters[[1]];
 	method <- object$method;
-	if (!is.null(parameters$method)) method=parameters$method;
-	controlDistances <- signatureDistance(object$fit$controlTemplate,testframe,method);
-	caseDistances <- signatureDistance(object$fit$caseTamplate,testframe,method);
+	if (!is.null(parameters$method)) method <- parameters$method;
+	if (!is.null(parameters$wts)) 
+	{
+		wts <- parameters$wts;
+	}
+	else
+	{
+		if (class(object$fit$caseTamplate) == "list")
+		{
+			ca_tmp <- object$fit$caseTamplate$template;
+			co_tmp <- object$fit$controlTemplate$template;
+			mvs <- as.integer(nrow(ca_tmp)/2 + 1.0);
+			wts <- abs(ca_tmp[mvs,] - co_tmp[mvs,]);
+			sdd <- pmax((co_tmp[mvs+1,]-co_tmp[mvs-1,]),(ca_tmp[mvs+1,]-ca_tmp[mvs-1,]));
+			sdd[sdd == 0] <- 0.1;
+			wts <- wts/sdd;
+			wts[wts == 0] <- 0.01; 
+		}
+	}
+	controlDistances <- signatureDistance(object$fit$controlTemplate,testframe,method,wts);
+	caseDistances <- signatureDistance(object$fit$caseTamplate,testframe,method,wts);
 	controlp <- 2*pnorm(controlDistances, lower.tail = FALSE);
 	casep <- 2*pnorm(caseDistances, lower.tail = FALSE);
 	distancep <- (casep + (1.0-controlp))/2;
 	attr(distancep,"controlDistances") <- controlDistances;
 	attr(distancep,"caseDistances") <- caseDistances;
+	attr(distancep,"wts") <- wts;
 	return (distancep);
 }
 

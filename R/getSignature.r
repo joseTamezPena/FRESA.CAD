@@ -182,8 +182,10 @@ CVDistance <- function (casesample,controlsample,CVFolds,totRepeats,target)
 
 	Ntemplate <- apply(as.matrix(controlsample[,minkeep]),2,quantile,probs = theProbs,na.rm = TRUE);
 	Ptemplate <- apply(as.matrix(casesample[,minkeep]),2,quantile,probs = theProbs,na.rm = TRUE);
-	Ntemplate <- list(template=Ntemplate,quant=theProbs);
-	Ptemplate <- list(template=Ptemplate,quant=theProbs);
+	Nmean <- apply(as.matrix(controlsample[,minkeep]),2,mean,na.rm = TRUE);
+	Pmean <- apply(as.matrix(casesample[,minkeep]),2,mean,na.rm = TRUE);
+	Ntemplate <- list(template=Ntemplate,quant=theProbs,mean=Nmean);
+	Ptemplate <- list(template=Ptemplate,quant=theProbs,mean=Pmean);
 	
 	result <- list(controlTemplate=Ntemplate,
 				   caseTamplate=Ptemplate,

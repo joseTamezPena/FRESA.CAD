@@ -1,5 +1,5 @@
 signatureDistance <- 
-function (template, data=NULL, method = c("pearson","spearman","kendall","RSS","MAN"))
+function (template, data=NULL, method = c("pearson","spearman","kendall","RSS","MAN"),fwts=NULL)
 {
 
 #given the template: mean,median,sample, etc....;signatureDistance it will return the distance between the template to each row of the dataframe
@@ -19,6 +19,11 @@ function (template, data=NULL, method = c("pearson","spearman","kendall","RSS","
 	{
 		theQuant <- template$quant;
 		template <- template$template;
+		meant <- template$mean;
+	}
+	if (is.null(fwts))
+	{
+		fwts <- rep(1,ncol(template));
 	}
 
 	wvalues <- 1.0/abs(qnorm(theQuant));
@@ -36,7 +41,7 @@ function (template, data=NULL, method = c("pearson","spearman","kendall","RSS","
 	medianv <- as.integer((length(theQuant) + 1)/2);
 	if (class(template)[1] == "matrix")
 	{
-		tem <- template[medianv,];
+		tem <- meant;
 		
 #		cat("median:")
 #		print(tem)
@@ -60,12 +65,12 @@ function (template, data=NULL, method = c("pearson","spearman","kendall","RSS","
 		ud <- ud/wts;
 		qud <- (template[medianv + 1,] - tem)*wvalues[medianv + 1];
 
-		ld[ld == 0] <- 0.33*ud[ld == 0];
-		ld[ld == 0] <- 0.33;
+		ld[ld == 0] <- 0.25*ud[ld == 0];
+		ld[ld == 0] <- 0.25;
 		qld[qld == 0] <- ld[qld == 0];
 
-		ud[ud == 0] <- 0.33*ld[ud == 0];
-		ud[ud == 0] <- 0.33;
+		ud[ud == 0] <- 0.25*ld[ud == 0];
+		ud[ud == 0] <- 0.25;
 		qud[qud == 0] <- ud[qud == 0];
 
 #		cat("ld:")
@@ -92,23 +97,25 @@ function (template, data=NULL, method = c("pearson","spearman","kendall","RSS","
 	switch(method, 
 		RSS = 
 		{ 
-			RSSDistance <- function (x,template,ld,ud) 
+			RSSDistance <- function (x,template,ld,ud,wts) 
 			{
-				md <- x-template
-				md <- sqrt(sum(pmax(md/ud,-md/ld)^2,na.rm=TRUE));
+				md <- (x-template)*wts;
+				tsum = sum(wts);
+				md <- sqrt(sum(pmax(md/ud,-md/ld)^2,na.rm=TRUE)/tsum);
 				return (md)
 			}
-			metric <- apply(datasubset,1,RSSDistance,tem,ld,ud)/sqrt(ncol(template));
+			metric <- apply(datasubset,1,RSSDistance,tem,ld,ud,fwts);
 		},
 		MAN = 
 		{ 
-			manDistance <- function (x,template,ld,ud) 
+			manDistance <- function (x,template,ld,ud,wts) 
 			{
-				md <- x-template
-				md <- sum(pmax(md/ud,-md/ld),na.rm=TRUE);
+				md <- (x-template)*wts;
+				tsum = sum(wts);
+				md <- sum(pmax(md/ud,-md/ld),na.rm=TRUE)/tsum;
 				return (md)
 			}
-			metric <- apply(datasubset,1,manDistance,tem,qld,qud)/ncol(template);
+			metric <- apply(datasubset,1,manDistance,tem,qld,qud,fwts);
 	  },
 		{
 			corDistance <- function (x,template,method) {md <- 3.0*(1.0-cor(x,template,method=method,use="pairwise.complete.obs")); return (md)}

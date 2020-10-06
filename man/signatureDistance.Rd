@@ -8,7 +8,8 @@
 	signatureDistance(
 	              template,
 	              data=NULL,
-	              method = c("pearson","spearman","kendall","RSS","MAN")
+	              method = c("pearson","spearman","kendall","RSS","MAN"),
+	              fwts=NULL
 	)
 }
 \arguments{
@@ -21,6 +22,9 @@
 	}
 	\item{method}{
 		The distance method.
+	}
+	\item{fwts}{
+		A numeric vector defining the weight of each feature
 	}
 }
 \details{
