@@ -212,13 +212,18 @@ predictionStats_binary <-  function(predictions, plotname="", center=FALSE,...)
 		predictions <- predictions[!is.na(predictions[,2]),]
 	}	
     if (center) predictions[,2] <- predictions[,2] - 0.5;
-	if (min(predictions[,2]) >= 0)
-	{
-		predictions[,2] <- predictions[,2] - 0.5;
-	}
+#	if (min(predictions[,2]) >= 0)
+#	{
+#		predictions[,2] <- predictions[,2] - 0.5;
+#	}
 	
     pm <- NULL;
 	citest <- NULL;
+	thrval <- 0.5;
+	if ((min(predictions[,2]) < -0.01) | (max(predictions[,2]) > 1.01))
+	{
+		thrval <- 0.0;
+	}
     if (nchar(plotname) > 1)
     {
       pm <- plotModels.ROC(predictions,main = plotname,...);
@@ -228,7 +233,7 @@ predictionStats_binary <-  function(predictions, plotname="", center=FALSE,...)
     {
       pm <- pROC::roc(as.vector(predictions[,1]),predictions[,2],quiet = TRUE);
       cis <- ci.auc(pm);
-      pm$predictionTable <- table(predictions[,2] < 0,1 - predictions[,1]);
+      pm$predictionTable <- table(predictions[,2] < thrval,1 - predictions[,1]);
 		if (nrow(pm$predictionTable) == 1)
 		{
 			if ((rownames(pm$predictionTable) == "0") || (rownames(pm$predictionTable) == "FALSE"))
@@ -242,7 +247,7 @@ predictionStats_binary <-  function(predictions, plotname="", center=FALSE,...)
 			rownames(pm$predictionTable) <- c("0","1")
 		}
     }
-	class95ci <- ClassMetric95ci(cbind(predictions[,1],predictions[,2] >= 0),200 + 800*(nrow(predictions) < 1000) );
+	class95ci <- ClassMetric95ci(cbind(predictions[,1],predictions[,2] >= thrval),200 + 800*(nrow(predictions) < 1000) );
 
 #    print(pm$predictionTable)
     if (length(pm$predictionTable) > 2 )

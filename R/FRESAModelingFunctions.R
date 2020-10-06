@@ -47,11 +47,11 @@ predict.FRESAsignature <- function(object, ...)
 			ca_tmp <- object$fit$caseTamplate$template;
 			co_tmp <- object$fit$controlTemplate$template;
 			mvs <- as.integer(nrow(ca_tmp)/2 + 1.0);
-			wts <- abs(ca_tmp[mvs,] - co_tmp[mvs,]);
-			sdd <- pmax((co_tmp[mvs+1,]-co_tmp[mvs-1,]),(ca_tmp[mvs+1,]-ca_tmp[mvs-1,]));
+			wts <- abs(object$fit$caseTamplate$meanv - object$fit$controlTemplate$meanv);
+			sdd <- pmax((co_tmp[mvs+2,]-co_tmp[mvs-2,]),(ca_tmp[mvs+2,]-ca_tmp[mvs-2,]));
 			sdd[sdd == 0] <- 0.1;
 			wts <- wts/sdd;
-			wts[wts == 0] <- 0.01; 
+			wts[wts == 0] <- 0.001; 
 		}
 	}
 	controlDistances <- signatureDistance(object$fit$controlTemplate,testframe,method,wts);

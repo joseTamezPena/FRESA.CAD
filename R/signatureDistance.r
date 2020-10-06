@@ -18,8 +18,8 @@ function (template, data=NULL, method = c("pearson","spearman","kendall","RSS","
 	if (class(template)[1] == "list")
 	{
 		theQuant <- template$quant;
+		meant <- template$meanv;
 		template <- template$template;
-		meant <- template$mean;
 	}
 	if (is.null(fwts))
 	{
