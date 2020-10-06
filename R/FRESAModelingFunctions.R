@@ -46,12 +46,20 @@ predict.FRESAsignature <- function(object, ...)
 		{
 			ca_tmp <- object$fit$caseTamplate$template;
 			co_tmp <- object$fit$controlTemplate$template;
-			mvs <- as.integer(nrow(ca_tmp)/2 + 1.0);
-			wts <- abs(object$fit$caseTamplate$meanv - object$fit$controlTemplate$meanv);
-			sdd <- pmax((co_tmp[mvs+2,]-co_tmp[mvs-2,]),(ca_tmp[mvs+2,]-ca_tmp[mvs-2,]));
-			sdd[sdd == 0] <- 0.1;
-			wts <- wts/sdd;
-			wts[wts == 0] <- 0.001; 
+			mvs <- as.integer((nrow(ca_tmp)+ 1.0)/2);
+			wts <- object$fit$caseTamplate$meanv - object$fit$controlTemplate$meanv;
+			sddCa <- (ca_tmp[mvs,]-ca_tmp[mvs-2,]);
+			sddCo <- (co_tmp[mvs+2,]-co_tmp[mvs,]);
+			sddP <- pmin(sddCa,sddCo);
+			sddCa <- (ca_tmp[mvs+2,]-ca_tmp[mvs,]);
+			sddCo <- (co_tmp[mvs,]-co_tmp[mvs-2,]);
+			sddN <- pmin(sddCa,sddCo);
+			sdd <- sddP;
+			sdd[wts < 0] <- sddN[wts < 0];
+			sdd[sdd == 0] <- 0.25*(sddP[sdd == 0] + sddN[sdd == 0]);
+			sdd[sdd == 0] <- 0.25;
+			wts <- (wts/sdd)^2;
+			wts[wts == 0] <- 0.0001; 
 		}
 	}
 	controlDistances <- signatureDistance(object$fit$controlTemplate,testframe,method,wts);

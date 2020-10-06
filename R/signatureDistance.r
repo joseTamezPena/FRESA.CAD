@@ -39,37 +39,49 @@ function (template, data=NULL, method = c("pearson","spearman","kendall","RSS","
 	datasubset <- as.matrix(data[,vnames]);
 	
 	medianv <- as.integer((length(theQuant) + 1)/2);
+	ld <- NULL;
+	ud <- NULL;
+	qld <- NULL;
+	qud <- NULL;
 	if (class(template)[1] == "matrix")
 	{
 		tem <- meant;
 		
 #		cat("median:")
 #		print(tem)
-		wts <- 0.0;
+		wts <- numeric(length(tem));
 		ld <- numeric(length(tem));
 		for (i in 1:(medianv - 1))
 		{
-			wts <- wts + theQuant[i];
-			ld <- ld + theQuant[i]*wvalues[i]*(tem - template[i,]);
+			tdis <- tem - template[i,];
+			wts <- wts + theQuant[i]*(tdis >= 0);
+			tdis[tdis < 0] <- 0;
+			ld <- ld + theQuant[i]*wvalues[i]*(tdis >= 0)*tdis;
 		}
 		ld <- ld/wts;
-		qld <- (tem - template[medianv - 1,])*wvalues[medianv - 1];
+		tdis <- tem - template[medianv - 2,];
+		tdis[tdis < 0] <- 0;
+		qld <- tdis*wvalues[medianv - 2];
 
 		wts <- 0;
 		ud <- numeric(length(tem));
 		for (i in (medianv + 1):length(wvalues))
 		{
-			wts <- wts + (1.0-theQuant[i]);
-			ud <- ud + (1.0-theQuant[i])*wvalues[i]*(template[i,] - tem);
+			tdis <- template[i,] - tem;
+			wts <- wts + (1.0-theQuant[i])*(tdis >= 0);
+			tdis[tdis < 0] <- 0;
+			ud <- ud + (1.0-theQuant[i])*wvalues[i]*(tdis >= 0)*tdis;
 		}
 		ud <- ud/wts;
-		qud <- (template[medianv + 1,] - tem)*wvalues[medianv + 1];
+		tdis <- template[medianv + 2,] - tem;
+		tdis[tdis < 0] <- 0;
+		qud <- tdis*wvalues[medianv + 2];
 
-		ld[ld == 0] <- 0.25*ud[ld == 0];
+		ld[ld == 0] <- 0.5*ud[ld == 0];
 		ld[ld == 0] <- 0.25;
 		qld[qld == 0] <- ld[qld == 0];
 
-		ud[ud == 0] <- 0.25*ld[ud == 0];
+		ud[ud == 0] <- 0.5*ld[ud == 0];
 		ud[ud == 0] <- 0.25;
 		qud[qud == 0] <- ud[qud == 0];
 
@@ -86,7 +98,7 @@ function (template, data=NULL, method = c("pearson","spearman","kendall","RSS","
 	{
 		tem <- template;
 		ld <- sd(template);
-		ld[ld == 0] <- 0.33;
+		ld[ld == 0] <- 0.25;
 
 		ud <- ld;
 		qld <- IQR(template)/abs(qnorm(0.25))/2;
@@ -144,6 +156,10 @@ function (template, data=NULL, method = c("pearson","spearman","kendall","RSS","
 		}
 	)
 	names(metric) <- rownames(data);
+	attr(metric,"ld") <- ld;
+	attr(metric,"ud") <- ud;
+	attr(metric,"qld") <- qld;
+	attr(metric,"qud") <- qud;
 	metric[is.na(metric)] <- 1.0e10;
 	
 	result <- metric
