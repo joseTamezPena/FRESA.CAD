@@ -56,9 +56,10 @@ predict.FRESAsignature <- function(object, ...)
 			sddN <- pmin(sddCa,sddCo);
 			sdd <- sddP;
 			sdd[wts < 0] <- sddN[wts < 0];
-			sdd[sdd == 0] <- 0.25*(sddP[sdd == 0] + sddN[sdd == 0]);
+			sdd[sdd == 0] <- 0.5*(sddP[sdd == 0] + sddN[sdd == 0]);
 			sdd[sdd == 0] <- 0.25;
-			wts <- (wts/sdd)^2;
+			wts <- (abs(wts)/sdd);
+			wts[wts > 2.0] <- 2.0;
 			wts[wts == 0] <- 0.0001; 
 		}
 	}

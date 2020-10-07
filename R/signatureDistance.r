@@ -54,24 +54,28 @@ function (template, data=NULL, method = c("pearson","spearman","kendall","RSS","
 		for (i in 1:(medianv - 1))
 		{
 			tdis <- tem - template[i,];
-			wts <- wts + theQuant[i]*(tdis >= 0);
+			w <- (tdis >= 0)*theQuant[i];
+			wts <- wts + w;
 			tdis[tdis < 0] <- 0;
-			ld <- ld + theQuant[i]*wvalues[i]*(tdis >= 0)*tdis;
+			ld <- ld + w*wvalues[i]*tdis;
 		}
+		wts[wts == 0] <- 1.0e-10;
 		ld <- ld/wts;
 		tdis <- tem - template[medianv - 2,];
 		tdis[tdis < 0] <- 0;
 		qld <- tdis*wvalues[medianv - 2];
 
-		wts <- 0;
+		wts <- numeric(length(tem));
 		ud <- numeric(length(tem));
 		for (i in (medianv + 1):length(wvalues))
 		{
 			tdis <- template[i,] - tem;
-			wts <- wts + (1.0-theQuant[i])*(tdis >= 0);
+			w <- (tdis >= 0)*(1.0-theQuant[i]);
+			wts <- wts + w;
 			tdis[tdis < 0] <- 0;
-			ud <- ud + (1.0-theQuant[i])*wvalues[i]*(tdis >= 0)*tdis;
+			ud <- ud + w*wvalues[i]*tdis;
 		}
+		wts[wts == 0] <- 1.0e-10;
 		ud <- ud/wts;
 		tdis <- template[medianv + 2,] - tem;
 		tdis[tdis < 0] <- 0;
