@@ -14,11 +14,13 @@ function (template, data=NULL, method = c("pearson","spearman","kendall","RSS","
 
 	method <- match.arg(method)
 	theQuant <- c(0.025,0.16,0.25,0.5,0.75,0.84,0.975);
-	
+	samplesize <- 2.0;
 	if (class(template)[1] == "list")
 	{
+		samplesize <- template$samples;
 		theQuant <- template$quant;
 		meant <- template$meanv;
+		sdt <- template$sdv;
 		template <- template$template;
 	}
 	if (is.null(fwts))
@@ -26,7 +28,7 @@ function (template, data=NULL, method = c("pearson","spearman","kendall","RSS","
 		fwts <- rep(1,ncol(template));
 	}
 
-	wvalues <- 1.0/abs(qnorm(theQuant));
+	wvalues <- 1.0/abs(qt(theQuant,df=samplesize-1));
 	
 	if (class(template)[1]=="matrix")
 	{
@@ -82,10 +84,12 @@ function (template, data=NULL, method = c("pearson","spearman","kendall","RSS","
 		qud <- tdis*wvalues[medianv + 2];
 
 		ld[ld == 0] <- 0.5*ud[ld == 0];
+		ld[ld == 0] <- sdt[ld == 0];
 		ld[ld == 0] <- 0.25;
 		qld[qld == 0] <- ld[qld == 0];
 
 		ud[ud == 0] <- 0.5*ld[ud == 0];
+		ud[ud == 0] <- sdt[ld == 0];
 		ud[ud == 0] <- 0.25;
 		qud[qud == 0] <- ud[qud == 0];
 

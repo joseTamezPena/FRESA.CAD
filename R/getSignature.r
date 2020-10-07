@@ -186,6 +186,8 @@ CVDistance <- function (casesample,controlsample,CVFolds,totRepeats,target)
 	Pmedian <- apply(as.matrix(casesample[,minkeep]),2,median,na.rm = TRUE);
 	Nmean <- apply(as.matrix(controlsample[,minkeep]),2,mean,na.rm = TRUE);
 	Pmean <- apply(as.matrix(casesample[,minkeep]),2,mean,na.rm = TRUE);
+	Nsd <- apply(as.matrix(controlsample[,minkeep]),2,sd,na.rm = TRUE);
+	Psd <- apply(as.matrix(casesample[,minkeep]),2,sd,na.rm = TRUE);
 	for (sf in minkeep)
 	{
 		vtype <- length(table(data[,sf]));
@@ -197,8 +199,8 @@ CVDistance <- function (casesample,controlsample,CVFolds,totRepeats,target)
 	}
 
 
-	Ntemplate <- list(template=Ntemplate,quant=theProbs,meanv=Nmean);
-	Ptemplate <- list(template=Ptemplate,quant=theProbs,meanv=Pmean);
+	Ntemplate <- list(template=Ntemplate,quant=theProbs,meanv=Nmean,sdv=Nsd,samples=controlsamplesize);
+	Ptemplate <- list(template=Ptemplate,quant=theProbs,meanv=Pmean,sdv=Psd,samples=casesamplesize);
 	
 	result <- list(controlTemplate=Ntemplate,
 				   caseTamplate=Ptemplate,
@@ -207,7 +209,7 @@ CVDistance <- function (casesample,controlsample,CVFolds,totRepeats,target)
 				   featureSizeEvolution=featureSizeEvolution,
 				   featureList=minkeep,
 				   CVOutput=CVOutput,
-				   maxES=maxES
+				   maxES=maxES 
 				   );
   
 	return (result);

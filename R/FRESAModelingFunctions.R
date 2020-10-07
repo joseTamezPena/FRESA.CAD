@@ -20,6 +20,7 @@ CVsignature <- function(formula = formula, data=NULL, ...)
 		if (!is.null(parameters$repeats)) repeats=parameters$repeats;
 		if (!is.null(parameters$distanceFunction)) distanceFunction=parameters$distanceFunction;
 		if (!is.null(parameters$method)) method=parameters$method;
+		
 		cvsig <- getSignature(data=data,varlist=usedFeatures,Outcome=baseformula[2],target,CVFolds,repeats,distanceFunction,method);
 		variable.importance <- 1:length(cvsig$featureList);
 		names(variable.importance) <- cvsig$featureList;
@@ -57,17 +58,18 @@ predict.FRESAsignature <- function(object, ...)
 			sdd <- sddP;
 			sdd[wts < 0] <- sddN[wts < 0];
 			sdd[sdd == 0] <- 0.5*(sddP[sdd == 0] + sddN[sdd == 0]);
+			sdd[sdd == 0] <- 0.5*(object$fit$controlTemplate$sdv[sdd == 0] + object$fit$caseTamplate$sdv[sdd == 0]);
 			sdd[sdd == 0] <- 0.25;
 			wts <- (abs(wts)/sdd);
 			wts[wts > 2.0] <- 2.0;
 			wts[wts == 0] <- 0.0001; 
 		}
 	}
+	
+
 	controlDistances <- signatureDistance(object$fit$controlTemplate,testframe,method,wts);
 	caseDistances <- signatureDistance(object$fit$caseTamplate,testframe,method,wts);
-	controlp <- 2*pnorm(controlDistances, lower.tail = FALSE);
-	casep <- 2*pnorm(caseDistances, lower.tail = FALSE);
-	distancep <- (casep + (1.0-controlp))/2;
+	distancep <- pnorm(controlDistances-caseDistances);
 	attr(distancep,"controlDistances") <- controlDistances;
 	attr(distancep,"caseDistances") <- caseDistances;
 	attr(distancep,"wts") <- wts;
