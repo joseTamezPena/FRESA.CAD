@@ -119,9 +119,9 @@ function (template, data=NULL, method = c("pearson","spearman","kendall","RSS","
 		{ 
 			RSSDistance <- function (x,template,ld,ud,wts) 
 			{
-				md <- (x-template)*wts;
+				md <- (x-template);
 				tsum = sum(wts);
-				md <- sqrt(sum(pmax(md/ud,-md/ld)^2,na.rm=TRUE)/tsum);
+				md <- sqrt(sum(wts*(pmax(md/ud,-md/ld)^2),na.rm=TRUE)/tsum);
 				return (md)
 			}
 			metric <- apply(datasubset,1,RSSDistance,tem,ld,ud,fwts);

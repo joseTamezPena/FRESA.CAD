@@ -2,7 +2,7 @@ CVsignature <- function(formula = formula, data=NULL, ...)
 {
 	baseformula <- as.character(formula);
 	usedFeatures <- colnames(data)[!(colnames(data) %in% baseformula[2])]
-	if (length(usedFeatures)<5) #if less than 5 features, just use a glm fit.
+	if (length(usedFeatures)<3) #if less than 3 features, just use a glm fit.
 	{
 		warning("Less than five features. Returning a glm model");
 		result <- glm(formula,data=data,na.action=na.exclude,family=binomial(link=logit));
@@ -22,9 +22,33 @@ CVsignature <- function(formula = formula, data=NULL, ...)
 		if (!is.null(parameters$method)) method=parameters$method;
 		
 		cvsig <- getSignature(data=data,varlist=usedFeatures,Outcome=baseformula[2],target,CVFolds,repeats,distanceFunction,method);
-		variable.importance <- 1:length(cvsig$featureList);
-		names(variable.importance) <- cvsig$featureList;
-		result <- list(fit=cvsig,method=method,variable.importance=variable.importance);
+#		variable.importance <- 1:length(cvsig$featureList);
+#		names(variable.importance) <- cvsig$featureList;
+		
+		misam <- min(cvsig$caseTamplate$samples,cvsig$controlTemplate$samples);
+		lowtthr <- qt(0.4,misam-1,lower.tail = FALSE); # The distance has to greater than t values with a chance of 0.6 success
+		uptthr  <- qt(0.01,misam-1,lower.tail = FALSE); # The distance has to greater than t values with a chance of 0.6 success
+		ca_tmp <- cvsig$caseTamplate$template;
+		co_tmp <- cvsig$controlTemplate$template;
+		mvs <- as.integer((nrow(ca_tmp)+ 1.0)/2);
+		wts <- cvsig$caseTamplate$meanv - cvsig$controlTemplate$meanv;
+		sddCa <- (ca_tmp[mvs,]-ca_tmp[mvs-2,])/pt(1,cvsig$caseTamplate$samples-1);
+		sddCo <- (co_tmp[mvs+2,]-co_tmp[mvs,])/pt(1,cvsig$controlTemplate$samples-1);
+		sddP <- pmin(sddCa,sddCo);
+		sddCa <- (ca_tmp[mvs+2,]-ca_tmp[mvs,])/pt(1,cvsig$caseTamplate$samples-1);
+		sddCo <- (co_tmp[mvs,]-co_tmp[mvs-2,])/pt(1,cvsig$controlTemplate$samples-1);
+		sddN <- pmin(sddCa,sddCo);
+		sdd <- sddP;
+		sdd[wts < 0] <- sddN[wts < 0];
+		sdd[sdd == 0] <- 0.5*(sddP[sdd == 0] + sddN[sdd == 0]);
+		sdd[sdd == 0] <- 0.5*(cvsig$controlTemplate$sdv[sdd == 0]/pt(1,cvsig$controlTemplate$samples) + cvsig$caseTamplate$sdv[sdd == 0]/pt(1,cvsig$caseTamplate$samples));
+		sdd[sdd == 0] <- 0.25;
+		wts <- (abs(wts)/sdd);
+		variable.importance <- wts[order(-wts)];
+		wts[wts > uptthr] <- uptthr;
+		wts[wts < lowtthr] <- 0.01*wts[wts < lowtthr]; 
+
+		result <- list(fit=cvsig,method=method,variable.importance=variable.importance,wts=wts);
 		class(result) <- "FRESAsignature";
 	}
 	return (result);
@@ -45,24 +69,7 @@ predict.FRESAsignature <- function(object, ...)
 	{
 		if (class(object$fit$caseTamplate) == "list")
 		{
-			ca_tmp <- object$fit$caseTamplate$template;
-			co_tmp <- object$fit$controlTemplate$template;
-			mvs <- as.integer((nrow(ca_tmp)+ 1.0)/2);
-			wts <- object$fit$caseTamplate$meanv - object$fit$controlTemplate$meanv;
-			sddCa <- (ca_tmp[mvs,]-ca_tmp[mvs-2,]);
-			sddCo <- (co_tmp[mvs+2,]-co_tmp[mvs,]);
-			sddP <- pmin(sddCa,sddCo);
-			sddCa <- (ca_tmp[mvs+2,]-ca_tmp[mvs,]);
-			sddCo <- (co_tmp[mvs,]-co_tmp[mvs-2,]);
-			sddN <- pmin(sddCa,sddCo);
-			sdd <- sddP;
-			sdd[wts < 0] <- sddN[wts < 0];
-			sdd[sdd == 0] <- 0.5*(sddP[sdd == 0] + sddN[sdd == 0]);
-			sdd[sdd == 0] <- 0.5*(object$fit$controlTemplate$sdv[sdd == 0] + object$fit$caseTamplate$sdv[sdd == 0]);
-			sdd[sdd == 0] <- 0.25;
-			wts <- (abs(wts)/sdd);
-			wts[wts > 2.0] <- 2.0;
-			wts[wts == 0] <- 0.0001; 
+			wts <- object$wts;
 		}
 	}
 	
