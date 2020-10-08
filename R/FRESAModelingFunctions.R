@@ -27,7 +27,7 @@ CVsignature <- function(formula = formula, data=NULL, ...)
 		
 		misam <- min(cvsig$caseTamplate$samples,cvsig$controlTemplate$samples);
 		lowtthr <- qt(0.4,misam-1,lower.tail = FALSE); # The distance has to greater than t values with a chance of 0.6 success
-		uptthr  <- qt(0.01,misam-1,lower.tail = FALSE); # The distance has to greater than t values with a chance of 0.6 success
+		uptthr  <- qt(0.01,misam-1,lower.tail = FALSE); # The upper distance of the t value of weights 
 		ca_tmp <- cvsig$caseTamplate$template;
 		co_tmp <- cvsig$controlTemplate$template;
 		mvs <- as.integer((nrow(ca_tmp)+ 1.0)/2);
