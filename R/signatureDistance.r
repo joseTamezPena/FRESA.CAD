@@ -89,7 +89,7 @@ function (template, data=NULL, method = c("pearson","spearman","kendall","RSS","
 		qld[qld == 0] <- ld[qld == 0];
 
 		ud[ud == 0] <- 0.5*ld[ud == 0];
-		ud[ud == 0] <- sdt[ld == 0];
+		ud[ud == 0] <- sdt[ud == 0];
 		ud[ud == 0] <- 0.25;
 		qud[qud == 0] <- ud[qud == 0];
 
