@@ -236,7 +236,7 @@ predictionStats_binary <-  function(predictions, plotname="", center=FALSE,...)
       pm$predictionTable <- table(predictions[,2] < thrval,1 - predictions[,1]);
 		if (nrow(pm$predictionTable) == 1)
 		{
-			if ((rownames(pm$predictionTable) == "0") || (rownames(pm$predictionTable) == "FALSE"))
+			if ((rownames(pm$predictionTable) == "0") || (rownames(pm$predictionTable) == "TRUE"))
 			{
 				pm$predictionTable <- rbind(c(0,0),pm$predictionTable);
 			}
