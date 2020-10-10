@@ -34,10 +34,10 @@ CVsignature <- function(formula = formula, data=NULL, ...)
 		wts <- cvsig$caseTamplate$meanv - cvsig$controlTemplate$meanv;
 		sddCa <- (ca_tmp[mvs,]-ca_tmp[mvs-2,])/pt(1,cvsig$caseTamplate$samples-1);
 		sddCo <- (co_tmp[mvs+2,]-co_tmp[mvs,])/pt(1,cvsig$controlTemplate$samples-1);
-		sddP <- pmin(sddCa,sddCo);
+		sddP <- 0.5*(sddCa+sddCo);
 		sddCa <- (ca_tmp[mvs+2,]-ca_tmp[mvs,])/pt(1,cvsig$caseTamplate$samples-1);
 		sddCo <- (co_tmp[mvs,]-co_tmp[mvs-2,])/pt(1,cvsig$controlTemplate$samples-1);
-		sddN <- pmin(sddCa,sddCo);
+		sddN <- 0.5*(sddCa+sddCo);
 		sdd <- sddP;
 		sdd[wts < 0] <- sddN[wts < 0];
 		sdd[sdd == 0] <- 0.5*(sddP[sdd == 0] + sddN[sdd == 0]);

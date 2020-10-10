@@ -124,18 +124,13 @@ function (template, data=NULL, method = c("pearson","spearman","kendall","RSS","
 			}
 			NBDistance <- function (x,template,npdf,wts,dff,center) 
 			{
-#				print(template)
-#				print(x)
 				md <- template;
 				for (ind in 1:nrow(template))
 				{
 					md[ind,] <- abs(x-template[ind,]);
 				}
-#				print(md);
 				minidx <- apply(md,2,whichmin);
-#				print(minidx);
 				pval = npdf[minidx];
-#				print(pval);
 				for (ds in 1:length(x))
 				{
 					dis <- x[ds] - template[minidx[ds],ds];
@@ -182,11 +177,9 @@ function (template, data=NULL, method = c("pearson","spearman","kendall","RSS","
 					}
 				}
 				pval[pval < 1.0e-6] <- 1.0e-6;
-#				print(pval);
 				logpvals = log(pval);
 				tsum = sum(wts);
 				md <- exp(sum(wts*logpvals,na.rm=TRUE)/tsum);
-#				print(md);
 				md <- qt(md,df=dff,lower.tail = FALSE);
 				return (md);
 			}
