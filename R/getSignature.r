@@ -10,7 +10,7 @@ function(data,varlist=NULL,Outcome=NULL,target=c("All","Control","Case"),CVFolds
 #... parameters to the distanceFuntion
 
 trimvalue = 0.05; #trim 5% of the tails
-theProbs <-  c(0.025,0.16,0.25, 0.5,0.75,0.84, 0.975);
+theProbs <-  c(0.025,0.100,0.159,0.250,0.500,0.750,0.841,0.900,0.975);
 
 CVDistance <- function (casesample,controlsample,CVFolds,totRepeats,target)
 {

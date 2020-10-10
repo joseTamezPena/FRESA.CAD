@@ -1,5 +1,5 @@
 signatureDistance <- 
-function (template, data=NULL, method = c("pearson","spearman","kendall","RSS","MAN"),fwts=NULL)
+function (template, data=NULL, method = c("pearson","spearman","kendall","RSS","MAN","NB"),fwts=NULL)
 {
 
 #given the template: mean,median,sample, etc....;signatureDistance it will return the distance between the template to each row of the dataframe
@@ -13,7 +13,7 @@ function (template, data=NULL, method = c("pearson","spearman","kendall","RSS","
 # kendall: 2*(1-kendall correlation coefficient)
 
 	method <- match.arg(method)
-	theQuant <- c(0.025,0.16,0.25,0.5,0.75,0.84,0.975);
+	theQuant <- c(0.025,0.100,0.159,0.250,0.500,0.750,0.841,0.900,0.975);
 	samplesize <- 2.0;
 	if (class(template)[1] == "list")
 	{
@@ -113,8 +113,88 @@ function (template, data=NULL, method = c("pearson","spearman","kendall","RSS","
 		qld[qld == 0] <- ld[qld == 0];
 		qud <- qld;
 
-	}
+	} 
 	switch(method, 
+		NB = 
+		{
+			whichmin <- function (x) 
+			{
+			  minidx <- as.integer(median(which.min(x)));
+			  return (minidx);
+			}
+			NBDistance <- function (x,template,npdf,wts,dff,center) 
+			{
+#				print(template)
+#				print(x)
+				md <- template;
+				for (ind in 1:nrow(template))
+				{
+					md[ind,] <- abs(x-template[ind,]);
+				}
+#				print(md);
+				minidx <- apply(md,2,whichmin);
+#				print(minidx);
+				pval = npdf[minidx];
+#				print(pval);
+				for (ds in 1:length(x))
+				{
+					dis <- x[ds] - template[minidx[ds],ds];
+					if (dis != 0)
+					{
+						dis2 <- template[minidx[ds],ds] - template[center,ds];
+						if (dis2 == 0)
+						{
+							dis2 <- 0.51*dis;
+						}
+						if ((minidx[ds]==1) && (dis < 0))
+						{
+							pval[ds] = pval[ds]*(1.0 - dis/(2.0*dis2));
+						}
+						else
+						{
+							if ((minidx[ds]==length(npdf)) && (dis > 0))
+							{
+								pval[ds] = pval[ds]*(1.0 - dis/(2.0*dis2));
+							}
+							else
+							{
+								if (dis < 0)
+								{
+									dis2 <- (template[minidx[ds]-1,ds]-template[minidx[ds],ds]);
+									if (dis2 < 0) 
+									{
+										pval[ds] = pval[ds] + dis*(npdf[minidx[ds]-1]-pval[ds])/dis2;
+									}
+								}
+								else
+								{
+									if (dis > 0)
+									{
+										dis2 <- (template[minidx[ds]+1,ds]-template[minidx[ds],ds])
+										if (dis2 > 0) 
+										{
+											pval[ds] = pval[ds] + dis*(npdf[minidx[ds]+1]-pval[ds])/dis2;
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+				pval[pval < 1.0e-6] <- 1.0e-6;
+#				print(pval);
+				logpvals = log(pval);
+				tsum = sum(wts);
+				md <- exp(sum(wts*logpvals,na.rm=TRUE)/tsum);
+#				print(md);
+				md <- qt(md,df=dff,lower.tail = FALSE);
+				return (md);
+			}
+			center = as.integer((length(theQuant)+1)/2);
+			npdf <- dnorm(qnorm(theQuant));
+			npdf <- 0.5*npdf/max(npdf);
+			metric <- apply(datasubset,1,NBDistance,template,npdf,fwts,samplesize-1,center);
+		},
 		RSS = 
 		{ 
 			RSSDistance <- function (x,template,ld,ud,wts) 

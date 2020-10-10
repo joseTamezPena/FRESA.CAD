@@ -8,14 +8,14 @@
 	signatureDistance(
 	              template,
 	              data=NULL,
-	              method = c("pearson","spearman","kendall","RSS","MAN"),
+	              method = c("pearson","spearman","kendall","RSS","MAN","NB"),
 	              fwts=NULL
 	)
 }
 \arguments{
 	\item{template}{
 		A list with a template matrix of the signature described with 
-		quantiles = [0.025,0.25,0.5,0.75,0.975]
+		quantiles = [0.025,0.100,0.159,0.250,0.500,0.750,0.841,0.900,0.975]
 	}
 	\item{data}{
 		A data frame that will be used to compute the distance
@@ -30,8 +30,9 @@
 \details{
    The distance to the template:
    "pearson","spearman" and "kendall" distances are computed using the correlation function i.e. 1-r. 
-   "RSS" distance is the root sum square distance
+   "RSS" distance is the normalized root sum square distance
    "MAN" Manhattan. The standardized L^1 distance  
+   "NB" Weighted Naive-Bayes distance  
 }
 \value{
 	\item{result}{
