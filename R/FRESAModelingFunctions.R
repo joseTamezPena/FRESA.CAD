@@ -26,7 +26,7 @@ CVsignature <- function(formula = formula, data=NULL, ...)
 #		names(variable.importance) <- cvsig$featureList;
 		
 		misam <- min(cvsig$caseTamplate$samples,cvsig$controlTemplate$samples);
-		lowtthr <- qt(0.4,misam-1,lower.tail = FALSE); # The distance has to greater than t values with a chance of 0.6 success
+		lowtthr <- qt(0.40,misam-1,lower.tail = FALSE); # The distance has to greater than t values with a chance of 0.6 success
 		uptthr  <- qt(0.01,misam-1,lower.tail = FALSE); # The upper distance of the t value of weights 
 		ca_tmp <- cvsig$caseTamplate$template;
 		co_tmp <- cvsig$controlTemplate$template;
@@ -47,8 +47,15 @@ CVsignature <- function(formula = formula, data=NULL, ...)
 		variable.importance <- wts[order(-wts)];
 		wts[wts > uptthr] <- uptthr;
 		wts[wts < lowtthr] <- 0.01*wts[wts < lowtthr]; 
+		cmat <- abs(cor(data[,colnames(cvsig$caseTamplate$template)],method="spearman"));
+		cmat[cmat < 0.5] <- 0;
+		cmat <- cmat*cmat;
+		cwts <- 1.0/apply(cmat,1,sum);
+#		print(cwts);
 
-		result <- list(fit=cvsig,method=method,variable.importance=variable.importance,wts=wts);
+		wts <- wts*cwts;
+
+		result <- list(fit=cvsig,method=method,variable.importance=variable.importance,wts=wts,cwts=cwts);
 		class(result) <- "FRESAsignature";
 	}
 	return (result);

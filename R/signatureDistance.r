@@ -122,7 +122,7 @@ function (template, data=NULL, method = c("pearson","spearman","kendall","RSS","
 			  minidx <- as.integer(median(which.min(x)));
 			  return (minidx);
 			}
-			NBDistance <- function (x,template,npdf,wts,dff,center) 
+			NBDistance <- function (x,template,nPDF,wts,dff,center) 
 			{
 				md <- template;
 				for (ind in 1:nrow(template))
@@ -130,7 +130,7 @@ function (template, data=NULL, method = c("pearson","spearman","kendall","RSS","
 					md[ind,] <- abs(x-template[ind,]);
 				}
 				minidx <- apply(md,2,whichmin);
-				pval = npdf[minidx];
+				pval = nPDF[minidx];
 				for (ds in 1:length(x))
 				{
 					dis <- x[ds] - template[minidx[ds],ds];
@@ -139,7 +139,7 @@ function (template, data=NULL, method = c("pearson","spearman","kendall","RSS","
 						dis2 <- template[minidx[ds],ds] - template[center,ds];
 						if (dis2 == 0)
 						{
-							dis2 <- 0.51*dis;
+							dis2 <- 0.501*dis;
 						}
 						if ((minidx[ds]==1) && (dis < 0))
 						{
@@ -147,7 +147,7 @@ function (template, data=NULL, method = c("pearson","spearman","kendall","RSS","
 						}
 						else
 						{
-							if ((minidx[ds]==length(npdf)) && (dis > 0))
+							if ((minidx[ds]==length(nPDF)) && (dis > 0))
 							{
 								pval[ds] = pval[ds]*(1.0 - dis/(2.0*dis2));
 							}
@@ -158,7 +158,7 @@ function (template, data=NULL, method = c("pearson","spearman","kendall","RSS","
 									dis2 <- (template[minidx[ds]-1,ds]-template[minidx[ds],ds]);
 									if (dis2 < 0) 
 									{
-										pval[ds] = pval[ds] + dis*(npdf[minidx[ds]-1]-pval[ds])/dis2;
+										pval[ds] = pval[ds] + dis*(nPDF[minidx[ds]-1]-pval[ds])/dis2;
 									}
 								}
 								else
@@ -168,7 +168,7 @@ function (template, data=NULL, method = c("pearson","spearman","kendall","RSS","
 										dis2 <- (template[minidx[ds]+1,ds]-template[minidx[ds],ds])
 										if (dis2 > 0) 
 										{
-											pval[ds] = pval[ds] + dis*(npdf[minidx[ds]+1]-pval[ds])/dis2;
+											pval[ds] = pval[ds] + dis*(nPDF[minidx[ds]+1]-pval[ds])/dis2;
 										}
 									}
 								}
@@ -176,7 +176,7 @@ function (template, data=NULL, method = c("pearson","spearman","kendall","RSS","
 						}
 					}
 				}
-				pval[pval < 1.0e-6] <- 1.0e-6;
+				pval[pval < 1.0e-16] <- 1.0e-16;
 				logpvals = log(pval);
 				tsum = sum(wts);
 				md <- exp(sum(wts*logpvals,na.rm=TRUE)/tsum);
@@ -184,9 +184,8 @@ function (template, data=NULL, method = c("pearson","spearman","kendall","RSS","
 				return (md);
 			}
 			center = as.integer((length(theQuant)+1)/2);
-			npdf <- dnorm(qnorm(theQuant));
-			npdf <- 0.5*npdf/max(npdf);
-			metric <- apply(datasubset,1,NBDistance,template,npdf,fwts,samplesize-1,center);
+			nPDF <- 0.5*dnorm(qnorm(theQuant))/dnorm(qnorm(0.5));
+			metric <- apply(datasubset,1,NBDistance,template,nPDF,fwts,samplesize-1,center);
 		},
 		RSS = 
 		{ 
