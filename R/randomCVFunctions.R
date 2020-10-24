@@ -131,6 +131,43 @@ univariate_residual <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMetho
 	return(unitPvalues);
 }
 
+univariate_KS <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="BH",limit=0,...,n = 0)
+{
+
+	varlist <-colnames(data);
+	case <- subset(data,get(Outcome) == 1);
+	control <- subset(data,get(Outcome) == 0);
+	varlist <- varlist[Outcome != varlist];
+	unitPvalues <- numeric(length(varlist));
+	names(unitPvalues) <- varlist;
+
+	for (j in varlist) 
+	{
+		 pval <- ks.test(control[,j],case[,j],na.action = na.exclude)$p.value; 
+		 if (inherits(pval, "try-error")) {pval <- 1.0;}
+		 if (is.null(pval)) { pval <- 1.0; }
+		 if (is.na(pval)) {pval <- 1.0;}
+		 unitPvalues[j] <- pval;
+	}
+  	unadjusted <- unitPvalues;
+	unitPvalues <- p.adjust(unitPvalues,adjustMethod,n=max(n,length(unitPvalues)));
+	unitPvalues <- unitPvalues[order(unitPvalues)];
+	top <- unitPvalues[1];
+	unitPvalues <- unitPvalues[unitPvalues < pvalue];
+	if (length(unitPvalues) > 1) 
+	{
+#		unitPvalues <- unitPvalues[correlated_Remove(data,names(unitPvalues))];
+		unitPvalues <- correlated_RemoveToLimit(data,unitPvalues,limit,...);
+	}
+	else 
+	{
+		unitPvalues <- top;
+	}
+	attr(unitPvalues,"Unadjusted") <- unadjusted;
+   return(unitPvalues);
+}
+
+
 univariate_Wilcoxon <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="BH",limit=0,...,n = 0)
 {
 
@@ -277,6 +314,86 @@ mRMR.classic_FRESA <- function(data=NULL, Outcome=NULL,feature_count=0,...)
 	}
 	return(result);
 }
+
+univariate_BinEnsemble <- function(data,Outcome,...)
+{
+  allf <- numeric();
+  pvaltest <- univariate_Logit(data,Outcome,...,uniTest="zNRI");
+  wilcxf <- univariate_Wilcoxon(data,Outcome,...);
+  features <- intersect(names(pvaltest),names(wilcxf));
+  both <- pmin(pvaltest[features],wilcxf[features]);
+  allf <- c(pvaltest[!(names(pvaltest) %in% features)],wilcxf[!(names(wilcxf) %in% features)],both);
+  allf <- allf[order(allf)];
+  pvaltest <- univariate_Logit(data,Outcome,...,uniTest="zIDI");
+  features <- intersect(names(pvaltest),names(allf));
+  both <- pmin(pvaltest[features],allf[features]);
+  allf <- c(pvaltest[!(names(pvaltest) %in% features)],allf[!(names(allf) %in% features)],both);
+  allf <- allf[order(allf)];
+  pvaltest <- univariate_residual(data,Outcome,...,uniTest="Wilcox",type="LOGIT");
+  features <- intersect(names(pvaltest),names(allf));
+  both <- pmin(pvaltest[features],allf[features]);
+  allf <- c(pvaltest[!(names(pvaltest) %in% features)],allf[!(names(allf) %in% features)],both);
+  allf <- allf[order(allf)];
+
+  pvaltest <- univariate_residual(data,Outcome,...,uniTest="Ftest",type="LOGIT");
+  features <- intersect(names(pvaltest),names(allf));
+  both <- pmin(pvaltest[features],allf[features]);
+  allf <- c(pvaltest[!(names(pvaltest) %in% features)],allf[!(names(allf) %in% features)],both);
+  allf <- allf[order(allf)];
+
+  pvaltest <- univariate_residual(data,Outcome,...,uniTest="Binomial",type="LOGIT");
+  features <- intersect(names(pvaltest),names(allf));
+  both <- pmin(pvaltest[features],allf[features]);
+  allf <- c(pvaltest[!(names(pvaltest) %in% features)],allf[!(names(allf) %in% features)],both);
+  allf <- allf[order(allf)];
+
+  pvaltest <- univariate_correlation(data,Outcome,..., method = "kendall")
+  features <- intersect(names(pvaltest),names(allf));
+  both <- pmin(pvaltest[features],allf[features]);
+  allf <- c(pvaltest[!(names(pvaltest) %in% features)],allf[!(names(allf) %in% features)],both);
+
+  pvaltest <- univariate_correlation(data,Outcome,..., method = "spearman")
+  features <- intersect(names(pvaltest),names(allf));
+  both <- pmin(pvaltest[features],allf[features]);
+  allf <- c(pvaltest[!(names(pvaltest) %in% features)],allf[!(names(allf) %in% features)],both);
+  
+  
+  pvaltest <- univariate_KS(data,Outcome,...)
+  unadjustedKS <- attr(pvaltest,"Unadjusted");
+  features <- intersect(names(pvaltest),names(allf));
+  both <- pmin(pvaltest[features],allf[features]);
+  allf <- c(pvaltest[!(names(pvaltest) %in% features)],allf[!(names(allf) %in% features)],both);
+  
+  allf <- allf[order(allf)];
+  parameters <- list(...);
+
+  mRMRf <- mRMR.classic_FRESA(data,Outcome,feature_count = min(length(allf)+1,parameters$limit))
+  if (length(allf)>0)
+  {
+    mRMRf <- mRMRf[mRMRf>0];
+    missing <- !(names(mRMRf) %in% names(allf))
+    allf <- c(allf,unadjustedKS[missing])
+  }
+  else
+  {
+    allf <- unadjustedKS[names(mRMRf)]
+  }
+  
+  top <- allf[1];
+  allf <- allf[allf <= 0.5];
+  if (length(allf) > 1) 
+  {
+		allf <- correlated_RemoveToLimit(data,allf,1.25*parameters$limit);
+  }
+  else 
+  {
+	allf <- top;
+  }
+  
+  attr(allf,"Unadjusted") <- unadjustedKS;
+  return (allf);
+}
+
 
 sperman95ci <- function(datatest,nss=4000)
 {
