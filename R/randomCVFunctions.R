@@ -368,22 +368,25 @@ univariate_BinEnsemble <- function(data,Outcome,...)
   parameters <- list(...);
 
   mRMRf <- mRMR.classic_FRESA(data,Outcome,feature_count = min(length(allf)+1,parameters$limit))
+  mRMRf <- mRMRf[mRMRf>0];
+  mRMRf <- unadjustedKS[names(mRMRf)];
+  mRMRf <- mRMRf[mRMRf <= 0.10];
+#  cat("(",length(allf),",",length(mRMRf),")");
   if (length(allf)>0)
   {
-    mRMRf <- mRMRf[mRMRf>0];
     missing <- !(names(mRMRf) %in% names(allf))
-    allf <- c(allf,unadjustedKS[missing])
+    allf <- c(allf,mRMRf[missing])
   }
   else
   {
-    allf <- unadjustedKS[names(mRMRf)]
+    allf <- mRMRf;
   }
   
   top <- allf[1];
-  allf <- allf[allf <= 0.5];
+  allf <- allf[allf <= parameters$pvalue];
   if (length(allf) > 1) 
   {
-		allf <- correlated_RemoveToLimit(data,allf,1.25*parameters$limit);
+		allf <- correlated_RemoveToLimit(data,allf,1.5*parameters$limit);
   }
   else 
   {
