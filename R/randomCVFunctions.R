@@ -402,8 +402,6 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,...)
   if (length(allf) > 1) 
   {
 	  allf <- allf[allf <= 2*pvalue];
-	  allf <- correlated_RemoveToLimit(data,allf,limit=2*limit);
-	  allf <- allf[allf <= pvalue];
 	  allf <- correlated_RemoveToLimit(data,allf,limit=limit);
   }
   else 
