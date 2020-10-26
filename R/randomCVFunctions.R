@@ -380,7 +380,7 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,...)
 
   mRMRf <- mRMR.classic_FRESA(data,Outcome,feature_count = min(length(allf)+1,limit))
   mRMRf <- mRMRf[mRMRf>0];
-  varcount[names(mRMRf)] <- varcount[names(mRMRf)]+1.0;
+  varcount[names(mRMRf)] <- varcount[names(mRMRf)]+0.5;
   mRMRf <- unadjustedKS[names(mRMRf)];
 #  cat("(",length(allf),",",length(mRMRf),")");
   if (length(allf)>0)
@@ -394,7 +394,7 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,...)
   }
   ordcount <- varcount[names(allf)]-allf;
   varcount <- varcount[names(allf)];
-  padjs <- 1.0*(varcount > 1) + 1.0;
+  padjs <- 1.0*(varcount > 1.0) + 1.0;
   allf <- allf/padjs;
   allf <- allf[order(-ordcount)];
   
