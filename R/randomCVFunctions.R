@@ -84,12 +84,12 @@ univariate_Logit <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="
 	varlist <- cbind(varlist,varlist);
 	uniTest <- match.arg(uniTest);
 	univ <- ForwardSelection.Model.Bin(nrow(varlist),1.0,0.0,1,"1",Outcome,varlist,data,1,type="LOGIT",selectionType=uniTest);
-	unitPvalues <- (1.0 - pnorm(univ$base.Zvalues));
+	unitPvalues <- (1.0 - pnorm(univ$base.Zvalues))*2.0;
 	names(unitPvalues) <-  varlist[,1];
-	unitPvalues <- p.adjust(unitPvalues,adjustMethod,n=max(n,length(unitPvalues)));
 	unitPvalues <- unitPvalues[order(unitPvalues)];
+	unitPvalues <- p.adjust(unitPvalues,adjustMethod,n=max(n,length(unitPvalues)));
 	top <- unitPvalues[1];
-	unitPvalues <- unitPvalues[unitPvalues < pvalue];
+	unitPvalues <- unitPvalues[unitPvalues <= pvalue];
 #	print(unitPvalues)
 	if (length(unitPvalues) > 1) 
 	{
@@ -112,13 +112,13 @@ univariate_residual <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMetho
 	type <- match.arg(type);
 
 	univ <- ForwardSelection.Model.Res(nrow(varlist),1.0,0.0,1,"1",Outcome,varlist,data,1,type=type,testType=uniTest);
-	unitPvalues <- (1.0 - pnorm(univ$base.Zvalues));
+	unitPvalues <- (1.0 - pnorm(univ$base.Zvalues))*2.0;
 #	print(unitPvalues);
 	names(unitPvalues) <- varlist[,1];
-	unitPvalues <- p.adjust(unitPvalues,adjustMethod,n=max(n,length(unitPvalues)));
 	unitPvalues <- unitPvalues[order(unitPvalues)];
+	unitPvalues <- p.adjust(unitPvalues,adjustMethod,n=max(n,length(unitPvalues)));
 	top <- unitPvalues[1];
-	unitPvalues <- unitPvalues[unitPvalues < pvalue];
+	unitPvalues <- unitPvalues[unitPvalues <= pvalue];
 	if (length(unitPvalues) > 1) 
 	{
 #		unitPvalues <- unitPvalues[correlated_Remove(data,names(unitPvalues))];
@@ -149,9 +149,9 @@ univariate_KS <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="BH"
 		 if (is.na(pval)) {pval <- 1.0;}
 		 unitPvalues[j] <- pval;
 	}
+  	unitPvalues <- unitPvalues[order(unitPvalues)];
   	unadjusted <- unitPvalues;
 	unitPvalues <- p.adjust(unitPvalues,adjustMethod,n=max(n,length(unitPvalues)));
-	unitPvalues <- unitPvalues[order(unitPvalues)];
 	top <- unitPvalues[1];
 	unitPvalues <- unitPvalues[unitPvalues < pvalue];
 	if (length(unitPvalues) > 1) 
@@ -187,10 +187,10 @@ univariate_Wilcoxon <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMetho
 		 unitPvalues[j] <- pval;
 	}
   
-	unitPvalues <- p.adjust(unitPvalues,adjustMethod,n=max(n,length(unitPvalues)));
 	unitPvalues <- unitPvalues[order(unitPvalues)];
+	unitPvalues <- p.adjust(unitPvalues,adjustMethod,n=max(n,length(unitPvalues)));
 	top <- unitPvalues[1];
-	unitPvalues <- unitPvalues[unitPvalues < pvalue];
+	unitPvalues <- unitPvalues[unitPvalues <= pvalue];
 	if (length(unitPvalues) > 1) 
 	{
 #		unitPvalues <- unitPvalues[correlated_Remove(data,names(unitPvalues))];
@@ -221,10 +221,10 @@ univariate_tstudent <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMetho
 		if (is.na(pval)) {pval <- 1.0;}
 		unitPvalues[j] <-  pval;	
 	}
-	unitPvalues <- p.adjust(unitPvalues,adjustMethod,n=max(n,length(unitPvalues)));
 	unitPvalues <- unitPvalues[order(unitPvalues)];
+	unitPvalues <- p.adjust(unitPvalues,adjustMethod,n=max(n,length(unitPvalues)));
 	top <- unitPvalues[1];
-	unitPvalues <- unitPvalues[unitPvalues < pvalue];
+	unitPvalues <- unitPvalues[unitPvalues <= pvalue];
 	if (length(unitPvalues) > 1) 
 	{
 #		unitPvalues <- unitPvalues[correlated_Remove(data,names(unitPvalues))];
@@ -253,11 +253,10 @@ univariate_correlation <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMe
 		if (is.na(pval)) {pval <- 1.0;}
 		unitPvalues[j] <-  pval;
 	}
-  
+  	unitPvalues <- unitPvalues[order(unitPvalues)];
 	unitPvalues <- p.adjust(unitPvalues,adjustMethod,n=max(n,length(unitPvalues)));
-	unitPvalues <- unitPvalues[order(unitPvalues)];
 	top <- unitPvalues[1];
-	unitPvalues <- unitPvalues[unitPvalues < pvalue];
+	unitPvalues <- unitPvalues[unitPvalues <= pvalue];
 	if (length(unitPvalues) > 1) 
 	{
 #		unitPvalues <- unitPvalues[correlated_Remove(data,names(unitPvalues))];
@@ -403,14 +402,15 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,...)
 
   top <- allf[1];
 
-  padjs <- 1.0*(varcount > 1.0) + 1.0;
+  padjs <- varcount + 0.5;
   allf <- allf/padjs;
-
   allf <- allf[allf <= pvalue];
-  
   if (length(allf) > 1) 
   {
+#	  allf <- allf[allf <= min(pvalue,0.05)];
 	  allf <- allf[correlated_Remove(data,names(allf),thr=0.95)];
+	  allf <- unadjustedKS[names(allf)];
+	  allf <- allf[order(allf)];
 	  allf <- correlated_RemoveToLimit(data,allf,limit=limit);
   }
   else 
