@@ -397,6 +397,11 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,...)
   both <- pmin(pvaltest[features],allf[features]);
   allf <- c(pvaltest[!(names(pvaltest) %in% features)],allf[!(names(allf) %in% features)],both);
 
+  if (limit < 1)
+  {
+    limit = as.integer(nrow(data)*limit + 0.5);
+	if ( limit < 2 ) limit = 2;
+  }
 
   mRMRf <- mRMR.classic_FRESA(data,Outcome,feature_count = limit)
 
