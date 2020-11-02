@@ -90,7 +90,8 @@ export(GLMNET_ELASTICNET_MIN)
 export(GLMNET_RIDGE_MIN)
 export(univariate_cox)
 export(filteredFit)
-export(predict.FRESA_FILTERFIT);
+export(predict.FRESA_FILTERFIT)
+export(supervisedDecorrelation);
 
 useDynLib(FRESA.CAD,.registration = TRUE)
 

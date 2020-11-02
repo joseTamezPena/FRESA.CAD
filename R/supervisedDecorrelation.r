@@ -53,7 +53,6 @@ supervisedDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=1
                                              referenceframe=refdata,
                                              type="LM",
                                              pvalue=unipvalue);
-           
         }
       }
 #      print(uncorrelatedFetures)
