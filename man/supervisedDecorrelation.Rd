@@ -1,12 +1,12 @@
-\name{steerDecorrelation}
-\alias{steerDecorrelation}
+\name{covariateDecorrelation}
+\alias{covariateDecorrelation}
 \title{Supervised decorrelation of dataframe features}
 \description{
 	All features significatly associated to the outcome will be decorrelated
 }
 
 \usage{
-	steerDecorrelation(data=NULL, Outcome=NULL,refdata=NULL,loops=10,unipvalue=0.1,method=NULL,...)
+	covariateDecorrelation(data=NULL, Outcome=NULL,refdata=NULL,loops=10,unipvalue=0.1,method=NULL,...)
 }
 \arguments{
 	\item{data}{

@@ -72,7 +72,7 @@ if (!requireNamespace("MASS", quietly = TRUE)) {
 								model <- smooth.spline(cstrataref[,baseModel], 
 											  y = cstrataref[,colnamesList[i]],
 											  nknots = 5,
-#											  df = 3,
+											  df = 3,
 											  keep.data = FALSE)						
 								dgf = nrow(cstrataref) - model$df;
 								pred <- predict(model,cstrataref[,baseModel]);

@@ -1,4 +1,4 @@
-steerDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=20,unipvalue=0.05,method=NULL,...)
+covariateDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=20,unipvalue=0.05,method=NULL,...)
 {
 
   dataAdjusted <- data;
@@ -62,8 +62,8 @@ steerDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=20,uni
 			  }
 		  }
 		  varlist <- varlist[adjusted];
-          uncorrelatedFetures <- c(uncorrelatedFetures,varlist)
-          addedlist <- addedlist + length(varlist);
+          uncorrelatedFetures <- unique(c(uncorrelatedFetures,varlist));
+          addedlist <- length(uncorrelatedFetures);
         }
       }
 #      print(uncorrelatedFetures)
