@@ -1,4 +1,4 @@
-supervisedDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=10,unipvalue=0.1,...)
+steerDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=20,unipvalue=0.05,method=NULL,...)
 {
 
   dataAdjusted <- data;
@@ -7,21 +7,21 @@ supervisedDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=1
     refdata <- data;
   }
   parameters <- list(...);
-  thr <- 0.5;
-  if (!is.null(parameters$thr)) thr <- parameters$thr;
+  thr <- 0.375;
+  if (!is.null(parameters$thr)) thr <- 0.5*parameters$thr;
   totuncorrelated <- character()
   topFeatures <- character()
   addedlist <- 1;
   lp = 0;
   uncorrelatedFetures <- character();
+  if (is.null(method)) method ="LM";
   while ((addedlist > 0) && (lp < loops))
   {
     lp = lp + 1;
     addedlist <- 0;
     topfeat <- univariate_KS(refdata,Outcome,...)
     topFeatures <- unique(c(topFeatures,names(topfeat)));
-#    cat(lp,":")
-#    print(topFeatures)
+#    cat(lp,":",topFeatures,":")
     lastuncorrelatedFetures <- uncorrelatedFetures;
     uncorrelatedFetures <- character();
     if (length(topFeatures)>0)
@@ -37,22 +37,33 @@ supervisedDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=1
         varlist <- varlist[!(varlist %in% uncorrelatedFetures)]
         if (length(varlist) > 0)
         {
-          addedlist <- addedlist + length(varlist);
-          uncorrelatedFetures <- c(uncorrelatedFetures,varlist)
-           varlist <- cbind(varlist,varlist)
+           dvarlist <- cbind(varlist,varlist)
 #           print(c(feat,varlist))
-           dataAdjusted <- featureAdjustment(varlist,
+           dataAdjusted <- featureAdjustment(dvarlist,
                                           baseModel=feat,
                                           data=dataAdjusted,
                                           referenceframe=refdata,
-                                          type="LM",
+                                          type=method,
                                           pvalue=unipvalue);
-           refdata <- featureAdjustment(varlist,
+           refdata <- featureAdjustment(dvarlist,
                                              baseModel=feat,
                                              data=refdata,
                                              referenceframe=refdata,
-                                             type="LM",
+                                             type=method,
                                              pvalue=unipvalue);
+		  adjusted <- numeric(length(varlist)) == 1;
+		  names(adjusted) <- varlist;
+		  models <- attr(refdata,"models")
+		  if (length(models) > 0)
+		  {
+			  for (vl in 1:length(models))
+			  {
+				adjusted[models[[vl]]$feature] <- models[[vl]]$pval < unipvalue;
+			  }
+		  }
+		  varlist <- varlist[adjusted];
+          uncorrelatedFetures <- c(uncorrelatedFetures,varlist)
+          addedlist <- addedlist + length(varlist);
         }
       }
 #      print(uncorrelatedFetures)

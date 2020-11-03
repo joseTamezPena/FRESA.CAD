@@ -1,12 +1,12 @@
-\name{supervisedDecorrelation}
-\alias{supervisedDecorrelation}
+\name{steerDecorrelation}
+\alias{steerDecorrelation}
 \title{Supervised decorrelation of dataframe features}
 \description{
 	All features significatly associated to the outcome will be decorrelated
 }
 
 \usage{
-	supervisedDecorrelation(data=NULL, Outcome=NULL,refdata=NULL,loops=10,unipvalue=0.1,...)
+	steerDecorrelation(data=NULL, Outcome=NULL,refdata=NULL,loops=10,unipvalue=0.1,method=NULL,...)
 }
 \arguments{
 	\item{data}{
@@ -24,6 +24,9 @@
 	\item{unipvalue}{
 	the maxumum p-value for linear association
 	}
+	\item{method}{
+	fitting type of featureAdjustment
+	}	
 	\item{...}{
 	parameters passed to the univariate filter.
 	}
@@ -40,5 +43,5 @@
 	}
 }
 \author{Jose G. Tamez-Pena}
-\seealso{\code{\link{univariate_KS}}}
+\seealso{\code{featureAdjustment}}
 \keyword{Data Conditioning}
