@@ -1,5 +1,5 @@
 featureAdjustment <-
-function(variableList,baseModel,strata=NA,data,referenceframe,type=c("LM","GLS","RLM","RQNT","SPLINE"),pvalue=0.05,correlationGroup = "ID") 
+function(variableList,baseModel,strata=NA,data,referenceframe,type=c("LM","GLS","RLM","NZLM","SPLINE"),pvalue=0.05,correlationGroup = "ID") 
 {
 
 if (!requireNamespace("nlme", quietly = TRUE)) {
@@ -71,7 +71,7 @@ if (!requireNamespace("MASS", quietly = TRUE)) {
 							{
 								model <- smooth.spline(cstrataref[,baseModel], 
 											  y = cstrataref[,colnamesList[i]],
-											  nknots = 5,
+											  nknots = 4,
 											  df = 3,
 											  keep.data = FALSE)						
 								dgf = nrow(cstrataref) - model$df;
@@ -81,7 +81,7 @@ if (!requireNamespace("MASS", quietly = TRUE)) {
 							}
 							else
 							{
-								model <- lm(ftmp,data=cstrataref,na.action=na.exclude);						
+								model <- lm(ftmp,data=cstrataref, model = FALSE,na.action=na.exclude);						
 								dgf = nrow(cstrataref) - 1;
 								rss2 <- var(model$residuals,na.rm = TRUE);
 							}
@@ -89,41 +89,16 @@ if (!requireNamespace("MASS", quietly = TRUE)) {
 							p <- pf(dgf*rss1/rss2-dgf,1,dgf,lower.tail=FALSE);
 #							cat(colnamesList[i],"\t F Stats:\t ",f1,"\t P-value:\t",p,"\n");
 						},						
-						RQNT = 
+						NZLM = 
 						{ 
-							model <- lm(ftmp,data=cstrataref,na.action=na.exclude);
-							iqrref <- as.vector(quantile(cstrataref[,baseModel], probs = c(0.1, 0.5, 0.9), na.rm = TRUE,names = FALSE, type = 7));
-							medref <- iqrref[2];
-							iqrref <- iqrref[3] - iqrref[1];
-							if (iqrref == 0) iqrref <- sd(cstrataref[,baseModel],na.rm = TRUE);
-							if (iqrref == 0) iqrref <- 1.0;
-							iqrtarget <- as.vector(quantile(cstrataref[,colnamesList[i]], probs = c(0.1, 0.5, 0.9), na.rm = TRUE,names = FALSE, type = 7));
-							medtarget <- iqrtarget[2];
-							iqrtarget <- iqrtarget[3] - iqrtarget[1];
-							if (iqrtarget == 0) iqrtarget <- sd(cstrataref[,colnamesList[i]],na.rm = TRUE);
-
-							slope = iqrtarget/iqrref;
-
-							dpp <- (cstrataref[,colnamesList[i]]-medtarget) - (cstrataref[,baseModel]-medref)*slope;
-							iqrdiff <- as.vector(quantile(dpp, probs = c(0.1, 0.5, 0.9), na.rm = TRUE,names = FALSE, type = 7));
-							iqrdiff <- iqrdiff[3] - iqrdiff[1];
-
-							model$coefficients[2] <- (iqrtarget-iqrdiff)/iqrref;
-							model$coefficients[1] <- medtarget-medref*model$coefficients[2];
-							
-							if (iqrdiff < 0.00001*iqrtarget) iqrdiff <- 0.00001*iqrtarget;
-
-							f1 = iqrtarget/iqrdiff;
-							
-							dgf = nrow(cstrataref)-1;
-							p <- 1.0-pf(dgf*(iqrtarget/iqrdiff)^2-dgf,1,dgf);
-							
-#							print(summary(model)$coef)
-#							cat(" Variable:\t ",colnamesList[i],"\t F Stats:\t ",f1,"\t P-value:\t",p,"\n");
+							model <- lm(ftmp,data=cstrataref, model = FALSE,na.action=na.exclude)
+							f <- summary(model)$fstatistic
+							f1 = f[1];
+							p <- pf(f[1],f[2],f[3],lower.tail=FALSE)										
 						},
 						LM = 
 						{ 
-							model <- lm(ftmp,data=cstrataref,na.action=na.exclude)
+							model <- lm(ftmp,data=cstrataref, model = FALSE,na.action=na.exclude)
 							f <- summary(model)$fstatistic
 							f1 = f[1];
 							p <- pf(f[1],f[2],f[3],lower.tail=FALSE)			
@@ -131,15 +106,25 @@ if (!requireNamespace("MASS", quietly = TRUE)) {
 						},
 						RLM = 
 						{ 
-							model <- MASS::rlm(ftmp,data=cstrataref,na.action=na.exclude,method = "MM")
-							sw <- sum(model$w);
-							dgf = sw-length(model$coef)+1;
-							m1 <- sum(model$w*cstrataref[,colnamesList[i]],na.rm = TRUE)/sw
-							rss1 <- sum(model$w*(cstrataref[,colnamesList[i]]^2),na.rm = TRUE)/sw-m1*m1
-							m2 <- sum(model$w*model$residuals,na.rm = TRUE)/sw
-							rss2 <- sum(model$w*(model$residuals^2),na.rm = TRUE)/sw-m2*m2
-							f1 = rss1/rss2;
-							p <- pf(dgf*rss1/rss2-dgf,1,dgf,lower.tail=FALSE);
+							if (length(tbbaseModel) > 9)
+							{
+								model <- MASS::rlm(ftmp,data=cstrataref,na.action=na.exclude, model = FALSE,method = "MM")
+								sw <- sum(model$w);
+								dgf = sw-length(model$coef)+1;
+								m1 <- sum(model$w*cstrataref[,colnamesList[i]],na.rm = TRUE)/sw
+								rss1 <- sum(model$w*(cstrataref[,colnamesList[i]]^2),na.rm = TRUE)/sw-m1*m1
+								m2 <- sum(model$w*model$residuals,na.rm = TRUE)/sw
+								rss2 <- sum(model$w*(model$residuals^2),na.rm = TRUE)/sw-m2*m2
+								f1 = rss1/rss2;
+								p <- pf(dgf*rss1/rss2-dgf,1,dgf,lower.tail=FALSE);
+							}
+							else
+							{
+								model <- lm(ftmp,data=cstrataref, model = FALSE,na.action=na.exclude)
+								f <- summary(model)$fstatistic
+								f1 = f[1];
+								p <- pf(f[1],f[2],f[3],lower.tail=FALSE)										
+							}	
 	#						cat(" Variable:\t ",colnamesList[i],"\t F Stats:\t ",f1,"\t P-value:\t",p,"\n");
 						},
 						GLS =
@@ -155,13 +140,15 @@ if (!requireNamespace("MASS", quietly = TRUE)) {
 	#						cat(" Variable:\t ",colnamesList[i],"\t F Stats:\t ",f1,"\t P-value:\t",p," ",p1,"\n");
 						},
 						{ 
-							model <- lm(ftmp,data=cstrataref,na.action=na.exclude)
+							model <- lm(ftmp,data=cstrataref, model = FALSE,na.action=na.exclude)
 							f <- summary(model)$fstatistic
 							f1 = f[1];
 							p <- pf(f[1],f[2],f[3],lower.tail=FALSE)			
 	#						cat(" Variable:\t ",colnamesList[i],"\t F Stats:\t ",f1,"\t P-value:\t",p,"\n");
 						}
 					)
+					environment(model$formula) <- NULL;
+					environment(model$terms) <- NULL;
 					avg <- mean(cstrataref[,colnamesList[i]],na.rm = TRUE);
 					models[[idx]] <- list(strata=sta,feature=colnamesList[i],model=model,mean=avg,pval=p);
 					idx= idx+1;
@@ -183,7 +170,7 @@ if (!requireNamespace("MASS", quietly = TRUE)) {
 									}
 								}
 							},
-							RQNT = 
+							NZLM = 
 							{ 
 								if (p < pvalue)
 								{
@@ -205,11 +192,7 @@ if (!requireNamespace("MASS", quietly = TRUE)) {
 							{ 
 								if (p < pvalue)
 								{
-									cstrata[,colnamesList[i]] <- cstrata[,colnamesList[i]]-predict(model,cstrata);
-								}
-								else
-								{
-									cstrata[,colnamesList[i]] <- cstrata[,colnamesList[i]]-avg;
+									cstrata[,colnamesList[i]] <- avg + cstrata[,colnamesList[i]]-predict(model,cstrata);
 								}
 							},
 							GLS =

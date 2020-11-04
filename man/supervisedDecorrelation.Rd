@@ -1,12 +1,12 @@
-\name{covariateDecorrelation}
-\alias{covariateDecorrelation}
+\name{featureDecorrelation}
+\alias{featureDecorrelation}
 \title{Supervised decorrelation of dataframe features}
 \description{
 	All features significatly associated to the outcome will be decorrelated
 }
 
 \usage{
-	covariateDecorrelation(data=NULL, Outcome=NULL,refdata=NULL,loops=10,unipvalue=0.1,method=NULL,...)
+	featureDecorrelation(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20,3),unipvalue=0.05,method=NULL,...)
 }
 \arguments{
 	\item{data}{

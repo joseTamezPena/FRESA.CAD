@@ -12,7 +12,7 @@
 	                  strata = NA,
 	                  data,
 	                  referenceframe,
-	                  type = c("LM", "GLS", "RLM","RQNT","SPLINE"),
+	                  type = c("LM", "GLS", "RLM","NZLM","SPLINE"),
 	                  pvalue = 0.05,
 	                  correlationGroup = "ID")
 }

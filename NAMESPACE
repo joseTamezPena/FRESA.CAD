@@ -91,7 +91,7 @@ export(GLMNET_RIDGE_MIN)
 export(univariate_cox)
 export(filteredFit)
 export(predict.FRESA_FILTERFIT)
-export(covariateDecorrelation);
+export(featureDecorrelation);
 
 useDynLib(FRESA.CAD,.registration = TRUE)
 
