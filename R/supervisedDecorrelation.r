@@ -1,4 +1,4 @@
-covariateDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=20,unipvalue=0.05,method=NULL,...)
+covariateDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=10,unipvalue=0.05,method=NULL,...)
 {
 
   dataAdjusted <- data;
@@ -15,19 +15,22 @@ covariateDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=20
   lp = 0;
   uncorrelatedFetures <- character();
   if (is.null(method)) method ="LM";
+  countf <- numeric(ncol(data));
+  names(countf) <- colnames(data);
+#  topFeatures <- names(univariate_KS(refdata,Outcome,...))
   while ((addedlist > 0) && (lp < loops))
   {
     lp = lp + 1;
     addedlist <- 0;
     topfeat <- univariate_KS(refdata,Outcome,...)
     topFeatures <- unique(c(topFeatures,names(topfeat)));
+	datacor <- refdata[,!(colnames(refdata) %in% Outcome)]
+	cormat <- abs(cor(datacor,method="spearman"))
 #    cat(lp,":",topFeatures,":")
     lastuncorrelatedFetures <- uncorrelatedFetures;
     uncorrelatedFetures <- character();
     if (length(topFeatures)>0)
     {
-      datacor <- refdata[,!(colnames(refdata) %in% Outcome)]
-      cormat <- abs(cor(datacor,method="spearman"))
       for (feat in topFeatures)
       {
         corlist <- cormat[feat,]
@@ -35,6 +38,7 @@ covariateDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=20
         varlist <- names(corlist)
         varlist <- varlist[!(varlist %in% topFeatures)]
         varlist <- varlist[!(varlist %in% uncorrelatedFetures)]
+		varlist <- varlist[countf[varlist] < 3]
         if (length(varlist) > 0)
         {
            dvarlist <- cbind(varlist,varlist)
@@ -62,6 +66,7 @@ covariateDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=20
 			  }
 		  }
 		  varlist <- varlist[adjusted];
+		  countf[varlist] <- countf[varlist] + 1;
           uncorrelatedFetures <- unique(c(uncorrelatedFetures,varlist));
           addedlist <- length(uncorrelatedFetures);
         }

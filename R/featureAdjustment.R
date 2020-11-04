@@ -171,7 +171,7 @@ if (!requireNamespace("MASS", quietly = TRUE)) {
 						switch(type, 
 							SPLINE = 
 							{ 
-								if (p<pvalue)
+								if (p < pvalue)
 								{
 									if (length(tbbaseModel) > 9)
 									{
@@ -185,14 +185,14 @@ if (!requireNamespace("MASS", quietly = TRUE)) {
 							},
 							RQNT = 
 							{ 
-								if (p<pvalue)
+								if (p < pvalue)
 								{
 									cstrata[,colnamesList[i]] <- avg + cstrata[,colnamesList[i]]-predict(model,cstrata);
 								}
 							},
 							LM = 
 							{ 
-								if (p<pvalue)
+								if (p < pvalue)
 								{
 									cstrata[,colnamesList[i]] <- cstrata[,colnamesList[i]]-predict(model,cstrata);
 								}
@@ -203,7 +203,7 @@ if (!requireNamespace("MASS", quietly = TRUE)) {
 							},
 							RLM = 
 							{ 
-								if (p<pvalue)
+								if (p < pvalue)
 								{
 									cstrata[,colnamesList[i]] <- cstrata[,colnamesList[i]]-predict(model,cstrata);
 								}
@@ -214,10 +214,10 @@ if (!requireNamespace("MASS", quietly = TRUE)) {
 							},
 							GLS =
 							{
-								if (p<pvalue)
+								if (p < pvalue)
 								{
 									avg <-model$coef[1];
-									cstrata[,colnamesList[i]] <- cstrata[,colnamesList[i]]-predict(model,cstrata)+avg;
+									cstrata[,colnamesList[i]] <- cstrata[,colnamesList[i]]-predict(model,cstrata) + avg;
 								}
 							}
 						)
