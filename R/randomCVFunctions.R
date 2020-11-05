@@ -12,19 +12,22 @@ correlated_Remove <- function(data= NULL,fnames= NULL,thr=0.999)
 		colsd <- apply(data[,fnames],2,sd,na.rm = TRUE);
 		fnames <- fnames[colsd > 0];
 		
-		corm <- abs(cor(data[,fnames],method="spearman"));
-		corm[diag(length(fnames)) == 1] <- 0;
-		keep <- numeric(length(fnames));
-		for (i in length(fnames):1)
+		if (length(fnames)>1)
 		{
-			keep[i] <- (sum(corm[,i] > thr) == 0);
-			if (!keep[i])  
+			corm <- abs(cor(data[,fnames],method="spearman"));
+			diag(corm) <- 0;
+			keep <- numeric(length(fnames));
+			for (i in length(fnames):1)
 			{
-				corm[i,] <- 0;
+				keep[i] <- (sum(corm[,i] > thr) == 0);
+				if (!keep[i])  
+				{
+					corm[i,] <- 0;
+				}
 			}
+			attributes(fnames) <- list(removed=fnames[keep == 0]);
+			fnames <- fnames[keep == 1];
 		}
-		attributes(fnames) <- list(removed=fnames[keep == 0]);
-		fnames <- fnames[keep == 1];
 	}
 #	cat(length(fnames),"\n");
 
