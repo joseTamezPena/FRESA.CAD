@@ -1,4 +1,4 @@
-featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20,5),unipvalue=0.05,method=NULL,...)
+featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20,10),unipvalue=0.05,method=NULL,...)
 {
 
   dataAdjusted <- data;
@@ -7,76 +7,74 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
     refdata <- data;
   }
   parameters <- list(...);
-  thr2 <- 0.75;
+  thr <- 0.75;
   if (!is.null(parameters$thr))
   {
-    thr2 <- parameters$thr;
+    thr <- parameters$thr;
   }
-  thr <- thr2*0.75;
   totuncorrelated <- character()
   topFeatures <- character()
+  baseFeatures <- character()
   addedlist <- 1;
   lp = 0;
   uncorrelatedFetures <- character();
   if (is.null(method)) method ="LM";
   countf <- numeric(ncol(refdata));
   names(countf) <- colnames(refdata);
-  tsum <- 5;
+  tsum <- 10;
   if (length(loops) > 1) tsum <- loops[2];
+  varincluded <- !(colnames(refdata) %in% Outcome);
   while ((addedlist > 0) && (lp < loops[1]))
   {
     lp = lp + 1;
     addedlist <- 0;
-	datacor <- refdata[,!(colnames(refdata) %in% Outcome)]
-	cormat <- abs(cor(datacor,method="spearman"))
+	cormat <- abs(cor(refdata[,varincluded],method="spearman"))
     diag(cormat) <- 0;
-
+    maxcor <- apply(cormat,2,max)
+    mmaxcor <- max(maxcor);
+    topfeat <- colnames(cormat);
+    ordcorfeat <- 1*(topfeat %in% baseFeatures) + 1*(topfeat %in% topFeatures) + 0.99*maxcor + 0.01*apply(cormat,2,mean);
     if (is.null(Outcome))
     {
-      maxcor <- apply(cormat,2,max)
-      sumcorfeat <- apply(cormat,2,sum)
-      topfeat <- colnames(cormat)[order(-(maxcor+sumcorfeat))];
-      topfeat <- topfeat[maxcor[topfeat] > thr2];
-#      print(topfeat);
+      topfeat <- topfeat[order(-ordcorfeat)];
+      topfeat <- topfeat[maxcor[topfeat] >= thr];
       if (length(topfeat) > 0)
       {
-        if (length(topfeat) > 1)
-        {
-          topfeat <- correlated_Remove(refdata,topfeat,thr = thr2);
-#          print(survfeat)
-          topFeatures <- unique(c(topFeatures,topfeat));
-        }
-        else
-        {
-          topFeatures <- unique(c(topFeatures,topfeat));
-        }
+          topfeat <- correlated_Remove(refdata,topfeat,thr = thr);
       }
-#      print(topFeatures);
     }
     else
     {
-      topfeat <- univariate_KS(refdata,Outcome,...)
-      topFeatures <- unique(c(topFeatures,names(topfeat)));
+      topfeat <- names(univariate_KS(refdata,Outcome,...))
     }
+    if (length(baseFeatures) == 0)
+    {
+      baseFeatures <- topfeat;
+    }
+    topFeatures <- unique(c(topfeat,topFeatures));
+    topFeatures <- topFeatures[order(-ordcorfeat[topFeatures])]
 
-
-#    cat(lp,":",topFeatures,":")
+#    cat(lp,":")
+#    print(ordcorfeat[topFeatures])
     lastuncorrelatedFetures <- uncorrelatedFetures;
     uncorrelatedFetures <- character();
     if (length(topfeat)>0)
     {
       for (feat in topfeat)
       {
-        corlist <- cormat[feat,]
-        corlist <- corlist[corlist > thr]
+        corlist <- cormat[,feat];
+        corlist <- corlist[corlist >= thr]
+#        cat(feat,":");
+#        print(corlist)
         varlist <- names(corlist)
         varlist <- varlist[!(varlist %in% topfeat)]
+        varlist <- varlist[!(varlist %in% baseFeatures)]
         varlist <- varlist[!(varlist %in% uncorrelatedFetures)]
 		varlist <- varlist[countf[varlist] < tsum]
         if (length(varlist) > 0)
         {
            dvarlist <- cbind(varlist,varlist)
-#           print(c(feat,varlist))
+#          print(corlist[varlist])
            dataAdjusted <- featureAdjustment(dvarlist,
                                           baseModel=feat,
                                           data=dataAdjusted,
@@ -96,7 +94,7 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
 		  {
 			  for (vl in 1:length(models))
 			  {
-				adjusted[models[[vl]]$feature] <- models[[vl]]$pval < unipvalue;
+				adjusted[models[[vl]]$feature] <- (models[[vl]]$pval < unipvalue);
 			  }
 		  }
 #          cat("The adjusted :",feat,":");
@@ -109,11 +107,11 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
         }
       }
 #      print(uncorrelatedFetures)
-      cat (addedlist,":")
       if (length(lastuncorrelatedFetures) == length(uncorrelatedFetures))
       {
         addedlist <- sum(lastuncorrelatedFetures != uncorrelatedFetures);
       }
+      cat (addedlist,":")
     }
     totuncorrelated <- unique(c(totuncorrelated,uncorrelatedFetures));
   }
