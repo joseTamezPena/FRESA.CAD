@@ -25,6 +25,9 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
   tsum <- 10;
   if (length(loops) > 1) tsum <- loops[2];
   varincluded <- !(colnames(refdata) %in% Outcome);
+  addfeaturematrix <- as.data.frame(matrix(0,nrow=length(varincluded),ncol=length(varincluded)));
+  colnames(addfeaturematrix) <- colnames(refdata)[varincluded];
+  rownames(addfeaturematrix) <- colnames(addfeaturematrix);
   while ((addedlist > 0) && (lp < loops[1]))
   {
     lp = lp + 1;
@@ -34,7 +37,8 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
     maxcor <- apply(cormat,2,max)
     mmaxcor <- max(maxcor);
     topfeat <- colnames(cormat);
-    ordcorfeat <- 1*(topfeat %in% baseFeatures) + 1*(topfeat %in% topFeatures) + 0.99*maxcor + 0.01*apply(cormat,2,mean);
+    ordcor <- 0.99*maxcor + 0.01*apply(cormat,2,mean)
+    ordcorfeat <-  1*(topfeat %in% baseFeatures) + 1*(topfeat %in% topFeatures) + ordcor;
     if (is.null(Outcome))
     {
       topfeat <- topfeat[order(-ordcorfeat)];
@@ -52,23 +56,21 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
     {
       baseFeatures <- topfeat;
     }
-    topFeatures <- unique(c(topfeat,topFeatures));
-    topFeatures <- topFeatures[order(-ordcorfeat[topFeatures])]
-
-#    cat(lp,":")
-#    print(ordcorfeat[topFeatures])
+    topfeat <- topfeat[order(-ordcor)];
+    topFeatures <- unique(c(topFeatures,topfeat));
     lastuncorrelatedFetures <- uncorrelatedFetures;
     uncorrelatedFetures <- character();
     if (length(topfeat)>0)
     {
-      for (feat in topFeatures)
+      for (feat in topfeat)
       {
         corlist <- cormat[,feat];
         corlist <- corlist[corlist >= thr2]
 #        cat(feat,":");
 #        print(corlist)
         varlist <- names(corlist)
-        varlist <- varlist[!(varlist %in% topFeatures)]
+        varlist <- varlist[!(varlist %in% baseFeatures)]
+        varlist <- varlist[!(varlist %in% topfeat)]
         varlist <- varlist[!(varlist %in% uncorrelatedFetures)]
 		varlist <- varlist[countf[varlist] < tsum]
         if (length(varlist) > 0)
@@ -100,6 +102,7 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
 #          cat("The adjusted :",feat,":");
 #          print(varlist);
 		  varlist <- varlist[adjusted];
+          addfeaturematrix[feat,varlist] <- addfeaturematrix[feat,varlist] + 1;
 #         print(varlist);
 		  countf[varlist] <- countf[varlist] + 1;
           uncorrelatedFetures <- unique(c(uncorrelatedFetures,varlist));
@@ -116,7 +119,8 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
     totuncorrelated <- unique(c(totuncorrelated,uncorrelatedFetures));
   }
   cat ("\n")
-  attr(dataAdjusted,"topFeatures") <- topFeatures;
+  attr(dataAdjusted,"topFeatures") <- unique(topFeatures);
   attr(dataAdjusted,"TotalAdjustments") <- countf;
+  attr(dataAdjusted,"featureMatrix") <- addfeaturematrix;
   return(dataAdjusted)
 }
