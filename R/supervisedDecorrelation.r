@@ -12,7 +12,7 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
   {
     thr <- parameters$thr;
   }
-  thr2 <- 0.75*thr;
+  thr2 <- thr;
   totuncorrelated <- character()
   topFeatures <- character()
   baseFeatures <- character()
@@ -37,11 +37,12 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
     maxcor <- apply(cormat,2,max)
     mmaxcor <- max(maxcor);
     topfeat <- colnames(cormat);
-    ordcor <- 0.99*maxcor + 0.01*apply(cormat,2,mean)
     if (is.null(Outcome))
     {
-      ordcorfeat <-  1*(topfeat %in% baseFeatures) + 1*(topfeat %in% topFeatures) + ordcor;
-      topfeat <- topfeat[order(-ordcorfeat)];
+      ordcor <- 0.99*maxcor + 0.01*apply(cormat,2,mean)
+      topfeat <- topfeat[order(-ordcor)];
+      names(topfeat) <- topfeat;
+      topfeat <- c(topfeat[topFeatures],topfeat[!(topfeat %in% topFeatures)]);
       topfeat <- topfeat[maxcor[topfeat] >= thr];
       if (length(topfeat) > 0)
       {
@@ -115,6 +116,10 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
         addedlist <- sum(lastuncorrelatedFetures != uncorrelatedFetures);
       }
       cat (addedlist,":")
+    }
+    if (thr2 > 0.5*thr)
+    {
+      thr2 <- thr2*0.9;
     }
     totuncorrelated <- unique(c(totuncorrelated,uncorrelatedFetures));
   }
