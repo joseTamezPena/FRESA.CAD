@@ -38,14 +38,15 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
     mmaxcor <- max(maxcor);
     topfeat <- colnames(cormat);
     ordcor <- 0.99*maxcor + 0.01*apply(cormat,2,mean)
-    ordcorfeat <-  1*(topfeat %in% baseFeatures) + 1*(topfeat %in% topFeatures) + ordcor;
     if (is.null(Outcome))
     {
+      ordcorfeat <-  1*(topfeat %in% baseFeatures) + 1*(topfeat %in% topFeatures) + ordcor;
       topfeat <- topfeat[order(-ordcorfeat)];
       topfeat <- topfeat[maxcor[topfeat] >= thr];
       if (length(topfeat) > 0)
       {
           topfeat <- correlated_Remove(refdata,topfeat,thr = thr);
+          topfeat <- topfeat[order(-ordcor[topfeat])];
       }
     }
     else
@@ -56,7 +57,6 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
     {
       baseFeatures <- topfeat;
     }
-    topfeat <- topfeat[order(-ordcor)];
     topFeatures <- unique(c(topFeatures,topfeat));
     lastuncorrelatedFetures <- uncorrelatedFetures;
     uncorrelatedFetures <- character();
