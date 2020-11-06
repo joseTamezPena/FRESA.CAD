@@ -12,6 +12,7 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
   {
     thr <- parameters$thr;
   }
+  thr2 <- 0.75*thr;
   totuncorrelated <- character()
   topFeatures <- character()
   baseFeatures <- character()
@@ -60,15 +61,14 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
     uncorrelatedFetures <- character();
     if (length(topfeat)>0)
     {
-      for (feat in topfeat)
+      for (feat in topFeatures)
       {
         corlist <- cormat[,feat];
-        corlist <- corlist[corlist >= thr]
+        corlist <- corlist[corlist >= thr2]
 #        cat(feat,":");
 #        print(corlist)
         varlist <- names(corlist)
-        varlist <- varlist[!(varlist %in% topfeat)]
-        varlist <- varlist[!(varlist %in% baseFeatures)]
+        varlist <- varlist[!(varlist %in% topFeatures)]
         varlist <- varlist[!(varlist %in% uncorrelatedFetures)]
 		varlist <- varlist[countf[varlist] < tsum]
         if (length(varlist) > 0)
