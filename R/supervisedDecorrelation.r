@@ -110,7 +110,7 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
 #         print(varlist);
 		  countf[varlist] <- countf[varlist] + 1;
           uncorrelatedFetures <- unique(c(uncorrelatedFetures,varlist));
-          addedlist <- length(uncorrelatedFetures) + 1.0*(thr2 > 1.05*thr);
+          addedlist <- length(uncorrelatedFetures) + 1.0*(thr2 > 1.01*thr);
         }
       }
 #      print(uncorrelatedFetures)
