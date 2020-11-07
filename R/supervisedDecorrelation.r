@@ -37,16 +37,22 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
     maxcor <- apply(cormat,2,max)
     mmaxcor <- max(maxcor);
     topfeat <- colnames(cormat);
+    thr2 <- thr;    
     if (is.null(Outcome))
     {
       ordcor <- 0.99*maxcor + 0.01*apply(cormat,2,mean)
       topfeat <- topfeat[order(-ordcor)];
       names(topfeat) <- topfeat;
       topfeat <- c(topfeat[topFeatures],topfeat[!(topfeat %in% topFeatures)]);
+
+      if (thr2 < mmaxcor)
+      {
+        thr2 <- 0.25*mmaxcor + 0.75*thr;
+      }
       topfeat <- topfeat[maxcor[topfeat] >= thr];
       if (length(topfeat) > 0)
       {
-          topfeat <- correlated_Remove(refdata,topfeat,thr = thr);
+          topfeat <- correlated_Remove(refdata,topfeat,thr = thr2);
           topfeat <- topfeat[order(-ordcor[topfeat])];
       }
     }
@@ -95,6 +101,7 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
 			  {
 				adjusted[models[[vl]]$feature] <- (models[[vl]]$pval < unipvalue);
 			  }
+              intopfeat <- c(intopfeat,feat);      
 		  }
 #          cat("The adjusted :",feat,":");
 #          print(varlist);
@@ -103,8 +110,7 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
 #         print(varlist);
 		  countf[varlist] <- countf[varlist] + 1;
           uncorrelatedFetures <- unique(c(uncorrelatedFetures,varlist));
-          addedlist <- length(uncorrelatedFetures);
-          intopfeat <- c(intopfeat,feat);      
+          addedlist <- length(uncorrelatedFetures) + 1.0*(thr2 > 1.05*thr);
         }
       }
 #      print(uncorrelatedFetures)
