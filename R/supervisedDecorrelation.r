@@ -28,6 +28,7 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
   colnames(addfeaturematrix) <- colnames(refdata)[varincluded];
   rownames(addfeaturematrix) <- colnames(addfeaturematrix);
   unipvalue = 2.0*unipvalue/(nrow(data)-1);
+  wmax = 0.5;
   while ((addedlist > 0) && (lp < loops[1]))
   {
     lp = lp + 1;
@@ -47,7 +48,7 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
 
       if (thr2 < mmaxcor)
       {
-        thr2 <- 0.25*mmaxcor + 0.75*thr;
+        thr2 <- wmax*mmaxcor + (1.0-wmax)*thr;
       }
       topfeat <- topfeat[maxcor[topfeat] >= thr];
       if (length(topfeat) > 0)
@@ -58,7 +59,7 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
     }
     else
     {
-      topfeat <- names(univariate_KS(refdata,Outcome,...))
+      topfeat <- names(univariate_correlation(refdata,Outcome,method="spearman",...))
     }
     lastuncorrelatedFetures <- uncorrelatedFetures;
     uncorrelatedFetures <- character();
@@ -110,8 +111,12 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
 #         print(varlist);
 		  countf[varlist] <- countf[varlist] + 1;
           uncorrelatedFetures <- unique(c(uncorrelatedFetures,varlist));
-          addedlist <- length(uncorrelatedFetures) + 1.0*(thr2 > 1.01*thr);
         }
+        addedlist <- length(uncorrelatedFetures) + 1.0*(thr2 > 1.01*thr);
+      }
+      if (thr2 > 1.01*thr)
+      {
+        wmax <- 0.75*wmax;
       }
 #      print(uncorrelatedFetures)
       if (length(lastuncorrelatedFetures) == length(uncorrelatedFetures))
