@@ -12,7 +12,6 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
   {
     thr <- parameters$thr;
   }
-  thr2 <- thr;
   totuncorrelated <- character()
   topFeatures <- character()
   baseFeatures <- character()
@@ -28,6 +27,7 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
   addfeaturematrix <- as.data.frame(matrix(0,nrow=length(varincluded),ncol=length(varincluded)));
   colnames(addfeaturematrix) <- colnames(refdata)[varincluded];
   rownames(addfeaturematrix) <- colnames(addfeaturematrix);
+  unipvalue = 2.0*unipvalue/(nrow(data)-1);
   while ((addedlist > 0) && (lp < loops[1]))
   {
     lp = lp + 1;
@@ -54,19 +54,15 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
     {
       topfeat <- names(univariate_KS(refdata,Outcome,...))
     }
-    if (length(baseFeatures) == 0)
-    {
-      baseFeatures <- topfeat;
-    }
-    topFeatures <- unique(c(topFeatures,topfeat));
     lastuncorrelatedFetures <- uncorrelatedFetures;
     uncorrelatedFetures <- character();
     if (length(topfeat)>0)
     {
+      intopfeat <- character();
       for (feat in topfeat)
       {
         corlist <- cormat[,feat];
-        corlist <- corlist[corlist >= thr2]
+        corlist <- corlist[corlist >= thr]
 #        cat(feat,":");
 #        print(corlist)
         varlist <- names(corlist)
@@ -108,6 +104,7 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
 		  countf[varlist] <- countf[varlist] + 1;
           uncorrelatedFetures <- unique(c(uncorrelatedFetures,varlist));
           addedlist <- length(uncorrelatedFetures);
+          intopfeat <- c(intopfeat,feat);      
         }
       }
 #      print(uncorrelatedFetures)
@@ -116,10 +113,11 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
         addedlist <- sum(lastuncorrelatedFetures != uncorrelatedFetures);
       }
       cat (addedlist,":")
-    }
-    if (thr2 > 0.5*thr)
-    {
-      thr2 <- thr2*0.9;
+      if (length(baseFeatures) == 0)
+      {
+        baseFeatures <- intopfeat;
+      }
+      topFeatures <- unique(c(topFeatures,intopfeat));
     }
     totuncorrelated <- unique(c(totuncorrelated,uncorrelatedFetures));
   }
