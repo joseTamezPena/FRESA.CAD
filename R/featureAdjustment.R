@@ -67,17 +67,29 @@ if (!requireNamespace("MASS", quietly = TRUE)) {
 						{
 #							cat(baseModel,": Variable:\t ",colnamesList[i]);
 							rss1 <- var(cstrataref[,colnamesList[i]],na.rm = TRUE)
-							if (length(tbbaseModel) > 9)
-							{
-								model <- smooth.spline(cstrataref[,baseModel], 
+							dgf = nrow(cstrataref) - 1;
+							if (length(tbbaseModel) > 5)
+							{	
+#								cat(baseModel,":",colnamesList[i],"\n")
+								model <- try(smooth.spline(cstrataref[,baseModel], 
 											  y = cstrataref[,colnamesList[i]],
-											  nknots = 4,
+#											  nknots = 4,
 #											  df = 3,
-											  keep.data = FALSE)						
-								dgf = nrow(cstrataref) - model$df;
-								pred <- predict(model,cstrataref[,baseModel]);
-								ress <- cstrataref[,colnamesList[i]] - pred$y;
-								rss2 <- var(ress,na.rm = TRUE);
+											  keep.data = FALSE))
+#								cat(class(model),"\n")
+								if (inherits(model, "try-error"))
+								{
+#									cat("Error\n");
+									model <- lm(ftmp,data=cstrataref, model = FALSE,na.action=na.exclude);						
+									rss2 <- var(model$residuals,na.rm = TRUE);
+								}
+								else
+								{
+									dgf = nrow(cstrataref) - model$df;
+									pred <- predict(model,cstrataref[,baseModel]);
+									ress <- cstrataref[,colnamesList[i]] - pred$y;
+									rss2 <- var(ress,na.rm = TRUE);
+								}								
 							}
 							else
 							{
@@ -106,17 +118,27 @@ if (!requireNamespace("MASS", quietly = TRUE)) {
 						},
 						RLM = 
 						{ 
-							if (length(tbbaseModel) > 9)
+							if (length(tbbaseModel) > 5)
 							{
-								model <- MASS::rlm(ftmp,data=cstrataref,na.action=na.exclude, model = FALSE,method = "MM")
-								sw <- sum(model$w);
-								dgf = sw-length(model$coef)+1;
-								m1 <- sum(model$w*cstrataref[,colnamesList[i]],na.rm = TRUE)/sw
-								rss1 <- sum(model$w*(cstrataref[,colnamesList[i]]^2),na.rm = TRUE)/sw-m1*m1
-								m2 <- sum(model$w*model$residuals,na.rm = TRUE)/sw
-								rss2 <- sum(model$w*(model$residuals^2),na.rm = TRUE)/sw-m2*m2
-								f1 = rss1/rss2;
-								p <- pf(dgf*rss1/rss2-dgf,1,dgf,lower.tail=FALSE);
+								model <- try(MASS::rlm(ftmp,data=cstrataref,na.action=na.exclude, model = FALSE,method = "MM"))
+								if (!inherits(model, "try-error"))
+								{								
+									sw <- sum(model$w);
+									dgf = sw-length(model$coef)+1;
+									m1 <- sum(model$w*cstrataref[,colnamesList[i]],na.rm = TRUE)/sw
+									rss1 <- sum(model$w*(cstrataref[,colnamesList[i]]^2),na.rm = TRUE)/sw-m1*m1
+									m2 <- sum(model$w*model$residuals,na.rm = TRUE)/sw
+									rss2 <- sum(model$w*(model$residuals^2),na.rm = TRUE)/sw-m2*m2
+									f1 = rss1/rss2;
+									p <- pf(dgf*rss1/rss2-dgf,1,dgf,lower.tail=FALSE);
+								}
+								else
+								{
+									model <- lm(ftmp,data=cstrataref, model = FALSE,na.action=na.exclude)
+									f <- summary(model)$fstatistic
+									f1 = f[1];
+									p <- pf(f[1],f[2],f[3],lower.tail=FALSE)										
+								}
 							}
 							else
 							{
@@ -160,7 +182,7 @@ if (!requireNamespace("MASS", quietly = TRUE)) {
 							{ 
 								if (p < pvalue)
 								{
-									if (length(tbbaseModel) > 9)
+									if (class(model) == "smooth.spline")
 									{
 										cstrata[,colnamesList[i]] <- avg + cstrata[,colnamesList[i]]-predict(model,cstrata[,baseModel])$y;
 									}
