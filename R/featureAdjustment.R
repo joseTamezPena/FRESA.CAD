@@ -1,5 +1,5 @@
 featureAdjustment <-
-function(variableList,baseModel,strata=NA,data,referenceframe,type=c("LM","GLS","RLM","NZLM","SPLINE"),pvalue=0.05,correlationGroup = "ID",...) 
+function(variableList,baseModel,strata=NA,data,referenceframe,type=c("LM","GLS","RLM","NZLM","SPLINE","MARS"),pvalue=0.05,correlationGroup = "ID",...) 
 {
 
 if (!requireNamespace("nlme", quietly = TRUE)) {
@@ -7,6 +7,9 @@ if (!requireNamespace("nlme", quietly = TRUE)) {
 } 
 if (!requireNamespace("MASS", quietly = TRUE)) {
 	install.packages("MASS", dependencies = TRUE)
+}
+if (!requireNamespace("mda", quietly = TRUE)) {
+	install.packages("mda", dependencies = TRUE)
 }
 	type <- match.arg(type);
 	## the reference frame will be used to predict a variable from the basemodel. At output the residuals are returned.
@@ -63,6 +66,35 @@ if (!requireNamespace("MASS", quietly = TRUE)) {
 					ftmp <- formula(ftm1);
 
 					switch(type,
+    					MARS =
+						{
+#							cat(baseModel,": Variable:\t ",colnamesList[i]);
+							rss1 <- var(cstrataref[,colnamesList[i]],na.rm = TRUE)
+							dgf = nrow(cstrataref) - 1;
+#								cat(baseModel,":",colnamesList[i],"\n")
+							model <- try(mda::mars(cstrataref[,baseModel], 
+											  y = cstrataref[,colnamesList[i]]
+											  )
+										  )
+#								cat(class(model),"\n")
+							if (inherits(model, "try-error"))
+							{
+#								cat("Error\n");
+								model <- lm(ftmp,data=cstrataref, model = FALSE,na.action=na.exclude);						
+								rss2 <- var(model$residuals,na.rm = TRUE);
+							}
+							else
+							{
+#								cat(class(model));
+								dgf = nrow(cstrataref) - length(model$coefficients);
+								pred <- predict(model,cstrataref[,baseModel]);
+								ress <- cstrataref[,colnamesList[i]] - pred;
+								rss2 <- var(ress,na.rm = TRUE);
+							}								
+							f1 = rss1/rss2;
+							p <- pf(dgf*rss1/rss2-dgf,1,dgf,lower.tail=FALSE);
+#							cat(colnamesList[i],"\t F Stats:\t ",f1,"\t P-value:\t",p,"\n");
+						},						
     					SPLINE =
 						{
 #							cat(baseModel,": Variable:\t ",colnamesList[i]);
@@ -179,6 +211,20 @@ if (!requireNamespace("MASS", quietly = TRUE)) {
 					if (!is.na(p))
 					{
 						switch(type, 
+							MARS = 
+							{ 
+								if (p < pvalue)
+								{
+									if (class(model) == "mars")
+									{
+										cstrata[,colnamesList[i]] <- avg + cstrata[,colnamesList[i]]-predict(model,cstrata[,baseModel]);
+									}
+									else
+									{
+										cstrata[,colnamesList[i]] <- avg + cstrata[,colnamesList[i]]-predict(model,cstrata);
+									}
+								}
+							},
 							SPLINE = 
 							{ 
 								if (p < pvalue)
