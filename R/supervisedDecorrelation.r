@@ -122,7 +122,7 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
       {
         addedlist <- sum(lastuncorrelatedFetures != uncorrelatedFetures);
       }
-      cat (addedlist,":")
+#      cat (addedlist,":")
       if (length(baseFeatures) == 0)
       {
         baseFeatures <- intopfeat;
@@ -131,7 +131,7 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
     }
     totuncorrelated <- unique(c(totuncorrelated,uncorrelatedFetures));
   }
-  cat ("\n")
+#  cat ("\n")
   attr(dataAdjusted,"topFeatures") <- unique(topFeatures);
   attr(dataAdjusted,"TotalAdjustments") <- countf;
   attr(dataAdjusted,"featureMatrix") <- addfeaturematrix;
