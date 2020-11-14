@@ -1,5 +1,5 @@
 featureAdjustment <-
-function(variableList,baseModel,strata=NA,data,referenceframe,type=c("LM","GLS","RLM","NZLM","SPLINE"),pvalue=0.05,correlationGroup = "ID") 
+function(variableList,baseModel,strata=NA,data,referenceframe,type=c("LM","GLS","RLM","NZLM","SPLINE"),pvalue=0.05,correlationGroup = "ID",...) 
 {
 
 if (!requireNamespace("nlme", quietly = TRUE)) {
@@ -72,10 +72,11 @@ if (!requireNamespace("MASS", quietly = TRUE)) {
 							{	
 #								cat(baseModel,":",colnamesList[i],"\n")
 								model <- try(smooth.spline(cstrataref[,baseModel], 
-											  y = cstrataref[,colnamesList[i]],
-#											  nknots = 4,
-#											  df = 3,
-											  keep.data = FALSE))
+												  y = cstrataref[,colnamesList[i]],
+												  keep.data = FALSE,
+												  ...
+												  )
+											  )
 #								cat(class(model),"\n")
 								if (inherits(model, "try-error"))
 								{

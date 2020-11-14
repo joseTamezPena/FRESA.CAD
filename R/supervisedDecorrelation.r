@@ -1,4 +1,4 @@
-featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20,10),unipvalue=0.05,method=NULL,...)
+featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20,10),thr=0.75,...)
 {
 
   dataAdjusted <- data;
@@ -6,19 +6,12 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
   {
     refdata <- data;
   }
-  parameters <- list(...);
-  thr <- 0.75;
-  if (!is.null(parameters$thr))
-  {
-    thr <- parameters$thr;
-  }
   totuncorrelated <- character()
   topFeatures <- character()
   baseFeatures <- character()
   addedlist <- 1;
   lp = 0;
   uncorrelatedFetures <- character();
-  if (is.null(method)) method ="LM";
   countf <- numeric(ncol(refdata));
   names(countf) <- colnames(refdata);
   tsum <- 10;
@@ -27,8 +20,14 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
   addfeaturematrix <- as.data.frame(matrix(0,nrow=length(varincluded),ncol=length(varincluded)));
   colnames(addfeaturematrix) <- colnames(refdata)[varincluded];
   rownames(addfeaturematrix) <- colnames(addfeaturematrix);
-  unipvalue = 2.0*unipvalue/(nrow(data)-1);
   wmax = 0.5;
+  unipvalue = 0.05/nrow(data);
+  parameters <- list(...);
+  if (!is.null(parameters$pvalue))
+  {
+    unipvalue = parameters$pvalue/nrow(data);
+  }
+
   while ((addedlist > 0) && (lp < loops[1]))
   {
     lp = lp + 1;
@@ -59,7 +58,7 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
     }
     else
     {
-      topfeat <- names(univariate_correlation(refdata,Outcome,method="spearman",...))
+      topfeat <- names(univariate_correlation(refdata,Outcome,method="spearman",thr = thr2))
     }
     lastuncorrelatedFetures <- uncorrelatedFetures;
     uncorrelatedFetures <- character();
@@ -85,14 +84,14 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
                                           baseModel=feat,
                                           data=dataAdjusted,
                                           referenceframe=refdata,
-                                          type=method,
-                                          pvalue=unipvalue);
+                                          ...
+                                          );
            refdata <- featureAdjustment(dvarlist,
                                              baseModel=feat,
                                              data=refdata,
                                              referenceframe=refdata,
-                                             type=method,
-                                             pvalue=unipvalue);
+                                             ...
+                                          );
 		  adjusted <- numeric(length(varlist)) == 1;
 		  names(adjusted) <- varlist;
 		  models <- attr(refdata,"models")

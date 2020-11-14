@@ -6,7 +6,7 @@
 }
 
 \usage{
-	featureDecorrelation(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20,3),unipvalue=0.05,method=NULL,...)
+	featureDecorrelation(data=NULL,refdata=NULL,Outcome=NULL,loops=c(20,3),thr=0.75,method=NULL,...)
 }
 \arguments{
 	\item{data}{
@@ -21,19 +21,16 @@
 	\item{loops}{
 	the maxumum number of loops
 	}
-	\item{unipvalue}{
-	the maxumum p-value for linear association
+	\item{thr}{
+	correlation threshold for feature selection
 	}
-	\item{method}{
-	fitting type of featureAdjustment
-	}	
 	\item{...}{
-	parameters passed to the univariate filter.
+	parameters passed to the adjuting method.
 	}
 }
 
 \details{
- The data-frame will be analyzed: 1) Features associated to the outcome will be extracted. 2) Features associeted to the significant features will be decorrelated
+ The data-frame will be analyzed and correlated features will be decorrelated. Feature selection may be based on Outcome or by default in Top correlation
 }
 
 	

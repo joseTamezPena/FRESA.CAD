@@ -1,4 +1,4 @@
-randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL, trainFraction = 0.5, repetitions = 100,trainSampleSets=NULL,featureSelectionFunction=NULL,featureSelection.control=NULL,asFactor=FALSE,addNoise=FALSE,classSamplingType=c("Augmented","NoAugmented","Proportional","Balanced"),...)
+randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL, trainFraction = 0.5, repetitions = 100,trainSampleSets=NULL,featureSelectionFunction=NULL,featureSelection.control=NULL,asFactor=FALSE,addNoise=FALSE,classSamplingType=c("Augmented","NoAugmented","Proportional","Balanced","LOO"),...)
 {
   classSamplingType <- match.arg(classSamplingType);
   if (is.null(theData))
@@ -253,27 +253,35 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
         sampleTrain <- NULL;
         if (is.null(trainSampleSets))
         {
-          if (classSamplingType == "Proportional")
+          if (classSamplingType == "LOO")
           {
-            sampleTrain <- sample(nrow(ssubsets[[jind]]),as.integer(nrow(ssubsets[[jind]])*trainFraction),replace=BootReplace);
+            smp <- seq(1,nrow(ssubsets[[jind]]));
+            sampleTrain <- smp[-(1 + (rept %% nrow(ssubsets[[jind]])))];
           }
           else
           {
-            maxfrac <- max(c(trainFraction,0.95));
-            ssize <- min(c(nrow(ssubsets[[jind]])-1,as.integer(nrow(ssubsets[[jind]])*maxfrac))); # minimum training size
-            if (samplePerClass > ssize)
+            if (classSamplingType == "Proportional")
             {
-              sampleTrain <- sample(nrow(ssubsets[[jind]]),ssize,replace=BootReplace);
-              if (classSamplingType == "Augmented")
-              {
-                therest <- samplePerClass-ssize;
-                nsample <- sample(ssize,therest,replace=TRUE);
-                sampleTrain <- append(sampleTrain,sampleTrain[nsample]);
-              }
+              sampleTrain <- sample(nrow(ssubsets[[jind]]),as.integer(nrow(ssubsets[[jind]])*trainFraction),replace=BootReplace);
             }
             else
             {
-              sampleTrain <- sample(nrow(ssubsets[[jind]]),samplePerClass,replace=BootReplace);
+              maxfrac <- max(c(trainFraction,0.95));
+              ssize <- min(c(nrow(ssubsets[[jind]])-1,as.integer(nrow(ssubsets[[jind]])*maxfrac))); # minimum training size
+              if (samplePerClass > ssize)
+              {
+                sampleTrain <- sample(nrow(ssubsets[[jind]]),ssize,replace=BootReplace);
+                if (classSamplingType == "Augmented")
+                {
+                  therest <- samplePerClass-ssize;
+                  nsample <- sample(ssize,therest,replace=TRUE);
+                  sampleTrain <- append(sampleTrain,sampleTrain[nsample]);
+                }
+              }
+              else
+              {
+                sampleTrain <- sample(nrow(ssubsets[[jind]]),samplePerClass,replace=BootReplace);
+              }
             }
           }
 		  usample <- unique(sampleTrain);
