@@ -73,7 +73,8 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 							dgf = nrow(cstrataref) - 1;
 #								cat(baseModel,":",colnamesList[i],"\n")
 							model <- try(mda::mars(cstrataref[,baseModel], 
-											  y = cstrataref[,colnamesList[i]]
+											  y = cstrataref[,colnamesList[i]],
+											  ...
 											  )
 										  )
 #								cat(class(model),"\n")
