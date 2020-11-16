@@ -57,6 +57,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 			{
 				tbbaseModel <- table(cstrataref[,baseModel])
 			}
+
 			for (i in 1:size)
 			{ 
 				tb <- table(cstrataref[,colnamesList[i]])
@@ -70,20 +71,25 @@ if (!requireNamespace("mda", quietly = TRUE)) {
     					LOESS =
 						{
 							rss1 <- var(cstrataref[,colnamesList[i]],na.rm = TRUE)
+
 							dgf = 0.5*nrow(cstrataref) - 2;
 							model <- try(loess(ftmp,data=cstrataref,model=FALSE,...)
 										  )
+							modellm <- lm(ftmp,data=cstrataref, model = FALSE,na.action=na.exclude)
+
 							if (inherits(model, "try-error"))
 							{
 #								cat("Error\n");
-								model <- lm(ftmp,data=cstrataref, model = FALSE,na.action=na.exclude);						
+								model <- modellm;						
 								rss2 <- var(model$residuals,na.rm = TRUE);
 							}
 							else
 							{
 #								cat(class(model));
-								dgf = nrow(cstrataref)*model$pars$span-lf$pars$degree;
+								dgf = nrow(cstrataref)*model$pars$span-model$pars$degree;
 								pred <- predict(model,cstrataref);
+								predlm <- predict(modellm,cstrataref);
+								pred[is.na(pred)] <- predlm[is.na(pred)];
 								ress <- cstrataref[,colnamesList[i]] - pred;
 								rss2 <- var(ress,na.rm = TRUE);
 							}								
@@ -241,7 +247,10 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 							{ 
 								if (p < pvalue)
 								{
-									cstrata[,colnamesList[i]] <- avg + cstrata[,colnamesList[i]]-predict(model,cstrata);
+									pred <- predict(model,cstrata);
+									predlm <- predict(modellm,cstrata);
+									pred[is.na(pred)] <- predlm[is.na(pred)];
+									cstrata[,colnamesList[i]] <- avg + cstrata[,colnamesList[i]]-pred;
 								}
 							},
 							MARS = 
@@ -250,7 +259,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 								{
 									if (class(model) == "mars")
 									{
-										cstrata[,colnamesList[i]] <- avg + cstrata[,colnamesList[i]]-predict(model,cstrata[,baseModel]);
+										cstrata[,colnamesList[i]] <- avg + cstrata[,colnamesList[i]]-as.numeric(predict(model,cstrata[,baseModel]));
 									}
 									else
 									{
