@@ -1,5 +1,5 @@
 featureAdjustment <-
-function(variableList,baseModel,strata=NA,data,referenceframe,type=c("LM","GLS","RLM","NZLM","SPLINE","MARS"),pvalue=0.05,correlationGroup = "ID",...) 
+function(variableList,baseModel,strata=NA,data,referenceframe,type=c("LM","GLS","RLM","NZLM","SPLINE","MARS","LOESS"),pvalue=0.05,correlationGroup = "ID",...) 
 {
 
 if (!requireNamespace("nlme", quietly = TRUE)) {
@@ -66,6 +66,31 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 					ftmp <- formula(ftm1);
 
 					switch(type,
+					
+    					LOESS =
+						{
+							rss1 <- var(cstrataref[,colnamesList[i]],na.rm = TRUE)
+							dgf = 0.5*nrow(cstrataref) - 2;
+							model <- try(loess(ftmp,data=cstrataref,model=FALSE,...)
+										  )
+							if (inherits(model, "try-error"))
+							{
+#								cat("Error\n");
+								model <- lm(ftmp,data=cstrataref, model = FALSE,na.action=na.exclude);						
+								rss2 <- var(model$residuals,na.rm = TRUE);
+							}
+							else
+							{
+#								cat(class(model));
+								dgf = nrow(cstrataref)*model$pars$span-lf$pars$degree;
+								pred <- predict(model,cstrataref);
+								ress <- cstrataref[,colnamesList[i]] - pred;
+								rss2 <- var(ress,na.rm = TRUE);
+							}								
+							f1 = rss1/rss2;
+							p <- pf(dgf*rss1/rss2-dgf,1,dgf,lower.tail=FALSE);
+#							cat(colnamesList[i],"\t F Stats:\t ",f1,"\t P-value:\t",p,"\n");
+						},						
     					MARS =
 						{
 #							cat(baseModel,": Variable:\t ",colnamesList[i]);
@@ -212,6 +237,13 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 					if (!is.na(p))
 					{
 						switch(type, 
+							LOESS = 
+							{ 
+								if (p < pvalue)
+								{
+									cstrata[,colnamesList[i]] <- avg + cstrata[,colnamesList[i]]-predict(model,cstrata);
+								}
+							},
 							MARS = 
 							{ 
 								if (p < pvalue)

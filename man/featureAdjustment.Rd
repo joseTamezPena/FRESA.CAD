@@ -12,7 +12,7 @@
 	                  strata = NA,
 	                  data,
 	                  referenceframe,
-	                  type = c("LM", "GLS", "RLM","NZLM","SPLINE","MARS"),
+	                  type = c("LM", "GLS", "RLM","NZLM","SPLINE","MARS","LOESS"),
 	                  pvalue = 0.05,
 	                  correlationGroup = "ID",
 	                  ...
@@ -44,7 +44,7 @@
 		The name of the column in \code{data} that stores the variable to be used to group the data (only needed if \code{type} defined as "GLS")
 	}
 	\item{...}{
-		parameters for smooth.spline or mda::mars)
+		parameters for smooth.spline,loess or mda::mars)
 	}
 }
 \value{
