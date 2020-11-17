@@ -34,6 +34,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 	models <- list();
 	idx <- 1; 
 	tbbaseModel <- NULL;
+	AdjustedFrame <- NULL;
 	for (sta in minStrata:maxStrata)
 	{
 		if (!is.na(strata))
@@ -314,27 +315,23 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 					}
 				}
 			}
-			if (created == 1) 
-			{
-				AdjustedFrame <- rbind(AdjustedFrame,cstrata);
-			}
-			else
-			{
-				created = 1;
-				AdjustedFrame = cstrata;
-			}
+			AdjustedFrame <- rbind(AdjustedFrame,cstrata);
+			created = 1;
 		}
 	}
-	attr(AdjustedFrame,"models") <- models;
 	# for (i in 1:size)		
 	# { 
 		# var1 <- var(data[,colnamesList[i]],na.rm = TRUE);
 		# var2 <- var(AdjustedFrame[,colnamesList[i]],na.rm = TRUE);
  		# cat(" Variable: \t",colnamesList[i],"\t Var Ini: \t",var1,"\t Var End:\t",var2,"\t F:\t",var1/var2,"\n");
 	# }
-	if (created ==0 ) 
+	if (created == 0 ) 
 	{
 		AdjustedFrame=NULL;
+	}
+	else
+	{
+		attr(AdjustedFrame,"models") <- models;
 	}
 
 	return (AdjustedFrame);
