@@ -53,11 +53,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 		}
 		if ((nrow(cstrata)>1) && ( nrow(cstrataref)>1))
 		{
-			if (type=="SPLINE")
-			{
-				tbbaseModel <- table(cstrataref[,baseModel])
-			}
-
+			tbbaseModel <- table(cstrataref[,baseModel])
 			for (i in 1:size)
 			{ 
 				tb <- table(cstrataref[,colnamesList[i]])
