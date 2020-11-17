@@ -115,7 +115,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 							{
 #								cat(class(model));
 								dgf = nrow(cstrataref) - length(model$coefficients);
-								pred <- predict(model,cstrataref[,baseModel]);
+								pred <- as.numeric(predict(model,cstrataref[,baseModel]));
 								ress <- cstrataref[,colnamesList[i]] - pred;
 								rss2 <- var(ress,na.rm = TRUE);
 							}								
