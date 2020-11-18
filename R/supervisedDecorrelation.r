@@ -1,11 +1,14 @@
-featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20,10),thr=0.75,...)
+featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20,10),thr=0.75,unipvalue=0.05,...)
 {
 
-  dataAdjusted <- data;
+  dataids <- rownames(data)
+
   if (is.null(refdata))
   {
     refdata <- data;
   }
+  refdataids <- rownames(refdata);
+  dataAdjusted <- rbind(data,refdata[!(refdataids %in% dataids),]);
   totuncorrelated <- character()
   topFeatures <- character()
   baseFeatures <- character()
@@ -21,12 +24,7 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
   colnames(addfeaturematrix) <- colnames(refdata)[varincluded];
   rownames(addfeaturematrix) <- colnames(addfeaturematrix);
   wmax = 0.5;
-  unipvalue = 0.05/nrow(data);
-  parameters <- list(...);
-  if (!is.null(parameters$pvalue))
-  {
-    unipvalue = parameters$pvalue/nrow(data);
-  }
+  
 
   while ((addedlist > 0) && (lp < loops[1]))
   {
@@ -84,17 +82,13 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
                                           baseModel=feat,
                                           data=dataAdjusted,
                                           referenceframe=refdata,
+                                          pvalue = unipvalue,
                                           ...
                                           );
-           refdata <- featureAdjustment(dvarlist,
-                                             baseModel=feat,
-                                             data=refdata,
-                                             referenceframe=refdata,
-                                             ...
-                                          );
+           refdata <- dataAdjusted[refdataids,];
 		  adjusted <- numeric(length(varlist)) == 1;
 		  names(adjusted) <- varlist;
-		  models <- attr(refdata,"models")
+		  models <- attr(dataAdjusted,"models")
 		  if (length(models) > 0)
 		  {
 			  for (vl in 1:length(models))
@@ -131,6 +125,7 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
     }
     totuncorrelated <- unique(c(totuncorrelated,uncorrelatedFetures));
   }
+  dataAdjusted <- dataAdjusted[dataids,];
 #  cat ("\n")
   attr(dataAdjusted,"topFeatures") <- unique(topFeatures);
   attr(dataAdjusted,"TotalAdjustments") <- countf;

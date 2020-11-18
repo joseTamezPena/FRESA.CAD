@@ -6,7 +6,7 @@
 }
 
 \usage{
-	featureDecorrelation(data=NULL,refdata=NULL,Outcome=NULL,loops=c(20,3),thr=0.75,method=NULL,...)
+	featureDecorrelation(data=NULL,refdata=NULL,Outcome=NULL,loops=c(20,3),thr=0.75,unipvalue=0.05,...)
 }
 \arguments{
 	\item{data}{
@@ -23,6 +23,9 @@
 	}
 	\item{thr}{
 	correlation threshold for feature selection
+	}
+	\item{unipvalue}{
+	association p-value
 	}
 	\item{...}{
 	parameters passed to the adjuting method.
