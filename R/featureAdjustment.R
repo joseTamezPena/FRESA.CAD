@@ -325,11 +325,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 		# var2 <- var(AdjustedFrame[,colnamesList[i]],na.rm = TRUE);
  		# cat(" Variable: \t",colnamesList[i],"\t Var Ini: \t",var1,"\t Var End:\t",var2,"\t F:\t",var1/var2,"\n");
 	# }
-	if (created == 0 ) 
-	{
-		AdjustedFrame=NULL;
-	}
-	else
+	if (created > 0) 
 	{
 		attr(AdjustedFrame,"models") <- models;
 	}
