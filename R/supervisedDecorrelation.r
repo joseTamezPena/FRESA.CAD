@@ -31,38 +31,33 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
     lp = lp + 1;
     addedlist <- 0;
     refdata <- dataAdjusted[refdataids,];
+    lastuncorrelatedFetures <- uncorrelatedFetures;
+    uncorrelatedFetures <- character();
+
 	cormat <- abs(cor(refdata[,varincluded],method="spearman"))
     diag(cormat) <- 0;
     maxcor <- apply(cormat,2,max)
     mmaxcor <- max(maxcor);
     topfeat <- colnames(cormat);
     thr2 <- thr;    
+    if (thr2 < mmaxcor)
+    {
+      thr2 <- wmax*mmaxcor + (1.0-wmax)*thr;
+    }
     ordcor <- 0.9999*maxcor + 0.0001*apply(cormat,2,mean)
-    if (is.null(Outcome))
+    topfeat <- topfeat[order(-ordcor)];
+    names(topfeat) <- topfeat;
+    topfeat <- c(topfeat[topFeatures],topfeat[!(topfeat %in% topFeatures)]);
+    if (!is.null(Outcome))
     {
-      topfeat <- topfeat[order(-ordcor)];
-      names(topfeat) <- topfeat;
-      topfeat <- c(topfeat[topFeatures],topfeat[!(topfeat %in% topFeatures)]);
-
-      if (thr2 < mmaxcor)
-      {
-        thr2 <- wmax*mmaxcor + (1.0-wmax)*thr;
-      }
-      topfeat <- topfeat[maxcor[topfeat] >= thr];
-      if (length(topfeat) > 0)
-      {
-          topfeat <- correlated_Remove(refdata,topfeat,thr = thr2);
-      }
+      topfeat <- names(univariate_correlation(refdata,Outcome,method="spearman",thr = 0.999,pvalue=0.45));
+      topfeat <- c(topfeat[topfeat %in% topFeatures],topfeat[!(topfeat %in% topFeatures)]);
     }
-    else
-    {
-      topfeat <- names(univariate_correlation(refdata,Outcome,method="spearman",thr = thr2,pvalue=0.45))
-    }
-    topfeat <- topfeat[order(-ordcor[topfeat])];
-    lastuncorrelatedFetures <- uncorrelatedFetures;
-    uncorrelatedFetures <- character();
+    topfeat <- topfeat[maxcor[topfeat] >= thr];
     if (length(topfeat)>0)
     {
+      topfeat <- correlated_Remove(refdata,topfeat,thr = thr2);
+      topfeat <- topfeat[order(-ordcor[topfeat])];
       intopfeat <- character();
       for (feat in topfeat)
       {
