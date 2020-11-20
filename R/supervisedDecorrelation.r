@@ -30,6 +30,7 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
   {
     lp = lp + 1;
     addedlist <- 0;
+    refdata <- dataAdjusted[refdataids,];
 	cormat <- abs(cor(refdata[,varincluded],method="spearman"))
     diag(cormat) <- 0;
     maxcor <- apply(cormat,2,max)
@@ -38,7 +39,7 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
     thr2 <- thr;    
     if (is.null(Outcome))
     {
-      ordcor <- 0.99*maxcor + 0.01*apply(cormat,2,mean)
+      ordcor <- 0.9999*maxcor + 0.0001*apply(cormat,2,mean)
       topfeat <- topfeat[order(-ordcor)];
       names(topfeat) <- topfeat;
       topfeat <- c(topfeat[topFeatures],topfeat[!(topfeat %in% topFeatures)]);
@@ -67,7 +68,7 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
       {
         corlist <- cormat[,feat];
         corlist <- corlist[corlist >= thr]
-#        cat(feat,":");
+#        cat(lp,":",feat,":");
 #        print(corlist)
         varlist <- names(corlist)
         varlist <- varlist[!(varlist %in% baseFeatures)]
@@ -85,37 +86,42 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
                                           pvalue = unipvalue,
                                           ...
                                           );
-           refdata <- dataAdjusted[refdataids,];
-		  adjusted <- numeric(length(varlist)) == 1;
-		  names(adjusted) <- varlist;
+#          refdata <- dataAdjusted[refdataids,];
 		  models <- attr(dataAdjusted,"models")
 		  if (length(models) > 0)
 		  {
+              adjusted <- numeric(length(varlist)) == 1;
+              names(adjusted) <- varlist;
 			  for (vl in 1:length(models))
 			  {
 				adjusted[models[[vl]]$feature] <- (models[[vl]]$pval < unipvalue);
+#                cat("(",models[[vl]]$feature,":",models[[vl]]$pval,")");
 			  }
-              intopfeat <- c(intopfeat,feat);      
+  #          cat("The adjusted :",feat,":");
+  #
+  #          print(varlist);
+            varlist <- varlist[adjusted];
+            if (length(varlist) > 0)
+            {
+                intopfeat <- c(intopfeat,feat);      
+                addfeaturematrix[feat,varlist] <- addfeaturematrix[feat,varlist] + 1;
+#                print(varlist);
+                countf[varlist] <- countf[varlist] + 1;
+                uncorrelatedFetures <- unique(c(uncorrelatedFetures,varlist));
+            }
 		  }
-#          cat("The adjusted :",feat,":");
-#          print(varlist);
-		  varlist <- varlist[adjusted];
-          addfeaturematrix[feat,varlist] <- addfeaturematrix[feat,varlist] + 1;
-#         print(varlist);
-		  countf[varlist] <- countf[varlist] + 1;
-          uncorrelatedFetures <- unique(c(uncorrelatedFetures,varlist));
         }
-        addedlist <- length(uncorrelatedFetures) + 1.0*(thr2 > 1.01*thr);
+        addedlist <- length(uncorrelatedFetures) + 1.0*(thr2 > 1.001*thr);
       }
-      if (thr2 > 1.01*thr)
+      if (thr2 > 1.001*thr)
       {
-        wmax <- 0.75*wmax;
+        wmax <- 0.5*wmax;
       }
 #      print(uncorrelatedFetures)
-      if (length(lastuncorrelatedFetures) == length(uncorrelatedFetures))
-      {
-        addedlist <- sum(lastuncorrelatedFetures != uncorrelatedFetures);
-      }
+#      if (length(lastuncorrelatedFetures) == length(uncorrelatedFetures))
+#      {
+#        addedlist <- sum(lastuncorrelatedFetures != uncorrelatedFetures);
+#      }
 #      cat (addedlist,":")
       if (length(baseFeatures) == 0)
       {

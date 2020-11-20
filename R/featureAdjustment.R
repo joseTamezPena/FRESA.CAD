@@ -122,7 +122,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 							}								
 							f1 = rss1/rss2;
 							p <- pf(dgf*rss1/rss2-dgf,1,dgf,lower.tail=FALSE);
-#							cat(colnamesList[i],"\t F Stats:\t ",f1,"\t P-value:\t",p,"\n");
+#							if (p < pvalue) cat(colnamesList[i],"\t F Stats:\t ",f1,"\t P-value:\t",p,"\n");
 						},						
     					SPLINE =
 						{
