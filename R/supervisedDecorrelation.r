@@ -19,10 +19,10 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
   names(countf) <- colnames(refdata);
   tsum <- 10;
   if (length(loops) > 1) tsum <- loops[2];
-  varincluded <- !(colnames(refdata) %in% Outcome);
+  varincluded <- colnames(refdata)[!(colnames(refdata) %in% Outcome)];
   addfeaturematrix <- as.data.frame(matrix(0,nrow=length(varincluded),ncol=length(varincluded)));
-  colnames(addfeaturematrix) <- colnames(refdata)[varincluded];
-  rownames(addfeaturematrix) <- colnames(addfeaturematrix);
+  colnames(addfeaturematrix) <- varincluded;
+  rownames(addfeaturematrix) <- varincluded;
   wmax = 0.5;
   
 
@@ -37,9 +37,9 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
     mmaxcor <- max(maxcor);
     topfeat <- colnames(cormat);
     thr2 <- thr;    
+    ordcor <- 0.9999*maxcor + 0.0001*apply(cormat,2,mean)
     if (is.null(Outcome))
     {
-      ordcor <- 0.9999*maxcor + 0.0001*apply(cormat,2,mean)
       topfeat <- topfeat[order(-ordcor)];
       names(topfeat) <- topfeat;
       topfeat <- c(topfeat[topFeatures],topfeat[!(topfeat %in% topFeatures)]);
@@ -52,13 +52,13 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
       if (length(topfeat) > 0)
       {
           topfeat <- correlated_Remove(refdata,topfeat,thr = thr2);
-          topfeat <- topfeat[order(-ordcor[topfeat])];
       }
     }
     else
     {
-      topfeat <- names(univariate_correlation(refdata,Outcome,method="spearman",thr = thr2))
+      topfeat <- names(univariate_correlation(refdata,Outcome,method="spearman",thr = thr2,pvalue=0.45))
     }
+    topfeat <- topfeat[order(-ordcor[topfeat])];
     lastuncorrelatedFetures <- uncorrelatedFetures;
     uncorrelatedFetures <- character();
     if (length(topfeat)>0)
