@@ -1110,11 +1110,13 @@ predict.FRESA_HLCM <- function(object,...)
 					prbclas[condone,n] <- classPred2[condone];
 					condtwo <- (classPred2 < 0.5) & (classPred2 < prbclas[,n]);
 					prbclas[condtwo,n] <- classPred2[condtwo];
+					prbclas[,n] <- 0.5*(prbclas[,n] +  classPred2);
 				}
 				else
 				{
 					nclass <- as.numeric(attributes(classPred)$class);
 					prbclas[,n] <- classPred*(nclass == 3) + (1.0 - classPred)*(nclass == 2);
+					prbclas[,n] <- prbclas[,n] + (1.0 - (classPred*(nclass == 0) + (1.0 - classPred)*(nclass == 1)));
 				}
 			}
 			else
@@ -1145,15 +1147,16 @@ predict.FRESA_HLCM <- function(object,...)
 		mpclas <- (2.0*mpclas)^2;
 		for (i in 1:length(pLS))
 		{
-			nwt <- object$classfreq[1]*(1.0-object$classfreq[1])*(1.0 - prbclas[i,1])*mpclas[i];
-			wts <- prbclas[i,1] + nwt;
-			pLS[i] <- prbclas[i,1]*pmodel[i,1] + nwt*(1.0-pmodel[i,1]);
+			nwt <- object$classfreq[1]*prbclas[i,1];
+			pLS[i] <- nwt*pmodel[i,1];
+			wts <- nwt;
 			if (nm > 1)
 			{
 				for (n in 2:nm)
 				{
-					wts <- wts + prbclas[i,n]*mpclas[i];
-					pLS[i] <- pLS[i] + prbclas[i,n]*mpclas[i]*pmodel[i,n];
+					nwt <- object$classfreq[n]*prbclas[i,n];
+					pLS[i] <- pLS[i] + nwt*pmodel[i,n];
+					wts <- wts + nwt;
 				}
 			}
 			if (wts > 0) pLS[i] <- pLS[i]/wts;
