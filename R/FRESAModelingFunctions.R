@@ -1115,8 +1115,7 @@ predict.FRESA_HLCM <- function(object,...)
 				else
 				{
 					nclass <- as.numeric(attributes(classPred)$class);
-					prbclas[,n] <- classPred*(nclass == 3) + (1.0 - classPred)*(nclass == 2);
-					prbclas[,n] <- prbclas[,n] + (1.0 - (classPred*(nclass == 0) + (1.0 - classPred)*(nclass == 1)));
+					prbclas[,n] <- classPred*(nclass == 3) + (1.0-classPred)*(nclass == 2) + (1.0 - ((1.0-classPred)*(nclass == 0) + classPred*(nclass == 1)));
 				}
 			}
 			else
