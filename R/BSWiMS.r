@@ -582,6 +582,11 @@ NumberofRepeats=1)
 		}
 		bagg <- baggedModel(formula.list,data,type,univariate=unirank,useFreq=FALSE,equifreqCorrection=equiMaxFreq,n_bootstrap=1);
 	}
+	selectedfeatures <- NULL;
+	if (!is.null(bagg))
+	{
+		selectedfeatures <- names(bagg$frequencyTable);
+	}
 
 
 
@@ -593,7 +598,8 @@ NumberofRepeats=1)
 		formula.list=formula.list,
 		forward.selection.list=forward.selection.list,
 		oridinalModels=oridinalModels,
-		equivalent=equivalent
+		equivalent=equivalent,
+		selectedfeatures = selectedfeatures
 	);
 	class(result) <- c("fitFRESA","BSWiMS");
 
