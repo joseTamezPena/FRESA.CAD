@@ -54,6 +54,7 @@ FRESAScale <- function(data,refFrame=NULL,method=c("Norm","Order","OrderLogit","
 					refDisp <- apply(datRefUses,2,IQR, na.rm = TRUE);
 					refMean[refDisp == 0] <- meanRange[refDisp == 0];
 					refDisp[refDisp == 0] <- refRange[refDisp == 0];
+					refDisp <- refDisp/abs(2*qnorm(0.25));
 				}
 
 				meanmat <- matrix(rep(refMean,nrow(data)),nrow=nrow(data),ncol=length(usedFeatures),byrow = TRUE);
@@ -74,12 +75,13 @@ FRESAScale <- function(data,refFrame=NULL,method=c("Norm","Order","OrderLogit","
 					refDisp <- apply(datRefUses,2,IQR, na.rm = TRUE);
 					refMean[refDisp == 0] <- meanRange[refDisp == 0];
 					refDisp[refDisp == 0] <- refRange[refDisp == 0];
+					refDisp <- refDisp/abs(2*qnorm(0.25));
 				}
 				iqrsdratio = 0.5;
 
 				meanmat <- matrix(rep(refMean,nrow(data)),nrow=nrow(data),ncol=length(usedFeatures),byrow = TRUE);
 				sdmat <- matrix(rep(refDisp,nrow(data)),nrow=nrow(data),ncol=length(usedFeatures),byrow = TRUE);
-				data[,usedFeatures] <- 4*(1.0/(1.0+exp(-iqrsdratio*(data[,usedFeatures]-meanmat)/sdmat)) - 0.5);
+				data[,usedFeatures] <- 4.0*(1.0/(1.0+exp(-iqrsdratio*(data[,usedFeatures]-meanmat)/sdmat)) - 0.5)/iqrsdratio;
 			},
 			RankInv =
 			{
