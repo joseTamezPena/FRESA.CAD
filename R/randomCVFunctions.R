@@ -325,6 +325,7 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,...)
   names(varcount) <- colnames(data);
   names(rankVar) <- colnames(data);
 
+  if (class(data[,Outcome]) == "factor") data[,Outcome] <- as.numeric(as.character(data[,Outcome]));
 
   tpvalue <- min(c(2.0*pvalue,0.5));
   
