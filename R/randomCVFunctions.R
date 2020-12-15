@@ -83,6 +83,7 @@ correlated_RemoveToLimit <- function(data,unitPvalues,limit=0,thr=0.975,maxLoops
 univariate_Logit <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="BH", uniTest=c("zIDI","zNRI"),limit=0,...,n = 0)
 {
 	varlist <-colnames(data);
+  if (class(data[,Outcome]) == "factor") data[,Outcome] <- as.numeric(as.character(data[,Outcome]));
 	varlist <- varlist[Outcome != varlist];
 	varlist <- cbind(varlist,varlist);
 	uniTest <- match.arg(uniTest);
@@ -109,6 +110,7 @@ univariate_Logit <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="
 univariate_residual <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="BH",uniTest=c("Ftest","Binomial","Wilcox","tStudent"),type=c("LM","LOGIT"),limit=0,...,n = 0)
 {
 	varlist <- colnames(data);
+  if (class(data[,Outcome]) == "factor") data[,Outcome] <- as.numeric(as.character(data[,Outcome]));
 	varlist <- varlist[Outcome != varlist];
 	varlist <- cbind(varlist,varlist)
 	uniTest <- match.arg(uniTest);
@@ -138,6 +140,7 @@ univariate_KS <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="BH"
 {
 
 	varlist <-colnames(data);
+  if (class(data[,Outcome]) == "factor") data[,Outcome] <- as.numeric(as.character(data[,Outcome]));
 	case <- subset(data,get(Outcome) == 1);
 	control <- subset(data,get(Outcome) == 0);
 	varlist <- varlist[Outcome != varlist];
@@ -175,6 +178,7 @@ univariate_Wilcoxon <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMetho
 {
 
 	varlist <-colnames(data);
+  if (class(data[,Outcome]) == "factor") data[,Outcome] <- as.numeric(as.character(data[,Outcome]));
 	case <- subset(data,get(Outcome) == 1);
 	control <- subset(data,get(Outcome) == 0);
 	varlist <- varlist[Outcome != varlist];
@@ -211,6 +215,7 @@ univariate_tstudent <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMetho
 {
 
 	varlist <-colnames(data);
+  if (class(data[,Outcome]) == "factor") data[,Outcome] <- as.numeric(as.character(data[,Outcome]));
 	case <- subset(data,get(Outcome) == 1);
 	control <- subset(data,get(Outcome) == 0);
 	varlist <- varlist[Outcome != varlist];
@@ -243,6 +248,7 @@ univariate_tstudent <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMetho
 univariate_correlation <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="BH", method = "kendall",limit=0,...,n = 0)
 {
 
+  if (class(data[,Outcome]) == "factor") data[,Outcome] <- as.numeric(as.character(data[,Outcome]));
 	varlist <-colnames(data);
 	varlist <- varlist[Outcome != varlist];
 	unitPvalues <- numeric(length(varlist));
@@ -278,6 +284,7 @@ mRMR.classic_FRESA <- function(data=NULL, Outcome=NULL,feature_count=0,...)
 	   install.packages("mRMRe", dependencies = TRUE)
 	} 
 
+  if (class(data[,Outcome]) == "factor") data[,Outcome] <- as.numeric(as.character(data[,Outcome]));
 	if (feature_count == 0)
 	{
 		feature_count <- min(c(nrow(data)-1,ncol(data)-1));
