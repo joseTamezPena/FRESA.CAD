@@ -54,7 +54,6 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 		}
 		if ((nrow(cstrata)>1) && ( nrow(cstrataref)>1))
 		{
-			tbbaseModel <- table(cstrataref[,baseModel])
 			for (i in 1:size)
 			{ 
 				tb <- table(cstrataref[,colnamesList[i]])
@@ -72,7 +71,13 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 							dgf = 0.5*nrow(cstrataref) - 2;
 							model <- try(loess(ftmp,data=cstrataref,model=FALSE,...)
 										  )
-							modellm <- lm(ftmp,data=cstrataref, model = FALSE,na.action=na.exclude)
+#							modellm <- lm(ftmp,data=cstrataref, model = FALSE,na.action=na.exclude)
+
+							modellm <- try(MASS::rlm(ftmp,data=cstrataref,na.action=na.exclude, model = FALSE,method = "MM"))
+							if (inherits(model, "try-error"))
+							{								
+								modellm <- lm(ftmp,data=cstrataref, model = FALSE,na.action=na.exclude)
+							}
 
 							if (inherits(model, "try-error"))
 							{
@@ -87,6 +92,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 								pred <- predict(model,cstrataref);
 								predlm <- predict(modellm,cstrataref);
 								pred[is.na(pred)] <- predlm[is.na(pred)];
+								pred <- 0.5*(pred + predlm);
 								ress <- cstrataref[,colnamesList[i]] - pred;
 								rss2 <- var(ress,na.rm = TRUE);
 							}								
@@ -129,6 +135,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 #							cat(baseModel,": Variable:\t ",colnamesList[i]);
 							rss1 <- var(cstrataref[,colnamesList[i]],na.rm = TRUE)
 							dgf = nrow(cstrataref) - 1;
+							tbbaseModel <- table(cstrataref[,baseModel])
 							if (length(tbbaseModel) > 5)
 							{	
 #								cat(baseModel,":",colnamesList[i],"\n")
@@ -180,6 +187,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 						},
 						RLM = 
 						{ 
+							tbbaseModel <- table(cstrataref[,baseModel])
 							if (length(tbbaseModel) > 5)
 							{
 								model <- try(MASS::rlm(ftmp,data=cstrataref,na.action=na.exclude, model = FALSE,method = "MM"))
@@ -247,6 +255,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 									pred <- predict(model,cstrata);
 									predlm <- predict(modellm,cstrata);
 									pred[is.na(pred)] <- predlm[is.na(pred)];
+									pred <- 0.5*(pred + predlm);
 									cstrata[,colnamesList[i]] <- avg + cstrata[,colnamesList[i]]-pred;
 								}
 							},
