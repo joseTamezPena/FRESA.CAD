@@ -7,6 +7,7 @@
 \alias{univariate_correlation}
 \alias{correlated_Remove}
 \alias{univariate_cox}
+\alias{univariate_BinEnsemble}
 \title{Univariate Filters}
 
 \description{
@@ -29,7 +30,7 @@ univariate_correlation(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="BH",
                        method = "kendall",limit=0,...,n=0)
 univariate_cox(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="BH",
                      limit=0,...)
-univariate_BinEnsemble(data=NULL, Outcome=NULL,limit=0,...)
+univariate_BinEnsemble(data=NULL, Outcome=NULL,limit=0,adjustMethod="BH",...)
 correlated_Remove(data=NULL,fnames=NULL,thr=0.999)
 
 }

@@ -1,4 +1,4 @@
-randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL, trainFraction = 0.5, repetitions = 100,trainSampleSets=NULL,featureSelectionFunction=NULL,featureSelection.control=NULL,asFactor=FALSE,addNoise=FALSE,classSamplingType=c("Augmented","NoAugmented","Proportional","Balanced","LOO"),...)
+randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL, trainFraction = 0.5, repetitions = 100,trainSampleSets=NULL,featureSelectionFunction=NULL,featureSelection.control=NULL,asFactor=FALSE,addNoise=FALSE,classSamplingType=c("Augmented","NoAugmented","Proportional","Balanced","LOO"),testingSet=NULL,...)
 {
   classSamplingType <- match.arg(classSamplingType);
   if (is.null(theData))
@@ -15,6 +15,11 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
     assign("theDataOutcome",theOutcome,FRESAcacheEnv);
   }
   
+  fullSet <- theData
+  if (!is.null(testingSet))
+  {
+    fullSet <- rbind(fullSet,testingSet);
+  }
   
   survpredict <- function(currentModel,Dataset,TestDataset,selectedFeatures)
   {
@@ -226,7 +231,8 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
   theTimes <- NULL;
   survTestPredictions <- NULL;
   survTrainPredictions <- NULL;
-  
+  avgsel <- 0;
+
   theVars <-colnames(theData)[!colnames(theData) %in% c(as.character(theTime),as.character(theOutcome))];
   survHR <- data.frame(matrix(ncol = length(theVars), nrow = 0));
   colnames(survHR) <- theVars;
@@ -324,6 +330,12 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
       tset <- tset + 1;
       trainSet <- theData[sampleTrain,];
       testSet <- theData[-unique(sampleTrain),];
+    }
+    
+    if (!is.null(testingSet))
+    {
+       toremove <- (rownames(testingSet) %in% rownames(trainSet)) | (rownames(testingSet) %in% rownames(testSet))
+       testSet <- rbind(testSet,testingSet[!toremove,]);
     }
     
     selnames <- character();
@@ -576,17 +588,18 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
       trainPredictions <- rbind(trainPredictions,ctrainPredictions);
     }
     MADERROR[rept] = 0;
+    avgsel <- avgsel + length(selectedFeaturesSet[[rept]])
     if ((!is.null(testPredictions) && length(rownames(testPredictions)) > 3 ))
     {
       boxstaTest <- try(boxplot(as.numeric(as.character(testPredictions[,3]))~rownames(testPredictions),plot = FALSE));
       if (!inherits(boxstaTest, "try-error"))
       {
-        medianTest <- cbind(theData[boxstaTest$names,theOutcome],boxstaTest$stats[3,])
+        medianTest <- cbind(fullSet[boxstaTest$names,theOutcome],boxstaTest$stats[3,])
         tb <- table(rownames(testPredictions));
         MADERROR[rept] = mean(abs(medianTest[,1]-medianTest[,2]));
         if ((rept %% 10) == 0)
         {
-          cat(rept," Tested:",nrow(medianTest),"Min Tests:",min(tb),"Max Tests:",max(tb),"Mean Tests:",mean(tb),". MAD:",MADERROR[rept],"\n");
+          cat(rept," Tested:",nrow(medianTest),"Avg. Selected:",avgsel/rept,"Min Tests:",min(tb),"Max Tests:",max(tb),"Mean Tests:",mean(tb),". MAD:",MADERROR[rept],"\n");
         }
       }
     }
@@ -630,14 +643,14 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
     boxstaTest <- try(boxplot(as.numeric(as.character(testPredictions[,3]))~rownames(testPredictions),plot = FALSE));
     if (!inherits(boxstaTest, "try-error"))
     {
-      medianTest <- cbind(theData[boxstaTest$names,theOutcome],boxstaTest$stats[3,])
+      medianTest <- cbind(fullSet[boxstaTest$names,theOutcome],boxstaTest$stats[3,])
       rownames(medianTest) <- boxstaTest$names
     }
     else
     {
       warning("boxplot test failed");
-      medianTest <- cbind(theData[,theOutcome],rep(0,nrow(theData)));
-      rownames(medianTest) <- rownames(theData);
+      medianTest <- cbind(fullSet[,theOutcome],rep(0,nrow(fullSet)));
+      rownames(medianTest) <- rownames(fullSet);
     }
     colnames(medianTest) <- c("Outcome","Median");
     

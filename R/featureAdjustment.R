@@ -241,8 +241,8 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 					)
 					environment(model$formula) <- NULL;
 					environment(model$terms) <- NULL;
-					avg <- mean(cstrataref[,colnamesList[i]],na.rm = TRUE);
-					models[[idx]] <- list(strata=sta,feature=colnamesList[i],model=model,mean=avg,pval=p);
+					avgref <- mean(cstrataref[,colnamesList[i]],na.rm = TRUE);
+					models[[idx]] <- list(strata=sta,feature=colnamesList[i],model=model,avgref=avgref,pval=p);
 					idx= idx+1;
 			
 					if (!is.na(p))
@@ -255,8 +255,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 									pred <- predict(model,cstrata);
 									predlm <- predict(modellm,cstrata);
 									pred[is.na(pred)] <- predlm[is.na(pred)];
-									pred <- 0.5*(pred + predlm);
-									cstrata[,colnamesList[i]] <- avg + cstrata[,colnamesList[i]]-pred;
+									cstrata[,colnamesList[i]] <-  avgref + cstrata[,colnamesList[i]] - pred;
 								}
 							},
 							MARS = 
@@ -265,11 +264,11 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 								{
 									if (class(model) == "mars")
 									{
-										cstrata[,colnamesList[i]] <- avg + cstrata[,colnamesList[i]]-as.numeric(predict(model,cstrata[,baseModel]));
+										cstrata[,colnamesList[i]] <- avgref + cstrata[,colnamesList[i]] - as.numeric(predict(model,cstrata[,baseModel]));
 									}
 									else
 									{
-										cstrata[,colnamesList[i]] <- avg + cstrata[,colnamesList[i]]-predict(model,cstrata);
+										cstrata[,colnamesList[i]] <- avgref + cstrata[,colnamesList[i]] - predict(model,cstrata);
 									}
 								}
 							},
@@ -279,11 +278,11 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 								{
 									if (class(model) == "smooth.spline")
 									{
-										cstrata[,colnamesList[i]] <- avg + cstrata[,colnamesList[i]]-predict(model,cstrata[,baseModel])$y;
+										cstrata[,colnamesList[i]] <-  avgref + cstrata[,colnamesList[i]] - predict(model,cstrata[,baseModel])$y;
 									}
 									else
 									{
-										cstrata[,colnamesList[i]] <- avg + cstrata[,colnamesList[i]]-predict(model,cstrata);
+										cstrata[,colnamesList[i]] <- avgref + cstrata[,colnamesList[i]] - predict(model,cstrata);
 									}
 								}
 							},
@@ -291,33 +290,36 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 							{ 
 								if (p < pvalue)
 								{
-									cstrata[,colnamesList[i]] <- avg + cstrata[,colnamesList[i]]-predict(model,cstrata);
+									avg <- model$coef[1];
+									cstrata[,colnamesList[i]] <- avg + cstrata[,colnamesList[i]] - predict(model,cstrata);
 								}
 							},
 							LM = 
 							{ 
 								if (p < pvalue)
 								{
-									cstrata[,colnamesList[i]] <- cstrata[,colnamesList[i]]-predict(model,cstrata);
+									cstrata[,colnamesList[i]] <- cstrata[,colnamesList[i]] - predict(model,cstrata);
 								}
 								else
 								{
-									cstrata[,colnamesList[i]] <- cstrata[,colnamesList[i]]-avg;
+									avg <- model$coef[1];
+									cstrata[,colnamesList[i]] <- cstrata[,colnamesList[i]] - avg;
 								}
 							},
 							RLM = 
 							{ 
 								if (p < pvalue)
 								{
-									cstrata[,colnamesList[i]] <- avg + cstrata[,colnamesList[i]]-predict(model,cstrata);
+									avg <- model$coef[1];
+									cstrata[,colnamesList[i]] <- avg + cstrata[,colnamesList[i]] - predict(model,cstrata);
 								}
 							},
 							GLS =
 							{
 								if (p < pvalue)
 								{
-									avg <-model$coef[1];
-									cstrata[,colnamesList[i]] <- cstrata[,colnamesList[i]]-predict(model,cstrata) + avg;
+									avg <- model$coef[1];
+									cstrata[,colnamesList[i]] <- cstrata[,colnamesList[i]] - predict(model,cstrata) + avg;
 								}
 							}
 						)
