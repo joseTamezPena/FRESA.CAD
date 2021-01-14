@@ -413,8 +413,9 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
   if ((limitmrmr < 1) && (limitmrmr > 0))
   {
     limitmrmr = as.integer(nrow(data)*limitmrmr + 0.5);
-	if ( limitmrmr < 2 ) limitmrmr = 2;
   }
+  if (limit == 0) limit = length(allf);
+  if ( limitmrmr < 2 ) limitmrmr = 2;
 
   mRMRf <- mRMR.classic_FRESA(data,Outcome,feature_count = limitmrmr)
 
@@ -422,7 +423,7 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
   varcount[names(mRMRf)] <- varcount[names(mRMRf)] + 1.0;
   rankVar[names(mRMRf)] <- rankVar[names(mRMRf)] + c(1:length(mRMRf))/length(mRMRf);
   mRMRf <- unadjustedKS[names(mRMRf)];
-  mRMRf <- mRMRf[mRMRf <= 0.1];
+  mRMRf <- mRMRf[mRMRf <= 0.05];
 #  mRMRf <- mRMRf/(1 + varcount[names(mRMRf)]);
 #  mRMRf <- p.adjust(mRMRf,adjustMethod,n=length(unadjustedKS))
   pvallist$mRMR <- mRMRf;

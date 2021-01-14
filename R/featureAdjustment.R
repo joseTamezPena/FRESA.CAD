@@ -187,8 +187,12 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 						},
 						RLM = 
 						{ 
-							tbbaseModel <- table(cstrataref[,baseModel])
-							if (length(tbbaseModel) > 5)
+							isContinous=TRUE
+							if (sum(str_count(baseModel,"+")) == 0)
+							{
+								isContinous <- length(table(cstrataref[,baseModel])) > 5;
+							}
+							if (isContinous)
 							{
 								model <- try(MASS::rlm(ftmp,data=cstrataref,na.action=na.exclude, model = FALSE,method = "MM"))
 								if (!inherits(model, "try-error"))
