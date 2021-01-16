@@ -188,7 +188,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 						RLM = 
 						{ 
 							isContinous=TRUE
-							if (sum(str_count(baseModel,"+")) == 0)
+							if (sum(str_count(baseModel,"\\+")) == 0)
 							{
 								isContinous <- length(table(cstrataref[,baseModel])) > 5;
 							}
