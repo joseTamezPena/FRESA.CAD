@@ -50,7 +50,7 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
     topfeat <- c(topfeat[topFeatures],topfeat[!(topfeat %in% topFeatures)]);
     if (!is.null(Outcome))
     {
-      topfeat <- names(univariate_correlation(refdata,Outcome,method="spearman",thr = 0.999,pvalue=0.45));
+      topfeat <- names(univariate_correlation(refdata,Outcome,method="spearman",limit=-1,pvalue=0.45));
       topfeat <- c(topfeat[topfeat %in% topFeatures],topfeat[!(topfeat %in% topFeatures)]);
     }
     topfeat <- topfeat[maxcor[topfeat] >= thr];
