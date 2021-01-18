@@ -1169,7 +1169,7 @@ predict.FRESA_HLCM <- function(object,...)
 }
 
 
-filteredFit <- function(formula = formula, data=NULL, filtermethod=univariate_Wilcoxon, fitmethod=e1071::svm,filtermethod.control=list(pvalue=0.10,limit=0.1),...)
+filteredFit <- function(formula = formula, data=NULL, filtermethod=univariate_Wilcoxon, fitmethod=e1071::svm,filtermethod.control=list(pvalue=0.10,limit=0.1),Scale=FALSE,PCA=FALSE,...)
 {
 	if (class(formula) == "character")
 	{
@@ -1193,9 +1193,34 @@ filteredFit <- function(formula = formula, data=NULL, filtermethod=univariate_Wi
 		fm <- do.call(filtermethod,c(list(data,Outcome),filtermethod.control));
 	}
 	usedFeatures <-  c(Outcome,names(fm));
-	fit <- try(fitmethod(formula,data[,usedFeatures],...));
+	data <- data[,usedFeatures]
+	pcaobj <- NULL;
+	scaleparm <- NULL;
+	if (Scale)
+	{
+		scaleparm <- FRESAScale(data[,names(fm)],method="OrderLogit");
+		data[,names(fm)] <- scaleparm$scaledData;
+	}
+
+	if (PCA && (nrow(data) > 2*length(usedFeatures)) && (length(usedFeatures) > 2))
+	{
+		pcaobj <- prcomp(data[,names(fm)]);
+		data[,names(fm)] <- as.data.frame(pcaobj$x);
+		colnames(data) <- c(Outcome,colnames(pcaobj$x));
+	}
+	
+	fit <- try(fitmethod(formula,data,...));
 	parameters <- list(...);
-	result <- list(fit=fit,filter=fm,selectedfeatures = names(fm),usedFeatures = usedFeatures,parameters=parameters,asFactor=(class(data[,Outcome])=="factor"),classLen=length(table(data[,Outcome])));
+	result <- list(fit=fit,
+					filter=fm,
+					selectedfeatures = names(fm),
+					usedFeatures = usedFeatures,
+					parameters=parameters,
+					asFactor=(class(data[,Outcome])=="factor"),
+					classLen=length(table(data[,Outcome])),
+					Scale = scaleparm,
+					pcaobj = pcaobj
+					);
 	class(result) <- c("FRESA_FILTERFIT");
 	if (inherits(fit, "try-error"))
 	{
@@ -1209,12 +1234,22 @@ predict.FRESA_FILTERFIT <- function(object,...)
 {
 	parameters <- list(...);
 	testData <- parameters[[1]];
+	testData <- testData[,object$usedFeatures]
+	if (!is.null(object$scaleparm))
+	{
+		testData[,object$selectedfeatures] <- FRESAScale(testData[,object$selectedfeatures],method=object$scaleparm$method,refMean=object$scaleparm$refMean,refDisp=object$scaleparm$refDisp)$scaledData;
+	}
+	if (!is.null(object$pcaobj))
+	{
+		testData <- cbind(testData[,object$usedFeatures[1]],predict(object$pcaobj,testData[,object$selectedfeatures]));
+	}
+	
 	probability <- FALSE;
 	if (!is.null(object$parameters$probability))
 	{
 		probability <- object$parameters$probability;
 	}
-	pLS <- rpredict(object$fit,testData[,object$usedFeatures],asFactor=object$asFactor,classLen=object$classLen,probability=probability,...);
+	pLS <- rpredict(object$fit,testData,asFactor=object$asFactor,classLen=object$classLen,probability=probability,...);
 	return (pLS);
 }
 
