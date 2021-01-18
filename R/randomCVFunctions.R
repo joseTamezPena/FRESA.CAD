@@ -333,6 +333,8 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
   names(rankVar) <- colnames(data);
 
   if (class(data[,Outcome]) == "factor") data[,Outcome] <- as.numeric(as.character(data[,Outcome]));
+  
+  data <- data[,c(Outcome,correlated_Remove(data,colnames(data)[!(colnames(data) %in% Outcome)]))]
 
   tpvalue <- max(c(sqrt(pvalue)/2.0,pvalue));
 #  tpvalue <- min(c(2.0*pvalue,0.499));
@@ -440,7 +442,7 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
 #  mRMRf <- mRMRf/(1 + varcount[names(mRMRf)]);
 #  mRMRf <- p.adjust(mRMRf,adjustMethod,n=length(unadjustedKS))
   pvallist$mRMR <- mRMRf;
-  if (length(mRMRf)>0)
+  if (length(mRMRf) > 0)
   {
     missing <- !(names(mRMRf) %in% names(allf))
     allf <- c(allf,mRMRf[missing])
@@ -460,6 +462,8 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
   allf <- allf/padjs;
 #  print(allf);
   allf <- allf[allf <= pvalue];
+  allf <- pmin(allf,unadjustedKS[names(allf)]);
+  allf <- allf[allf <= afKSTHR]
 #  print(allf);
   if ((length(allf) > 1) && (length(allf) > limit) && (limit > 0) )
   {
@@ -476,7 +480,6 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
   {
 	allf <- c(allf,top[!(names(top) %in% names(allf))]);
   }
-#  allf <- unadjustedKS[names(allf)];
 #  rankVar <- rankVar[names(allf)];
 
   attr(allf,"varcount") <- varcount;

@@ -1202,11 +1202,34 @@ filteredFit <- function(formula = formula, data=NULL, filtermethod=univariate_Wi
 		data[,names(fm)] <- scaleparm$scaledData;
 	}
 
-	if (PCA && (nrow(data) > 2*length(usedFeatures)) && (length(usedFeatures) > 2))
+	binOutcome <- length(table(data[,Outcome])) == 2
+	isFactor <- class(data[,Outcome]) == "factor"
+	if (PCA && (length(names(fm)) > 1))
 	{
-		pcaobj <- prcomp(data[,names(fm)]);
-		data[,names(fm)] <- as.data.frame(pcaobj$x);
-		colnames(data) <- c(Outcome,colnames(pcaobj$x));
+		if (binOutcome)
+		{
+			controlSet <- subset(data,get(Outcome) == 0)
+			if ((nrow(controlSet) > 2*length(usedFeatures)))
+			{
+				pcaobj <- prcomp(controlSet[,names(fm)]);
+				data <- as.data.frame(cbind(data[,Outcome],as.data.frame(predict(pcaobj,data[,names(fm)]))));
+				colnames(data) <- c(Outcome,colnames(pcaobj$x));
+				if (isFactor)
+				{
+					data[,Outcome] <-as.factor(data[,Outcome])
+				}
+			}
+		}
+		else
+		{
+			pcaobj <- prcomp(data[,names(fm)]);
+			data <- as.data.frame(cbind(data[,Outcome],as.data.frame(pcaobj$x)));
+			colnames(data) <- c(Outcome,colnames(pcaobj$x));
+			if (isFactor)
+			{
+				data[,Outcome] <-as.factor(data[,Outcome])
+			}
+		}
 	}
 	
 	fit <- try(fitmethod(formula,data,...));
@@ -1219,6 +1242,7 @@ filteredFit <- function(formula = formula, data=NULL, filtermethod=univariate_Wi
 					asFactor=(class(data[,Outcome])=="factor"),
 					classLen=length(table(data[,Outcome])),
 					Scale = scaleparm,
+					binOutcome = binOutcome,
 					pcaobj = pcaobj
 					);
 	class(result) <- c("FRESA_FILTERFIT");
