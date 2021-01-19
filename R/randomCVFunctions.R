@@ -431,11 +431,11 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
   afKSTHR <- unadjustedKS[names(allf[allf <= 0.20])];
   if (length(afKSTHR)>0)
   {
-	afKSTHR <- min(0.05,2*max(afKSTHR));
+	afKSTHR <- min(0.1,2*max(afKSTHR));
   }
   else
   {
-	afKSTHR <- 0.05;
+	afKSTHR <- 0.1;
   }
 #  print(allf);
 #  print(mRMRf);
