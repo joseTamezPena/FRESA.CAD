@@ -426,12 +426,12 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
 
   
   varcount[names(mRMRf)] <- varcount[names(mRMRf)] + 1.0;
-  rankVar[names(mRMRf)] <- rankVar[names(mRMRf)] + rep(1,length(mRMRf)) + log(c(1:length(mRMRf)));
+  rankVar[names(mRMRf)] <- rankVar[names(mRMRf)] + log(c(1:length(mRMRf)));
   mRMRf <- unadjustedKS[names(mRMRf)];
-  afKSTHR <- unadjustedKS[names(allf[allf <= 0.20])];
+  afKSTHR <- unadjustedKS[names(allf[allf <= 0.25])];
   if (length(afKSTHR)>0)
   {
-	afKSTHR <- min(0.1,2*max(afKSTHR));
+	afKSTHR <- min(0.1,5*max(afKSTHR));
   }
   else
   {
@@ -467,7 +467,7 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
   allf <- pmin(allf,unadjustedKS[names(allf)]);
   allf <- allf[allf <= afKSTHR]
 #  print(allf);
-  if ((length(allf) > 1) && (length(allf) > limit) && (limit > 0) )
+  if ( (length(allf) > limit) && (limit > 0) )
   {
   	  parameters <- list(...);
 	  thr = 0.975;
