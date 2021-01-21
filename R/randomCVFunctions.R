@@ -429,9 +429,9 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
   rankVar[names(mRMRf)] <- rankVar[names(mRMRf)] + log(c(1:length(mRMRf)));
   mRMRf <- unadjustedKS[names(mRMRf)];
   afKSTHR <- unadjustedKS[names(allf[allf <= 0.25])];
-  if (length(afKSTHR)>0)
+  if (length(afKSTHR) > 0)
   {
-	afKSTHR <- min(0.1,5*max(afKSTHR));
+	afKSTHR <- min(0.1,10*max(afKSTHR));
   }
   else
   {
@@ -464,8 +464,9 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
   allf <- allf/padjs;
 #  print(allf);
   allf <- allf[allf <= pvalue];
+  allf <- allf[allf <= pvalue];
   allf <- pmin(allf,unadjustedKS[names(allf)]);
-  allf <- allf[allf <= afKSTHR]
+  allf <- allf[unadjustedKS[names(allf)] <= afKSTHR]
 #  print(allf);
   if ( (length(allf) > limit) && (limit > 0) )
   {
