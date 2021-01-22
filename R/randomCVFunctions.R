@@ -411,6 +411,7 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
   both <- pmin(pvaltest[features],allf[features]);
   allf <- c(pvaltest[!(names(pvaltest) %in% features)],allf[!(names(allf) %in% features)],both);
 
+
   limitmrmr <- limit
   if ((limitmrmr < 1) && (limitmrmr > 0))
   {
@@ -428,7 +429,7 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
   varcount[names(mRMRf)] <- varcount[names(mRMRf)] + 1.0;
   rankVar[names(mRMRf)] <- rankVar[names(mRMRf)] + log(c(1:length(mRMRf)));
   mRMRf <- unadjustedKS[names(mRMRf)];
-  afKSTHR <- unadjustedKS[names(allf[allf <= 0.25])];
+  afKSTHR <- unadjustedKS[names(allf[allf <= 0.20])];
   if (length(afKSTHR) > 0)
   {
 	afKSTHR <- min(0.1,10*max(afKSTHR));
@@ -437,13 +438,14 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
   {
 	afKSTHR <- 0.1;
   }
-#  print(allf);
-#  print(mRMRf);
-#  print(afKSTHR)
   mRMRf <- mRMRf[mRMRf <= afKSTHR];
-#  mRMRf <- mRMRf/(1 + varcount[names(mRMRf)]);
-#  mRMRf <- p.adjust(mRMRf,adjustMethod,n=length(unadjustedKS))
   pvallist$mRMR <- mRMRf;
+  
+  padjs <- 1.0 + log(varcount[names(allf)]);
+  allf <- allf/padjs;
+  allf <- allf[allf <= pvalue];
+
+  
   if (length(mRMRf) > 0)
   {
     missing <- !(names(mRMRf) %in% names(allf))
@@ -451,24 +453,15 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
   }
 
   varcount <- varcount[names(allf)];
-  rankVar <- rankVar[names(allf)]/varcount;
-#  print(varcount)
-#  print(rankVar)
+  rankVar <- rankVar[names(allf)];
   allf <- allf[order(rankVar + unadjustedKS[names(allf)] - ncol(data)*varcount)];
   varcount <- varcount[names(allf)];
   rankVar <- rankVar[names(allf)];
 
   top <- allf[1:min(2,length(allf))];
 
-  padjs <- sqrt(varcount);
-  allf <- allf/padjs;
-#  print(allf);
-  allf <- allf[allf <= pvalue];
-  allf <- allf[allf <= pvalue];
   allf <- pmin(allf,unadjustedKS[names(allf)]);
-  allf <- allf[unadjustedKS[names(allf)] <= afKSTHR]
-#  print(allf);
-  if ( (length(allf) > limit) && (limit > 0) )
+  if ( (length(allf) > 0.5*limit) && (limit > 0) )
   {
   	  parameters <- list(...);
 	  thr = 0.975;
@@ -483,7 +476,6 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
   {
 	allf <- c(allf,top[!(names(top) %in% names(allf))]);
   }
-#  rankVar <- rankVar[names(allf)];
 
   attr(allf,"varcount") <- varcount;
   attr(allf,"UnadjustedKS") <- unadjustedKS;

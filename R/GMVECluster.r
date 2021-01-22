@@ -37,7 +37,7 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 	if (pca && (nrow(dataset) > 2*ncol(dataset)))
 	{
 		scaleparm <- FRESAScale(dataset,method="OrderLogit");
-		pcaobj <- prcomp(scaleparm$scaledData);
+		pcaobj <- prcomp(scaleparm$scaledData,center = FALSE);
 		dataset <- as.data.frame(pcaobj$x);
 		colnames(dataset) <- colnames(pcaobj$x);
 #		print(summary(pcaobj)$importance[3,]);

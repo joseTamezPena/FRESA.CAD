@@ -489,11 +489,11 @@ if (!requireNamespace("naivebayes", quietly = TRUE)) {
 		if (normalize)
 		{
 			scaleparm <- FRESAScale(data,method="OrderLogit");
-			pcaobj <- prcomp(scaleparm$scaledData);
+			pcaobj <- prcomp(scaleparm$scaledData,center = FALSE);
 		}
 		else
 		{
-			pcaobj <- prcomp(data);
+			pcaobj <- prcomp(data,center = FALSE);
 		}
 		data <- as.data.frame(cbind(as.numeric(as.character(outcome)),pcaobj$x));
 		colnames(data) <- c(baseformula[2],colnames(pcaobj$x));
@@ -1211,7 +1211,7 @@ filteredFit <- function(formula = formula, data=NULL, filtermethod=univariate_Wi
 			controlSet <- subset(data,get(Outcome) == 0)
 			if ((nrow(controlSet) > 2*length(usedFeatures)))
 			{
-				pcaobj <- prcomp(controlSet[,names(fm)]);
+				pcaobj <- prcomp(controlSet[,names(fm)],center = FALSE);
 				data <- as.data.frame(cbind(data[,Outcome],as.data.frame(predict(pcaobj,data[,names(fm)]))));
 				colnames(data) <- c(Outcome,colnames(pcaobj$x));
 				if (isFactor)
@@ -1222,7 +1222,7 @@ filteredFit <- function(formula = formula, data=NULL, filtermethod=univariate_Wi
 		}
 		else
 		{
-			pcaobj <- prcomp(data[,names(fm)]);
+			pcaobj <- prcomp(data[,names(fm)],center = FALSE);
 			data <- as.data.frame(cbind(data[,Outcome],as.data.frame(pcaobj$x)));
 			colnames(data) <- c(Outcome,colnames(pcaobj$x));
 			if (isFactor)
