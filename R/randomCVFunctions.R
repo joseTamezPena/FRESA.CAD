@@ -34,7 +34,7 @@ correlated_Remove <- function(data= NULL,fnames= NULL,thr=0.999)
 	return (fnames);
 }
 
-correlated_RemoveToLimit <- function(data,unitPvalues,limit=0,thr=0.975,maxLoops=50,minCorr=0.80)
+correlated_RemoveToLimit <- function(data,unitPvalues,limit=0,thr=0.975,maxLoops=10,minCorr=0.80)
 {
 	if ((limit >= 0) && (thr < 1.0))
 	{
@@ -45,7 +45,7 @@ correlated_RemoveToLimit <- function(data,unitPvalues,limit=0,thr=0.975,maxLoops
 			slimit <- limit;
 			if (limit <= 1)
 			{
-				slimit <- limit*nrow(data);
+				slimit <- as.integer(limit*nrow(data));
 			}
 			if (slimit < 2) 
 			{
@@ -62,6 +62,15 @@ correlated_RemoveToLimit <- function(data,unitPvalues,limit=0,thr=0.975,maxLoops
 			while ( (length(unitPvalues) > slimit) && (ntest < maxLoops) && (cthr > minCorr) )
 			{
 				unitPvalues <- unitPvalues[correlated_Remove(data,names(unitPvalues),cthr)];
+				if (length(unitPvalues) > slimit)
+				{
+					plimit <- 4*unitPvalues[slimit];
+					unitPvalues <- unitPvalues[unitPvalues <= plimit]
+				}
+				if (length(unitPvalues) > slimit)
+				{
+					unitPvalues <- unitPvalues[1:(length(unitPvalues)-1)];
+				}
 				ntest = ntest + 1;
 				cthr = cthr*thr;
 			}
@@ -138,6 +147,9 @@ univariate_residual <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMetho
 
 univariate_KS <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="BH",limit=0,...,n = 0)
 {
+if (!requireNamespace("twosamples", quietly = TRUE)) {
+	 install.packages("twosamples", dependencies = TRUE)
+} 
 
 	varlist <-colnames(data);
   if (class(data[,Outcome]) == "factor") data[,Outcome] <- as.numeric(as.character(data[,Outcome]));
@@ -146,6 +158,8 @@ univariate_KS <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="BH"
 	varlist <- varlist[Outcome != varlist];
 	unitPvalues <- numeric(length(varlist));
 	names(unitPvalues) <- varlist;
+	
+	nboots = 10.0*length(varlist);
 
 	for (j in varlist) 
 	{
@@ -154,6 +168,12 @@ univariate_KS <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="BH"
 		 if (is.null(pval)) { pval <- 1.0; }
 		 if (is.na(pval)) {pval <- 1.0;}
 		 unitPvalues[j] <- pval;
+		 
+		 # pvalDS <- twosamples::dts_test(control[,j],case[,j],nboots = nboots)["P-Value"]
+		 # if (inherits(pvalDS, "try-error")) {pvalDS <- 1.0;}
+		 # if (is.null(pvalDS)) { pvalDS <- 1.0; }
+		 # if (is.na(pvalDS)) {pvalDS <- 1.0;}
+		 # unitPvalues[j] <- min(pval,pvalDS);
 	}
   	unitPvalues <- unitPvalues[order(unitPvalues)];
   	unadjusted <- unitPvalues;
@@ -429,7 +449,7 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
   varcount[names(mRMRf)] <- varcount[names(mRMRf)] + 1.0;
   rankVar[names(mRMRf)] <- rankVar[names(mRMRf)] + log(c(1:length(mRMRf)));
   mRMRf <- unadjustedKS[names(mRMRf)];
-  afKSTHR <- unadjustedKS[names(allf[allf <= 0.20])];
+  afKSTHR <- unadjustedKS[names(allf[allf <= 0.25])];
   if (length(afKSTHR) > 0)
   {
 	afKSTHR <- min(0.1,10*max(afKSTHR));
