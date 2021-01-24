@@ -26,6 +26,8 @@ univariate_Wilcoxon(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="BH",
                      limit=0,...,n=0)
 univariate_KS(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="BH",
                      limit=0,...,n=0)
+univariate_DTS(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="BH",
+                     limit=0,...,n=0)
 univariate_correlation(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="BH",
                        method = "kendall",limit=0,...,n=0)
 univariate_cox(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="BH",

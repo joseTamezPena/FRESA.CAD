@@ -64,7 +64,7 @@ correlated_RemoveToLimit <- function(data,unitPvalues,limit=0,thr=0.975,maxLoops
 				unitPvalues <- unitPvalues[correlated_Remove(data,names(unitPvalues),cthr)];
 				if (length(unitPvalues) > slimit)
 				{
-					plimit <- 4*unitPvalues[slimit];
+					plimit <- max(10*median(unitPvalues),4*unitPvalues[slimit]);
 					unitPvalues <- unitPvalues[unitPvalues <= plimit]
 				}
 				if (length(unitPvalues) > slimit)
@@ -145,7 +145,7 @@ univariate_residual <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMetho
 	return(unitPvalues);
 }
 
-univariate_KS <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="BH",limit=0,...,n = 0)
+univariate_DTS <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="BH",limit=0,...,n = 0)
 {
 if (!requireNamespace("twosamples", quietly = TRUE)) {
 	 install.packages("twosamples", dependencies = TRUE)
@@ -159,8 +159,46 @@ if (!requireNamespace("twosamples", quietly = TRUE)) {
 	unitPvalues <- numeric(length(varlist));
 	names(unitPvalues) <- varlist;
 	
-	nboots = 10.0*length(varlist);
+	nboots = max(2000,10.0*length(varlist));
 
+	for (j in varlist) 
+	{
+		 pvalDS <- twosamples::dts_test(control[,j],case[,j],nboots = nboots)["P-Value"]
+		 if (inherits(pvalDS, "try-error")) {pvalDS <- 1.0;}
+		 if (is.null(pvalDS)) { pvalDS <- 1.0; }
+		 if (is.na(pvalDS)) {pvalDS <- 1.0;}
+		 unitPvalues[j] <- pvalDS;
+	}
+  	unitPvalues <- unitPvalues[order(unitPvalues)];
+  	unadjusted <- unitPvalues;
+	unitPvalues <- p.adjust(unitPvalues,adjustMethod,n=max(n,length(unitPvalues)));
+	top <- unitPvalues[1];
+	unitPvalues <- unitPvalues[unitPvalues <= pvalue];
+	if (length(unitPvalues) > 1) 
+	{
+#		unitPvalues <- unitPvalues[correlated_Remove(data,names(unitPvalues))];
+		unitPvalues <- correlated_RemoveToLimit(data,unitPvalues,limit,...);
+	}
+	else 
+	{
+		unitPvalues <- top;
+	}
+	attr(unitPvalues,"Unadjusted") <- unadjusted;
+   return(unitPvalues);
+}
+
+
+univariate_KS <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="BH",limit=0,...,n = 0)
+{
+
+	varlist <-colnames(data);
+  if (class(data[,Outcome]) == "factor") data[,Outcome] <- as.numeric(as.character(data[,Outcome]));
+	case <- subset(data,get(Outcome) == 1);
+	control <- subset(data,get(Outcome) == 0);
+	varlist <- varlist[Outcome != varlist];
+	unitPvalues <- numeric(length(varlist));
+	names(unitPvalues) <- varlist;
+	
 	for (j in varlist) 
 	{
 		 pval <- ks.test(control[,j],case[,j],na.action = na.exclude)$p.value; 
@@ -168,18 +206,12 @@ if (!requireNamespace("twosamples", quietly = TRUE)) {
 		 if (is.null(pval)) { pval <- 1.0; }
 		 if (is.na(pval)) {pval <- 1.0;}
 		 unitPvalues[j] <- pval;
-		 
-		 # pvalDS <- twosamples::dts_test(control[,j],case[,j],nboots = nboots)["P-Value"]
-		 # if (inherits(pvalDS, "try-error")) {pvalDS <- 1.0;}
-		 # if (is.null(pvalDS)) { pvalDS <- 1.0; }
-		 # if (is.na(pvalDS)) {pvalDS <- 1.0;}
-		 # unitPvalues[j] <- min(pval,pvalDS);
 	}
   	unitPvalues <- unitPvalues[order(unitPvalues)];
   	unadjusted <- unitPvalues;
 	unitPvalues <- p.adjust(unitPvalues,adjustMethod,n=max(n,length(unitPvalues)));
 	top <- unitPvalues[1];
-	unitPvalues <- unitPvalues[unitPvalues < pvalue];
+	unitPvalues <- unitPvalues[unitPvalues <= pvalue];
 	if (length(unitPvalues) > 1) 
 	{
 #		unitPvalues <- unitPvalues[correlated_Remove(data,names(unitPvalues))];
@@ -441,23 +473,14 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
   if (limitmrmr < 2 ) limitmrmr = 2;
 
   mRMRf <- mRMR.classic_FRESA(data,Outcome,feature_count = limitmrmr)
-
    
   mRMRf <- mRMRf[mRMRf > 0];
 
-  
+  mRMRf <- unadjustedKS[names(mRMRf)];
+  mRMRf <- mRMRf[order(mRMRf)]
   varcount[names(mRMRf)] <- varcount[names(mRMRf)] + 1.0;
   rankVar[names(mRMRf)] <- rankVar[names(mRMRf)] + log(c(1:length(mRMRf)));
-  mRMRf <- unadjustedKS[names(mRMRf)];
-  afKSTHR <- unadjustedKS[names(allf[allf <= 0.25])];
-  if (length(afKSTHR) > 0)
-  {
-	afKSTHR <- min(0.1,10*max(afKSTHR));
-  }
-  else
-  {
-	afKSTHR <- 0.1;
-  }
+  afKSTHR <- 0.1;
   mRMRf <- mRMRf[mRMRf <= afKSTHR];
   pvallist$mRMR <- mRMRf;
   
