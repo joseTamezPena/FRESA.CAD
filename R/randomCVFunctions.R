@@ -102,7 +102,7 @@ univariate_Logit <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="
 	unitPvalues <- unitPvalues[order(unitPvalues)];
   	unadjusted <- unitPvalues;
 	unitPvalues <- p.adjust(unitPvalues,adjustMethod,n=max(n,length(unitPvalues)));
-	top <- unitPvalues[1];
+	top <- unitPvalues[unitPvalues <= 1.01*unitPvalues[1]];
 	unitPvalues <- unitPvalues[unitPvalues <= pvalue];
 #	print(unitPvalues)
 	if (length(unitPvalues) > 1) 
@@ -134,7 +134,7 @@ univariate_residual <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMetho
 	unitPvalues <- unitPvalues[order(unitPvalues)];
   	unadjusted <- unitPvalues;
 	unitPvalues <- p.adjust(unitPvalues,adjustMethod,n=max(n,length(unitPvalues)));
-	top <- unitPvalues[1];
+	top <- unitPvalues[unitPvalues <= 1.01*unitPvalues[1]];
 	unitPvalues <- unitPvalues[unitPvalues <= pvalue];
 	if (length(unitPvalues) > 1) 
 	{
@@ -184,7 +184,7 @@ if (!requireNamespace("twosamples", quietly = TRUE)) {
   	unitPvalues <- unitPvalues[order(unitPvalues)];
   	unadjusted <- unitPvalues;
 	unitPvalues <- p.adjust(unitPvalues,adjustMethod,n=max(n,length(unitPvalues)));
-	top <- unitPvalues[1];
+	top <- unitPvalues[unitPvalues <= 1.01*unitPvalues[1]];
 	unitPvalues <- unitPvalues[unitPvalues <= pvalue];
 	if (length(unitPvalues) > 1) 
 	{
@@ -230,7 +230,7 @@ univariate_KS <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="BH"
   	unitPvalues <- unitPvalues[order(unitPvalues)];
   	unadjusted <- unitPvalues;
 	unitPvalues <- p.adjust(unitPvalues,adjustMethod,n=max(n,length(unitPvalues)));
-	top <- unitPvalues[1];
+	top <- unitPvalues[unitPvalues <= 1.01*unitPvalues[1]];
 	unitPvalues <- unitPvalues[unitPvalues <= pvalue];
 	if (length(unitPvalues) > 1) 
 	{
@@ -269,7 +269,7 @@ univariate_Wilcoxon <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMetho
 	unitPvalues <- unitPvalues[order(unitPvalues)];
   	unadjusted <- unitPvalues;
 	unitPvalues <- p.adjust(unitPvalues,adjustMethod,n=max(n,length(unitPvalues)));
-	top <- unitPvalues[1];
+	top <- unitPvalues[unitPvalues <= 1.01*unitPvalues[1]];
 	unitPvalues <- unitPvalues[unitPvalues <= pvalue];
 	if (length(unitPvalues) > 1) 
 	{
@@ -305,7 +305,7 @@ univariate_tstudent <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMetho
 	unitPvalues <- unitPvalues[order(unitPvalues)];
   	unadjusted <- unitPvalues;
 	unitPvalues <- p.adjust(unitPvalues,adjustMethod,n=max(n,length(unitPvalues)));
-	top <- unitPvalues[1];
+	top <- unitPvalues[unitPvalues <= 1.01*unitPvalues[1]];
 	unitPvalues <- unitPvalues[unitPvalues <= pvalue];
 	if (length(unitPvalues) > 1) 
 	{
@@ -340,7 +340,7 @@ univariate_correlation <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMe
   	unitPvalues <- unitPvalues[order(unitPvalues)];
   	unadjusted <- unitPvalues;
 	unitPvalues <- p.adjust(unitPvalues,adjustMethod,n=max(n,length(unitPvalues)));
-	top <- unitPvalues[1];
+	top <- unitPvalues[unitPvalues <= 1.01*unitPvalues[1]];
 	unitPvalues <- unitPvalues[unitPvalues <= pvalue];
 	if (length(unitPvalues) > 1) 
 	{
@@ -511,17 +511,24 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
    
   mRMRf <- mRMRf[mRMRf > 0];
 
-  mRMRf <- unadjustedpKS[names(mRMRf)];
+#  mRMRf <- unadjustedpKS[names(mRMRf)];
+  mRMRf <- unadjustedpMIN[names(mRMRf)];
   mRMRf <- mRMRf[order(mRMRf)]
   varcount[names(mRMRf)] <- varcount[names(mRMRf)] + 1.0;
   rankVar[names(mRMRf)] <- rankVar[names(mRMRf)] + log(c(1:length(mRMRf)));
-  afKSTHR <- min(0.1,pvalue);
+  afKSTHR <- min(0.05,pvalue);
   mRMRf <- mRMRf[mRMRf <= afKSTHR];
   pvallist$mRMR <- mRMRf;
   
-  padjs <- 1.0 + log(varcount[names(allf)]);
-  allf <- allf/padjs;
+  
+  allf <- p.adjust(unadjustedpMIN,adjustMethod);
+  adjusptedp <- allf;
+  top <- allf[allf <= 1.01*allf[1]];
+
   allf <- allf[allf <= pvalue];
+  allf <- c(allf,top[!(names(top) %in% names(allf))])
+  varcount[names(allf)] <- varcount[names(allf)] + 1.0;
+  rankVar[names(allf)] <- rankVar[names(allf)] + log(c(1:length(allf)));
 
   
   if (length(mRMRf) > 0)
@@ -536,9 +543,9 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
   varcount <- varcount[names(allf)];
   rankVar <- rankVar[names(allf)];
 
-  top <- allf[1:min(2,length(allf))];
 
   allf <- unadjustedpMIN[names(allf)];
+  allf <- allf[allf <= afKSTHR]
   if ( (length(allf) > 0.5*limit) && (limit > 0) )
   {
   	  parameters <- list(...);
@@ -557,6 +564,7 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
 
   attr(allf,"varcount") <- varcount;
   attr(allf,"unadjustedpMIN") <- unadjustedpMIN;
+  attr(allf,"adjusptedpMIN") <- adjusptedp;
   attr(allf,"Pvalues") <- pvallist;
   attr(allf,"rankVar") <- rankVar;
   return (allf);
