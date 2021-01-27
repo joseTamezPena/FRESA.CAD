@@ -413,7 +413,7 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
   
   data <- data[,c(Outcome,correlated_Remove(data,colnames(data)[!(colnames(data) %in% Outcome)]))]
 
-  tpvalue <- max(c(sqrt(pvalue)/2.0,pvalue));
+  tpvalue <- min(c(0.49,max(c(sqrt(pvalue)/2.0,pvalue))));
 #  tpvalue <- min(c(2.0*pvalue,0.499));
   
   pvallist <- list();
@@ -499,31 +499,36 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
   allf <- c(pvaltest[!(names(pvaltest) %in% features)],allf[!(names(allf) %in% features)],both);
 
   unadjustedpMIN <- unadjustedpMIN[order(unadjustedpMIN)]
-  limitmrmr <- limit
-  if ((limitmrmr < 1) && (limitmrmr > 0))
-  {
-    limitmrmr = as.integer(nrow(data)*limitmrmr + 0.5);
-  }
-  if (limitmrmr == 0) limitmrmr = length(allf);
+  allf <- p.adjust(unadjustedpMIN,adjustMethod);
+  adjusptedp <- allf;
+  top <- allf[allf <= 1.01*allf[1]];
+  
+  limitmrmr = length(allf);
+
   if (limitmrmr < 2 ) limitmrmr = 2;
 
   mRMRf <- mRMR.classic_FRESA(data,Outcome,feature_count = limitmrmr)
    
   mRMRf <- mRMRf[mRMRf > 0];
 
-#  mRMRf <- unadjustedpKS[names(mRMRf)];
   mRMRf <- unadjustedpMIN[names(mRMRf)];
-  mRMRf <- mRMRf[order(mRMRf)]
   varcount[names(mRMRf)] <- varcount[names(mRMRf)] + 1.0;
   rankVar[names(mRMRf)] <- rankVar[names(mRMRf)] + log(c(1:length(mRMRf)));
-  afKSTHR <- min(0.05,pvalue);
-  mRMRf <- mRMRf[mRMRf <= afKSTHR];
+  mRMRf <- mRMRf[order(mRMRf)]
+  
+  tunad <- unadjustedpMIN[adjusptedp < min(c(tpvalue,0.25))];
+  if (length(tunad) > 0)
+  {
+	aTHR <- min(c(0.05,max(tunad),pvalue));
+  }
+  else
+  {
+	aTHR <- min(c(0.05,unadjustedpMIN[length(top)],pvalue));
+  }
+  mRMRf <- mRMRf[mRMRf <= aTHR];
   pvallist$mRMR <- mRMRf;
   
   
-  allf <- p.adjust(unadjustedpMIN,adjustMethod);
-  adjusptedp <- allf;
-  top <- allf[allf <= 1.01*allf[1]];
 
   allf <- allf[allf <= pvalue];
   allf <- c(allf,top[!(names(top) %in% names(allf))])
@@ -545,8 +550,8 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
 
 
   allf <- unadjustedpMIN[names(allf)];
-  allf <- allf[allf <= afKSTHR]
-  if ( (length(allf) > 0.5*limit) && (limit > 0) )
+  allf <- allf[allf <= aTHR]
+  if ( (length(allf) > 0.25*limit) && (limit > 0) )
   {
   	  parameters <- list(...);
 	  thr = 0.975;
@@ -560,6 +565,7 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
   if (length(allf) < 2) 
   {
 	allf <- c(allf,top[!(names(top) %in% names(allf))]);
+	allf <- unadjustedpMIN[names(allf)];
   }
 
   attr(allf,"varcount") <- varcount;
@@ -567,6 +573,7 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
   attr(allf,"adjusptedpMIN") <- adjusptedp;
   attr(allf,"Pvalues") <- pvallist;
   attr(allf,"rankVar") <- rankVar;
+  attr(allf,"aTHR") <- aTHR;
   return (allf);
 }
 
