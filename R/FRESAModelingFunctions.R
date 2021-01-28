@@ -4,6 +4,7 @@ CVsignature <- function(formula = formula, data=NULL, ...)
 	usedFeatures <- colnames(data)[!(colnames(data) %in% baseformula[2])]
 	if (length(usedFeatures)<3) #if less than 3 features, just use a glm fit.
 	{
+#		print(usedFeatures)
 		warning("Less than five features. Returning a glm model");
 		result <- glm(formula,data=data,na.action=na.exclude,family=binomial(link=logit));
 	}
@@ -501,7 +502,15 @@ if (!requireNamespace("naivebayes", quietly = TRUE)) {
 	}
 	if (length(list(...)) == 0)
 	{
-		result <- list(fit = naivebayes::naive_bayes(formula,data,usekernel = TRUE,bw="SJ",adjust=0.5),pcaobj=pcaobj,outcome=baseformula[2],scaleparm=scaleparm,numClases=numclases);
+		result <- list(fit = naivebayes::naive_bayes(formula,data,
+		laplace = 0.1,
+		usekernel = TRUE,
+		kernel="gaussian",
+		bw="SJ",adjust=1.25),
+		pcaobj=pcaobj,
+		outcome=baseformula[2],
+		scaleparm=scaleparm,
+		numClases=numclases);
 	}
 	else
 	{
@@ -1265,7 +1274,7 @@ predict.FRESA_FILTERFIT <- function(object,...)
 	}
 	if (!is.null(object$pcaobj))
 	{
-		testData <- cbind(testData[,object$usedFeatures[1]],predict(object$pcaobj,testData[,object$selectedfeatures]));
+		testData <- as.data.frame(cbind(testData[,object$usedFeatures[1]],predict(object$pcaobj,testData[,object$selectedfeatures])));
 	}
 	
 	probability <- FALSE;

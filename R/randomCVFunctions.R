@@ -34,7 +34,7 @@ correlated_Remove <- function(data= NULL,fnames= NULL,thr=0.999)
 	return (fnames);
 }
 
-correlated_RemoveToLimit <- function(data,unitPvalues,limit=0,thr=0.975,maxLoops=10,minCorr=0.80)
+correlated_RemoveToLimit <- function(data,unitPvalues,limit=0,thr=0.975,maxLoops=50,minCorr=0.80)
 {
 	if ((limit >= 0) && (thr < 1.0))
 	{
@@ -64,7 +64,7 @@ correlated_RemoveToLimit <- function(data,unitPvalues,limit=0,thr=0.975,maxLoops
 				unitPvalues <- unitPvalues[correlated_Remove(data,names(unitPvalues),cthr)];
 				if (length(unitPvalues) > slimit)
 				{
-					plimit <- max(10*median(unitPvalues),4*unitPvalues[slimit]);
+					plimit <- 4.0*min(unitPvalues[1:slimit]);
 					unitPvalues <- unitPvalues[unitPvalues <= plimit]
 				}
 				if (length(unitPvalues) > slimit)
@@ -414,7 +414,6 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
   data <- data[,c(Outcome,correlated_Remove(data,colnames(data)[!(colnames(data) %in% Outcome)]))]
 
   tpvalue <- min(c(0.49,max(c(sqrt(pvalue)/2.0,pvalue))));
-#  tpvalue <- min(c(2.0*pvalue,0.499));
   
   pvallist <- list();
   pvaltest <- univariate_Logit(data,Outcome,pvalue=tpvalue,limit=-1,uniTest="zNRI",adjustMethod=adjustMethod);
@@ -551,7 +550,8 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
 
   allf <- unadjustedpMIN[names(allf)];
   allf <- allf[allf <= aTHR]
-  if ( (length(allf) > 0.25*limit) && (limit > 0) )
+#  print(names(allf))
+  if ( (length(allf) > 0.75*limit) && (limit > 0) )
   {
   	  parameters <- list(...);
 	  thr = 0.975;
@@ -567,6 +567,7 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
 	allf <- c(allf,top[!(names(top) %in% names(allf))]);
 	allf <- unadjustedpMIN[names(allf)];
   }
+#  print(names(allf))
 
   attr(allf,"varcount") <- varcount;
   attr(allf,"unadjustedpMIN") <- unadjustedpMIN;
