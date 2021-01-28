@@ -64,7 +64,7 @@ correlated_RemoveToLimit <- function(data,unitPvalues,limit=0,thr=0.975,maxLoops
 				unitPvalues <- unitPvalues[correlated_Remove(data,names(unitPvalues),cthr)];
 				if (length(unitPvalues) > slimit)
 				{
-					plimit <- 4.0*min(unitPvalues[1:slimit]);
+					plimit <- 4.0*max(unitPvalues[1:slimit]);
 					unitPvalues <- unitPvalues[unitPvalues <= plimit]
 				}
 				if (length(unitPvalues) > slimit)
@@ -515,7 +515,7 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
   rankVar[names(mRMRf)] <- rankVar[names(mRMRf)] + log(c(1:length(mRMRf)));
   mRMRf <- mRMRf[order(mRMRf)]
   
-  tunad <- unadjustedpMIN[adjusptedp < min(c(tpvalue,0.25))];
+  tunad <- unadjustedpMIN[adjusptedp <= min(c(tpvalue,0.25))];
   if (length(tunad) > 0)
   {
 	aTHR <- min(c(0.05,max(tunad),pvalue));
