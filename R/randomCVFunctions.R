@@ -107,7 +107,6 @@ univariate_Logit <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="
 #	print(unitPvalues)
 	if (length(unitPvalues) > 1) 
 	{
-#		unitPvalues <- unitPvalues[correlated_Remove(data,names(unitPvalues))];
 		unitPvalues <- correlated_RemoveToLimit(data,unitPvalues,limit,...);
 	}
 	else 
@@ -138,7 +137,6 @@ univariate_residual <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMetho
 	unitPvalues <- unitPvalues[unitPvalues <= pvalue];
 	if (length(unitPvalues) > 1) 
 	{
-#		unitPvalues <- unitPvalues[correlated_Remove(data,names(unitPvalues))];
 		unitPvalues <- correlated_RemoveToLimit(data,unitPvalues,limit,...);
 	}
 	else 
@@ -188,7 +186,6 @@ if (!requireNamespace("twosamples", quietly = TRUE)) {
 	unitPvalues <- unitPvalues[unitPvalues <= pvalue];
 	if (length(unitPvalues) > 1) 
 	{
-#		unitPvalues <- unitPvalues[correlated_Remove(data,names(unitPvalues))];
 		unitPvalues <- correlated_RemoveToLimit(data,unitPvalues,limit,...);
 	}
 	else 
@@ -234,7 +231,6 @@ univariate_KS <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="BH"
 	unitPvalues <- unitPvalues[unitPvalues <= pvalue];
 	if (length(unitPvalues) > 1) 
 	{
-#		unitPvalues <- unitPvalues[correlated_Remove(data,names(unitPvalues))];
 		unitPvalues <- correlated_RemoveToLimit(data,unitPvalues,limit,...);
 	}
 	else 
@@ -273,7 +269,6 @@ univariate_Wilcoxon <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMetho
 	unitPvalues <- unitPvalues[unitPvalues <= pvalue];
 	if (length(unitPvalues) > 1) 
 	{
-#		unitPvalues <- unitPvalues[correlated_Remove(data,names(unitPvalues))];
 		unitPvalues <- correlated_RemoveToLimit(data,unitPvalues,limit,...);
 	}
 	else 
@@ -309,7 +304,6 @@ univariate_tstudent <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMetho
 	unitPvalues <- unitPvalues[unitPvalues <= pvalue];
 	if (length(unitPvalues) > 1) 
 	{
-#		unitPvalues <- unitPvalues[correlated_Remove(data,names(unitPvalues))];
 		unitPvalues <- correlated_RemoveToLimit(data,unitPvalues,limit,...);
 	}
 	else 
@@ -344,7 +338,6 @@ univariate_correlation <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMe
 	unitPvalues <- unitPvalues[unitPvalues <= pvalue];
 	if (length(unitPvalues) > 1) 
 	{
-#		unitPvalues <- unitPvalues[correlated_Remove(data,names(unitPvalues))];
 		unitPvalues <- correlated_RemoveToLimit(data,unitPvalues,limit,...);
 	}
 	else 
