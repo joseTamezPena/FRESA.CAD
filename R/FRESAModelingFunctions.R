@@ -504,7 +504,7 @@ if (!requireNamespace("naivebayes", quietly = TRUE)) {
 	{
 #		print(colnames(data))
 		result <- list(fit = naivebayes::naive_bayes(formula,data,
-		laplace = 0.1,
+		laplace = 0.001,
 		usekernel = TRUE,
 		bw="SJ",adjust=1.25),
 		pcaobj=pcaobj,
