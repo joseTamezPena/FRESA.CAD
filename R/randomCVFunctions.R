@@ -572,6 +572,22 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
 }
 
 
+univariate_Strata <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod="BH",unifilter=univariate_BinEnsemble,strata="Gender",...)
+{
+	statatable <- table(data[,strata]);
+	pvalues <- unifilter(data=data[data[,strata]==st,],Outcome=Outcome,pvalue=pvalue,limit=limit,adjustMethod=adjustMethod,...);
+	for (st in as.integer(names(statatable)))
+	{
+		spvalues <- unifilter(data=data[data[,strata]==st,],Outcome=Outcome,pvalue=pvalue,limit=limit,adjustMethod=adjustMethod,...);
+		features <- intersect(names(spvalues),names(pvalues));
+		both <- pmin(pvalues[features],spvalues[features]);
+		pvalues <- c(both,pvalues[!(names(pvalues) %in% features)],spvalues[!(names(spvalues) %in% features)]);
+	}
+	return (pvalues)
+
+}
+
+
 sperman95ci <- function(datatest,nss=4000)
 {
 	sz <- nrow(datatest)
