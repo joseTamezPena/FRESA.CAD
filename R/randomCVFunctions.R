@@ -575,7 +575,7 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
 univariate_Strata <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod="BH",unifilter=univariate_BinEnsemble,strata="Gender",...)
 {
 	statatable <- table(data[,strata]);
-	pvalues <- unifilter(data=data[data[,strata]==st,],Outcome=Outcome,pvalue=pvalue,limit=limit,adjustMethod=adjustMethod,...);
+	pvalues <- unifilter(data=data,Outcome=Outcome,pvalue=pvalue,limit=limit,adjustMethod=adjustMethod,...);
 	for (st in as.integer(names(statatable)))
 	{
 		spvalues <- unifilter(data=data[data[,strata]==st,],Outcome=Outcome,pvalue=pvalue,limit=limit,adjustMethod=adjustMethod,...);
@@ -583,6 +583,8 @@ univariate_Strata <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod="BH",
 		both <- pmin(pvalues[features],spvalues[features]);
 		pvalues <- c(both,pvalues[!(names(pvalues) %in% features)],spvalues[!(names(spvalues) %in% features)]);
 	}
+	pvalues <- pvalues[order(pvalues)]
+	pvalues <- correlated_RemoveToLimit(data,pvalues,limit=limit,...);
 	return (pvalues)
 
 }
