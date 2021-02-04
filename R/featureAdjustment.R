@@ -73,17 +73,17 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 										  )
 #							modellm <- lm(ftmp,data=cstrataref, model = FALSE,na.action=na.exclude)
 
-							modellm <- try(MASS::rlm(ftmp,data=cstrataref,na.action=na.exclude, model = FALSE,method = "MM"))
-							if (inherits(model, "try-error"))
-							{								
+#							modellm <- try(MASS::rlm(ftmp,data=cstrataref,na.action=na.exclude, model = FALSE,method = "MM"))
+#							if (inherits(model, "try-error"))
+#							{								
 								modellm <- lm(ftmp,data=cstrataref, model = FALSE,na.action=na.exclude)
-							}
+#							}
 
 							if (inherits(model, "try-error"))
 							{
 #								cat("Error\n");
 								model <- modellm;						
-								rss2 <- var(model$residuals,na.rm = TRUE);
+								rss2 <- mean(model$residuals^2,na.rm = TRUE);
 							}
 							else
 							{
@@ -92,9 +92,8 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 								pred <- predict(model,cstrataref);
 								predlm <- predict(modellm,cstrataref);
 								pred[is.na(pred)] <- predlm[is.na(pred)];
-								pred <- 0.5*(pred + predlm);
 								ress <- cstrataref[,colnamesList[i]] - pred;
-								rss2 <- var(ress,na.rm = TRUE);
+								rss2 <- mean(ress^2,na.rm = TRUE);
 							}								
 							f1 = rss1/rss2;
 							p <- pf(dgf*rss1/rss2-dgf,1,dgf,lower.tail=FALSE);
@@ -116,7 +115,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 							{
 #								cat("Error\n");
 								model <- lm(ftmp,data=cstrataref, model = FALSE,na.action=na.exclude);						
-								rss2 <- var(model$residuals,na.rm = TRUE);
+								rss2 <- mean(model$residuals^2,na.rm = TRUE);
 							}
 							else
 							{
@@ -124,7 +123,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 								dgf = nrow(cstrataref) - length(model$coefficients);
 								pred <- as.numeric(predict(model,cstrataref[,baseModel]));
 								ress <- cstrataref[,colnamesList[i]] - pred;
-								rss2 <- var(ress,na.rm = TRUE);
+								rss2 <- mean(ress^2,na.rm = TRUE);
 							}								
 							f1 = rss1/rss2;
 							p <- pf(dgf*rss1/rss2-dgf,1,dgf,lower.tail=FALSE);
@@ -150,21 +149,21 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 								{
 #									cat("Error\n");
 									model <- lm(ftmp,data=cstrataref, model = FALSE,na.action=na.exclude);						
-									rss2 <- var(model$residuals,na.rm = TRUE);
+									rss2 <- mean(model$residuals^2,na.rm = TRUE);
 								}
 								else
 								{
 									dgf = nrow(cstrataref) - model$df;
 									pred <- predict(model,cstrataref[,baseModel]);
 									ress <- cstrataref[,colnamesList[i]] - pred$y;
-									rss2 <- var(ress,na.rm = TRUE);
+									rss2 <- mean(ress^2,na.rm = TRUE);
 								}								
 							}
 							else
 							{
 								model <- lm(ftmp,data=cstrataref, model = FALSE,na.action=na.exclude);						
 								dgf = nrow(cstrataref) - 1;
-								rss2 <- var(model$residuals,na.rm = TRUE);
+								rss2 <- mean(model$residuals^2,na.rm = TRUE);
 							}
 							f1 = rss1/rss2;
 							p <- pf(dgf*rss1/rss2-dgf,1,dgf,lower.tail=FALSE);
@@ -201,8 +200,8 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 									dgf = sw-length(model$coef)+1;
 									m1 <- sum(model$w*cstrataref[,colnamesList[i]],na.rm = TRUE)/sw
 									rss1 <- sum(model$w*(cstrataref[,colnamesList[i]]^2),na.rm = TRUE)/sw-m1*m1
-									m2 <- sum(model$w*model$residuals,na.rm = TRUE)/sw
-									rss2 <- sum(model$w*(model$residuals^2),na.rm = TRUE)/sw-m2*m2
+#									m2 <- sum(model$w*model$residuals,na.rm = TRUE)/sw
+									rss2 <- sum(model$w*(model$residuals^2),na.rm = TRUE)/sw
 									f1 = rss1/rss2;
 									p <- pf(dgf*rss1/rss2-dgf,1,dgf,lower.tail=FALSE);
 								}
@@ -228,7 +227,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 							model <- eval(parse(text=paste("try(nlme::gls(formula(",ftm1,"),cstrataref,na.action=na.exclude,correlation = nlme::corAR1(0.9,form = ~ 1 | ",correlationGroup,")))")))
 							dgf = nrow(cstrataref)-length(model$coef)+1;
 							rss1 <- var(cstrataref[,colnamesList[i]],na.rm = TRUE)
-							rss2 <- var(model$residuals,na.rm = TRUE);
+							rss2 <- mean(model$residuals^2,na.rm = TRUE);
 							f1 = rss1/rss2;
 							p1 <- 1.0-pf(dgf*rss1/rss2-dgf,1,dgf);
 							reg <- summary(model);						
