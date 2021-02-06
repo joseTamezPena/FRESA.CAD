@@ -35,6 +35,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 	idx <- 1; 
 	tbbaseModel <- NULL;
 	AdjustedFrame <- NULL;
+	isContinous <- TRUE
 	for (sta in minStrata:maxStrata)
 	{
 		if (!is.na(strata))
@@ -54,192 +55,144 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 		}
 		if ((nrow(cstrata)>1) && ( nrow(cstrataref)>1))
 		{
+			if (sum(str_count(baseModel,"\\+")) == 0)
+			{
+				isContinous <- length(table(cstrataref[,baseModel])) > 5;
+			}
 			for (i in 1:size)
 			{ 
 				tb <- table(cstrataref[,colnamesList[i]])
 				if (length(tb) > 4)
 				{
+					ress1 <- cstrataref[,colnamesList[i]] - mean(cstrataref[,colnamesList[i]])
 					ftm1 <- paste(colnamesList[i],paste(" ~ ",baseModel));
 					ftmp <- formula(ftm1);
-
+					modellm <- lm(ftmp,data=cstrataref, model = FALSE,na.action=na.exclude)
+					ress2 <- modellm$residuals
+					plm <- improvedResiduals(ress1,ress2,testType="Wilcox")$p.value
+#					f <- summary(modellm)$fstatistic
+#					plm <- pf(f[1],f[2],f[3],lower.tail=FALSE)
+					model <- modellm;
+					p <- plm;
+					if (isContinous)
+					{
+						plm <- cor.test(cstrataref[,baseModel],cstrataref[,colnamesList[i]],method="spearman")$p.value
+					}
 					switch(type,
-					
     					LOESS =
 						{
-							rss1 <- var(cstrataref[,colnamesList[i]],na.rm = TRUE)
-
-							dgf = 0.5*nrow(cstrataref) - 2;
-							model <- try(loess(ftmp,data=cstrataref,model=FALSE,...)
-										  )
-#							modellm <- lm(ftmp,data=cstrataref, model = FALSE,na.action=na.exclude)
-
-#							modellm <- try(MASS::rlm(ftmp,data=cstrataref,na.action=na.exclude, model = FALSE,method = "MM"))
-#							if (inherits(model, "try-error"))
-#							{								
-								modellm <- lm(ftmp,data=cstrataref, model = FALSE,na.action=na.exclude)
-#							}
-
-							if (inherits(model, "try-error"))
+							if ((plm < pvalue) && isContinous )
 							{
-#								cat("Error\n");
-								model <- modellm;						
-								rss2 <- mean(model$residuals^2,na.rm = TRUE);
+								model <- try(loess(ftmp,data=cstrataref,model=FALSE,...))
+								if (!inherits(model, "try-error"))
+								{
+#									rss1 <- var(cstrataref[,colnamesList[i]],na.rm = TRUE)
+#									dgf = nrow(cstrataref)*min(model$pars$span,1.0)-model$pars$degree;
+									pred <- predict(model,cstrataref);
+									predlm <- predict(modellm,cstrataref);
+									pred[is.na(pred)] <- predlm[is.na(pred)];
+									ress <- cstrataref[,colnamesList[i]] - pred;
+									p <- improvedResiduals(ress1,ress,testType="Wilcox")$p.value
+#									rss2 <- mean(ress^2,na.rm = TRUE);
+#									f1 = rss1/rss2;
+#									p <- pf(dgf*rss1/rss2-dgf,1,dgf,lower.tail=FALSE);
+								}								
+								else
+								{
+									model <- modellm;
+								}								
 							}
-							else
-							{
-#								cat(class(model));
-								dgf = nrow(cstrataref)*model$pars$span-model$pars$degree;
-								pred <- predict(model,cstrataref);
-								predlm <- predict(modellm,cstrataref);
-								pred[is.na(pred)] <- predlm[is.na(pred)];
-								ress <- cstrataref[,colnamesList[i]] - pred;
-								rss2 <- mean(ress^2,na.rm = TRUE);
-							}								
-							f1 = rss1/rss2;
-							p <- pf(dgf*rss1/rss2-dgf,1,dgf,lower.tail=FALSE);
-#							cat(colnamesList[i],"\t F Stats:\t ",f1,"\t P-value:\t",p,"\n");
 						},						
     					MARS =
 						{
-#							cat(baseModel,": Variable:\t ",colnamesList[i]);
-							rss1 <- var(cstrataref[,colnamesList[i]],na.rm = TRUE)
-							dgf = nrow(cstrataref) - 1;
-#								cat(baseModel,":",colnamesList[i],"\n")
-							model <- try(mda::mars(cstrataref[,baseModel], 
-											  y = cstrataref[,colnamesList[i]],
-											  ...
+							if ((plm < pvalue) && isContinous )
+							{
+								model <- try(mda::mars(cstrataref[,baseModel], 
+												  y = cstrataref[,colnamesList[i]],
+												  ...
+												  )
 											  )
-										  )
-#								cat(class(model),"\n")
-							if (inherits(model, "try-error"))
-							{
-#								cat("Error\n");
-								model <- lm(ftmp,data=cstrataref, model = FALSE,na.action=na.exclude);						
-								rss2 <- mean(model$residuals^2,na.rm = TRUE);
+								if (!inherits(model, "try-error"))
+								{
+#									rss1 <- var(cstrataref[,colnamesList[i]],na.rm = TRUE)
+#									dgf = nrow(cstrataref) - length(model$coefficients);
+									pred <- as.numeric(predict(model,cstrataref[,baseModel]));
+									ress <- cstrataref[,colnamesList[i]] - pred;
+									p <- improvedResiduals(ress1,ress,testType="Wilcox")$p.value
+#									rss2 <- mean(ress^2,na.rm = TRUE);
+#									f1 = rss1/rss2;
+#									p <- pf(dgf*rss1/rss2-dgf,1,dgf,lower.tail=FALSE);
+								}								
+								else
+								{
+									model <- modellm;
+								}								
 							}
-							else
-							{
-#								cat(class(model));
-								dgf = nrow(cstrataref) - length(model$coefficients);
-								pred <- as.numeric(predict(model,cstrataref[,baseModel]));
-								ress <- cstrataref[,colnamesList[i]] - pred;
-								rss2 <- mean(ress^2,na.rm = TRUE);
-							}								
-							f1 = rss1/rss2;
-							p <- pf(dgf*rss1/rss2-dgf,1,dgf,lower.tail=FALSE);
-#							if (p < pvalue) cat(colnamesList[i],"\t F Stats:\t ",f1,"\t P-value:\t",p,"\n");
 						},						
     					SPLINE =
 						{
-#							cat(baseModel,": Variable:\t ",colnamesList[i]);
-							rss1 <- var(cstrataref[,colnamesList[i]],na.rm = TRUE)
-							dgf = nrow(cstrataref) - 1;
-							tbbaseModel <- table(cstrataref[,baseModel])
-							if (length(tbbaseModel) > 5)
-							{	
-#								cat(baseModel,":",colnamesList[i],"\n")
+							if ((plm < pvalue) && isContinous )
+							{
 								model <- try(smooth.spline(cstrataref[,baseModel], 
 												  y = cstrataref[,colnamesList[i]],
 												  keep.data = FALSE,
 												  ...
 												  )
 											  )
-#								cat(class(model),"\n")
-								if (inherits(model, "try-error"))
+								if (!inherits(model, "try-error"))
 								{
-#									cat("Error\n");
-									model <- lm(ftmp,data=cstrataref, model = FALSE,na.action=na.exclude);						
-									rss2 <- mean(model$residuals^2,na.rm = TRUE);
+#									rss1 <- var(cstrataref[,colnamesList[i]],na.rm = TRUE)
+#									dgf = nrow(cstrataref) - model$df;
+									pred <- predict(model,cstrataref[,baseModel]);
+									ress <- cstrataref[,colnamesList[i]] - pred$y;
+									p <- improvedResiduals(ress1,ress,testType="Wilcox")$p.value
+#									rss2 <- mean(ress^2,na.rm = TRUE);
+#									f1 = rss1/rss2;
+#									p <- pf(dgf*rss1/rss2-dgf,1,dgf,lower.tail=FALSE);
 								}
 								else
 								{
-									dgf = nrow(cstrataref) - model$df;
-									pred <- predict(model,cstrataref[,baseModel]);
-									ress <- cstrataref[,colnamesList[i]] - pred$y;
-									rss2 <- mean(ress^2,na.rm = TRUE);
+									model <- modellm;
 								}								
 							}
-							else
-							{
-								model <- lm(ftmp,data=cstrataref, model = FALSE,na.action=na.exclude);						
-								dgf = nrow(cstrataref) - 1;
-								rss2 <- mean(model$residuals^2,na.rm = TRUE);
-							}
-							f1 = rss1/rss2;
-							p <- pf(dgf*rss1/rss2-dgf,1,dgf,lower.tail=FALSE);
-#							cat(colnamesList[i],"\t F Stats:\t ",f1,"\t P-value:\t",p,"\n");
 						},						
-						NZLM = 
-						{ 
-							model <- lm(ftmp,data=cstrataref, model = FALSE,na.action=na.exclude)
-							f <- summary(model)$fstatistic
-							f1 = f[1];
-							p <- pf(f[1],f[2],f[3],lower.tail=FALSE)										
-						},
-						LM = 
-						{ 
-							model <- lm(ftmp,data=cstrataref, model = FALSE,na.action=na.exclude)
-							f <- summary(model)$fstatistic
-							f1 = f[1];
-							p <- pf(f[1],f[2],f[3],lower.tail=FALSE)			
-	#						cat(" Variable:\t ",colnamesList[i],"\t F Stats:\t ",f1,"\t P-value:\t",p,"\n");
-						},
 						RLM = 
 						{ 
-							isContinous=TRUE
-							if (sum(str_count(baseModel,"\\+")) == 0)
-							{
-								isContinous <- length(table(cstrataref[,baseModel])) > 5;
-							}
-							if (isContinous)
+							if ((plm < pvalue) && isContinous)
 							{
 								model <- try(MASS::rlm(ftmp,data=cstrataref,na.action=na.exclude, model = FALSE,method = "MM"))
 								if (!inherits(model, "try-error"))
 								{								
-									sw <- sum(model$w);
-									dgf = sw-length(model$coef)+1;
-									m1 <- sum(model$w*cstrataref[,colnamesList[i]],na.rm = TRUE)/sw
-									rss1 <- sum(model$w*(cstrataref[,colnamesList[i]]^2),na.rm = TRUE)/sw-m1*m1
-#									m2 <- sum(model$w*model$residuals,na.rm = TRUE)/sw
-									rss2 <- sum(model$w*(model$residuals^2),na.rm = TRUE)/sw
-									f1 = rss1/rss2;
-									p <- pf(dgf*rss1/rss2-dgf,1,dgf,lower.tail=FALSE);
+									ress <- model$residuals
+									p <- improvedResiduals(ress1,ress,testType="Wilcox")$p.value
+
+									#sw <- sum(model$w);
+									#dgf = sw-length(model$coef)+1;
+									#m1 <- sum(model$w*cstrataref[,colnamesList[i]],na.rm = TRUE)/sw
+									#rss1 <- sum(model$w*(cstrataref[,colnamesList[i]]^2),na.rm = TRUE)/sw-m1*m1
+									#rss2 <- sum(model$w*(model$residuals^2),na.rm = TRUE)/sw
+									#f1 = rss1/rss2;
+									#p <- pf(dgf*rss1/rss2-dgf,1,dgf,lower.tail=FALSE);
 								}
 								else
 								{
-									model <- lm(ftmp,data=cstrataref, model = FALSE,na.action=na.exclude)
-									f <- summary(model)$fstatistic
-									f1 = f[1];
-									p <- pf(f[1],f[2],f[3],lower.tail=FALSE)										
-								}
+									model <- modellm;
+								}								
 							}
-							else
-							{
-								model <- lm(ftmp,data=cstrataref, model = FALSE,na.action=na.exclude)
-								f <- summary(model)$fstatistic
-								f1 = f[1];
-								p <- pf(f[1],f[2],f[3],lower.tail=FALSE)										
-							}	
-	#						cat(" Variable:\t ",colnamesList[i],"\t F Stats:\t ",f1,"\t P-value:\t",p,"\n");
 						},
 						GLS =
 						{
 							model <- eval(parse(text=paste("try(nlme::gls(formula(",ftm1,"),cstrataref,na.action=na.exclude,correlation = nlme::corAR1(0.9,form = ~ 1 | ",correlationGroup,")))")))
-							dgf = nrow(cstrataref)-length(model$coef)+1;
-							rss1 <- var(cstrataref[,colnamesList[i]],na.rm = TRUE)
-							rss2 <- mean(model$residuals^2,na.rm = TRUE);
-							f1 = rss1/rss2;
-							p1 <- 1.0-pf(dgf*rss1/rss2-dgf,1,dgf);
-							reg <- summary(model);						
-							p <- min(p1,reg$tTable[-1,4])
-	#						cat(" Variable:\t ",colnamesList[i],"\t F Stats:\t ",f1,"\t P-value:\t",p," ",p1,"\n");
-						},
-						{ 
-							model <- lm(ftmp,data=cstrataref, model = FALSE,na.action=na.exclude)
-							f <- summary(model)$fstatistic
-							f1 = f[1];
-							p <- pf(f[1],f[2],f[3],lower.tail=FALSE)			
-	#						cat(" Variable:\t ",colnamesList[i],"\t F Stats:\t ",f1,"\t P-value:\t",p,"\n");
+							ress <- model$residuals
+							p <- improvedResiduals(ress1,ress,testType="Wilcox")$p.value
+
+#							dgf = nrow(cstrataref)-length(model$coef)+1;
+#							rss1 <- var(cstrataref[,colnamesList[i]],na.rm = TRUE)
+#							rss2 <- mean(model$residuals^2,na.rm = TRUE);
+#							f1 = rss1/rss2;
+#							p1 <- 1.0-pf(dgf*rss1/rss2-dgf,1,dgf);
+#							reg <- summary(model);						
+#							p <- min(p1,reg$tTable[-1,4])
 						}
 					)
 					environment(model$formula) <- NULL;
@@ -293,8 +246,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 							{ 
 								if (p < pvalue)
 								{
-									avg <- model$coef[1];
-									cstrata[,colnamesList[i]] <- avg + cstrata[,colnamesList[i]] - predict(model,cstrata);
+									cstrata[,colnamesList[i]] <- avgref + cstrata[,colnamesList[i]] - predict(model,cstrata);
 								}
 							},
 							LM = 
@@ -313,8 +265,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 							{ 
 								if (p < pvalue)
 								{
-									avg <- model$coef[1];
-									cstrata[,colnamesList[i]] <- avg + cstrata[,colnamesList[i]] - predict(model,cstrata);
+									cstrata[,colnamesList[i]] <- avgref + cstrata[,colnamesList[i]] - predict(model,cstrata);
 								}
 							},
 							GLS =

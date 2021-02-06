@@ -97,7 +97,7 @@ univariate_Logit <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="
 	varlist <- cbind(varlist,varlist);
 	uniTest <- match.arg(uniTest);
 	univ <- ForwardSelection.Model.Bin(nrow(varlist),1.0,0.0,1,"1",Outcome,varlist,data,1,type="LOGIT",selectionType=uniTest);
-	unitPvalues <- (1.0 - pnorm(univ$base.Zvalues))*2.0;
+	unitPvalues <- (1.0 - pnorm(univ$base.Zvalues));
 	names(unitPvalues) <-  varlist[,1];
 	unitPvalues <- unitPvalues[order(unitPvalues)];
   	unadjusted <- unitPvalues;
@@ -127,7 +127,7 @@ univariate_residual <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMetho
 	type <- match.arg(type);
 
 	univ <- ForwardSelection.Model.Res(nrow(varlist),1.0,0.0,1,"1",Outcome,varlist,data,1,type=type,testType=uniTest);
-	unitPvalues <- (1.0 - pnorm(univ$base.Zvalues))*2.0;
+	unitPvalues <- (1.0 - pnorm(univ$base.Zvalues));
 #	print(unitPvalues);
 	names(unitPvalues) <- varlist[,1];
 	unitPvalues <- unitPvalues[order(unitPvalues)];

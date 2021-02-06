@@ -1445,13 +1445,13 @@ improvedRes improvedResidualsFunc(const vec &oldResiduals,const vec &newResidual
     improvedRes result; 
  
  
-	double pwil = 0.5; 
-	double pbin = 0.5; 
-	double ptstu = 0.5; 
-	double f_test = 0.5; 
+	double pwil = 1.0; 
+	double pbin = 1.0; 
+	double ptstu = 1.0; 
+	double f_test = 1.0; 
 	double p1=0.0; 
 	double p2=0.0; 
-	double pvalue = 0.5; 
+	double pvalue = 1.0; 
 	double size = oldResiduals.n_elem; 
 	double improved = 0.0; 
 	if (size==0)  
@@ -1481,7 +1481,7 @@ improvedRes improvedResidualsFunc(const vec &oldResiduals,const vec &newResidual
 	 
 	if (rss1 > 1000*DOUBLEEPS) 
 	{ 
-		pvalue = 0.5; 
+		pvalue = 1.0; 
 		pwil = pvalue; 
 		pbin =  pvalue; 
 		ptstu =  pvalue; 
@@ -1501,7 +1501,7 @@ improvedRes improvedResidualsFunc(const vec &oldResiduals,const vec &newResidual
 			{ 
 				case 1: 
 				{ 
-					pbin = 0.5; 
+					pbin = 1.0; 
 					if (reduction>=increase) pbin = binomtest(reduction,size,0.5,tail); 
 					pvalue = pbin;	 
 					break; 
@@ -1511,7 +1511,7 @@ improvedRes improvedResidualsFunc(const vec &oldResiduals,const vec &newResidual
 					rss2 = rss1/rss2; 
 //					Rcout << "\n 1:" << rss2 << "\n"; 
 					if (rss2>10000.0) rss2=10000.0; 
-					pvalue = f_test = (1.0-R::pf(size*(rss2-1.0),1.0,size,1,0))*0.5; 
+					pvalue = f_test = (1.0-R::pf(size*(rss2-1.0),1.0,size,1,0)); 
 					break; 
 				} 
 				case 3: 
@@ -1530,9 +1530,9 @@ improvedRes improvedResidualsFunc(const vec &oldResiduals,const vec &newResidual
 					rss2 = rss1/rss2; 
 					if (rss2>10000.0) rss2=10000.0; 
 //					Rcout << "\n 1:" << rss2 << "\n"; 
-					f_test = (1.0-R::pf(size*(rss2-1.0),1.0,size,1,0))*0.5; 
+					f_test = (1.0-R::pf(size*(rss2-1.0),1.0,size,1,0)); 
 					pvalue =  f_test; 
-					pbin=0.5; 
+					pbin=1.0; 
 					pwil=1.0; 
 					if (reduction>=increase) pbin = binomtest(reduction,size,0.5,tail); 
 					if (reduction>=increase) pwil = wilcoxtest(oldres, newres,0.0,TRUE,tail,TRUE); 
