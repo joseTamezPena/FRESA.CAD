@@ -64,7 +64,8 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 				tb <- table(cstrataref[,colnamesList[i]])
 				if (length(tb) > 4)
 				{
-					ress1 <- cstrataref[,colnamesList[i]] - mean(cstrataref[,colnamesList[i]])
+					avgref <- mean(cstrataref[,colnamesList[i]],na.rm = TRUE);
+					ress1 <- cstrataref[,colnamesList[i]] - avgref;
 					ftm1 <- paste(colnamesList[i],paste(" ~ ",baseModel));
 					ftmp <- formula(ftm1);
 					modellm <- lm(ftmp,data=cstrataref, model = FALSE,na.action=na.exclude)
@@ -166,13 +167,13 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 									ress <- model$residuals
 									p <- improvedResiduals(ress1,ress,testType="Wilcox")$p.value
 
-									#sw <- sum(model$w);
-									#dgf = sw-length(model$coef)+1;
-									#m1 <- sum(model$w*cstrataref[,colnamesList[i]],na.rm = TRUE)/sw
-									#rss1 <- sum(model$w*(cstrataref[,colnamesList[i]]^2),na.rm = TRUE)/sw-m1*m1
-									#rss2 <- sum(model$w*(model$residuals^2),na.rm = TRUE)/sw
-									#f1 = rss1/rss2;
-									#p <- pf(dgf*rss1/rss2-dgf,1,dgf,lower.tail=FALSE);
+									sw <- sum(model$w);
+									dgf = sw-length(model$coef)+1;
+									m1 <- sum(model$w*cstrataref[,colnamesList[i]],na.rm = TRUE)/sw
+									rss1 <- sum(model$w*(cstrataref[,colnamesList[i]]^2),na.rm = TRUE)/sw-m1*m1
+									rss2 <- sum(model$w*(model$residuals^2),na.rm = TRUE)/sw
+									f1 = rss1/rss2;
+									p <- min(p,pf(dgf*rss1/rss2-dgf,1,dgf,lower.tail=FALSE));
 								}
 								else
 								{
@@ -197,7 +198,6 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 					)
 					environment(model$formula) <- NULL;
 					environment(model$terms) <- NULL;
-					avgref <- mean(cstrataref[,colnamesList[i]],na.rm = TRUE);
 					models[[idx]] <- list(strata=sta,feature=colnamesList[i],model=model,avgref=avgref,pval=p);
 					idx= idx+1;
 			
