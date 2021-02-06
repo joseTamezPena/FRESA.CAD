@@ -87,16 +87,17 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 								model <- try(loess(ftmp,data=cstrataref,model=FALSE,...))
 								if (!inherits(model, "try-error"))
 								{
-#									rss1 <- var(cstrataref[,colnamesList[i]],na.rm = TRUE)
-#									dgf = nrow(cstrataref)*min(model$pars$span,1.0)-model$pars$degree;
 									pred <- predict(model,cstrataref);
 									predlm <- predict(modellm,cstrataref);
 									pred[is.na(pred)] <- predlm[is.na(pred)];
 									ress <- cstrataref[,colnamesList[i]] - pred;
 									p <- improvedResiduals(ress1,ress,testType="Wilcox")$p.value
-#									rss2 <- mean(ress^2,na.rm = TRUE);
-#									f1 = rss1/rss2;
-#									p <- pf(dgf*rss1/rss2-dgf,1,dgf,lower.tail=FALSE);
+
+									wts <- exp(-(ress/(5.0*median(ress)))^2)
+									dgf = sum(wts)*min(model$pars$span,1.0)-model$pars$degree;
+									rss1 <- sum(wts*ress1^2)
+									rss2 <- sum(wts*ress^2)
+									p <- min(p,pf(dgf*rss1/rss2-dgf,1,dgf,lower.tail=FALSE));
 								}								
 								else
 								{
@@ -115,14 +116,15 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 											  )
 								if (!inherits(model, "try-error"))
 								{
-#									rss1 <- var(cstrataref[,colnamesList[i]],na.rm = TRUE)
-#									dgf = nrow(cstrataref) - length(model$coefficients);
 									pred <- as.numeric(predict(model,cstrataref[,baseModel]));
 									ress <- cstrataref[,colnamesList[i]] - pred;
 									p <- improvedResiduals(ress1,ress,testType="Wilcox")$p.value
-#									rss2 <- mean(ress^2,na.rm = TRUE);
-#									f1 = rss1/rss2;
-#									p <- pf(dgf*rss1/rss2-dgf,1,dgf,lower.tail=FALSE);
+
+									wts <- exp(-(ress/(5.0*median(ress)))^2)
+									dgf = sum(wts) - length(model$coefficients);
+									rss1 <- sum(wts*ress1^2)
+									rss2 <- sum(wts*ress^2)
+									p <- min(p,pf(dgf*rss1/rss2-dgf,1,dgf,lower.tail=FALSE));
 								}								
 								else
 								{
@@ -142,14 +144,15 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 											  )
 								if (!inherits(model, "try-error"))
 								{
-#									rss1 <- var(cstrataref[,colnamesList[i]],na.rm = TRUE)
-#									dgf = nrow(cstrataref) - model$df;
 									pred <- predict(model,cstrataref[,baseModel]);
 									ress <- cstrataref[,colnamesList[i]] - pred$y;
 									p <- improvedResiduals(ress1,ress,testType="Wilcox")$p.value
-#									rss2 <- mean(ress^2,na.rm = TRUE);
-#									f1 = rss1/rss2;
-#									p <- pf(dgf*rss1/rss2-dgf,1,dgf,lower.tail=FALSE);
+
+									wts <- exp(-(ress/(5.0*median(ress)))^2)
+									dgf = sum(wts) - model$fit$nk;
+									rss1 <- sum(wts*ress1^2)
+									rss2 <- sum(wts*ress^2)
+									p <- min(p,pf(dgf*rss1/rss2-dgf,1,dgf,lower.tail=FALSE));
 								}
 								else
 								{
@@ -187,13 +190,12 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 							ress <- model$residuals
 							p <- improvedResiduals(ress1,ress,testType="Wilcox")$p.value
 
-#							dgf = nrow(cstrataref)-length(model$coef)+1;
-#							rss1 <- var(cstrataref[,colnamesList[i]],na.rm = TRUE)
-#							rss2 <- mean(model$residuals^2,na.rm = TRUE);
-#							f1 = rss1/rss2;
-#							p1 <- 1.0-pf(dgf*rss1/rss2-dgf,1,dgf);
-#							reg <- summary(model);						
-#							p <- min(p1,reg$tTable[-1,4])
+							dgf = nrow(cstrataref)-length(model$coef)+1;
+							rss1 <- sum(ress1^2)
+							rss2 <- sum(ress^2,na.rm = TRUE);
+							p1 <- 1.0-pf(dgf*rss1/rss2-dgf,1,dgf);
+							reg <- summary(model);						
+							p <- min(c(p,p1,reg$tTable[-1,4]))
 						}
 					)
 					environment(model$formula) <- NULL;
