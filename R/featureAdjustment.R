@@ -92,8 +92,13 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 									pred[is.na(pred)] <- predlm[is.na(pred)];
 									ress <- cstrataref[,colnamesList[i]] - pred;
 									p <- improvedResiduals(ress1,ress,testType="Wilcox")$p.value
-
-									wts <- exp(-(ress/(5.0*median(ress)))^2)
+									
+									sdd <- 3.0*median(abs(ress)) + 2.0*mean(abs(ress))
+									if (sdd == 0)
+									{
+										sdd <- 1.0
+									}									
+									wts <- exp(-(ress/sdd)^2)
 									dgf = sum(wts)*min(model$pars$span,1.0)-model$pars$degree;
 									rss1 <- sum(wts*ress1^2)
 									rss2 <- sum(wts*ress^2)
@@ -120,7 +125,12 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 									ress <- cstrataref[,colnamesList[i]] - pred;
 									p <- improvedResiduals(ress1,ress,testType="Wilcox")$p.value
 
-									wts <- exp(-(ress/(5.0*median(ress)))^2)
+									sdd <- 3.0*median(abs(ress)) + 2.0*mean(abs(ress))
+									if (sdd == 0)
+									{
+										sdd <- 1.0
+									}									
+									wts <- exp(-(ress/sdd)^2)
 									dgf = sum(wts) - length(model$coefficients);
 									rss1 <- sum(wts*ress1^2)
 									rss2 <- sum(wts*ress^2)
@@ -148,7 +158,12 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 									ress <- cstrataref[,colnamesList[i]] - pred$y;
 									p <- improvedResiduals(ress1,ress,testType="Wilcox")$p.value
 
-									wts <- exp(-(ress/(5.0*median(ress)))^2)
+									sdd <- 3.0*median(abs(ress)) + 2.0*mean(abs(ress))
+									if (sdd == 0)
+									{
+										sdd <- 1.0
+									}									
+									wts <- exp(-(ress/sdd)^2)
 									dgf = sum(wts) - model$fit$nk;
 									rss1 <- sum(wts*ress1^2)
 									rss2 <- sum(wts*ress^2)
