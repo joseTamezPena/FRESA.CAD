@@ -1511,7 +1511,7 @@ improvedRes improvedResidualsFunc(const vec &oldResiduals,const vec &newResidual
 					rss2 = rss1/rss2; 
 //					Rcout << "\n 1:" << rss2 << "\n"; 
 					if (rss2>10000.0) rss2=10000.0; 
-					pvalue = f_test = (1.0-R::pf(size*(rss2-1.0),1.0,size,1,0)); 
+					pvalue = f_test = 0.5*(1.0-R::pf(size*(rss2-1.0),1.0,size,1,0)); 
 					break; 
 				} 
 				case 3: 
@@ -1530,7 +1530,7 @@ improvedRes improvedResidualsFunc(const vec &oldResiduals,const vec &newResidual
 					rss2 = rss1/rss2; 
 					if (rss2>10000.0) rss2=10000.0; 
 //					Rcout << "\n 1:" << rss2 << "\n"; 
-					f_test = (1.0-R::pf(size*(rss2-1.0),1.0,size,1,0)); 
+					f_test = 0.5*(1.0-R::pf(size*(rss2-1.0),1.0,size,1,0)); 
 					pvalue =  f_test; 
 					pbin=1.0; 
 					pwil=1.0; 

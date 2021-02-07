@@ -33,7 +33,7 @@ function (oldResiduals,newResiduals,testType=c("Binomial","Wilcox","tStudent","F
 	p2 <- increase/size;																#proportion of subjects with worst residuals
 	rss1 <- sum(oldResiduals^2)
 	rss2 <- sum(newResiduals^2)/size1;
-	f.test <- 1-pf(rss1/rss2-size1,1,size1); 											# Just compare an improvement of the residual Variance
+	f.test <- 0.5*(1-pf(rss1/rss2-size1,1,size1)); 											# Just compare an improvement of the residual Variance
 	tdat <- try(t.test(oldres, newres, paired = TRUE,alternative = "greater"))
 	if (!inherits(tdat, "try-error"))
 	{
