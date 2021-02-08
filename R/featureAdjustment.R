@@ -69,6 +69,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 					ftm1 <- paste(colnamesList[i],paste(" ~ ",baseModel));
 					ftmp <- formula(ftm1);
 					modellm <- lm(ftmp,data=cstrataref, model = FALSE,na.action=na.exclude)
+					modelRLM <- modellm;
 					ress2 <- modellm$residuals
 					plm <- improvedResiduals(ress1,ress2,testType="Wilcox")$p.value
 #					f <- summary(modellm)$fstatistic
@@ -77,18 +78,23 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 					p <- plm;
 					if (isContinous)
 					{
-						plm <- cor.test(cstrataref[,baseModel],cstrataref[,colnamesList[i]],method="spearman")$p.value
+						plm <- 10.0*cor.test(cstrataref[,baseModel],cstrataref[,colnamesList[i]],method="spearman")$p.value
 					}
 					switch(type,
     					LOESS =
 						{
 							if ((plm < pvalue) && isContinous )
 							{
+								modelRLM <- try(MASS::rlm(ftmp,data=cstrataref,na.action=na.exclude, model = FALSE,method = "MM"))
+								if (inherits(modelRLM, "try-error"))
+								{	
+									modelRLM <- modellm
+								}
 								model <- try(loess(ftmp,data=cstrataref,model=FALSE,...))
 								if (!inherits(model, "try-error"))
 								{
 									pred <- predict(model,cstrataref);
-									predlm <- predict(modellm,cstrataref);
+									predlm <- predict(modelRLM,cstrataref);
 									pred[is.na(pred)] <- predlm[is.na(pred)];
 									ress <- cstrataref[,colnamesList[i]] - pred;
 									p <- improvedResiduals(ress1,ress,testType="Wilcox")$p.value
@@ -106,7 +112,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 								}								
 								else
 								{
-									model <- modellm;
+									model <- modelRLM;
 								}								
 							}
 						},						
@@ -226,7 +232,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 								if (p < pvalue)
 								{
 									pred <- predict(model,cstrata);
-									predlm <- predict(modellm,cstrata);
+									predlm <- predict(modelRLM,cstrata);
 									pred[is.na(pred)] <- predlm[is.na(pred)];
 									cstrata[,colnamesList[i]] <-  avgref + cstrata[,colnamesList[i]] - pred;
 								}
