@@ -78,7 +78,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 					p <- plm;
 					if (isContinous)
 					{
-						plm <- 10.0*cor.test(cstrataref[,baseModel],cstrataref[,colnamesList[i]],method="spearman")$p.value
+						plm <- cor.test(cstrataref[,baseModel],cstrataref[,colnamesList[i]],method="spearman")$p.value
 					}
 					switch(type,
     					LOESS =
