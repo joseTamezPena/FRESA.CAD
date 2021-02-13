@@ -421,9 +421,12 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
           for (nf in names(iqrg))
           {
 #            cat(nf,":",iqrg[nf],"\n");
-            noise <- as.numeric(rnorm(rows,0,iqrg[nf]));
-#           print(noise);
-            trainSet[,nf] <- trainSet[,nf]+noise;
+            if (length(table(trainSet[,nf]))>10)
+            {
+              noise <- as.numeric(rnorm(rows,0,iqrg[nf]));
+  #           print(noise);
+              trainSet[,nf] <- trainSet[,nf]+noise;
+            }
           }
 #          print(summary(trainSet[,fnames]));
         }
