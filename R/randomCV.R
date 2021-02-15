@@ -420,11 +420,8 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
           iqrg <- iqrg/(2*rows);
           for (nf in fnames)
           {
-#            print(nf)
             dto <- trainSet[,nf];
-#           print(length(dto))
             tb <- table(dto)
-#            hist(dto,main=nf)
             if (length(tb) > 2)
             {
               noise <- as.numeric(rnorm(rows,0,iqrg[nf]));
@@ -438,24 +435,7 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
               nidx[nidx > length(tb)] <- length(tb);
               trainSet[,nf] <- 0.5*(dto + as.numeric(names(tb[nidx]))) + noise;
             }
-#            plot(dto,trainSet[,nf],main=nf);
-#            hist(trainSet[,nf],main=nf)
           }
-
-
-##         print(iqrg);
-##         print(summary(trainSet[,fnames]));
-          # for (nf in names(iqrg))
-          # {
-##           cat(nf,":",iqrg[nf],"\n");
-            # if (length(table(trainSet[,nf]))>10)
-            # {
-              # noise <- as.numeric(rnorm(rows,0,iqrg[nf]));
-##            print(noise);
-              # trainSet[,nf] <- trainSet[,nf]+noise;
-            # }
-          # }
-##         print(summary(trainSet[,fnames]));
          }
       }
       if ((testClases) && (asFactor))
