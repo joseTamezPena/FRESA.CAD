@@ -19,6 +19,7 @@ correlated_Remove <- function(data= NULL,fnames= NULL,thr=0.999)
 			keep <- numeric(length(fnames));
 			for (i in length(fnames):1)
 			{
+#				plot(corm[,i],main=fnames[i])
 				keep[i] <- (sum(corm[,i] > thr) == 0);
 				if (!keep[i])  
 				{

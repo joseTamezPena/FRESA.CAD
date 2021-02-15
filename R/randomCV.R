@@ -406,8 +406,10 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
       {
         fnames <- !(colnames(trainSet) %in% c(varsmod));
         cols <- sum(fnames);
-        if (cols>1)
+        if (cols > 1)
         {
+          fnames <- colnames(trainSet)[fnames];
+          nlevel = 1.0*addNoise;
           sdg <- apply(trainSet[,fnames],2,sd,na.rm = TRUE);
           iqrg <- apply(trainSet[,fnames],2,IQR,na.rm = TRUE);
           rangeg <- apply(trainSet[,fnames],2,max,na.rm = TRUE)-apply(trainSet[,fnames],2,min,na.rm = TRUE);
@@ -416,20 +418,45 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
           iqrg[iqrg == 0] <- 1.0e-10;
           rows <- nrow(trainSet);
           iqrg <- iqrg/(2*rows);
-#          print(iqrg);
-#          print(summary(trainSet[,fnames]));
-          for (nf in names(iqrg))
+          for (nf in fnames)
           {
-#            cat(nf,":",iqrg[nf],"\n");
-            if (length(table(trainSet[,nf]))>10)
+#            print(nf)
+            dto <- trainSet[,nf];
+#           print(length(dto))
+            tb <- table(dto)
+#            hist(dto,main=nf)
+            if (length(tb) > 2)
             {
               noise <- as.numeric(rnorm(rows,0,iqrg[nf]));
-  #           print(noise);
-              trainSet[,nf] <- trainSet[,nf]+noise;
+              nthr <- nlevel/2.0; 
+              tbnames <- names(tb);
+              indx <- 1:length(tb);
+              names(indx) <- tbnames;
+              ralea <- runif(length(dto));
+              nidx <- indx[as.character(dto)] + 1.0*(ralea > (1.0-nthr)) - 1.0*(ralea < nthr);
+              nidx[nidx < 1] <- 1;
+              nidx[nidx > length(tb)] <- length(tb);
+              trainSet[,nf] <- 0.5*(dto + as.numeric(names(tb[nidx]))) + noise;
             }
+#            plot(dto,trainSet[,nf],main=nf);
+#            hist(trainSet[,nf],main=nf)
           }
-#          print(summary(trainSet[,fnames]));
-        }
+
+
+##         print(iqrg);
+##         print(summary(trainSet[,fnames]));
+          # for (nf in names(iqrg))
+          # {
+##           cat(nf,":",iqrg[nf],"\n");
+            # if (length(table(trainSet[,nf]))>10)
+            # {
+              # noise <- as.numeric(rnorm(rows,0,iqrg[nf]));
+##            print(noise);
+              # trainSet[,nf] <- trainSet[,nf]+noise;
+            # }
+          # }
+##         print(summary(trainSet[,fnames]));
+         }
       }
       if ((testClases) && (asFactor))
       {
