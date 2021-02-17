@@ -411,20 +411,16 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
           fnames <- colnames(trainSet)[fnames];
           nlevel = 1.0*addNoise;
           sdg <- apply(trainSet[,fnames],2,sd,na.rm = TRUE);
-          iqrg <- apply(trainSet[,fnames],2,IQR,na.rm = TRUE);
-          rangeg <- apply(trainSet[,fnames],2,max,na.rm = TRUE)-apply(trainSet[,fnames],2,min,na.rm = TRUE);
+          iqrg <- apply(trainSet[,fnames],2,IQR,na.rm = TRUE)/(2*abs(qnorm(0.25)));
           iqrg[iqrg == 0] <- sdg[iqrg == 0];
-          iqrg[iqrg == 0] <- rangeg[iqrg == 0];
           iqrg[iqrg == 0] <- 1.0e-10;
           rows <- nrow(trainSet);
-          iqrg <- iqrg/(2*rows);
           for (nf in fnames)
           {
             dto <- trainSet[,nf];
             tb <- table(dto)
             if (length(tb) > 2)
             {
-              noise <- as.numeric(rnorm(rows,0,iqrg[nf]));
               nthr <- nlevel/2.0; 
               tbnames <- names(tb);
               indx <- 1:length(tb);
@@ -433,6 +429,7 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
               nidx <- indx[as.character(dto)] + 1.0*(ralea > (1.0-nthr)) - 1.0*(ralea < nthr);
               nidx[nidx < 1] <- 1;
               nidx[nidx > length(tb)] <- length(tb);
+              noise <- as.numeric(rnorm(rows,0,iqrg[nf]/length(tb)));
               trainSet[,nf] <- 0.5*(dto + as.numeric(names(tb[nidx]))) + noise;
             }
           }
