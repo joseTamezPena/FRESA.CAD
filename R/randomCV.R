@@ -249,6 +249,8 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
     nfet <- TRUE;
     selectedFeaturesSet[[rept]] <- character();
     #		cat(length(selectedFeaturesSet),"\n");
+#    therest <- NULL;
+#    sourceset <- NULL;
     if (testClases)
     {
       jind <- 1;
@@ -281,7 +283,10 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
                 {
                   therest <- samplePerClass-ssize;
                   nsample <- sample(ssize,therest,replace=TRUE);
+#                  therest <- c(nrow(sampleTrain)+1,nrow(sampleTrain)+therest);
+#                  sourceset <- sampleTrain;
                   sampleTrain <- append(sampleTrain,sampleTrain[nsample]);
+                  
                 }
               }
               else
@@ -303,7 +308,45 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
         }
         tset <- tset + 1;
         
-        trainSet <- rbind(trainSet,ssubsets[[jind]][sampleTrain,]);
+        samdup <- duplicated(sampleTrain)
+        if (sum(samdup) > 0 )
+        {
+          dupIDS <- rownames(ssubsets[[jind]])[sampleTrain[samdup]]
+          tobePerturbed <- as.data.frame(ssubsets[[jind]][sampleTrain[!samdup],])
+#          print(nrow(tobePerturbed))
+          fnames <- !(colnames(ssubsets[[jind]]) %in% c(varsmod));
+          cols <- sum(fnames);
+          if (cols > 1)
+          {
+            fnames <- colnames(ssubsets[[jind]])[fnames];
+            for (nf in fnames)
+            {
+              dto <- tobePerturbed[,nf]
+              tb <- table(dto)
+              if (length(tb) > 2)
+              {
+                tbnames <- names(tb);
+                indx <- 1:length(tb);
+                names(indx) <- tbnames;
+                ralea <- runif(length(dto));
+                nidx <- indx[as.character(dto)] + 1.0*(ralea > 0.55) - 1.0*(ralea < 0.45);
+                nidx[nidx < 1] <- 1;
+                nidx[nidx > length(tb)] <- length(tb);
+                tobePerturbed[,nf] <- 0.5*(dto + as.numeric(names(tb[nidx])));
+              }
+            }
+          }
+#          print(sum(is.na(tobePerturbed)))
+#          print(sampleTrain[samdup])
+          trainSet <- rbind(trainSet,ssubsets[[jind]][sampleTrain[!samdup],],tobePerturbed[dupIDS,]);
+#          print(sum(is.na(trainSet)))
+#          print(nrow(trainSet))
+        }
+        else
+        {
+          trainSet <- rbind(trainSet,ssubsets[[jind]][sampleTrain,]);
+        }
+        
         testSet <- rbind(testSet,ssubsets[[jind]][-unique(sampleTrain),]);
         
         jind <- jind + 1;
@@ -422,15 +465,16 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
             if (length(tb) > 2)
             {
               nthr <- nlevel/2.0; 
-              tbnames <- names(tb);
-              indx <- 1:length(tb);
-              names(indx) <- tbnames;
-              ralea <- runif(length(dto));
-              nidx <- indx[as.character(dto)] + 1.0*(ralea > (1.0-nthr)) - 1.0*(ralea < nthr);
-              nidx[nidx < 1] <- 1;
-              nidx[nidx > length(tb)] <- length(tb);
+#              tbnames <- names(tb);
+#              indx <- 1:length(tb);
+#              names(indx) <- tbnames;
+#              ralea <- runif(length(dto));
+#              nidx <- indx[as.character(dto)] + 1.0*(ralea > (1.0-nthr)) - 1.0*(ralea < nthr);
+#              nidx[nidx < 1] <- 1;
+#              nidx[nidx > length(tb)] <- length(tb);
               noise <- as.numeric(rnorm(rows,0,iqrg[nf]/length(tb)));
-              trainSet[,nf] <- 0.5*(dto + as.numeric(names(tb[nidx]))) + noise;
+#              trainSet[,nf] <- 0.5*(dto + as.numeric(names(tb[nidx]))) + noise;
+              trainSet[,nf] <- dto + nlevel*noise;
             }
           }
          }
