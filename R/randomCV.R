@@ -328,9 +328,9 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
                 indx <- 1:length(tb);
                 names(indx) <- tbnames;
                 ralea <- runif(length(dto));
-                nidx <- indx[as.character(dto)] + 1.0*(ralea > 2.0/3.0) - 1.0*(ralea < 1.0/3.0);
-                nidx[nidx < 1] <- 1;
-                nidx[nidx > length(tb)] <- length(tb);
+                nidx <- indx[as.character(dto)] + 1.0*(ralea > 0.60) - 1.0*(ralea < 0.40);
+                nidx[nidx < 1] <- 2;
+                nidx[nidx > length(tb)] <- length(tb) - 1;
                 tobePerturbed[,nf] <- 0.5*(dto + as.numeric(names(tb[nidx])));
               }
             }
