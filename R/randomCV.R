@@ -249,8 +249,6 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
     nfet <- TRUE;
     selectedFeaturesSet[[rept]] <- character();
     #		cat(length(selectedFeaturesSet),"\n");
-#    therest <- NULL;
-#    sourceset <- NULL;
     if (testClases)
     {
       jind <- 1;
@@ -283,10 +281,7 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
                 {
                   therest <- samplePerClass-ssize;
                   nsample <- sample(ssize,therest,replace=TRUE);
-#                  therest <- c(nrow(sampleTrain)+1,nrow(sampleTrain)+therest);
-#                  sourceset <- sampleTrain;
                   sampleTrain <- append(sampleTrain,sampleTrain[nsample]);
-                  
                 }
               }
               else
@@ -329,8 +324,8 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
                 names(indx) <- tbnames;
                 ralea <- runif(length(dto));
                 nidx <- indx[as.character(dto)] + 1.0*(ralea > 0.60) - 1.0*(ralea < 0.40);
-                nidx[nidx < 1] <- 2;
-                nidx[nidx > length(tb)] <- length(tb) - 1;
+                nidx[nidx < 1] <- 1;
+                nidx[nidx > length(tb)] <- length(tb);
                 tobePerturbed[,nf] <- 0.5*(dto + as.numeric(names(tb[nidx])));
               }
             }
