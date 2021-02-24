@@ -455,6 +455,16 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
             if (length(tb) > 5)
             {
               noise <- as.numeric(rnorm(rows,0,iqrg[nf]/length(tb)));
+
+              tbnames <- names(tb);
+              indx <- 1:length(tb);
+              names(indx) <- tbnames;
+              ralea <- runif(length(dto));
+              nidx <- indx[as.character(dto)] + 1.0*(ralea > (1.0 - nlevel/2)) - 1.0*(ralea < (nlevel/2));
+              nidx[nidx < 1] <- 1;
+              nidx[nidx > length(tb)] <- length(tb);
+              dto <- 0.5*(dto + as.numeric(names(tb[nidx])));
+
               trainSet[,nf] <- dto + nlevel*noise;
             }
           }
