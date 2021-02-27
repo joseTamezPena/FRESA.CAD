@@ -362,11 +362,12 @@ BESS <- function(formula = formula, data=NULL, method="sequential", ic.type="BIC
 		tb <- table(data[,baseformula[2]]);
 		if (length(tb)>2)
 		{
-			result <- list(fit=BeSS::bess(as.matrix(data[,usedFeatures]),as.vector(data[,baseformula[2]]), method=method, family = "gaussian", epsilon = 1e-12,...),ic.type=ic.type,formula = formula,usedFeatures=usedFeatures);
+#			result <- list(fit=BeSS::bess(as.matrix(data[,usedFeatures]),as.vector(data[,baseformula[2]]), method=method, family = "gaussian", epsilon = 1e-12,...),ic.type=ic.type,formula = formula,usedFeatures=usedFeatures);
+			result <- list(fit=BeSS::bess(as.matrix(data[,usedFeatures]),as.vector(data[,baseformula[2]]), method=method, family = "gaussian",...),ic.type=ic.type,formula = formula,usedFeatures=usedFeatures);
 		}
 		else
 		{
-			result <- list(fit=BeSS::bess(as.matrix(data[,usedFeatures]),as.vector(data[,baseformula[2]]), method=method, family = "binomial", epsilon = 0,...),ic.type=ic.type, formula = formula,usedFeatures=usedFeatures);
+			result <- list(fit=BeSS::bess(as.matrix(data[,usedFeatures]),as.vector(data[,baseformula[2]]), method=method, family = "binomial",...),ic.type=ic.type, formula = formula,usedFeatures=usedFeatures);
 
 		}
 		bessCoefficients <- result$fit$bestmodel$coefficients[-1];
@@ -401,7 +402,7 @@ predict.FRESA_BESS <- function(object,...)
 	if (!is.null(parameters$type))
 	{
 		type <- parameters$type;
-		if (type == "response")
+		if ((type == "response") || (type == "link"))
 		{
 			newdata <- as.data.frame(cbind(y=1:nrow(testData),testData[,object$selectedfeatures]))
 			colnames(newdata) <- c("y",paste("xbest",object$selectedfeatures,sep=""))
@@ -421,7 +422,7 @@ predict.FRESA_BESS <- function(object,...)
 	{
 		if (object$fit$method == "gsection")
 		{
-			pLS <- predict(object$fit,testData,type="opt");
+			pLS <- predict(object$fit,testData,type="response");
 		}
 		else
 		{
