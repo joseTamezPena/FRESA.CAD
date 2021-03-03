@@ -492,6 +492,7 @@ if (!requireNamespace("naivebayes", quietly = TRUE)) {
 		{
 			scaleparm <- FRESAScale(data,method="OrderLogit");
 			pcaobj <- prcomp(scaleparm$scaledData,center = FALSE);
+			scaleparm$scaledData <- NULL
 		}
 		else
 		{
@@ -1179,7 +1180,7 @@ predict.FRESA_HLCM <- function(object,...)
 }
 
 
-filteredFit <- function(formula = formula, data=NULL, filtermethod=univariate_Wilcoxon, fitmethod=e1071::svm,filtermethod.control=list(pvalue=0.10,limit=0.1),Scale=FALSE,PCA=FALSE,...)
+filteredFit <- function(formula = formula, data=NULL, filtermethod=univariate_Wilcoxon, fitmethod=e1071::svm,filtermethod.control=list(pvalue=0.10,limit=0.1),Scale="none",PCA=FALSE,...)
 {
 	if (class(formula) == "character")
 	{
@@ -1192,7 +1193,16 @@ filteredFit <- function(formula = formula, data=NULL, filtermethod=univariate_Wi
 	{
 		Outcome = dependent[3];
 	}
-	fm <- NULL
+	fm <- colnames(data)
+	fm <- fm[!(fm %in% dependent)]
+
+	scaleparm <- NULL;
+	if (Scale != "none")
+	{
+		scaleparm <- FRESAScale(data[,fm],method=Scale);
+		data[,fm] <- scaleparm$scaledData;
+		scaleparm$scaledData <- NULL;
+	}
 	
 	if (is.null(filtermethod.control))
 	{
@@ -1205,12 +1215,8 @@ filteredFit <- function(formula = formula, data=NULL, filtermethod=univariate_Wi
 	usedFeatures <-  c(Outcome,names(fm));
 	data <- data[,usedFeatures]
 	pcaobj <- NULL;
-	scaleparm <- NULL;
-	if (Scale)
-	{
-		scaleparm <- FRESAScale(data[,names(fm)],method="OrderLogit");
-		data[,names(fm)] <- scaleparm$scaledData;
-	}
+#	boxplot(data[,names(fm)])
+
 
 	binOutcome <- length(table(data[,Outcome])) == 2
 	isFactor <- class(data[,Outcome]) == "factor"
@@ -1268,11 +1274,15 @@ predict.FRESA_FILTERFIT <- function(object,...)
 {
 	parameters <- list(...);
 	testData <- parameters[[1]];
-	testData <- testData[,object$usedFeatures]
-	if (!is.null(object$scaleparm))
+	if (!is.null(object$Scale))
 	{
-		testData[,object$selectedfeatures] <- FRESAScale(testData[,object$selectedfeatures],method=object$scaleparm$method,refMean=object$scaleparm$refMean,refDisp=object$scaleparm$refDisp)$scaledData;
+		testData <- FRESAScale(testData,
+		method=object$scaleparm$method,
+		refMean=object$scaleparm$refMean,
+		refDisp=object$scaleparm$refDisp)$scaledData;
 	}
+	testData <- testData[,object$usedFeatures]
+#	boxplot(testData[,object$selectedfeatures])
 	if (!is.null(object$pcaobj))
 	{
 		testData <- as.data.frame(cbind(testData[,object$usedFeatures[1]],predict(object$pcaobj,testData[,object$selectedfeatures])));

@@ -10,7 +10,7 @@
 	            filtermethod=univariate_Wilcoxon,
 	            fitmethod=e1071::svm,
 	            filtermethod.control=list(pvalue=0.10,limit=0.1),
-	            Scale=FALSE,
+	            Scale="none",
 	            PCA=FALSE,
 	            ...
 	            )
@@ -32,7 +32,7 @@
 	the set of parameters required by the feature selection function
 	}
 	\item{Scale}{
-	Scale the data 
+	Scale the data using the provided method
 	}
 	\item{PCA}{
 	Estimate the PCA
