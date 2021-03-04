@@ -92,10 +92,11 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(10
 				adjusted[models[[vl]]$feature] <- (models[[vl]]$pval < unipvalue);
 #                cat("(",models[[vl]]$feature,":",models[[vl]]$pval,")");
 			  }
-  #          cat("The adjusted :",feat,":");
+            adjusted[is.na(adjusted)] <- FALSE;
+#            cat("The adjusted :",feat,":");
   #
-  #          print(varlist);
             varlist <- varlist[adjusted];
+#            print(varlist);
             if (length(varlist) > 0)
             {
                 intopfeat <- c(intopfeat,feat);      
@@ -117,7 +118,8 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(10
 #      {
 #        addedlist <- sum(lastuncorrelatedFetures != uncorrelatedFetures);
 #      }
-#      cat (addedlist,":")
+      cat (addedlist,":")
+#      cat ("|")
       if (length(baseFeatures) == 0)
       {
         baseFeatures <- intopfeat;

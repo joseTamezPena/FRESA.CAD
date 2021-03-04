@@ -72,8 +72,8 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 					modelRLM <- modellm;
 					ress2 <- modellm$residuals
 					plm <- improvedResiduals(ress1,ress2,testType="Wilcox")$p.value
-#					f <- summary(modellm)$fstatistic
-#					plm <- pf(f[1],f[2],f[3],lower.tail=FALSE)
+					f <- summary(modellm)$fstatistic
+					plm <- min(plm,pf(f[1],f[2],f[3],lower.tail=FALSE))
 					model <- modellm;
 					p <- plm;
 					if (isContinous)
@@ -85,12 +85,16 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 						{
 							if ((plm < pvalue) && isContinous )
 							{
-								modelRLM <- try(MASS::rlm(ftmp,data=cstrataref,na.action=na.exclude, model = FALSE,method = "MM"))
+								modelRLM <- try(MASS::rlm(ftmp,data=cstrataref,na.action=na.exclude, model = FALSE,method = "MM"), silent=TRUE)
 								if (inherits(modelRLM, "try-error"))
 								{	
 									modelRLM <- modellm
+									if (any(is.na(model$residuals)))
+									{
+										modelRLM <- modellm;
+									}
 								}
-								model <- try(loess(ftmp,data=cstrataref,model=FALSE,...))
+								model <- try(loess(ftmp,data=cstrataref,model=FALSE,...), silent=TRUE)
 								if (!inherits(model, "try-error"))
 								{
 									pred <- predict(model,cstrataref);
@@ -105,7 +109,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 										sdd <- 1.0
 									}									
 									wts <- exp(-(ress/sdd)^2)
-									dgf = sum(wts)*min(model$pars$span,1.0)-model$pars$degree;
+									dgf = length(ress)*min(model$pars$span,1.0)-model$pars$degree;
 									rss1 <- sum(wts*ress1^2)
 									rss2 <- sum(wts*ress^2)
 									p <- min(p,pf(dgf*rss1/rss2-dgf,1,dgf,lower.tail=FALSE));
@@ -123,7 +127,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 								model <- try(mda::mars(cstrataref[,baseModel], 
 												  y = cstrataref[,colnamesList[i]],
 												  ...
-												  )
+												  ), silent=TRUE
 											  )
 								if (!inherits(model, "try-error"))
 								{
@@ -137,7 +141,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 										sdd <- 1.0
 									}									
 									wts <- exp(-(ress/sdd)^2)
-									dgf = sum(wts) - length(model$coefficients);
+									dgf = length(ress) - length(model$coefficients);
 									rss1 <- sum(wts*ress1^2)
 									rss2 <- sum(wts*ress^2)
 									p <- min(p,pf(dgf*rss1/rss2-dgf,1,dgf,lower.tail=FALSE));
@@ -156,7 +160,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 												  y = cstrataref[,colnamesList[i]],
 												  keep.data = FALSE,
 												  ...
-												  )
+												  ), silent=TRUE
 											  )
 								if (!inherits(model, "try-error"))
 								{
@@ -170,7 +174,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 										sdd <- 1.0
 									}									
 									wts <- exp(-(ress/sdd)^2)
-									dgf = sum(wts) - model$fit$nk;
+									dgf = length(ress) - model$fit$nk;
 									rss1 <- sum(wts*ress1^2)
 									rss2 <- sum(wts*ress^2)
 									p <- min(p,pf(dgf*rss1/rss2-dgf,1,dgf,lower.tail=FALSE));
@@ -185,19 +189,26 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 						{ 
 							if ((plm < pvalue) && isContinous)
 							{
-								model <- try(MASS::rlm(ftmp,data=cstrataref,na.action=na.exclude, model = FALSE,method = "MM"))
+								model <- try(MASS::rlm(ftmp,data=cstrataref,na.action=na.exclude, model = FALSE,method = "MM"), silent=TRUE)
 								if (!inherits(model, "try-error"))
 								{								
 									ress <- model$residuals
-									p <- improvedResiduals(ress1,ress,testType="Wilcox")$p.value
+									if (any(is.na(ress)))
+									{
+										model <- modellm;
+									}
+									else
+									{
+										p <- improvedResiduals(ress1,ress,testType="Wilcox")$p.value
 
-									sw <- sum(model$w);
-									dgf = sw-length(model$coef)+1;
-									m1 <- sum(model$w*cstrataref[,colnamesList[i]],na.rm = TRUE)/sw
-									rss1 <- sum(model$w*(cstrataref[,colnamesList[i]]^2),na.rm = TRUE)/sw-m1*m1
-									rss2 <- sum(model$w*(model$residuals^2),na.rm = TRUE)/sw
-									f1 = rss1/rss2;
-									p <- min(p,pf(dgf*rss1/rss2-dgf,1,dgf,lower.tail=FALSE));
+										sw <- sum(model$w);
+										dgf = length(ress)-length(model$coef)+1;
+										m1 <- sum(model$w*cstrataref[,colnamesList[i]],na.rm = TRUE)/sw
+										rss1 <- sum(model$w*(cstrataref[,colnamesList[i]]^2),na.rm = TRUE)/sw-m1*m1
+										rss2 <- sum(model$w*(model$residuals^2),na.rm = TRUE)/sw
+										f1 = rss1/rss2;
+										p <- min(p,pf(dgf*rss1/rss2-dgf,1,dgf,lower.tail=FALSE));
+									}
 								}
 								else
 								{
@@ -211,7 +222,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 							ress <- model$residuals
 							p <- improvedResiduals(ress1,ress,testType="Wilcox")$p.value
 
-							dgf = nrow(cstrataref)-length(model$coef)+1;
+							dgf = length(ress)-length(model$coef)+1;
 							rss1 <- sum(ress1^2)
 							rss2 <- sum(ress^2,na.rm = TRUE);
 							p1 <- 1.0-pf(dgf*rss1/rss2-dgf,1,dgf);
@@ -219,6 +230,8 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 							p <- min(c(p,p1,reg$tTable[-1,4]))
 						}
 					)
+					if (is.na(p)) p <- 1.0;
+					if (is.nan(p)) p <- 1.0;
 					environment(model$formula) <- NULL;
 					environment(model$terms) <- NULL;
 					models[[idx]] <- list(strata=sta,feature=colnamesList[i],model=model,avgref=avgref,pval=p);
@@ -226,6 +239,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 			
 					if (!is.na(p))
 					{
+						orgdata <- cstrata[,colnamesList[i]];
 						switch(type, 
 							LOESS = 
 							{ 
@@ -288,7 +302,12 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 							{ 
 								if (p < pvalue)
 								{
-									cstrata[,colnamesList[i]] <- avgref + cstrata[,colnamesList[i]] - predict(model,cstrata);
+									pred <- predict(model,cstrata);
+									if (any(is.na(pred)))
+									{
+										pred <- predict(modellm,cstrata);
+									}
+									cstrata[,colnamesList[i]] <- avgref + cstrata[,colnamesList[i]] - pred;
 								}
 							},
 							GLS =
