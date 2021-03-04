@@ -1227,7 +1227,7 @@ filteredFit <- function(formula = formula, data=NULL, filtermethod=univariate_Wi
 			controlSet <- subset(data,get(Outcome) == 0)
 			if ((nrow(controlSet) > 2*length(usedFeatures)))
 			{
-				pcaobj <- prcomp(controlSet[,names(fm)],center = FALSE);
+				pcaobj <- prcomp(controlSet[,names(fm)],center = (Scale == "none"), scale= (Scale == "none"));
 				data <- as.data.frame(cbind(data[,Outcome],as.data.frame(predict(pcaobj,data[,names(fm)]))));
 				colnames(data) <- c(Outcome,colnames(pcaobj$x));
 				if (isFactor)
@@ -1238,7 +1238,7 @@ filteredFit <- function(formula = formula, data=NULL, filtermethod=univariate_Wi
 		}
 		else
 		{
-			pcaobj <- prcomp(data[,names(fm)],center = FALSE);
+			pcaobj <- prcomp(data[,names(fm)],center = (Scale == "none"), scale= (Scale == "none"));
 			data <- as.data.frame(cbind(data[,Outcome],as.data.frame(pcaobj$x)));
 			colnames(data) <- c(Outcome,colnames(pcaobj$x));
 			if (isFactor)
