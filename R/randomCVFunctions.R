@@ -52,13 +52,13 @@ correlated_RemoveToLimit <- function(data,unitPvalues,limit=0,thr=0.975,maxLoops
 			{
 				slimit <- 2;
 			}
-			if (slimit >= nrow(data))
+			if (slimit >= 5*nrow(data))
 			{
 				slimit = nrow(data) - 1;
 			}
-			if (length(unitPvalues) > (10*slimit))
+			if (length(unitPvalues) > (5*slimit))
 			{
-				unitPvalues <- unitPvalues[1:(10*slimit)];
+				unitPvalues <- unitPvalues[1:(5*slimit)];
 			}
 			while ( (length(unitPvalues) > slimit) && (ntest < maxLoops) && (cthr > minCorr) )
 			{
@@ -410,10 +410,11 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
   
   data <- data[,c(Outcome,correlated_Remove(data,colnames(data)[!(colnames(data) %in% Outcome)]))]
 
-  tpvalue <- min(c(0.49,max(c(sqrt(pvalue)/2.0,pvalue))));
+  tpvalue <- min(c(0.45,2.0*pvalue));
   
   pvallist <- list();
   pvaltest <- univariate_Logit(data,Outcome,pvalue=tpvalue,limit=-1,uniTest="zNRI",adjustMethod=adjustMethod);
+#  cat("zNRI")
   unadjustedpMIN <- attr(pvaltest,"Unadjusted");
 
   pvallist$LogitNRI <- pvaltest;
@@ -421,6 +422,7 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
   rankVar[names(pvaltest)] <- log(c(1:length(pvaltest)))
 
   wilcxf <- univariate_Wilcoxon(data,Outcome,pvalue=tpvalue,limit=-1,adjustMethod=adjustMethod);
+#  cat("->Wilcoxon")
   unadjustedpMIN <- pmin(unadjustedpMIN,attr(wilcxf,"Unadjusted")[names(unadjustedpMIN)]);
   pvallist$Wilcox <- wilcxf;
   varcount[names(wilcxf)] <- varcount[names(wilcxf)]+1;
@@ -431,6 +433,8 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
   allf <- c(pvaltest[!(names(pvaltest) %in% features)],wilcxf[!(names(wilcxf) %in% features)],both);
 
   pvaltest <- univariate_Logit(data,Outcome,pvalue=tpvalue,limit=-1,uniTest="zIDI",adjustMethod=adjustMethod);
+#  cat("->zIDI")
+
   unadjustedpMIN <- pmin(unadjustedpMIN,attr(pvaltest,"Unadjusted")[names(unadjustedpMIN)]);
   pvallist$LogitIDI <- pvaltest;
   varcount[names(pvaltest)] <- varcount[names(pvaltest)]+1;
@@ -440,6 +444,7 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
   allf <- c(pvaltest[!(names(pvaltest) %in% features)],allf[!(names(allf) %in% features)],both);
 
   pvaltest <- univariate_residual(data,Outcome,pvalue=tpvalue,limit=-1,uniTest="Wilcox",type="LOGIT",adjustMethod=adjustMethod);
+#  cat("->Wilcox")
   unadjustedpMIN <- pmin(unadjustedpMIN,attr(pvaltest,"Unadjusted")[names(unadjustedpMIN)]);
   pvallist$LogitWilcox <- pvaltest;
   varcount[names(pvaltest)] <- varcount[names(pvaltest)]+1;
@@ -449,6 +454,7 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
   allf <- c(pvaltest[!(names(pvaltest) %in% features)],allf[!(names(allf) %in% features)],both);
 
   pvaltest <- univariate_residual(data,Outcome,pvalue=tpvalue,limit=-1,uniTest="Ftest",type="LOGIT",adjustMethod=adjustMethod);
+#  cat("->Ftest")
   unadjustedpMIN <- pmin(unadjustedpMIN,attr(pvaltest,"Unadjusted")[names(unadjustedpMIN)]);
   pvallist$LogitFtest <- pvaltest;
   varcount[names(pvaltest)] <- varcount[names(pvaltest)]+1;
@@ -458,6 +464,7 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
   allf <- c(pvaltest[!(names(pvaltest) %in% features)],allf[!(names(allf) %in% features)],both);
 
   pvaltest <- univariate_residual(data,Outcome,pvalue=tpvalue,limit=-1,uniTest="Binomial",type="LOGIT",adjustMethod=adjustMethod);
+#  cat("->Binomial")
   unadjustedpMIN <- pmin(unadjustedpMIN,attr(pvaltest,"Unadjusted")[names(unadjustedpMIN)]);
   pvallist$LogitBin <- pvaltest;
   varcount[names(pvaltest)] <- varcount[names(pvaltest)]+1;
@@ -467,6 +474,7 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
   allf <- c(pvaltest[!(names(pvaltest) %in% features)],allf[!(names(allf) %in% features)],both);
 
   pvaltest <- univariate_correlation(data,Outcome,pvalue=tpvalue,limit=-1, method = "kendall",adjustMethod=adjustMethod)
+#  cat("->kendall")
   unadjustedpMIN <- pmin(unadjustedpMIN,attr(pvaltest,"Unadjusted")[names(unadjustedpMIN)]);
   pvallist$CorKendall <- pvaltest;
   varcount[names(pvaltest)] <- varcount[names(pvaltest)]+1;
@@ -475,7 +483,8 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
   both <- pmin(pvaltest[features],allf[features]);
   allf <- c(pvaltest[!(names(pvaltest) %in% features)],allf[!(names(allf) %in% features)],both);
 
-  pvaltest <- univariate_correlation(data,Outcome,pvalue=tpvalue,limit=-1,..., method = "spearman",adjustMethod=adjustMethod)
+  pvaltest <- univariate_correlation(data,Outcome,pvalue=tpvalue,limit=-1, method = "spearman",adjustMethod=adjustMethod)
+#  cat("->spearman")
   unadjustedpMIN <- pmin(unadjustedpMIN,attr(pvaltest,"Unadjusted")[names(unadjustedpMIN)]);
   pvallist$CorSpearman <- pvaltest;
   varcount[names(pvaltest)] <- varcount[names(pvaltest)]+1;
@@ -485,6 +494,7 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
   allf <- c(pvaltest[!(names(pvaltest) %in% features)],allf[!(names(allf) %in% features)],both);
   
   pvaltest <- univariate_KS(data,Outcome,pvalue=tpvalue,limit=-1,adjustMethod=adjustMethod)
+#  cat("->KS")
   unadjustedpKS <- attr(pvaltest,"Unadjusted");
   unadjustedpMIN <- pmin(unadjustedpMIN,unadjustedpKS[names(unadjustedpMIN)]);
   pvallist$KS <- pvaltest;
@@ -498,12 +508,27 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
   allf <- p.adjust(unadjustedpMIN,adjustMethod);
   adjusptedp <- allf;
   top <- allf[allf <= 1.01*allf[1]];
+
+#  print(names(allf))
   
   limitmrmr = length(allf);
+  if ((limit>0) && (limit<1.0))
+  {
+	limitmrmr = min(length(allf),limit*nrow(data));
+  }
+  if (limit > 2)
+  {
+	limitmrmr = min(length(allf),limit);
+  }
+  if (limitmrmr > nrow(data)) 
+  {
+	limitmrmr = nrow(data);
+  }
 
   if (limitmrmr < 2 ) limitmrmr = 2;
 
   mRMRf <- mRMR.classic_FRESA(data,Outcome,feature_count = limitmrmr)
+#  cat("->mRMRf")
    
   mRMRf <- mRMRf[mRMRf > 0];
 
