@@ -24,7 +24,7 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(10
   colnames(addfeaturematrix) <- varincluded;
   rownames(addfeaturematrix) <- varincluded;
   wmax = 0.5;
-  
+  models <- NULL
 
   while ((addedlist > 0) && (lp < loops[1]))
   {
@@ -83,6 +83,7 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(10
                                           );
 #          refdata <- dataAdjusted[refdataids,];
 		  models <- attr(dataAdjusted,"models")
+          attr(dataAdjusted,"models") <- NULL
 		  if (length(models) > 0)
 		  {
               adjusted <- numeric(length(varlist)) == 1;
