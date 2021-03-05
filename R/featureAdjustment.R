@@ -73,7 +73,11 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 					ress2 <- modellm$residuals
 					plm <- improvedResiduals(ress1,ress2,testType="Wilcox")$p.value
 					f <- summary(modellm)$fstatistic
-					plm <- min(plm,pf(f[1],f[2],f[3],lower.tail=FALSE))
+					pft <- pf(f[1],f[2],f[3],lower.tail=FALSE);
+
+					if (is.na(pft)) pft <- 1.0;
+					if (is.na(plm)) plm <- 1.0;
+					plm <- min(plm,pft)
 					model <- modellm;
 					p <- plm;
 					if (isContinous)
@@ -102,7 +106,6 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 									pred[is.na(pred)] <- predlm[is.na(pred)];
 									ress <- cstrataref[,colnamesList[i]] - pred;
 									p <- improvedResiduals(ress1,ress,testType="Wilcox")$p.value
-									
 									sdd <- 3.0*median(abs(ress)) + 2.0*mean(abs(ress))
 									if (sdd == 0)
 									{
@@ -112,7 +115,14 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 									dgf = length(ress)*min(model$pars$span,1.0)-model$pars$degree;
 									rss1 <- sum(wts*ress1^2)
 									rss2 <- sum(wts*ress^2)
-									p <- min(p,pf(dgf*rss1/rss2-dgf,1,dgf,lower.tail=FALSE));
+									pft <- 0;
+									if (rss2 > 0)
+									{
+										pft <- pf(dgf*rss1/rss2-dgf,1,dgf,lower.tail=FALSE)
+									}
+									if (is.na(p)) p <- 1.0;
+									if (is.na(pft)) pft <- 1.0;
+									p <- min(p,pft);
 								}								
 								else
 								{
@@ -144,7 +154,14 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 									dgf = length(ress) - length(model$coefficients);
 									rss1 <- sum(wts*ress1^2)
 									rss2 <- sum(wts*ress^2)
-									p <- min(p,pf(dgf*rss1/rss2-dgf,1,dgf,lower.tail=FALSE));
+									pft <- 0;
+									if (rss2 > 0)
+									{
+										pft <- pf(dgf*rss1/rss2-dgf,1,dgf,lower.tail=FALSE)
+									}
+									if (is.na(p)) p <- 1.0;
+									if (is.na(pft)) pft <- 1.0;
+									p <- min(p,pft);
 								}								
 								else
 								{
@@ -177,7 +194,14 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 									dgf = length(ress) - model$fit$nk;
 									rss1 <- sum(wts*ress1^2)
 									rss2 <- sum(wts*ress^2)
-									p <- min(p,pf(dgf*rss1/rss2-dgf,1,dgf,lower.tail=FALSE));
+									pft <- 0;
+									if (rss2 > 0)
+									{
+										pft <- pf(dgf*rss1/rss2-dgf,1,dgf,lower.tail=FALSE)
+									}
+									if (is.na(p)) p <- 1.0;
+									if (is.na(pft)) pft <- 1.0;
+									p <- min(p,pft);
 								}
 								else
 								{
@@ -192,8 +216,8 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 								model <- try(MASS::rlm(ftmp,data=cstrataref,na.action=na.exclude, model = FALSE,method = "MM"), silent=TRUE)
 								if (!inherits(model, "try-error"))
 								{								
-									ress <- model$residuals
-									if (any(is.na(ress)))
+									ress <- predict(model,cstrataref)-cstrataref[,colnamesList[i]];
+									if ( any(is.na(model$w)) | any(is.na(ress)) )
 									{
 										model <- modellm;
 									}
@@ -201,13 +225,21 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 									{
 										p <- improvedResiduals(ress1,ress,testType="Wilcox")$p.value
 
+										model$w[is.na(model$w)] <- 1.0;
+										model$w[model$w == 0] <- 1.0e-5;
 										sw <- sum(model$w);
 										dgf = length(ress)-length(model$coef)+1;
 										m1 <- sum(model$w*cstrataref[,colnamesList[i]],na.rm = TRUE)/sw
 										rss1 <- sum(model$w*(cstrataref[,colnamesList[i]]^2),na.rm = TRUE)/sw-m1*m1
-										rss2 <- sum(model$w*(model$residuals^2),na.rm = TRUE)/sw
-										f1 = rss1/rss2;
-										p <- min(p,pf(dgf*rss1/rss2-dgf,1,dgf,lower.tail=FALSE));
+										rss2 <- sum(model$w*(ress^2),na.rm = TRUE)/sw
+										pft <- 0;
+										if (rss2 > 0)
+										{
+											pft <- pf(dgf*rss1/rss2-dgf,1,dgf,lower.tail=FALSE)
+										}
+										if (is.na(p)) p <- 1.0;
+										if (is.na(pft)) pft <- 1.0;
+										p <- min(p,pft);
 									}
 								}
 								else
