@@ -52,7 +52,7 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(10
     {
       outcomep <- univariate_correlation(refdata,Outcome,method="spearman",limit=-1,pvalue=0.20) # the top associated features to the outcome
       selectfeat <- names(outcomep);
-      ordcor[selectfeat] <- ordcor[selectfeat] + (1.0 - outcomep[selectfeat]); # To sort by associated features to the outcome
+      ordcor[selectfeat] <- ordcor[selectfeat] + 0.01*(1.0 - outcomep[selectfeat]); # To sort by associated features to the outcome
     }
     topfeat <- topfeat[maxcor[topfeat] >= thr];
     if (length(topfeat)>0)
