@@ -1,4 +1,4 @@
-featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(10,5),thr=0.75,unipvalue=0.05,...)
+featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(10,10),thr=0.75,unipvalue=0.05,...)
 {
 
   dataids <- rownames(data)
@@ -20,6 +20,11 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(10
   tsum <- 10;
   if (length(loops) > 1) tsum <- loops[2];
   varincluded <- colnames(refdata)[!(colnames(refdata) %in% Outcome)];
+  colsd <- apply(refdata[,varincluded],2,sd,na.rm = TRUE);
+  varincluded <- varincluded[colsd > 0];
+#  print(length(varincluded));
+
+  
   addfeaturematrix <- as.data.frame(matrix(0,nrow=length(varincluded),ncol=length(varincluded)));
   colnames(addfeaturematrix) <- varincluded;
   rownames(addfeaturematrix) <- varincluded;
@@ -40,29 +45,26 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(10
     mmaxcor <- max(maxcor);
     topfeat <- colnames(cormat);
     names(topfeat) <- topfeat;
-    thr2 <- thr;    
+    thr2 <- thr;
     if (thr2 < mmaxcor)
     {
       thr2 <- wmax*mmaxcor + (1.0-wmax)*thr;
     }
-    ordcor <- 0.9999*maxcor + 0.0001*apply(cormat,2,mean)
-#    topfeat <- topfeat[order(-ordcor)];
-#    topfeat <- c(topfeat[topFeatures],topfeat[!(topfeat %in% topFeatures)]);
+    ordcor <- maxcor
+    ordcor <- 0.99*maxcor + 0.01*apply(cormat,2,mean)
     if (!is.null(Outcome))
     {
       outcomep <- univariate_correlation(refdata,Outcome,method="spearman",limit=-1,pvalue=0.20) # the top associated features to the outcome
       selectfeat <- names(outcomep);
-      ordcor[selectfeat] <- ordcor[selectfeat] + 0.01*(1.0 - outcomep[selectfeat]); # To sort by associated features to the outcome
+      ordcor[selectfeat] <- ordcor[selectfeat] + 0.0001*(1.0 - outcomep); # To sort by associated features to the outcome
     }
     topfeat <- topfeat[maxcor[topfeat] >= thr];
     if (length(topfeat)>0)
     {
       topfeat <- topfeat[order(-ordcor[topfeat])];
-      topfeat <- c(topfeat[topfeat %in% topFeatures],topfeat[!(topfeat %in% topFeatures)]);
-#      cat(topfeat)
-#      cat("\n");
-#      print(sum(!(topfeat %in% colnames(refdata))))
+#      topfeat <- c(topfeat[topfeat %in% topFeatures],topfeat[!(topfeat %in% topFeatures)]);
       topfeat <- correlated_Remove(refdata,topfeat,thr = thr2);
+#      topfeat <- topfeat[order(-ordcor[topfeat])];
       intopfeat <- character();
       for (feat in topfeat)
       {

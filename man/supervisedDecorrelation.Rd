@@ -6,7 +6,7 @@
 }
 
 \usage{
-	featureDecorrelation(data=NULL,refdata=NULL,Outcome=NULL,loops=c(10,5),thr=0.75,unipvalue=0.05,...)
+	featureDecorrelation(data=NULL,refdata=NULL,Outcome=NULL,loops=c(10,10),thr=0.75,unipvalue=0.05,...)
 }
 \arguments{
 	\item{data}{
