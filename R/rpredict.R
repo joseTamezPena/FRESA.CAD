@@ -50,7 +50,7 @@ rpredict <-	function(currentModel,DataSet,asFactor=FALSE,classLen=2,...)
 	}
 	else
 	{
-		if (class(pred) == "list")
+		if (class(pred)[1] == "list")
 		{
 			if (is.null(pred$posterior))
 			{
@@ -68,7 +68,7 @@ rpredict <-	function(currentModel,DataSet,asFactor=FALSE,classLen=2,...)
 				pred <-as.numeric(pred$posterior[,2]);
 			}
 		}
-		if (class(pred) == "factor")
+		if (class(pred)[1] == "factor")
 		{
 			pred <- as.numeric(as.character(pred));
 		}
@@ -78,7 +78,7 @@ rpredict <-	function(currentModel,DataSet,asFactor=FALSE,classLen=2,...)
 			pred <- pnames[apply(pred[,,1],1,which.max)];
 			pred <- as.numeric(pred);
 		}
-		if (class(pred) == "matrix") 
+		if (class(pred)[1] == "matrix") 
 		{
 			if (ncol(pred)>1)
 			{
@@ -94,7 +94,7 @@ rpredict <-	function(currentModel,DataSet,asFactor=FALSE,classLen=2,...)
 	}
 	if (classLen == 2)
 	{
-		if (class(pred) == "numeric")
+		if (class(pred)[1] == "numeric")
 		{
 			pred[pred == Inf] <- 36;
 			pred[pred == -Inf] <- -36;

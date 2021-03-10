@@ -306,8 +306,9 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
         samdup <- duplicated(sampleTrain)
         if (sum(samdup) > 0 )
         {
-          dupIDS <- rownames(ssubsets[[jind]])[sampleTrain[samdup]]
+          dupIDS <- paste(rownames(ssubsets[[jind]])[sampleTrain[samdup]],"D",sep="");
           tobePerturbed <- as.data.frame(ssubsets[[jind]][sampleTrain[!samdup],])
+          rownames(tobePerturbed) <- paste(rownames(tobePerturbed),"D",sep="");
           fnames <- !(colnames(ssubsets[[jind]]) %in% c(varsmod));
           cols <- sum(fnames);
           if (cols > 1)
