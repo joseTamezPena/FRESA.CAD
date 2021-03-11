@@ -36,6 +36,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 	tbbaseModel <- NULL;
 	AdjustedFrame <- NULL;
 	isContinous <- TRUE
+	datamodel <- NULL;
 	for (sta in minStrata:maxStrata)
 	{
 		if (!is.na(strata))
@@ -57,18 +58,22 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 		{
 			if (sum(str_count(baseModel,"\\+")) == 0)
 			{
-				isContinous <- length(table(cstrataref[,baseModel])) > 5;
+				datamodel <- cstrataref[,baseModel]
+				isContinous <- length(table(datamodel)) > 5;
 			}
 			for (i in 1:size)
 			{ 
-				tb <- table(cstrataref[,colnamesList[i]])
+				dtacolumn <- cstrataref[,colnamesList[i]]
+				tb <- table(dtacolumn)
 				if (length(tb) > 4)
 				{
-					avgref <- mean(cstrataref[,colnamesList[i]],na.rm = TRUE);
-					ress1 <- cstrataref[,colnamesList[i]] - avgref;
+					avgref <- mean(dtacolumn,na.rm = TRUE);
+					ress1 <- dtacolumn - avgref;
 					ftm1 <- paste(colnamesList[i],paste(" ~ ",baseModel));
 					ftmp <- formula(ftm1);
-					modellm <- lm(ftmp,data=cstrataref, model = FALSE,na.action=na.exclude)
+					mfref <- model.frame(ftmp,cstrataref);
+					mfstrata <- model.frame(ftmp,cstrata);
+					modellm <- lm(ftmp,data=mfref, model = FALSE,na.action=na.exclude)
 					modelRLM <- modellm;
 					ress2 <- modellm$residuals
 					plm <- improvedResiduals(ress1,ress2,testType="Wilcox")$p.value
@@ -82,14 +87,14 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 					p <- plm;
 					if (isContinous)
 					{
-						plm <- cor.test(cstrataref[,baseModel],cstrataref[,colnamesList[i]],method="spearman")$p.value
+						plm <- cor.test(datamodel,dtacolumn,method="spearman")$p.value
 					}
 					switch(type,
     					LOESS =
 						{
 							if ((plm < pvalue) && isContinous )
 							{
-								modelRLM <- try(MASS::rlm(ftmp,data=cstrataref,na.action=na.exclude, model = FALSE,method = "MM"), silent=TRUE)
+								modelRLM <- try(MASS::rlm(ftmp,data=mfref,na.action=na.exclude, model = FALSE,method = "MM"), silent=TRUE)
 								if (inherits(modelRLM, "try-error"))
 								{	
 									modelRLM <- modellm
@@ -98,13 +103,13 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 										modelRLM <- modellm;
 									}
 								}
-								model <- try(loess(ftmp,data=cstrataref,model=FALSE,...), silent=TRUE)
+								model <- try(loess(ftmp,data=mfref,model=FALSE,...), silent=TRUE)
 								if (!inherits(model, "try-error"))
 								{
-									pred <- predict(model,cstrataref);
-									predlm <- predict(modelRLM,cstrataref);
+									pred <- predict(model,mfref);
+									predlm <- predict(modelRLM,mfref);
 									pred[is.na(pred)] <- predlm[is.na(pred)];
-									ress <- cstrataref[,colnamesList[i]] - pred;
+									ress <- dtacolumn - pred;
 									p <- improvedResiduals(ress1,ress,testType="Wilcox")$p.value
 									sdd <- 3.0*median(abs(ress)) + 2.0*mean(abs(ress))
 									if (sdd == 0)
@@ -134,15 +139,15 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 						{
 							if ((plm < pvalue) && isContinous )
 							{
-								model <- try(mda::mars(cstrataref[,baseModel], 
-												  y = cstrataref[,colnamesList[i]],
+								model <- try(mda::mars(datamodel, 
+												  y = dtacolumn,
 												  ...
 												  ), silent=TRUE
 											  )
 								if (!inherits(model, "try-error"))
 								{
-									pred <- as.numeric(predict(model,cstrataref[,baseModel]));
-									ress <- cstrataref[,colnamesList[i]] - pred;
+									pred <- as.numeric(predict(model,datamodel));
+									ress <- dtacolumn - pred;
 									p <- improvedResiduals(ress1,ress,testType="Wilcox")$p.value
 
 									sdd <- 3.0*median(abs(ress)) + 2.0*mean(abs(ress))
@@ -173,16 +178,16 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 						{
 							if ((plm < pvalue) && isContinous )
 							{
-								model <- try(smooth.spline(cstrataref[,baseModel], 
-												  y = cstrataref[,colnamesList[i]],
+								model <- try(smooth.spline(datamodel, 
+												  y = dtacolumn,
 												  keep.data = FALSE,
 												  ...
 												  ), silent=TRUE
 											  )
 								if (!inherits(model, "try-error"))
 								{
-									pred <- predict(model,cstrataref[,baseModel]);
-									ress <- cstrataref[,colnamesList[i]] - pred$y;
+									pred <- predict(model,datamodel);
+									ress <- dtacolumn - pred$y;
 									p <- improvedResiduals(ress1,ress,testType="Wilcox")$p.value
 
 									sdd <- 3.0*median(abs(ress)) + 2.0*mean(abs(ress))
@@ -213,10 +218,10 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 						{ 
 							if ((plm < pvalue) && isContinous)
 							{
-								model <- try(MASS::rlm(ftmp,data=cstrataref,na.action=na.exclude, model = FALSE,method = "MM"), silent=TRUE)
+								model <- try(MASS::rlm(ftmp,data=mfref,na.action=na.exclude, model = FALSE,method = "MM"), silent=TRUE)
 								if (!inherits(model, "try-error"))
 								{								
-									ress <- predict(model,cstrataref)-cstrataref[,colnamesList[i]];
+									ress <- predict(model,mfref)-dtacolumn;
 									if ( any(is.na(model$w)) | any(is.na(ress)) )
 									{
 										model <- modellm;
@@ -229,8 +234,8 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 										model$w[model$w == 0] <- 1.0e-5;
 										sw <- sum(model$w);
 										dgf = length(ress)-length(model$coef)+1;
-										m1 <- sum(model$w*cstrataref[,colnamesList[i]],na.rm = TRUE)/sw
-										rss1 <- sum(model$w*(cstrataref[,colnamesList[i]]^2),na.rm = TRUE)/sw-m1*m1
+										m1 <- sum(model$w*dtacolumn,na.rm = TRUE)/sw
+										rss1 <- sum(model$w*(dtacolumn^2),na.rm = TRUE)/sw-m1*m1
 										rss2 <- sum(model$w*(ress^2),na.rm = TRUE)/sw
 										pft <- 0;
 										if (rss2 > 0)
@@ -277,8 +282,8 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 							{ 
 								if (p < pvalue)
 								{
-									pred <- predict(model,cstrata);
-									predlm <- predict(modelRLM,cstrata);
+									pred <- predict(model,mfstrata);
+									predlm <- predict(modelRLM,mfstrata);
 									pred[is.na(pred)] <- predlm[is.na(pred)];
 									cstrata[,colnamesList[i]] <-  avgref + cstrata[,colnamesList[i]] - pred;
 								}
@@ -293,7 +298,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 									}
 									else
 									{
-										cstrata[,colnamesList[i]] <- avgref + cstrata[,colnamesList[i]] - predict(model,cstrata);
+										cstrata[,colnamesList[i]] <- avgref + cstrata[,colnamesList[i]] - predict(model,mfstrata);
 									}
 								}
 							},
@@ -307,7 +312,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 									}
 									else
 									{
-										cstrata[,colnamesList[i]] <- avgref + cstrata[,colnamesList[i]] - predict(model,cstrata);
+										cstrata[,colnamesList[i]] <- avgref + cstrata[,colnamesList[i]] - predict(model,mfstrata);
 									}
 								}
 							},
@@ -315,14 +320,14 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 							{ 
 								if (p < pvalue)
 								{
-									cstrata[,colnamesList[i]] <- avgref + cstrata[,colnamesList[i]] - predict(model,cstrata);
+									cstrata[,colnamesList[i]] <- avgref + cstrata[,colnamesList[i]] - predict(model,mfstrata);
 								}
 							},
 							LM = 
 							{ 
 								if (p < pvalue)
 								{
-									cstrata[,colnamesList[i]] <- cstrata[,colnamesList[i]] - predict(model,cstrata);
+									cstrata[,colnamesList[i]] <- cstrata[,colnamesList[i]] - predict(model,mfstrata);
 								}
 								else
 								{
@@ -334,10 +339,10 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 							{ 
 								if (p < pvalue)
 								{
-									pred <- predict(model,cstrata);
+									pred <- predict(model,mfstrata);
 									if (any(is.na(pred)))
 									{
-										pred <- predict(modellm,cstrata);
+										pred <- predict(modellm,mfstrata);
 									}
 									cstrata[,colnamesList[i]] <- avgref + cstrata[,colnamesList[i]] - pred;
 								}
@@ -347,7 +352,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 								if (p < pvalue)
 								{
 									avg <- model$coef[1];
-									cstrata[,colnamesList[i]] <- cstrata[,colnamesList[i]] - predict(model,cstrata) + avg;
+									cstrata[,colnamesList[i]] <- cstrata[,colnamesList[i]] - predict(model,mfstrata) + avg;
 								}
 							}
 						)

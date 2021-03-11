@@ -15,6 +15,7 @@ function(x,xlab = "Years", ylab="Survival",strata.levels=c(0),main="ROC",cex=1.0
 		cobj = "co"
 	}
 	lrp = NULL;
+	F1 <- NULL;
 	switch(cobj,
 		co =
 		{
@@ -109,6 +110,6 @@ function(x,xlab = "Years", ylab="Survival",strata.levels=c(0),main="ROC",cex=1.0
 
 	par(op)
 
-	result <- list(proc.test=pr,proc.prediction=prp,diagnosticMatrix=dtable,LRP=lrp)
+	result <- list(proc.test=pr,proc.prediction=prp,diagnosticMatrix=dtable,LRP=lrp,F1=F1)
 	return (result)
 }

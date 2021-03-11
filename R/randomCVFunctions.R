@@ -684,7 +684,7 @@ ClassMetric95ci <- function(datatest,nss=4000)
 		  for (n in 1:nscores)
 		  {
 			scoresamples <- sum(bootsample[,1] == scores[n])
-			allPredictions <- sum(bootsample[,2])
+			allPosPredictions <- sum(bootsample[,2] == scores[n])
 			tp <- sum( (bootsample[,1] == scores[n]) & (bootsample[,2] == scores[n]) )
 
 			if (scoresamples > 0)
@@ -703,9 +703,9 @@ ClassMetric95ci <- function(datatest,nss=4000)
 			{
 				cspe[n] <- 0;
 			}
-			if (allPredictions > 0)
+			if (allPosPredictions > 0)
 			{			
-				cpre[n] <- tp/allPredictions;
+				cpre[n] <- tp/allPosPredictions;
 			}
 			else
 			{

@@ -13,6 +13,7 @@ function(modelPredictions,number.of.models=0,specificities=c(0.975,0.95,0.90,0.8
 	ensemblePrediction <- NULL;
 	ensemble.auc <- NULL;
 	rout <- NULL;
+	F1 <- NULL;
 	
 	if ((ncol(modelPredictions) == 3) && (number.of.models == 0))
 	{
@@ -237,7 +238,8 @@ function(modelPredictions,number.of.models=0,specificities=c(0.975,0.95,0.90,0.8
 	predictionTable=dtable,
 	ensemble.auc=ensemble.auc,
 	clasification.auc=enauc,
-	roc.predictor=rout
+	roc.predictor=rout,
+	F1=F1
 	)
 	return (result)
 }

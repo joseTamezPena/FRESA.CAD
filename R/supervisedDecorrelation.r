@@ -69,7 +69,7 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(10
     {
       topfeat <- topfeat[order(-ordcor[topfeat])];
 #      topfeat <- c(topfeat[topfeat %in% topFeatures],topfeat[!(topfeat %in% topFeatures)]);
-      topfeat <- correlated_Remove(refdata,topfeat,thr = thr2);
+      topfeat <- correlated_Remove(refdata[,topfeat],topfeat,thr = thr2);
 #      topfeat <- topfeat[order(-ordcor[topfeat])];
       intopfeat <- character();
       for (feat in topfeat)
@@ -91,16 +91,16 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(10
            {
              if ((length(uncorrelatedFetures) %% 100) == 0) cat("|");
            }
-           dataAdjusted <- featureAdjustment(dvarlist,
+           adataframe <- featureAdjustment(dvarlist,
                                           baseModel=feat,
-                                          data=dataAdjusted,
-                                          referenceframe=refdata,
+                                          data=dataAdjusted[,c(feat,varlist)],
+                                          referenceframe=refdata[,c(feat,varlist)],
                                           pvalue = unipvalue,
                                           ...
                                           );
-#          refdata <- dataAdjusted[refdataids,];
-		  models <- attr(dataAdjusted,"models")
-          attr(dataAdjusted,"models") <- NULL
+		  models <- attr(adataframe,"models")
+          attr(adataframe,"models") <- NULL
+          dataAdjusted[,c(feat,varlist)] <- adataframe;
 		  if (length(models) > 0)
 		  {
               refdata <- dataAdjusted[refdataids,];
