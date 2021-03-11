@@ -684,9 +684,12 @@ ClassMetric95ci <- function(datatest,nss=4000)
 		  for (n in 1:nscores)
 		  {
 			scoresamples <- sum(bootsample[,1] == scores[n])
+			allPredictions <- sum(bootsample[,2])
+			tp <- sum( (bootsample[,1] == scores[n]) & (bootsample[,2] == scores[n]) )
+
 			if (scoresamples > 0)
 			{
-				csen[n] <- sum( (bootsample[,1] == scores[n]) & (bootsample[,2] == scores[n]) )/scoresamples;
+				csen[n] <- tp/scoresamples;
 			}
 			else
 			{
@@ -700,11 +703,9 @@ ClassMetric95ci <- function(datatest,nss=4000)
 			{
 				cspe[n] <- 0;
 			}
-			tp <- sum( (bootsample[,2] == scores[n]) );
-			totpos <- sum(scores[n] == bootsample[,1])
-			if (totpos > 0)
+			if (allPredictions > 0)
 			{			
-				cpre[n] <- tp/totpos;
+				cpre[n] <- tp/allPredictions;
 			}
 			else
 			{
