@@ -701,9 +701,10 @@ ClassMetric95ci <- function(datatest,nss=4000)
 				cspe[n] <- 0;
 			}
 			tp <- sum( (bootsample[,2] == scores[n]) );
-			if (tp > 0)
+			totpos <- sum(scores[n] == bootsample[,1])
+			if (totpos > 0)
 			{			
-				cpre[n] <- sum( (bootsample[,1] == scores[n]) & (bootsample[,2] == scores[n]) )/tp ;
+				cpre[n] <- tp/totpos;
 			}
 			else
 			{
