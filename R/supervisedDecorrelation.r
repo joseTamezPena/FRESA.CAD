@@ -139,6 +139,7 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(10
 #        addedlist <- sum(lastuncorrelatedFetures != uncorrelatedFetures);
 #      }
       if (length(varincluded) > 1000) cat (addedlist,":")
+#       cat (addedlist,":")
 #      cat ("|")
       if (length(baseFeatures) == 0)
       {
