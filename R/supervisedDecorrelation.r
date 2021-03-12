@@ -75,7 +75,7 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(10
       for (feat in topfeat)
       {
         corlist <- cormat[,feat];
-        corlist <- corlist[corlist >= thr]
+        corlist <- corlist[corlist >= thr];
 #        cat(lp,":",feat,":");
 #        print(corlist)
         varlist <- names(corlist)
@@ -133,11 +133,6 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(10
       {
         wmax <- 0.5*wmax;
       }
-#      print(uncorrelatedFetures)
-#      if (length(lastuncorrelatedFetures) == length(uncorrelatedFetures))
-#      {
-#        addedlist <- sum(lastuncorrelatedFetures != uncorrelatedFetures);
-#      }
       if (length(varincluded) > 1000) cat (addedlist,":")
 #       cat (addedlist,":")
 #      cat ("|")
