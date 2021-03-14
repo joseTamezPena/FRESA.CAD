@@ -1,4 +1,4 @@
-featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(10,10),thr=0.75,unipvalue=0.05,...)
+featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20,10),thr=0.75,unipvalue=0.05,...)
 {
 
   dataids <- rownames(data)
