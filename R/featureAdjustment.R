@@ -76,7 +76,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 					modellm <- lm(ftmp,data=mfref, model = FALSE,na.action=na.exclude)
 					modelRLM <- modellm;
 					ress2 <- modellm$residuals
-					plm <- .Call("improvedResidualsCpp",ress1,ress2,"Binomial",0)$p.value
+					plm <- .Call("improvedResidualsCpp",ress1,ress2,"Wilcox",0)$p.value
 #					f <- summary(modellm)$fstatistic
 #					pft <- pf(f[1],f[2],f[3],lower.tail=FALSE);
 #					if (is.na(pft)) pft <- 1.0;
@@ -109,7 +109,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 									predlm <- predict(modelRLM,mfref);
 									pred[is.na(pred)] <- predlm[is.na(pred)];
 									ress <- dtacolumn - pred;
-									p <- .Call("improvedResidualsCpp",ress1,ress,"Binomial",0)$p.value
+									p <- .Call("improvedResidualsCpp",ress1,ress,"Wilcox",0)$p.value
 #									sdd <- 3.0*median(abs(ress)) + 2.0*mean(abs(ress))
 #									if (sdd == 0)
 #									{
@@ -147,7 +147,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 								{
 									pred <- as.numeric(predict(model,datamodel));
 									ress <- dtacolumn - pred;
-									p <- .Call("improvedResidualsCpp",ress1,ress,"Binomial",0)$p.value
+									p <- .Call("improvedResidualsCpp",ress1,ress,"Wilcox",0)$p.value
 
 #									sdd <- 3.0*median(abs(ress)) + 2.0*mean(abs(ress))
 #									if (sdd == 0)
@@ -187,7 +187,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 								{
 									pred <- predict(model,datamodel);
 									ress <- dtacolumn - pred$y;
-									p <- .Call("improvedResidualsCpp",ress1,ress,"Binomial",0)$p.value
+									p <- .Call("improvedResidualsCpp",ress1,ress,"Wilcox",0)$p.value
 
 #									sdd <- 3.0*median(abs(ress)) + 2.0*mean(abs(ress))
 #									if (sdd == 0)
@@ -227,7 +227,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 									}
 									else
 									{
-										p <- .Call("improvedResidualsCpp",ress1,ress,"Binomial",0)$p.value
+										p <- .Call("improvedResidualsCpp",ress1,ress,"Wilcox",0)$p.value
 
 #										model$w[is.na(model$w)] <- 1.0;
 #										model$w[model$w == 0] <- 1.0e-5;
@@ -256,7 +256,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 						{
 							model <- eval(parse(text=paste("try(nlme::gls(formula(",ftm1,"),cstrataref,na.action=na.exclude,correlation = nlme::corAR1(0.9,form = ~ 1 | ",correlationGroup,")))")))
 							ress <- model$residuals
-							p <- .Call("improvedResidualsCpp",ress1,ress,"Binomial",0)$p.value
+							p <- .Call("improvedResidualsCpp",ress1,ress,"Wilcox",0)$p.value
 
 							dgf = length(ress)-length(model$coef)+1;
 							rss1 <- sum(ress1^2)

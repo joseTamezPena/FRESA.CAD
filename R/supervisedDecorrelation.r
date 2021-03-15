@@ -60,7 +60,9 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
     ordcor <- 0.9999*maxcor + 0.0001*apply(cormat,2,mean)
     if (!is.null(Outcome))
     {
+       if (length(varincluded) > 1000) cat(".")
       outcomep <- univariate_correlation(refdata[,c(Outcome,varincluded)],Outcome,method="spearman",limit=-1,pvalue=0.20) # the top associated features to the outcome
+       if (length(varincluded) > 1000) cat("-")
       selectfeat <- names(outcomep);
       ordcor[selectfeat] <- ordcor[selectfeat] + 0.000001*(1.0 - outcomep); # To sort by associated features to the outcome
     }
@@ -69,7 +71,9 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
     {
       topfeat <- topfeat[order(-ordcor[topfeat])];
 #      topfeat <- c(topfeat[topfeat %in% topFeatures],topfeat[!(topfeat %in% topFeatures)]);
+       if (length(varincluded) > 1000) cat(".")
       topfeat <- correlated_Remove(refdata[,topfeat],topfeat,thr = thr2);
+       if (length(varincluded) > 1000) cat("-")
 #      topfeat <- topfeat[order(-ordcor[topfeat])];
       intopfeat <- character();
       for (feat in topfeat)
@@ -82,15 +86,11 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
         varlist <- varlist[!(varlist %in% baseFeatures)]
         varlist <- varlist[!(varlist %in% topfeat)]
         varlist <- varlist[!(varlist %in% uncorrelatedFetures)]
-		varlist <- varlist[countf[varlist] < tsum]
+		varlist <- varlist[countf[varlist] <= tsum]
         if (length(varlist) > 0)
         {
            dvarlist <- cbind(varlist,varlist)
 #          print(corlist[varlist])
-           if (length(varincluded) > 1000) 
-           {
-             if ((length(uncorrelatedFetures) %% 100) == 0) cat("|");
-           }
            adataframe <- featureAdjustment(dvarlist,
                                           baseModel=feat,
                                           data=dataAdjusted[,c(feat,varlist)],
@@ -124,6 +124,10 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
 #                print(varlist);
                 countf[varlist] <- countf[varlist] + 1;
                 uncorrelatedFetures <- unique(c(uncorrelatedFetures,varlist));
+                 if (length(varincluded) > 1000) 
+                 {
+                   if ((length(uncorrelatedFetures) %% 100) == 0) cat("|");
+                 }
             }
 		  }
         }

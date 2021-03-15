@@ -1464,8 +1464,8 @@ improvedRes improvedResidualsFunc(const vec &oldResiduals,const vec &newResidual
 	double increase  = 0.0; 
 	for (int i=0; i< size;i++) 
 	{ 
-		reduction += (newres[i]<oldres[i]); 
-		increase += (newres[i]>oldres[i]); 
+		reduction += (newres[i] <= oldres[i]); 
+		increase += (newres[i] > oldres[i]); 
 	} 
 	p1 = reduction/size;															//	#proportion of subjects with improved residuals 
 	p2 = increase/size;											//#proportion of subjects with worst residuals 
@@ -1481,7 +1481,7 @@ improvedRes improvedResidualsFunc(const vec &oldResiduals,const vec &newResidual
 	 
 	if (rss1 > 1000*DOUBLEEPS) 
 	{ 
-		pvalue = 1.0; 
+		pvalue = 0.0; 
 		pwil = pvalue; 
 		pbin =  pvalue; 
 		ptstu =  pvalue; 
@@ -1535,7 +1535,7 @@ improvedRes improvedResidualsFunc(const vec &oldResiduals,const vec &newResidual
 					pbin=1.0; 
 					pwil=1.0; 
 					if (reduction>=increase) pbin = binomtest(reduction,size,0.5,tail); 
-					if (reduction>=increase) pwil = wilcoxtest(oldres, newres,0.0,TRUE,tail,TRUE); 
+					if (reduction >= 0.5*increase) pwil = wilcoxtest(oldres, newres,0.0,TRUE,tail,TRUE); 
 //					ptstu = ttest(oldres, newres,0.0,TRUE,TRUE,tail); 
 					ptstu = pttest(oldres, newres,tail); 
 					break; 
