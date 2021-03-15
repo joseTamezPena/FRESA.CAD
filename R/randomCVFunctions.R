@@ -533,7 +533,7 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
   mRMRf <- mRMRf[mRMRf > 0];
 
   mRMRf <- unadjustedpMIN[names(mRMRf)];
-  varcount[names(mRMRf)] <- varcount[names(mRMRf)] + 1.0;
+  varcount[names(mRMRf)] <- varcount[names(mRMRf)] + 10.0;
   rankVar[names(mRMRf)] <- rankVar[names(mRMRf)] + log(c(1:length(mRMRf)));
   mRMRf <- mRMRf[order(mRMRf)]
   

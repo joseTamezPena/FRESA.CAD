@@ -76,13 +76,12 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 					modellm <- lm(ftmp,data=mfref, model = FALSE,na.action=na.exclude)
 					modelRLM <- modellm;
 					ress2 <- modellm$residuals
-					plm <- improvedResiduals(ress1,ress2,testType="Wilcox")$p.value
-					f <- summary(modellm)$fstatistic
-					pft <- pf(f[1],f[2],f[3],lower.tail=FALSE);
-
-					if (is.na(pft)) pft <- 1.0;
-					if (is.na(plm)) plm <- 1.0;
-					plm <- min(plm,0.5*pft)
+					plm <- .Call("improvedResidualsCpp",ress1,ress2,"Binomial",0)$p.value
+#					f <- summary(modellm)$fstatistic
+#					pft <- pf(f[1],f[2],f[3],lower.tail=FALSE);
+#					if (is.na(pft)) pft <- 1.0;
+#					if (is.na(plm)) plm <- 1.0;
+#					plm <- min(plm,0.5*pft)
 					model <- modellm;
 					p <- plm;
 					if (isContinous)
@@ -110,24 +109,24 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 									predlm <- predict(modelRLM,mfref);
 									pred[is.na(pred)] <- predlm[is.na(pred)];
 									ress <- dtacolumn - pred;
-									p <- improvedResiduals(ress1,ress,testType="Wilcox")$p.value
-									sdd <- 3.0*median(abs(ress)) + 2.0*mean(abs(ress))
-									if (sdd == 0)
-									{
-										sdd <- 1.0
-									}									
-									wts <- exp(-(ress/sdd)^2)
-									dgf = length(ress)*min(model$pars$span,1.0)-model$pars$degree;
-									rss1 <- sum(wts*ress1^2)
-									rss2 <- sum(wts*ress^2)
-									pft <- 0;
-									if (rss2 > 0)
-									{
-										pft <- pf(dgf*rss1/rss2-dgf,1,dgf,lower.tail=FALSE)
-									}
-									if (is.na(p)) p <- 1.0;
-									if (is.na(pft)) pft <- 1.0;
-									p <- min(p,0.5*pft);
+									p <- .Call("improvedResidualsCpp",ress1,ress,"Binomial",0)$p.value
+#									sdd <- 3.0*median(abs(ress)) + 2.0*mean(abs(ress))
+#									if (sdd == 0)
+#									{
+#										sdd <- 1.0
+#									}									
+#									wts <- exp(-(ress/sdd)^2)
+#									dgf = length(ress)*min(model$pars$span,1.0)-model$pars$degree;
+#									rss1 <- sum(wts*ress1^2)
+#									rss2 <- sum(wts*ress^2)
+#									pft <- 0;
+#									if (rss2 > 0)
+#									{
+#										pft <- pf(dgf*rss1/rss2-dgf,1,dgf,lower.tail=FALSE)
+#									}
+#									if (is.na(p)) p <- 1.0;
+#									if (is.na(pft)) pft <- 1.0;
+#									p <- min(p,0.5*pft);
 								}								
 								else
 								{
@@ -148,25 +147,25 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 								{
 									pred <- as.numeric(predict(model,datamodel));
 									ress <- dtacolumn - pred;
-									p <- improvedResiduals(ress1,ress,testType="Wilcox")$p.value
+									p <- .Call("improvedResidualsCpp",ress1,ress,"Binomial",0)$p.value
 
-									sdd <- 3.0*median(abs(ress)) + 2.0*mean(abs(ress))
-									if (sdd == 0)
-									{
-										sdd <- 1.0
-									}									
-									wts <- exp(-(ress/sdd)^2)
-									dgf = length(ress) - length(model$coefficients);
-									rss1 <- sum(wts*ress1^2)
-									rss2 <- sum(wts*ress^2)
-									pft <- 0;
-									if (rss2 > 0)
-									{
-										pft <- pf(dgf*rss1/rss2-dgf,1,dgf,lower.tail=FALSE)
-									}
-									if (is.na(p)) p <- 1.0;
-									if (is.na(pft)) pft <- 1.0;
-									p <- min(p,0.5*pft);
+#									sdd <- 3.0*median(abs(ress)) + 2.0*mean(abs(ress))
+#									if (sdd == 0)
+#									{
+#										sdd <- 1.0
+#									}									
+#									wts <- exp(-(ress/sdd)^2)
+#									dgf = length(ress) - length(model$coefficients);
+#									rss1 <- sum(wts*ress1^2)
+#									rss2 <- sum(wts*ress^2)
+#									pft <- 0;
+#									if (rss2 > 0)
+#									{
+#										pft <- pf(dgf*rss1/rss2-dgf,1,dgf,lower.tail=FALSE)
+#									}
+#									if (is.na(p)) p <- 1.0;
+#									if (is.na(pft)) pft <- 1.0;
+#									p <- min(p,0.5*pft);
 								}								
 								else
 								{
@@ -188,25 +187,25 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 								{
 									pred <- predict(model,datamodel);
 									ress <- dtacolumn - pred$y;
-									p <- improvedResiduals(ress1,ress,testType="Wilcox")$p.value
+									p <- .Call("improvedResidualsCpp",ress1,ress,"Binomial",0)$p.value
 
-									sdd <- 3.0*median(abs(ress)) + 2.0*mean(abs(ress))
-									if (sdd == 0)
-									{
-										sdd <- 1.0
-									}									
-									wts <- exp(-(ress/sdd)^2)
-									dgf = length(ress) - model$fit$nk;
-									rss1 <- sum(wts*ress1^2)
-									rss2 <- sum(wts*ress^2)
-									pft <- 0;
-									if (rss2 > 0)
-									{
-										pft <- pf(dgf*rss1/rss2-dgf,1,dgf,lower.tail=FALSE)
-									}
-									if (is.na(p)) p <- 1.0;
-									if (is.na(pft)) pft <- 1.0;
-									p <- min(p,0.5*pft);
+#									sdd <- 3.0*median(abs(ress)) + 2.0*mean(abs(ress))
+#									if (sdd == 0)
+#									{
+#										sdd <- 1.0
+#									}									
+#									wts <- exp(-(ress/sdd)^2)
+#									dgf = length(ress) - model$fit$nk;
+#									rss1 <- sum(wts*ress1^2)
+#									rss2 <- sum(wts*ress^2)
+#									pft <- 0;
+#									if (rss2 > 0)
+#									{
+#										pft <- pf(dgf*rss1/rss2-dgf,1,dgf,lower.tail=FALSE)
+#									}
+#									if (is.na(p)) p <- 1.0;
+#									if (is.na(pft)) pft <- 1.0;
+#									p <- min(p,0.5*pft);
 								}
 								else
 								{
@@ -228,23 +227,23 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 									}
 									else
 									{
-										p <- improvedResiduals(ress1,ress,testType="Wilcox")$p.value
+										p <- .Call("improvedResidualsCpp",ress1,ress,"Binomial",0)$p.value
 
-										model$w[is.na(model$w)] <- 1.0;
-										model$w[model$w == 0] <- 1.0e-5;
-										sw <- sum(model$w);
-										dgf = length(ress)-length(model$coef)+1;
-										m1 <- sum(model$w*dtacolumn,na.rm = TRUE)/sw
-										rss1 <- sum(model$w*(dtacolumn^2),na.rm = TRUE)/sw-m1*m1
-										rss2 <- sum(model$w*(ress^2),na.rm = TRUE)/sw
-										pft <- 0;
-										if (rss2 > 0)
-										{
-											pft <- pf(dgf*rss1/rss2-dgf,1,dgf,lower.tail=FALSE)
-										}
-										if (is.na(p)) p <- 1.0;
-										if (is.na(pft)) pft <- 1.0;
-										p <- min(p,0.5*pft);
+#										model$w[is.na(model$w)] <- 1.0;
+#										model$w[model$w == 0] <- 1.0e-5;
+#										sw <- sum(model$w);
+#										dgf = length(ress)-length(model$coef)+1;
+#										m1 <- sum(model$w*dtacolumn,na.rm = TRUE)/sw
+#										rss1 <- sum(model$w*(dtacolumn^2),na.rm = TRUE)/sw-m1*m1
+#										rss2 <- sum(model$w*(ress^2),na.rm = TRUE)/sw
+#										pft <- 0;
+#										if (rss2 > 0)
+#										{
+#											pft <- pf(dgf*rss1/rss2-dgf,1,dgf,lower.tail=FALSE)
+#										}
+#										if (is.na(p)) p <- 1.0;
+#										if (is.na(pft)) pft <- 1.0;
+#										p <- min(p,0.5*pft);
 									}
 								}
 								else
@@ -257,7 +256,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 						{
 							model <- eval(parse(text=paste("try(nlme::gls(formula(",ftm1,"),cstrataref,na.action=na.exclude,correlation = nlme::corAR1(0.9,form = ~ 1 | ",correlationGroup,")))")))
 							ress <- model$residuals
-							p <- improvedResiduals(ress1,ress,testType="Wilcox")$p.value
+							p <- .Call("improvedResidualsCpp",ress1,ress,"Binomial",0)$p.value
 
 							dgf = length(ress)-length(model$coef)+1;
 							rss1 <- sum(ress1^2)
