@@ -505,7 +505,7 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
   allf <- p.adjust(geomMeanpVal,adjustMethod);
   adjusptedp <- allf;
   top <- allf[1];
-  if ((top <= 0.45) && (geomMeanpVal[1]<0.05))
+  if ((top <= 0.45) && (geomMeanpVal[1] < 0.05))
   {
 	top <- allf[allf <= 1.01*allf[1]];
   }
@@ -514,13 +514,12 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
 
 #  print(names(allf))
   
-  limitmrmr = length(allf)+1;
+  limitmrmr = length(allf) + 1;
   if ((limit > 0) && (limit < 1.0))
   {
 	limitmrmr = min(length(allf),limit*nrow(data));
   } 
-  else
-  if (limit > 2)
+  else if (limit > 2)
   {
 	limitmrmr = min(nrow(data),limit);
   }
