@@ -42,7 +42,7 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,baseFeatur
 
   if ( !is.null(Outcome) && length(baseFeatures)==0 )
   {
-      outcomep <- univariate_correlation(dataAdjusted[,c(Outcome,varincluded)],Outcome,method="spearman",limit=0,pvalue=0.20,thr=thr) # the top associated features to the outcome
+      outcomep <- univariate_correlation(refdata[,c(Outcome,varincluded)],Outcome,method="spearman",limit=0,pvalue=0.20,thr=thr) # the top associated features to the outcome
       baseFeatures <- names(outcomep);
 #      print(baseFeatures);
   }
