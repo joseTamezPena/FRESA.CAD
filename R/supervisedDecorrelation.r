@@ -83,7 +83,7 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
 #        cat(lp,":",feat,":");
 #        print(corlist)
         varlist <- names(corlist)
-        varlist <- varlist[!(varlist %in% baseFeatures)]
+#        varlist <- varlist[!(varlist %in% baseFeatures)]
         varlist <- varlist[!(varlist %in% topfeat)]
         varlist <- varlist[!(varlist %in% uncorrelatedFetures)]
 		varlist <- varlist[countf[varlist] <= tsum]
