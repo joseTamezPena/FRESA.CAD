@@ -3,19 +3,30 @@
 
 FRESAcacheEnv <- new.env();
 
-correlated_Remove <- function(data= NULL,fnames= NULL,thr=0.999)
+correlated_Remove <- function(data= NULL,fnames= NULL,thr=0.999,isDataCorMatrix=FALSE)
 {
 #	cat(thr,":",length(fnames)," ->");
 	if (length(fnames)>1)
 	{
 #		print(fnames);
-		colsd <- apply(data[,fnames],2,sd,na.rm = TRUE);
-		fnames <- fnames[colsd > 0];
+		if (!isDataCorMatrix)
+		{
+			colsd <- apply(data[,fnames],2,sd,na.rm = TRUE);
+			fnames <- fnames[colsd > 0];
+		}
 		
 		if (length(fnames)>1)
 		{
-			corm <- abs(cor(data[,fnames],method="spearman"));
-			diag(corm) <- 0;
+			if (isDataCorMatrix)
+			{
+				corm <- abs(data[,fnames]);
+				corm <- corm[fnames,];
+			}
+			else
+			{
+				corm <- abs(cor(data[,fnames],method="spearman"));
+				diag(corm) <- 0;
+			}
 			keep <- numeric(length(fnames));
 			for (i in length(fnames):1)
 			{
@@ -31,6 +42,7 @@ correlated_Remove <- function(data= NULL,fnames= NULL,thr=0.999)
 		}
 	}
 #	cat(length(fnames),"\n");
+	attr(fnames,"CorrMatrix") <- corm;
 
 	return (fnames);
 }
@@ -58,9 +70,12 @@ correlated_RemoveToLimit <- function(data,unitPvalues,limit=0,thr=0.975,maxLoops
 				pvalatlimin <- unitPvalues[order(unitPvalues)][slimit]
 				maxpvalue <- max(100*pvalmin,10*pvalatlimin);
 				unitPvalues <- unitPvalues[unitPvalues < maxpvalue];
+				cormat <- correlated_Remove(data,names(unitPvalues),cthr)
+				unitPvalues <- unitPvalues[cormat];
+				cormat <- attr(cormat,"CorrMatrix");
 				while ( (length(unitPvalues) > slimit) && (ntest < maxLoops) && (cthr > minCorr) )
 				{
-					unitPvalues <- unitPvalues[correlated_Remove(data,names(unitPvalues),cthr)];
+					unitPvalues <- unitPvalues[correlated_Remove(cormat,names(unitPvalues),cthr,isDataCorMatrix=TRUE)];
 					ntest = ntest + 1;
 					cthr = cthr*thr;
 				}
@@ -95,7 +110,11 @@ univariate_Logit <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="
 	unitPvalues <- unitPvalues[order(unitPvalues)];
   	unadjusted <- unitPvalues;
 	unitPvalues <- p.adjust(unitPvalues,adjustMethod,n=max(n,length(unitPvalues)));
-	top <- unitPvalues[unitPvalues <= 1.01*unitPvalues[1]];
+	top <- unitPvalues[1];
+	if ((top < 0.45) && (unadjusted[1] < 0.05))
+	{
+		top <- unitPvalues[unitPvalues <= 1.01*top];
+	}
 	unitPvalues <- unitPvalues[unitPvalues <= pvalue];
 #	print(unitPvalues)
 	if (length(unitPvalues) > 1) 
@@ -127,7 +146,11 @@ univariate_residual <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMetho
 	unitPvalues <- unitPvalues[order(unitPvalues)];
   	unadjusted <- unitPvalues;
 	unitPvalues <- p.adjust(unitPvalues,adjustMethod,n=max(n,length(unitPvalues)));
-	top <- unitPvalues[unitPvalues <= 1.01*unitPvalues[1]];
+	top <- unitPvalues[1];
+	if ((top < 0.45) && (unadjusted[1] < 0.05))
+	{
+		top <- unitPvalues[unitPvalues <= 1.01*top];
+	}
 	unitPvalues <- unitPvalues[unitPvalues <= pvalue];
 	if (length(unitPvalues) > 1) 
 	{
@@ -176,7 +199,11 @@ if (!requireNamespace("twosamples", quietly = TRUE)) {
   	unitPvalues <- unitPvalues[order(unitPvalues)];
   	unadjusted <- unitPvalues;
 	unitPvalues <- p.adjust(unitPvalues,adjustMethod,n=max(n,length(unitPvalues)));
-	top <- unitPvalues[unitPvalues <= 1.01*unitPvalues[1]];
+	top <- unitPvalues[1];
+	if ((top < 0.45) && (unadjusted[1] < 0.05))
+	{
+		top <- unitPvalues[unitPvalues <= 1.01*top];
+	}
 	unitPvalues <- unitPvalues[unitPvalues <= pvalue];
 	if (length(unitPvalues) > 1) 
 	{
@@ -221,7 +248,11 @@ univariate_KS <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="BH"
   	unitPvalues <- unitPvalues[order(unitPvalues)];
   	unadjusted <- unitPvalues;
 	unitPvalues <- p.adjust(unitPvalues,adjustMethod,n=max(n,length(unitPvalues)));
-	top <- unitPvalues[unitPvalues <= 1.01*unitPvalues[1]];
+	top <- unitPvalues[1];
+	if ((top < 0.45) && (unadjusted[1] < 0.05))
+	{
+		top <- unitPvalues[unitPvalues <= 1.01*top];
+	}
 	unitPvalues <- unitPvalues[unitPvalues <= pvalue];
 	if (length(unitPvalues) > 1) 
 	{
@@ -259,7 +290,11 @@ univariate_Wilcoxon <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMetho
 	unitPvalues <- unitPvalues[order(unitPvalues)];
   	unadjusted <- unitPvalues;
 	unitPvalues <- p.adjust(unitPvalues,adjustMethod,n=max(n,length(unitPvalues)));
-	top <- unitPvalues[unitPvalues <= 1.01*unitPvalues[1]];
+	top <- unitPvalues[1];
+	if ((top < 0.45) && (unadjusted[1] < 0.05))
+	{
+		top <- unitPvalues[unitPvalues <= 1.01*top];
+	}
 	unitPvalues <- unitPvalues[unitPvalues <= pvalue];
 	if (length(unitPvalues) > 1) 
 	{
@@ -294,7 +329,11 @@ univariate_tstudent <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMetho
 	unitPvalues <- unitPvalues[order(unitPvalues)];
   	unadjusted <- unitPvalues;
 	unitPvalues <- p.adjust(unitPvalues,adjustMethod,n=max(n,length(unitPvalues)));
-	top <- unitPvalues[unitPvalues <= 1.01*unitPvalues[1]];
+	top <- unitPvalues[1];
+	if ((top < 0.45) && (unadjusted[1] < 0.05))
+	{
+		top <- unitPvalues[unitPvalues <= 1.01*top];
+	}
 	unitPvalues <- unitPvalues[unitPvalues <= pvalue];
 	if (length(unitPvalues) > 1) 
 	{
@@ -328,7 +367,11 @@ univariate_correlation <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMe
   	unitPvalues <- unitPvalues[order(unitPvalues)];
   	unadjusted <- unitPvalues;
 	unitPvalues <- p.adjust(unitPvalues,adjustMethod,n=max(n,length(unitPvalues)));
-	top <- unitPvalues[unitPvalues <= 1.01*unitPvalues[1]];
+	top <- unitPvalues[1];
+	if ((top < 0.45) && (unadjusted[1] < 0.05))
+	{
+		top <- unitPvalues[unitPvalues <= 1.01*top];
+	}
 	unitPvalues <- unitPvalues[unitPvalues <= pvalue];
 	if (length(unitPvalues) > 1) 
 	{

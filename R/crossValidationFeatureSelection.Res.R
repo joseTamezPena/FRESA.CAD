@@ -168,6 +168,8 @@ if (!requireNamespace("glmnet", quietly = TRUE)) {
 				adjPvalues <- p.adjust(unitPvalues,"BH")
 				gadjPvalues <- adjPvalues[adjPvalues < 2*filter.p.value]			
 				noncornames <- correlated_Remove(data,names(gadjPvalues),thr=0.99);
+				attr(noncornames,"CorrMatrix") <- NULL;
+
 				if (length(noncornames) > 1) featureSize <- featureSize*length(noncornames)/length(gadjPvalues);
 #				cat(length(noncornames),":",length(gadjPvalues),":",length(noncornames)/length(gadjPvalues),"\n");
 			}

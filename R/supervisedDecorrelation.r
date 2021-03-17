@@ -1,4 +1,4 @@
-featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20,10),thr=0.75,unipvalue=0.05,...)
+featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,baseFeatures=NULL,loops=c(20,10),thr=0.75,unipvalue=0.05,...)
 {
 
   dataids <- rownames(data)
@@ -12,7 +12,10 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
 #  print(c(nrow(dataAdjusted),ncol(dataAdjusted),nrow(refdata),ncol(refdata)));
   totuncorrelated <- character()
   topFeatures <- character()
-  baseFeatures <- character()
+  if (is.null(baseFeatures))
+  {
+    baseFeatures <- character()
+  }
   addedlist <- 1;
   lp = 0;
   uncorrelatedFetures <- character();
@@ -33,12 +36,26 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
   diag(cormat) <- 0;
   maxcor <- apply(cormat,2,max)
   varincluded <- names(maxcor)[maxcor >= thr];
+
+
+  if (length(varincluded) > 1000) cat (length(varincluded),":")
+
+  if ( !is.null(Outcome) && length(baseFeatures)==0 )
+  {
+      outcomep <- univariate_correlation(dataAdjusted[,c(Outcome,varincluded)],Outcome,method="spearman",limit=0,pvalue=0.20,thr=thr) # the top associated features to the outcome
+      baseFeatures <- names(outcomep);
+#      print(baseFeatures);
+  }
+  
   addfeaturematrix <- as.data.frame(matrix(0,nrow=length(varincluded),ncol=length(varincluded)));
   colnames(addfeaturematrix) <- varincluded;
   rownames(addfeaturematrix) <- varincluded;
-  
+
   cormat <- cormat[,varincluded];
   cormat <- cormat[varincluded,];
+
+  if (length(varincluded) > 1000) cat (length(baseFeatures),":")
+
 
   while ((addedlist > 0) && (lp < loops[1]))
   {
@@ -58,23 +75,11 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
     }
     ordcor <- maxcor
     ordcor <- 0.9999*maxcor + 0.0001*apply(cormat,2,mean)
-    if (!is.null(Outcome))
-    {
-       if (length(varincluded) > 1000) cat(".")
-      outcomep <- univariate_correlation(refdata[,c(Outcome,varincluded)],Outcome,method="spearman",limit=-1,pvalue=0.20) # the top associated features to the outcome
-       if (length(varincluded) > 1000) cat("-")
-      selectfeat <- names(outcomep);
-      ordcor[selectfeat] <- ordcor[selectfeat] + 0.000001*(1.0 - outcomep); # To sort by associated features to the outcome
-    }
     topfeat <- topfeat[maxcor[topfeat] >= thr];
     if (length(topfeat)>0)
     {
       topfeat <- topfeat[order(-ordcor[topfeat])];
-#      topfeat <- c(topfeat[topfeat %in% topFeatures],topfeat[!(topfeat %in% topFeatures)]);
-       if (length(varincluded) > 1000) cat(".")
-      topfeat <- correlated_Remove(refdata[,topfeat],topfeat,thr = thr2);
-       if (length(varincluded) > 1000) cat("-")
-#      topfeat <- topfeat[order(-ordcor[topfeat])];
+      topfeat <- correlated_Remove(cormat,topfeat,thr = thr2,isDataCorMatrix=TRUE);
       intopfeat <- character();
       for (feat in topfeat)
       {
@@ -83,9 +88,9 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
 #        cat(lp,":",feat,":");
 #        print(corlist)
         varlist <- names(corlist)
-#        varlist <- varlist[!(varlist %in% baseFeatures)]
         varlist <- varlist[!(varlist %in% topfeat)]
         varlist <- varlist[!(varlist %in% uncorrelatedFetures)]
+        varlist <- varlist[!(varlist %in% baseFeatures)]
 		varlist <- varlist[countf[varlist] <= tsum]
         if (length(varlist) > 0)
         {
@@ -157,5 +162,6 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,loops=c(20
   attr(dataAdjusted,"TotalAdjustments") <- countf;
   attr(dataAdjusted,"featureMatrix") <- addfeaturematrix;
   attr(dataAdjusted,"varincluded") <- varincluded;
+  attr(dataAdjusted,"baseFeatures") <- baseFeatures;
   return(dataAdjusted)
 }

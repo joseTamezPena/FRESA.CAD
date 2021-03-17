@@ -157,6 +157,8 @@ NumberofRepeats=1)
 
 #			filtered <- names(unitPvalues);
 			filtered <- correlated_Remove(data,names(unitPvalues),thr=0.99);
+			attr(filtered,"CorrMatrix") <- NULL;
+
 			if (length(filtered) > 1) featureSize <- featureSize*length(filtered)/length(unitPvalues);
 
 			size <- length(filtered);

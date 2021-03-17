@@ -33,7 +33,7 @@ univariate_correlation(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="BH",
 univariate_cox(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="BH",
                      limit=0,...)
 univariate_BinEnsemble(data=NULL, Outcome=NULL,limit=0,adjustMethod="BH",...)
-correlated_Remove(data=NULL,fnames=NULL,thr=0.999)
+correlated_Remove(data=NULL,fnames=NULL,thr=0.999,isDataCorMatrix=FALSE)
 
 }
 \arguments{
@@ -72,6 +72,9 @@ correlated_Remove(data=NULL,fnames=NULL,thr=0.999)
     }
     \item{n}{
 	the number of original features passed to p.adjust
+    }
+    \item{isDataCorMatrix}{
+	The provided data is the correlation matrix
     }
 }
 

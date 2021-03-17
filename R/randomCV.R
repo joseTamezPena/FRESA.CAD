@@ -494,6 +494,8 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
           if (olength>2) 
           {
             selnames <- correlated_Remove(trainSet,selnames);
+            attr(selnames,"CorrMatrix") <- NULL;
+
             if ((length(selnames)>1) && (olength>length(selnames)))
             {
               warning("Fit Error. I will try with less features. Original Number of features:",olength," New number of features:",length(selnames),"\n");
