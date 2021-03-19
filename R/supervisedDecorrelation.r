@@ -1,4 +1,4 @@
-featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,baseFeatures=NULL,loops=c(20,10),thr=0.75,unipvalue=0.05,...)
+featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,baseFeatures=NULL,loops=20,thr=0.80,unipvalue=0.05,useWhite=TRUE,...)
 {
 
   dataids <- rownames(data)
@@ -21,8 +21,6 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,baseFeatur
   uncorrelatedFetures <- character();
   countf <- numeric(ncol(refdata));
   names(countf) <- colnames(refdata);
-  tsum <- 10;
-  if (length(loops) > 1) tsum <- loops[2];
   varincluded <- colnames(refdata)[!(colnames(refdata) %in% Outcome)];
   colsd <- apply(refdata[,varincluded],2,sd,na.rm = TRUE);
   varincluded <- varincluded[colsd > 0];
@@ -47,9 +45,9 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,baseFeatur
 #      print(baseFeatures);
   }
   
-  addfeaturematrix <- as.data.frame(matrix(0,nrow=length(varincluded),ncol=length(varincluded)));
-  colnames(addfeaturematrix) <- varincluded;
-  rownames(addfeaturematrix) <- varincluded;
+  whiteningmatrix <- diag(length(varincluded));
+  colnames(whiteningmatrix) <- varincluded;
+  rownames(whiteningmatrix) <- varincluded;
 
   cormat <- cormat[,varincluded];
   cormat <- cormat[varincluded,];
@@ -57,12 +55,10 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,baseFeatur
   if (length(varincluded) > 1000) cat (length(baseFeatures),":")
 
 
-  while ((addedlist > 0) && (lp < loops[1]))
+  while ((addedlist > 0) && (lp < loops))
   {
     lp = lp + 1;
     addedlist <- 0;
-#    lastuncorrelatedFetures <- uncorrelatedFetures;
-    uncorrelatedFetures <- character();
 
     maxcor <- apply(cormat,2,max)
     mmaxcor <- max(maxcor);
@@ -78,11 +74,20 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,baseFeatur
     topfeat <- topfeat[maxcor[topfeat] >= thr];
     if (length(topfeat)>0)
     {
+      uncorrelatedFetures <- character();
+      betamatrix <- diag(length(varincluded));
+      colnames(betamatrix) <- varincluded;
+      rownames(betamatrix) <- varincluded;
       topfeat <- topfeat[order(-ordcor[topfeat])];
       topfeat <- correlated_Remove(cormat,topfeat,thr = thr2,isDataCorMatrix=TRUE);
       intopfeat <- character();
+      if (length(varincluded) > 1000) 
+      {
+          cat("(",length(topfeat),")");
+      }
       for (feat in topfeat)
       {
+        if (length(varincluded) > 1000) cat(".");
         corlist <- cormat[,feat];
         corlist <- corlist[corlist >= thr];
 #        cat(lp,":",feat,":");
@@ -91,11 +96,15 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,baseFeatur
         varlist <- varlist[!(varlist %in% topfeat)]
         varlist <- varlist[!(varlist %in% uncorrelatedFetures)]
         varlist <- varlist[!(varlist %in% baseFeatures)]
-		varlist <- varlist[countf[varlist] <= tsum]
         if (length(varlist) > 0)
         {
            dvarlist <- cbind(varlist,varlist)
 #          print(corlist[varlist])
+
+          if (length(varincluded) > 1000) 
+          {
+              if ((length(uncorrelatedFetures) %% 10) == 0) cat("<",length(varlist),"\\");
+          }
            adataframe <- featureAdjustment(dvarlist,
                                           baseModel=feat,
                                           data=dataAdjusted[,c(feat,varlist)],
@@ -105,16 +114,29 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,baseFeatur
                                           );
 		  models <- attr(adataframe,"models")
           attr(adataframe,"models") <- NULL
-          dataAdjusted[,c(feat,varlist)] <- adataframe;
+          if (length(varincluded) > 1000) 
+          {
+             if ((length(uncorrelatedFetures) %% 10) == 0) cat("|");
+          }
 		  if (length(models) > 0)
 		  {
-              refdata <- dataAdjusted[refdataids,];
-
               adjusted <- numeric(length(varlist)) == 1;
               names(adjusted) <- varlist;
 			  for (vl in 1:length(models))
 			  {
-				adjusted[models[[vl]]$feature] <- (models[[vl]]$pval < unipvalue);
+                if (models[[vl]]$pval < unipvalue)
+                {
+                  adjusted[models[[vl]]$feature] <- TRUE;
+                  if (is.null(models[[vl]]$model$coef))
+                  {
+                    betamatrix[feat,models[[vl]]$feature] <- 1.0;
+                    useWhite <- FALSE;
+                  }
+                  else
+                  {
+                    betamatrix[feat,models[[vl]]$feature] <- -1.0*models[[vl]]$model$coef[2];
+                  }
+                }
 #                cat("(",models[[vl]]$feature,":",models[[vl]]$pval,")");
 			  }
             adjusted[is.na(adjusted)] <- FALSE;
@@ -124,20 +146,30 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,baseFeatur
 #            print(varlist);
             if (length(varlist) > 0)
             {
+                dataAdjusted[,c(feat,varlist)] <- adataframe;
+                refdata[,c(feat,varlist)] <- adataframe[refdataids,];
                 intopfeat <- c(intopfeat,feat);      
-                addfeaturematrix[feat,varlist] <- addfeaturematrix[feat,varlist] + 1;
-#                print(varlist);
                 countf[varlist] <- countf[varlist] + 1;
                 uncorrelatedFetures <- unique(c(uncorrelatedFetures,varlist));
-                 if (length(varincluded) > 1000) 
-                 {
-                   if ((length(uncorrelatedFetures) %% 100) == 0) cat("|");
-                 }
             }
+             if (length(varincluded) > 1000) 
+             {
+               if ((length(uncorrelatedFetures) %% 10) == 0) cat("/");
+             }
 		  }
+          if (length(varincluded) > 1000) 
+          {
+              if ((length(uncorrelatedFetures) %% 10) == 0) cat(">");
+          }
         }
-        addedlist <- length(uncorrelatedFetures) + 1.0*(thr2 > 1.001*thr);
       }
+      if (length(varincluded) > 1000) cat("{");
+      addedlist <- length(uncorrelatedFetures) + 1.0*(thr2 > 1.01*thr);
+      if (length(uncorrelatedFetures) > 0)
+      {
+         whiteningmatrix <-  whiteningmatrix %*% betamatrix;
+      }
+      betamatrix <- NULL;
       if (thr2 > 1.001*thr)
       {
         wmax <- 0.5*wmax;
@@ -149,19 +181,33 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,baseFeatur
       {
         baseFeatures <- intopfeat;
       }
+      if (length(varincluded) > 1000) cat("}");
+      if (length(varincluded) > 1000) cat("[");
       cormat <- abs(cor(refdata[,varincluded],method="spearman"))
       diag(cormat) <- 0;
       topFeatures <- unique(c(topFeatures,intopfeat));
+      if (length(varincluded) > 1000) cat("]");
     }
 
     totuncorrelated <- unique(c(totuncorrelated,uncorrelatedFetures));
   }
-  dataAdjusted <- dataAdjusted[dataids,];
+  if (useWhite)
+  {
+    dataAdjusted <- data
+    dataAdjusted[,varincluded] <- as.matrix(data[,varincluded]) %*% whiteningmatrix;
+  }
+  else
+  {
+    dataAdjusted <- dataAdjusted[dataids,];
+  }
+  
+  
 #  cat ("\n")
   attr(dataAdjusted,"topFeatures") <- unique(topFeatures);
   attr(dataAdjusted,"TotalAdjustments") <- countf;
-  attr(dataAdjusted,"featureMatrix") <- addfeaturematrix;
+  attr(dataAdjusted,"whiteningmatrix") <- whiteningmatrix;
   attr(dataAdjusted,"varincluded") <- varincluded;
   attr(dataAdjusted,"baseFeatures") <- baseFeatures;
+  attr(dataAdjusted,"useWhite") <- useWhite;
   return(dataAdjusted)
 }

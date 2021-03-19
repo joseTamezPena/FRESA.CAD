@@ -4,9 +4,8 @@
 \description{
 	All features significatly associated to the outcome will be decorrelated
 }
-
 \usage{
-	featureDecorrelation(data=NULL,refdata=NULL,Outcome=NULL,loops=c(20,10),thr=0.75,unipvalue=0.05,...)
+	featureDecorrelation(data=NULL,refdata=NULL,Outcome=NULL,loops=20,thr=0.80,unipvalue=0.05,useWhite=TRUE,...)
 }
 \arguments{
 	\item{data}{
@@ -27,6 +26,9 @@
 	\item{unipvalue}{
 	association p-value
 	}
+	\item{useWhite}{
+	 if TRUE, the returned matrix will use the estimated whitening Matrix
+	}
 	\item{...}{
 	parameters passed to the adjuting method.
 	}
@@ -36,12 +38,30 @@
  The data-frame will be analyzed and correlated features will be decorrelated. Feature selection may be based on Outcome or by default in Top correlation
 }
 
-	
 \value{
 	\item{adjustedFrame}{
-	The scaled data set
+	The decorrelated data frame with the follwing attributes 
+	}
+	\item{topFeatures}{
+		The list of features that were decorrelated
+	}
+	\item{TotalAdjustments}{
+		The count of how many times was decorrelted
+	}
+	\item{whiteningmatrix}{
+		The whitening matrix for linear models
+	}
+	\item{varincluded}{
+		The list of variables in the whitening matrix
+	}
+	\item{baseFeatures}{
+		The list of feetures used as base features
+	}
+	\item{useWhite}{
+		If TRUE the whitening matrix was used for decorrelation
 	}
 }
+
 \author{Jose G. Tamez-Pena}
 \seealso{\code{featureAdjustment}}
 \keyword{Data Conditioning}
