@@ -554,8 +554,9 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
   both <- pmin(pvaltest[features],allf[features]);
   allf <- c(pvaltest[!(names(pvaltest) %in% features)],allf[!(names(allf) %in% features)],both);
 
-  expgeom <- 1.0/(length(pvallist));
-  geomMeanpVal <- (minPval*geomMeanpVal/maxPval)^expgeom;
+  expgeom <- 1.0/(length(pvallist)-1);
+  maxPval[maxPval <= 1.0e-12] <- 1.0e-12;
+  geomMeanpVal <- (geomMeanpVal/maxPval)^expgeom;
 
 #  print(names(allf))
   
@@ -589,8 +590,7 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
     allf <- c(allf,mRMRf[missing])
   }
 
-  geomMeanpVal <- geomMeanpVal;
-  geomMeanpVal[geomMeanpVal > 1] <- 1.0;
+  geomMeanpVal[names(mRMRf)] <- 0.75*geomMeanpVal[names(mRMRf)]; # Adjusting mRMR selected features
   geomMeanpVal <- geomMeanpVal[order(geomMeanpVal-varcount[names(geomMeanpVal)])];
   allf <- p.adjust(geomMeanpVal,adjustMethod);
   adjusptedp <- allf;
