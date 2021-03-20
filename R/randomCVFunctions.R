@@ -506,17 +506,17 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
   both <- pmin(pvaltest[features],allf[features]);
   allf <- c(pvaltest[!(names(pvaltest) %in% features)],allf[!(names(allf) %in% features)],both);
 
-	pvaltest <- univariate_residual(data,Outcome,pvalue=tpvalue,limit=-1,uniTest="Wilcox",type="LOGIT",adjustMethod=adjustMethod);
-#cat("->Wilcox")
-	 geomMeanpVal <- geomMeanpVal*(attr(pvaltest,"Unadjusted")[names(geomMeanpVal)]);
-	 maxPval <- pmax(maxPval,attr(pvaltest,"Unadjusted")[names(geomMeanpVal)]);
-	 minPval <- pmin(minPval,attr(pvaltest,"Unadjusted")[names(geomMeanpVal)]);
-	 pvallist$LogitWilcox <- pvaltest;
-	 varcount[names(pvaltest)] <- varcount[names(pvaltest)] + 1;
-	 rankVar[names(pvaltest)] <- rankVar[names(pvaltest)] + log(c(1:length(pvaltest)));
-	 features <- intersect(names(pvaltest),names(allf));
-	 both <- pmin(pvaltest[features],allf[features]);
-	 allf <- c(pvaltest[!(names(pvaltest) %in% features)],allf[!(names(allf) %in% features)],both);
+#	pvaltest <- univariate_residual(data,Outcome,pvalue=tpvalue,limit=-1,uniTest="Wilcox",type="LOGIT",adjustMethod=adjustMethod);
+##cat("->Wilcox")
+#	 geomMeanpVal <- geomMeanpVal*(attr(pvaltest,"Unadjusted")[names(geomMeanpVal)]);
+	 # maxPval <- pmax(maxPval,attr(pvaltest,"Unadjusted")[names(geomMeanpVal)]);
+	 # minPval <- pmin(minPval,attr(pvaltest,"Unadjusted")[names(geomMeanpVal)]);
+	 # pvallist$LogitWilcox <- pvaltest;
+	 # varcount[names(pvaltest)] <- varcount[names(pvaltest)] + 1;
+	 # rankVar[names(pvaltest)] <- rankVar[names(pvaltest)] + log(c(1:length(pvaltest)));
+	 # features <- intersect(names(pvaltest),names(allf));
+	 # both <- pmin(pvaltest[features],allf[features]);
+	 # allf <- c(pvaltest[!(names(pvaltest) %in% features)],allf[!(names(allf) %in% features)],both);
 
   pvaltest <- univariate_correlation(data,Outcome,pvalue=tpvalue,limit=-1, method = "spearman",adjustMethod=adjustMethod)
 #  cat("->spearman")
@@ -630,7 +630,7 @@ univariate_Strata <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod="BH",
 	{
 		top <- pvalues[pvalues <= 1.01*pvalues[1]];
 	}
-	pvalues <- pvalues[pvalues <= 2*pvalue];
+	pvalues <- pvalues[pvalues <= pvalue];
 	if (length(pvalues) < 2)
 	{
 		pvalues <- top;
