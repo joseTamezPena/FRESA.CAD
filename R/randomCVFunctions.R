@@ -482,41 +482,41 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
  # both <- pmin(pvaltest[features],allf[features]);
  # allf <- c(pvaltest[!(names(pvaltest) %in% features)],allf[!(names(allf) %in% features)],both);
 
-  pvaltest <- univariate_residual(data,Outcome,pvalue=tpvalue,limit=-1,uniTest="Ftest",type="LOGIT",adjustMethod=adjustMethod);
-#  cat("->Ftest")
-  geomMeanpVal <- geomMeanpVal*(attr(pvaltest,"Unadjusted")[names(geomMeanpVal)]);
-  maxPval <- pmax(maxPval,attr(pvaltest,"Unadjusted")[names(geomMeanpVal)]);
-  minPval <- pmin(minPval,attr(pvaltest,"Unadjusted")[names(geomMeanpVal)]);
-  pvallist$LogitFtest <- pvaltest;
-  varcount[names(pvaltest)] <- varcount[names(pvaltest)] + 1;
-  rankVar[names(pvaltest)] <- rankVar[names(pvaltest)] + c(1:length(pvaltest));
-  features <- intersect(names(pvaltest),names(allf));
-  both <- pmin(pvaltest[features],allf[features]);
-  allf <- c(pvaltest[!(names(pvaltest) %in% features)],allf[!(names(allf) %in% features)],both);
+  # pvaltest <- univariate_residual(data,Outcome,pvalue=tpvalue,limit=-1,uniTest="Ftest",type="LOGIT",adjustMethod=adjustMethod);
+# #  cat("->Ftest")
+  # geomMeanpVal <- geomMeanpVal*(attr(pvaltest,"Unadjusted")[names(geomMeanpVal)]);
+  # maxPval <- pmax(maxPval,attr(pvaltest,"Unadjusted")[names(geomMeanpVal)]);
+  # minPval <- pmin(minPval,attr(pvaltest,"Unadjusted")[names(geomMeanpVal)]);
+  # pvallist$LogitFtest <- pvaltest;
+  # varcount[names(pvaltest)] <- varcount[names(pvaltest)] + 1;
+  # rankVar[names(pvaltest)] <- rankVar[names(pvaltest)] + c(1:length(pvaltest));
+  # features <- intersect(names(pvaltest),names(allf));
+  # both <- pmin(pvaltest[features],allf[features]);
+  # allf <- c(pvaltest[!(names(pvaltest) %in% features)],allf[!(names(allf) %in% features)],both);
 
-  pvaltest <- univariate_residual(data,Outcome,pvalue=tpvalue,limit=-1,uniTest="Binomial",type="LOGIT",adjustMethod=adjustMethod);
-#  cat("->Binomial")
-  geomMeanpVal <- geomMeanpVal*(attr(pvaltest,"Unadjusted")[names(geomMeanpVal)]);
-  maxPval <- pmax(maxPval,attr(pvaltest,"Unadjusted")[names(geomMeanpVal)]);
-  minPval <- pmin(minPval,attr(pvaltest,"Unadjusted")[names(geomMeanpVal)]);
-  pvallist$LogitBin <- pvaltest;
-  varcount[names(pvaltest)] <- varcount[names(pvaltest)] + 1;
-  rankVar[names(pvaltest)] <- rankVar[names(pvaltest)] + c(1:length(pvaltest));
-  features <- intersect(names(pvaltest),names(allf));
-  both <- pmin(pvaltest[features],allf[features]);
-  allf <- c(pvaltest[!(names(pvaltest) %in% features)],allf[!(names(allf) %in% features)],both);
+  # pvaltest <- univariate_residual(data,Outcome,pvalue=tpvalue,limit=-1,uniTest="Binomial",type="LOGIT",adjustMethod=adjustMethod);
+# #  cat("->Binomial")
+  # geomMeanpVal <- geomMeanpVal*(attr(pvaltest,"Unadjusted")[names(geomMeanpVal)]);
+  # maxPval <- pmax(maxPval,attr(pvaltest,"Unadjusted")[names(geomMeanpVal)]);
+  # minPval <- pmin(minPval,attr(pvaltest,"Unadjusted")[names(geomMeanpVal)]);
+  # pvallist$LogitBin <- pvaltest;
+  # varcount[names(pvaltest)] <- varcount[names(pvaltest)] + 1;
+  # rankVar[names(pvaltest)] <- rankVar[names(pvaltest)] + c(1:length(pvaltest));
+  # features <- intersect(names(pvaltest),names(allf));
+  # both <- pmin(pvaltest[features],allf[features]);
+  # allf <- c(pvaltest[!(names(pvaltest) %in% features)],allf[!(names(allf) %in% features)],both);
 
-	pvaltest <- univariate_residual(data,Outcome,pvalue=tpvalue,limit=-1,uniTest="Wilcox",type="LOGIT",adjustMethod=adjustMethod);
-#cat("->Wilcox")
-	 geomMeanpVal <- geomMeanpVal*(attr(pvaltest,"Unadjusted")[names(geomMeanpVal)]);
-	 maxPval <- pmax(maxPval,attr(pvaltest,"Unadjusted")[names(geomMeanpVal)]);
-	 minPval <- pmin(minPval,attr(pvaltest,"Unadjusted")[names(geomMeanpVal)]);
-	 pvallist$LogitWilcox <- pvaltest;
-	 varcount[names(pvaltest)] <- varcount[names(pvaltest)] + 1;
-	 rankVar[names(pvaltest)] <- rankVar[names(pvaltest)] + c(1:length(pvaltest));
-	 features <- intersect(names(pvaltest),names(allf));
-	 both <- pmin(pvaltest[features],allf[features]);
-	 allf <- c(pvaltest[!(names(pvaltest) %in% features)],allf[!(names(allf) %in% features)],both);
+	# pvaltest <- univariate_residual(data,Outcome,pvalue=tpvalue,limit=-1,uniTest="Wilcox",type="LOGIT",adjustMethod=adjustMethod);
+# #cat("->Wilcox")
+	 # geomMeanpVal <- geomMeanpVal*(attr(pvaltest,"Unadjusted")[names(geomMeanpVal)]);
+	 # maxPval <- pmax(maxPval,attr(pvaltest,"Unadjusted")[names(geomMeanpVal)]);
+	 # minPval <- pmin(minPval,attr(pvaltest,"Unadjusted")[names(geomMeanpVal)]);
+	 # pvallist$LogitWilcox <- pvaltest;
+	 # varcount[names(pvaltest)] <- varcount[names(pvaltest)] + 1;
+	 # rankVar[names(pvaltest)] <- rankVar[names(pvaltest)] + c(1:length(pvaltest));
+	 # features <- intersect(names(pvaltest),names(allf));
+	 # both <- pmin(pvaltest[features],allf[features]);
+	 # allf <- c(pvaltest[!(names(pvaltest) %in% features)],allf[!(names(allf) %in% features)],both);
 
 	pvaltest <- univariate_residual(data,Outcome,pvalue=tpvalue,limit=-1,uniTest="tStudent",type="LOGIT",adjustMethod=adjustMethod);
 #cat("->tstudent")
