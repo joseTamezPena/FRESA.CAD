@@ -134,7 +134,10 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,baseFeatur
                   }
                   else
                   {
-                    betamatrix[feat,models[[vl]]$feature] <- -1.0*models[[vl]]$model$coef[2];
+                    if (!is.na(models[[vl]]$model$coef[2]))
+                    {
+                      betamatrix[feat,models[[vl]]$feature] <- -1.0*models[[vl]]$model$coef[2];
+                    }
                   }
                 }
 #                cat("(",models[[vl]]$feature,":",models[[vl]]$pval,")");

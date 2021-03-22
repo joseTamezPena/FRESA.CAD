@@ -73,21 +73,27 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 					ftmp <- formula(ftm1);
 					mfref <- model.frame(ftmp,cstrataref);
 					mfstrata <- model.frame(ftmp,cstrata);
-					modellm <- lm(ftmp,data=mfref, model = FALSE,na.action=na.exclude)
+					modellm <- try(lm(ftmp,data=mfref, model = FALSE,na.action=na.exclude))
+					model <- modellm;
+					plm <- 1.0;
+					p <- 1.0;
+					if (!inherits(modellm, "try-error"))
+					{	
+						ress2 <- modellm$residuals
+						plm <- .Call("improvedResidualsCpp",ress1,ress2,"Wilcox",0)$p.value
+						model <- modellm;
+						p <- plm;
+						if (isContinous)
+						{
+							plm <- cor.test(datamodel,dtacolumn,method="spearman")$p.value
+						}
+					}
 					modelRLM <- modellm;
-					ress2 <- modellm$residuals
-					plm <- .Call("improvedResidualsCpp",ress1,ress2,"Wilcox",0)$p.value
 #					f <- summary(modellm)$fstatistic
 #					pft <- pf(f[1],f[2],f[3],lower.tail=FALSE);
 #					if (is.na(pft)) pft <- 1.0;
 #					if (is.na(plm)) plm <- 1.0;
 #					plm <- min(plm,0.5*pft)
-					model <- modellm;
-					p <- plm;
-					if (isContinous)
-					{
-						plm <- cor.test(datamodel,dtacolumn,method="spearman")$p.value
-					}
 					switch(type,
     					LOESS =
 						{
