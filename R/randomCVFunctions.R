@@ -17,6 +17,7 @@ correlated_Remove <- function(data= NULL,fnames= NULL,thr=0.999,isDataCorMatrix=
 		
 		if (length(fnames)>1)
 		{
+			corm <- NULL;
 			if (isDataCorMatrix)
 			{
 				corm <- abs(data[,fnames]);
@@ -39,10 +40,10 @@ correlated_Remove <- function(data= NULL,fnames= NULL,thr=0.999,isDataCorMatrix=
 			}
 			attributes(fnames) <- list(removed=fnames[keep == 0]);
 			fnames <- fnames[keep == 1];
+			attr(fnames,"CorrMatrix") <- corm;
 		}
 	}
 #	cat(length(fnames),"\n");
-	attr(fnames,"CorrMatrix") <- corm;
 
 	return (fnames);
 }
