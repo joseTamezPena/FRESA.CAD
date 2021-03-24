@@ -1,4 +1,4 @@
-featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,baseFeatures=NULL,loops=20,thr=0.80,unipvalue=0.05,useWhite=TRUE,...)
+featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,baseFeatures=NULL,loops=20,thr=0.80,unipvalue=0.05,useDeCorr=TRUE,...)
 {
 
   dataids <- rownames(data)
@@ -45,9 +45,9 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,baseFeatur
 #      print(baseFeatures);
   }
   
-  whiteningmatrix <- diag(length(varincluded));
-  colnames(whiteningmatrix) <- varincluded;
-  rownames(whiteningmatrix) <- varincluded;
+  DeCorrmatrix <- diag(length(varincluded));
+  colnames(DeCorrmatrix) <- varincluded;
+  rownames(DeCorrmatrix) <- varincluded;
 
   cormat <- cormat[,varincluded];
   cormat <- cormat[varincluded,];
@@ -130,7 +130,7 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,baseFeatur
                   if (is.null(models[[vl]]$model$coef))
                   {
                     betamatrix[feat,models[[vl]]$feature] <- 1.0;
-                    useWhite <- FALSE;
+                    useDeCorr <- FALSE;
                   }
                   else
                   {
@@ -170,7 +170,7 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,baseFeatur
       addedlist <- length(uncorrelatedFetures) + 1.0*(thr2 > 1.005*thr);
       if (length(uncorrelatedFetures) > 0)
       {
-         whiteningmatrix[,uncorrelatedFetures] <-  whiteningmatrix %*% betamatrix[,uncorrelatedFetures];
+         DeCorrmatrix[,uncorrelatedFetures] <-  DeCorrmatrix %*% betamatrix[,uncorrelatedFetures];
       }
       betamatrix <- NULL;
       if (thr2 > 1.001*thr)
@@ -194,10 +194,10 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,baseFeatur
 
     totuncorrelated <- unique(c(totuncorrelated,uncorrelatedFetures));
   }
-  if (useWhite)
+  if (useDeCorr)
   {
     dataAdjusted <- data
-    dataAdjusted[,varincluded] <- as.matrix(data[,varincluded]) %*% whiteningmatrix;
+    dataAdjusted[,varincluded] <- as.matrix(data[,varincluded]) %*% DeCorrmatrix;
   }
   else
   {
@@ -208,9 +208,9 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,baseFeatur
 #  cat ("\n")
   attr(dataAdjusted,"topFeatures") <- unique(topFeatures);
   attr(dataAdjusted,"TotalAdjustments") <- countf;
-  attr(dataAdjusted,"whiteningmatrix") <- whiteningmatrix;
+  attr(dataAdjusted,"DeCorrmatrix") <- DeCorrmatrix;
   attr(dataAdjusted,"varincluded") <- varincluded;
   attr(dataAdjusted,"baseFeatures") <- baseFeatures;
-  attr(dataAdjusted,"useWhite") <- useWhite;
+  attr(dataAdjusted,"useDeCorr") <- useDeCorr;
   return(dataAdjusted)
 }

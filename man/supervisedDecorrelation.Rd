@@ -48,8 +48,8 @@
 	\item{TotalAdjustments}{
 		The count of how many times was decorrelted
 	}
-	\item{whiteningmatrix}{
-		The whitening matrix for linear models
+	\item{DeCorrmatrix}{
+		The Decorrelation matrix for linear models
 	}
 	\item{varincluded}{
 		The list of variables in the whitening matrix
@@ -57,8 +57,8 @@
 	\item{baseFeatures}{
 		The list of feetures used as base features
 	}
-	\item{useWhite}{
-		If TRUE the whitening matrix was used for decorrelation
+	\item{useDeCorr}{
+		If TRUE the estimated DeCorrmatrix matrix was used for decorrelation
 	}
 }
 
