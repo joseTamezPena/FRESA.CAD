@@ -180,9 +180,9 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,baseFeatur
       if (length(varincluded) > 1000) cat (addedlist,":")
 #       cat (addedlist,":")
 #      cat ("|")
-      if (length(baseFeatures) == 0)
+      if (lp == 1)
       {
-        baseFeatures <- intopfeat;
+        baseFeatures <- unique(c(baseFeatures,intopfeat));
       }
       if (length(varincluded) > 1000) cat("}");
       if (length(varincluded) > 1000) cat("[");
