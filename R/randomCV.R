@@ -266,13 +266,13 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
           }
           else
           {
+            maxfrac <- max(c(trainFraction,0.99));
             if (classSamplingType == "Proportional")
             {
-              sampleTrain <- sample(nrow(ssubsets[[jind]]),as.integer(nrow(ssubsets[[jind]])*trainFraction),replace=BootReplace);
+              sampleTrain <- sample(nrow(ssubsets[[jind]]),as.integer(nrow(ssubsets[[jind]])*maxfrac),replace=BootReplace);
             }
             else
             {
-              maxfrac <- max(c(trainFraction,0.95));
               ssize <- min(c(nrow(ssubsets[[jind]])-1,as.integer(nrow(ssubsets[[jind]])*maxfrac))); # minimum training size
               if (samplePerClass > ssize)
               {
