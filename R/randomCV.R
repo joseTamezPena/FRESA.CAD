@@ -217,6 +217,10 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
     {
       samplePerClass <- as.integer(min(dataTable)*trainFraction);
     }
+    if (classSamplingType == "Augmented")
+    {
+      samplePerClass <- as.integer(max(dataTable)*trainFraction);
+    }
     jind <- 1;
     for (s in theClasses)
     {
@@ -266,14 +270,14 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
           }
           else
           {
-            maxfrac <- max(c(trainFraction,0.99));
+            minfrac <- min(c(trainFraction,0.99));
             if (classSamplingType == "Proportional")
             {
-              sampleTrain <- sample(nrow(ssubsets[[jind]]),as.integer(nrow(ssubsets[[jind]])*maxfrac),replace=BootReplace);
+              sampleTrain <- sample(nrow(ssubsets[[jind]]),as.integer(nrow(ssubsets[[jind]])*minfrac),replace=BootReplace);
             }
             else
             {
-              ssize <- min(c(nrow(ssubsets[[jind]])-1,as.integer(nrow(ssubsets[[jind]])*maxfrac))); # minimum training size
+              ssize <- nrow(ssubsets[[jind]])*minfrac;
               if (samplePerClass > ssize)
               {
                 sampleTrain <- sample(nrow(ssubsets[[jind]]),ssize,replace=BootReplace);
@@ -444,6 +448,7 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
         {
           fnames <- colnames(trainSet)[fnames];
           nlevel = 1.0*addNoise;
+          nlthr <- min(nlevel/3,0.5);
           sdg <- apply(trainSet[,fnames],2,sd,na.rm = TRUE);
           iqrg <- apply(trainSet[,fnames],2,IQR,na.rm = TRUE)/(2*abs(qnorm(0.25)));
           iqrg[iqrg == 0] <- sdg[iqrg == 0];
@@ -461,7 +466,7 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
               indx <- 1:length(tb);
               names(indx) <- tbnames;
               ralea <- runif(length(dto));
-              nidx <- indx[as.character(dto)] + 1.0*(ralea > (1.0 - nlevel/2)) - 1.0*(ralea < (nlevel/2));
+              nidx <- indx[as.character(dto)] + 1.0*(ralea > (1.0 - nlthr)) - 1.0*(ralea < nlthr);
               nidx[nidx < 1] <- 1;
               nidx[nidx > length(tb)] <- length(tb);
               dto <- 0.5*(dto + as.numeric(names(tb[nidx])));
