@@ -69,8 +69,8 @@ correlated_RemoveToLimit <- function(data,unitPvalues,limit=0,thr=0.975,maxLoops
 			{
 				pvalmin <- min(unitPvalues)
 				pvalatlimin <- unitPvalues[order(unitPvalues)][slimit]
-				maxpvalue <- max(100*pvalmin,10*pvalatlimin);
-				unitPvalues <- unitPvalues[unitPvalues < maxpvalue];
+				maxpvalue <- max(c(1000*pvalmin,100*pvalatlimin,1.0e-9));
+				unitPvalues <- unitPvalues[unitPvalues <= maxpvalue];
 				cormat <- correlated_Remove(data,names(unitPvalues),cthr)
 				unitPvalues <- unitPvalues[cormat];
 				cormat <- attr(cormat,"CorrMatrix");
