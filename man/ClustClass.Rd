@@ -7,13 +7,15 @@
 \usage{
 	ClustClass(formula = formula,
 	            data=NULL,
-	            filtermethod=univariate_Wilcoxon,
+	            filtermethod=univariate_KS,
 	            clustermethod=GMVECluster,
 	            classmethod=LASSO_1SE,
-	            filtermethod.control=list(pvalue=0.1,limit=10),
+	            filtermethod.control=list(pvalue=0.1,limit=20),
 	            clustermethod.control= list(p.threshold = 0.95, 
 	                                   p.samplingthreshold = 0.5),
-	            classmethod.control=list(family = "binomial")
+	            classmethod.control=list(family = "binomial"),
+	            pca=TRUE,
+	            normalize=TRUE
 	            )
 
 }
@@ -41,6 +43,12 @@
 	}
 	\item{classmethod.control}{
 		A list with the parameters to be passed to the classification function
+	}
+	\item{pca}{
+		if TRUE it will compute the PCA transform
+	}
+	\item{normalize}{
+		if pca=TRUE and normalize=TRUE it will normalize all the data.
 	}
 }
 \details{

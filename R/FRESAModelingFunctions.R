@@ -1297,7 +1297,7 @@ predict.FRESA_FILTERFIT <- function(object,...)
 	return (pLS);
 }
 
-ClustClass <- function(formula = formula, data=NULL, filtermethod=univariate_Wilcoxon, clustermethod=GMVECluster, classmethod=LASSO_1SE,filtermethod.control=list(pvalue=0.1,limit=10),clustermethod.control=list(p.threshold = 0.95,p.samplingthreshold = 0.5),classmethod.control=list(family = "binomial"))
+ClustClass <- function(formula = formula, data=NULL, filtermethod=univariate_KS, clustermethod=GMVECluster, classmethod=LASSO_1SE,filtermethod.control=list(pvalue=0.1,limit=20),clustermethod.control=list(p.threshold = 0.95,p.samplingthreshold = 0.5),classmethod.control=list(family = "binomial"),pca=TRUE,normalize=TRUE)
 {
 	if (class(formula) == "character")
 	{
@@ -1313,7 +1313,7 @@ ClustClass <- function(formula = formula, data=NULL, filtermethod=univariate_Wil
 
 	outcomedata <- data[,Outcome];
 	totsamples <- nrow(data);
-	minSamples <- max(5,0.05*totsamples);
+	minSamples <- max(5,0.025*totsamples);
 	clus <- NULL
 	fm <- NULL
 	
@@ -1325,25 +1325,48 @@ ClustClass <- function(formula = formula, data=NULL, filtermethod=univariate_Wil
 	{
 		fm <- do.call(filtermethod,c(list(data,Outcome),filtermethod.control));
 	}
+	selectedfeatures <- names(fm);
+	datapca <- as.data.frame(data[,selectedfeatures]);
+	pcaobj <- NULL;
+	scaleparm <- NULL;
+	if (pca && ((nrow(datapca) > 2*ncol(datapca)) && (ncol(datapca) > 3)))
+	{
+		rank. = max(3,as.integer(length(selectedfeatures)/3+0.5));
+		rank. = min(rank.,length(selectedfeatures))
+		if (normalize)
+		{
+			scaleparm <- FRESAScale(datapca,method="OrderLogit");
+			pcaobj <- prcomp(scaleparm$scaledData,center = FALSE,rank.=rank. );
+			scaleparm$scaledData <- NULL
+		}
+		else
+		{
+			pcaobj <- prcomp(datapca,center = TRUE,rank.=rank.);
+		}
+		datapca <- as.data.frame(pcaobj$x);
+	}
+
 	if (is.null(clustermethod.control))
 	{
-		clus <- clustermethod(data[,names(fm)]);
+		clus <- clustermethod(datapca);
 	}
 	else
 	{
-		clus <- do.call(clustermethod,c(list(data[,names(fm)]),clustermethod.control));
+		clus <- do.call(clustermethod,c(list(datapca),clustermethod.control));
 	}
-	selectedfeatures <- names(fm);
 #	print(selectedfeatures)
 	tb <- table(clus$classification);
 	classlabels <- as.numeric(names(tb));
 	models <- list();
-	data <- data[,c(Outcome,selectedfeatures)];
+#	data <- data[,c(Outcome,selectedfeatures)];
+	allfeatures <- selectedfeatures;
 	if (length(classlabels) > 1)
 	{
 			tb <- table(clus$classification,outcomedata);
+#			print(tb)
 			for (i	in 1:nrow(tb))
 			{
+#				cat(i,":")
 				if (min(tb[i,]) > minSamples)
 				{
 					if (is.null(classmethod.control))
@@ -1354,11 +1377,13 @@ ClustClass <- function(formula = formula, data=NULL, filtermethod=univariate_Wil
 					{
 						models[[i]] <- do.call(classmethod,c(list(formula,subset(data,clus$classification == classlabels[i])),classmethod.control));
 					}
+					allfeatures <- c(allfeatures,models[[i]]$selectedFeatures);
 				}
 				else
 				{
 					models[[i]] <- as.numeric(colnames(tb)[which.max(tb[i,])]);
 				}
+#				cat(tb[i,],"<")
 			}
 	}
 	else
@@ -1371,9 +1396,10 @@ ClustClass <- function(formula = formula, data=NULL, filtermethod=univariate_Wil
 		{
 			models[[1]] <- do.call(classmethod,c(list(formula,data),classmethod.control));
 		}
+		allfeatures <- c(allfeatures,models[[1]]$selectedFeatures);
 	}
-	result <- list(features = fm,cluster = clus,models = models);
-	result$selectedfeatures <- selectedfeatures;
+	result <- list(features = selectedfeatures,cluster = clus,models = models,pcaobj = pcaobj,scaleparm=scaleparm );
+	result$selectedfeatures <- allfeatures;
 
 	class(result) <- "CLUSTER_CLASS"
 	return(result);
@@ -1383,13 +1409,22 @@ predict.CLUSTER_CLASS <- function(object,...)
 {
 	parameters <- list(...);
 	testData <- parameters[[1]];
-	pLS <- predict(object$cluster,testData[,names(object$features)])$classification;
+	pcaData <- testData[,object$features];
+	if (!is.null(object$pcaobj))
+	{
+		if (!is.null(object$scaleparm))
+		{
+			pcaData <- FRESAScale(pcaData,method=object$scaleparm$method,refMean=object$scaleparm$refMean,refDisp=object$scaleparm$refDisp)$scaledData;
+		}
+		pcaData <- as.data.frame(predict(object$pcaobj,pcaData));
+	}
+	pLS <- predict(object$cluster,pcaData)$classification;
 	tb <- table(pLS);
 	index <- as.numeric(names(tb));
 	for (i in 1:nrow(tb))
 	{
 		predeictset <- (pLS == index[i]);
-		if (class(object$models[[index[i]]]) == "numeric")
+		if (class(object$models[[index[i]]])[1] == "numeric")
 		{
 			pLS[predeictset] <- object$models[[index[i]]];
 		}
