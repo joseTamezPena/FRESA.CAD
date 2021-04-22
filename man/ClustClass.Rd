@@ -10,7 +10,7 @@
 	            filtermethod=univariate_KS,
 	            clustermethod=GMVECluster,
 	            classmethod=LASSO_1SE,
-	            filtermethod.control=list(pvalue=0.1,limit=20),
+	            filtermethod.control=list(pvalue=0.1,limit=21),
 	            clustermethod.control= list(p.threshold = 0.95, 
 	                                   p.samplingthreshold = 0.5),
 	            classmethod.control=list(family = "binomial"),

@@ -1297,7 +1297,7 @@ predict.FRESA_FILTERFIT <- function(object,...)
 	return (pLS);
 }
 
-ClustClass <- function(formula = formula, data=NULL, filtermethod=univariate_KS, clustermethod=GMVECluster, classmethod=LASSO_1SE,filtermethod.control=list(pvalue=0.1,limit=20),clustermethod.control=list(p.threshold = 0.95,p.samplingthreshold = 0.5),classmethod.control=list(family = "binomial"),pca=TRUE,normalize=TRUE)
+ClustClass <- function(formula = formula, data=NULL, filtermethod=univariate_KS, clustermethod=GMVECluster, classmethod=LASSO_1SE,filtermethod.control=list(pvalue=0.1,limit=21),clustermethod.control=list(p.threshold = 0.95,p.samplingthreshold = 0.5),classmethod.control=list(family = "binomial"),pca=TRUE,normalize=TRUE)
 {
 	if (class(formula) == "character")
 	{
