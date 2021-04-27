@@ -584,7 +584,7 @@ NumberofRepeats=1)
 		}
 		bagg <- baggedModel(formula.list,data,type,univariate=unirank,useFreq=FALSE,equifreqCorrection=equiMaxFreq,n_bootstrap=1);
 	}
-	selectedfeatures <- NULL;
+	selectedfeatures <- names(firstModel$at.opt.model$coefficients)[-1];
 	if (!is.null(bagg))
 	{
 		selectedfeatures <- names(bagg$frequencyTable);

@@ -1467,16 +1467,16 @@ GMVEBSWiMS <- function(formula = formula, data=NULL, GMVE.control = list(p.thres
 #	cat(error)
 
 	models <- list();
-	selectedfeatures <- names(baseClass$bagging$frequencyTable);
+	selectedfeatures <- baseClass$selectedfeatures;
 #	print(selectedfeatures);
-	fm <- selectedfeatures
+	fm <- names(baseClass$BSWiMS.model$at.opt.model$coefficients)[-1]
 #			print(fm)
 	if (length(fm) > 0)
 	{		
 		if (error > 0.025) # more than 2.5% of error
 		{
-			fm <- unique(fm,names(univariate_Wilcoxon(data,Outcome,pvalue=0.05,limit=10)));
-			selectedfeatures <- fm;
+			fm <- unique(fm,names(univariate_KS(data,Outcome,pvalue=0.05,limit=10,thr=0.8)));
+			selectedfeatures <- unique(fm,selectedfeatures);
 #			print(selectedfeatures);
 			if (is.null(GMVE.control))
 			{
