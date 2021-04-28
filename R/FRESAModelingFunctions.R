@@ -354,7 +354,7 @@ BESS <- function(formula = formula, data=NULL, method="sequential", ic.type="BIC
 		y <- as.numeric(unlist(data[featuresOnSurvivalObject[[1]][2]]))
 		baseformula <- gsub(featuresOnSurvivalObject[[1]][1],"x",baseformula)
 		baseformula <- gsub(featuresOnSurvivalObject[[1]][2],"y",baseformula)
-		result <- list(fit=BeSS::bess(as.matrix(data[,usedFeatures]), survival::Surv(x, y), method=method, family = "cox",ic.type=ic.type,...),formula = formula,usedFeatures=usedFeatures);
+		result <- list(fit=BeSS::bess(as.matrix(data[,usedFeatures]), survival::Surv(x, y), method=method, family = "cox",...),formula = formula,usedFeatures=usedFeatures);
 		bessCoefficients <- result$fit$bestmodel$coefficients
 	}
 	else
@@ -363,11 +363,11 @@ BESS <- function(formula = formula, data=NULL, method="sequential", ic.type="BIC
 		if (length(tb)>2)
 		{
 #			result <- list(fit=BeSS::bess(as.matrix(data[,usedFeatures]),as.vector(data[,baseformula[2]]), method=method, family = "gaussian", epsilon = 1e-12,...),ic.type=ic.type,formula = formula,usedFeatures=usedFeatures);
-			result <- list(fit=BeSS::bess(as.matrix(data[,usedFeatures]),as.vector(data[,baseformula[2]]), method=method, family = "gaussian",...),ic.type=ic.type,formula = formula,usedFeatures=usedFeatures);
+			result <- list(fit=BeSS::bess(as.matrix(data[,usedFeatures]),as.vector(data[,baseformula[2]]), method=method, family = "gaussian",...),formula = formula,usedFeatures=usedFeatures);
 		}
 		else
 		{
-			result <- list(fit=BeSS::bess(as.matrix(data[,usedFeatures]),as.vector(data[,baseformula[2]]), method=method, family = "binomial",...),ic.type=ic.type, formula = formula,usedFeatures=usedFeatures);
+			result <- list(fit=BeSS::bess(as.matrix(data[,usedFeatures]),as.vector(data[,baseformula[2]]), method=method, family = "binomial",...), formula = formula,usedFeatures=usedFeatures);
 
 		}
 		bessCoefficients <- result$fit$bestmodel$coefficients[-1];
@@ -388,7 +388,7 @@ BESS_GSECTION <- function(formula = formula, data=NULL, method="gsection", ic.ty
 	return(result);
 }
 
-BESS_GIC <- function(formula = formula, data=NULL, ic.type="GIC",...)
+BESS_EBIC <- function(formula = formula, data=NULL, ic.type="EBIC",...)
 {
 	result <- BESS(formula = formula, data = data, ic.type=ic.type,...);
 	return(result);
@@ -422,7 +422,7 @@ predict.FRESA_BESS <- function(object,...)
 	{
 		if (object$fit$method == "gsection")
 		{
-			pLS <- predict(object$fit,testData,type="response");
+			pLS <- predict(object$fit,testData,type="opt");
 		}
 		else
 		{
