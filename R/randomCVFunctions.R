@@ -511,7 +511,7 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
 
   if (limitmrmr < 2 ) limitmrmr = 2;
 
-  mRMRf <- mRMR.classic_FRESA(data,Outcome,feature_count = limitmrmr)
+  mRMRf <- mRMR.classic_FRESA(data[,c(Outcome,names(geomMeanpVal[geomMeanpVal<0.05]))],Outcome,feature_count = limitmrmr)
 #  cat("->mRMRf")
    
   mRMRf <- mRMRf[mRMRf > 0];

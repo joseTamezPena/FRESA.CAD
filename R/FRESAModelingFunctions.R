@@ -617,12 +617,11 @@ HLCM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis = 0
 	{
 		formula <- formula(formula);
 	}
-	varlist <- attr(terms(formula,data=data),"variables")
-	dependent <- as.character(varlist[[2]])
+	dependent <- all.vars(formula)
 	Outcome = dependent[1];
 	if (length(dependent) == 3)
 	{
-		Outcome = dependent[3];
+		Outcome = dependent[2];
 	}
 
 
@@ -775,12 +774,11 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 	{
 		formula <- formula(formula);
 	}
-	varlist <- attr(terms(formula,data=data),"variables")
-	dependent <- as.character(varlist[[2]])
+	dependent <- all.vars(formula)
 	Outcome = dependent[1];
 	if (length(dependent) == 3)
 	{
-		Outcome = dependent[3];
+		Outcome = dependent[2];
 	}
 
 	errorfreq <- numeric();
@@ -1186,23 +1184,17 @@ filteredFit <- function(formula = formula, data=NULL, filtermethod=univariate_Wi
 	{
 		formula <- formula(formula);
 	}
-	varlist <- attr(terms(formula,data=data),"variables")
-	dependent <- as.character(varlist[[2]])
+	dependent <- all.vars(formula)
 	Outcome = dependent[1];
 	if (length(dependent) == 3)
 	{
-		Outcome = dependent[3];
+		Outcome = dependent[2];
 	}
 	fm <- colnames(data)
 	fm <- fm[!(fm %in% dependent)]
 
 	scaleparm <- NULL;
-	if (Scale != "none")
-	{
-		scaleparm <- FRESAScale(data[,fm],method=Scale);
-		data[,fm] <- scaleparm$scaledData;
-		scaleparm$scaledData <- NULL;
-	}
+#	cat ("Here 1")
 	
 	if (is.null(filtermethod.control))
 	{
@@ -1212,8 +1204,19 @@ filteredFit <- function(formula = formula, data=NULL, filtermethod=univariate_Wi
 	{
 		fm <- do.call(filtermethod,c(list(data,Outcome),filtermethod.control));
 	}
-	usedFeatures <-  c(Outcome,names(fm));
+	filtout <- fm;
+#	cat ("Here 2")
+	fm <- names(fm)
+	usedFeatures <-  c(Outcome,fm);
 	data <- data[,usedFeatures]
+	if (Scale != "none")
+	{
+		scaleparm <- FRESAScale(data[,fm],method=Scale);
+		data[,fm] <- scaleparm$scaledData;
+		scaleparm$scaledData <- NULL;
+	}
+#	cat ("Here 3")
+	
 	pcaobj <- NULL;
 #	boxplot(data[,names(fm)])
 
@@ -1247,12 +1250,13 @@ filteredFit <- function(formula = formula, data=NULL, filtermethod=univariate_Wi
 			}
 		}
 	}
+#	cat ("Here 4:",ncol(data),"\n")
 	
 	fit <- try(fitmethod(formula,data,...));
 	parameters <- list(...);
 	result <- list(fit=fit,
-					filter=fm,
-					selectedfeatures = names(fm),
+					filter=filtout,
+					selectedfeatures = fm,
 					usedFeatures = usedFeatures,
 					parameters=parameters,
 					asFactor=(class(data[,Outcome])=="factor"),
@@ -1303,12 +1307,11 @@ ClustClass <- function(formula = formula, data=NULL, filtermethod=univariate_KS,
 	{
 		formula <- formula(formula);
 	}
-	varlist <- attr(terms(formula,data=data),"variables")
-	dependent <- as.character(varlist[[2]])
+	dependent <- all.vars(formula)
 	Outcome = dependent[1];
 	if (length(dependent) == 3)
 	{
-		Outcome = dependent[3];
+		Outcome = dependent[2];
 	}
 
 	outcomedata <- data[,Outcome];

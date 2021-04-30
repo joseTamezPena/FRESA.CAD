@@ -8,6 +8,7 @@ Changes from FRESA.CAD 3.1.1 to FRESA.CAD version 3.3.1
 		Longitudinal Features: trajectoriesPolyFeatures
 		Train prediction Wrappers for: BeSS and glmnet objects
 	    featureDecorrelation for the estimation of an outcome-steered decorrelated dataframe
+		filteredFit with normalization and PCA
 	Bugs:
 	-Try added to prediction, to avoid crashing errors.
 	Minor Changes:

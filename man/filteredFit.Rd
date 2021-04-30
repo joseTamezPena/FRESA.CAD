@@ -2,7 +2,7 @@
 \alias{filteredFit}
 \title{A generic fit method with a filtered step for feature selection}
 \description{
-	Sequential application of feature selection method followed by a fitting algorithm
+	Sequential application of feature selection method followed by optional scaling, PCA then fitting algorithm
 }
 \usage{	
     filteredFit(formula = formula, 
