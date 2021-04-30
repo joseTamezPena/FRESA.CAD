@@ -214,3 +214,18 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,baseFeatur
   attr(dataAdjusted,"useDeCorr") <- useDeCorr;
   return(dataAdjusted)
 }
+
+predictDecorrelate <- function(decorrelatedobject,testData)
+{
+  if (attr(decorrelatedobject,"useDeCorr"))
+  {
+    decorMat <- attr(decorrelatedobject,"DeCorrmatrix")
+    testData[,colnames(decorMat)] <- as.matrix(testData[,colnames(decorMat)]) %*% decorMat
+  }
+  else
+  {
+    warning("The object does not have a decorrelation Matrix\n")
+  }
+  return (testData)
+}
+

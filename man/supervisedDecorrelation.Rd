@@ -1,11 +1,13 @@
 \name{featureDecorrelation}
 \alias{featureDecorrelation}
+\alias{predictDecorrelate}
 \title{Supervised decorrelation of dataframe features}
 \description{
 	All features significatly associated to the outcome will be decorrelated
 }
 \usage{
 	featureDecorrelation(data=NULL,refdata=NULL,Outcome=NULL,loops=20,thr=0.80,unipvalue=0.05,useWhite=TRUE,...)
+	predictDecorrelate(decorrelatedobject,testData)
 }
 \arguments{
 	\item{data}{
@@ -31,6 +33,12 @@
 	}
 	\item{...}{
 	parameters passed to the adjuting method.
+	}
+	\item{decorrelatedobject}{
+	The dataframe created by the featureDecorrelation function
+	}
+	\item{testData}{
+	Test data to decorrelate
 	}
 }
 
