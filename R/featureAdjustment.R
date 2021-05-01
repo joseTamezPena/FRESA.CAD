@@ -223,7 +223,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 						{ 
 							if ((plm < pvalue) && isContinous)
 							{
-								model <- try(MASS::rlm(ftmp,data=mfref,na.action=na.exclude, model = FALSE,method = "MM"), silent=TRUE)
+								model <- try(MASS::rlm(ftmp,data=mfref,na.action=na.exclude, model = FALSE,x.ret = FALSE,method = "MM"), silent=TRUE)
 								if (!inherits(model, "try-error"))
 								{								
 									ress <- predict(model,mfref)-dtacolumn;
