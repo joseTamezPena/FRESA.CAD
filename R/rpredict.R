@@ -72,7 +72,7 @@ rpredict <-	function(currentModel,DataSet,asFactor=FALSE,classLen=2,...)
 		{
 			pred <- as.numeric(as.character(pred));
 		}
-		if (class(pred) == "array")
+		if (class(pred)[1] == "array")
 		{
 			pnames <- colnames(pred);
 			pred <- pnames[apply(pred[,,1],1,which.max)];

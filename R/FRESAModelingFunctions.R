@@ -1218,20 +1218,19 @@ filteredFit <- function(formula = formula, data=NULL, filtermethod=univariate_Wi
 #	cat ("Here 3")
 	
 	pcaobj <- NULL;
-#	boxplot(data[,names(fm)])
 
 
 	binOutcome <- length(table(data[,Outcome])) == 2
 	isFactor <- class(data[,Outcome]) == "factor"
-	if (PCA && (length(names(fm)) > 1))
+	if (PCA && (length(fm) > 1))
 	{
 		if (binOutcome)
 		{
 			controlSet <- subset(data,get(Outcome) == 0)
 			if ((nrow(controlSet) > 2*length(usedFeatures)))
 			{
-				pcaobj <- prcomp(controlSet[,names(fm)],center = (Scale == "none"), scale.= (Scale == "none"));
-				data <- as.data.frame(cbind(data[,Outcome],as.data.frame(predict(pcaobj,data[,names(fm)]))));
+				pcaobj <- prcomp(controlSet[,fm],center = (Scale == "none"), scale.= (Scale == "none"));
+				data <- as.data.frame(cbind(data[,Outcome],as.data.frame(predict(pcaobj,data[,fm]))));
 				colnames(data) <- c(Outcome,colnames(pcaobj$x));
 				if (isFactor)
 				{
@@ -1241,7 +1240,7 @@ filteredFit <- function(formula = formula, data=NULL, filtermethod=univariate_Wi
 		}
 		else
 		{
-			pcaobj <- prcomp(data[,names(fm)],center = (Scale == "none"), scale.= (Scale == "none"));
+			pcaobj <- prcomp(data[,fm],center = (Scale == "none"), scale.= (Scale == "none"));
 			data <- as.data.frame(cbind(data[,Outcome],as.data.frame(pcaobj$x)));
 			colnames(data) <- c(Outcome,colnames(pcaobj$x));
 			if (isFactor)
@@ -1278,6 +1277,7 @@ predict.FRESA_FILTERFIT <- function(object,...)
 {
 	parameters <- list(...);
 	testData <- parameters[[1]];
+	testData <- testData[,object$usedFeatures]
 	if (!is.null(object$Scale))
 	{
 		testData <- FRESAScale(testData,
@@ -1285,11 +1285,12 @@ predict.FRESA_FILTERFIT <- function(object,...)
 		refMean=object$scaleparm$refMean,
 		refDisp=object$scaleparm$refDisp)$scaledData;
 	}
-	testData <- testData[,object$usedFeatures]
 #	boxplot(testData[,object$selectedfeatures])
 	if (!is.null(object$pcaobj))
 	{
-		testData <- as.data.frame(cbind(testData[,object$usedFeatures[1]],predict(object$pcaobj,testData[,object$selectedfeatures])));
+		pcapred <- predict(object$pcaobj,testData[,object$selectedfeatures]);
+		testData <- as.data.frame(cbind(testData[,object$usedFeatures[1]],pcapred));
+		colnames(testData) <-  c(object$usedFeatures[1],colnames(pcapred));
 	}
 	
 	probability <- FALSE;
