@@ -35,7 +35,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 	idx <- 1; 
 	tbbaseModel <- NULL;
 	AdjustedFrame <- NULL;
-	isContinous <- TRUE
+	isContinous <- FALSE;
 	datamodel <- NULL;
 	for (sta in minStrata:maxStrata)
 	{
