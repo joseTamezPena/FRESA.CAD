@@ -502,16 +502,21 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
   limitmrmr = length(allf) + 1;
   if ((limit > 0) && (limit < 1.0))
   {
-	limitmrmr = min(length(allf),limit*nrow(data));
+	limitmrmr = min(length(allf),limit*(ncol(data)-1));
   } 
   else if (limit > 2)
   {
-	limitmrmr = min(nrow(data),limit);
+	limitmrmr = min((ncol(data)-1),limit);
   }
 
   if (limitmrmr < 2 ) limitmrmr = 2;
-
-  mRMRf <- mRMR.classic_FRESA(data[,c(Outcome,names(geomMeanpVal[geomMeanpVal<0.05]))],Outcome,feature_count = limitmrmr)
+  
+  selfeat <- names(geomMeanpVal[geomMeanpVal<0.1]);
+  if (length(selfeat) <= limitmrmr)
+  {
+  	selfeat <- names(geomMeanpVal[order(geomMeanpVal)])[1:min(limitmrmr+1,(ncol(data)-1))];
+  }
+  mRMRf <- mRMR.classic_FRESA(data[,c(Outcome,selfeat)],Outcome,feature_count = limitmrmr)
 #  cat("->mRMRf")
    
   mRMRf <- mRMRf[mRMRf > 0];
