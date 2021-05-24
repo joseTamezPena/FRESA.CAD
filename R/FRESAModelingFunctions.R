@@ -537,7 +537,9 @@ predict.FRESA_NAIVEBAYES <- function(object,...)
 	}
 	else
 	{
-		testData <- as.data.frame(testData[,!(colnames(testData) %in% object$outcome)]);
+		usedcolumns <- colnames(testData)[!(colnames(testData) %in% object$outcome)];
+		testData <- as.data.frame(as.matrix(testData[,usedcolumns]));
+		colnames(testData) <- usedcolumns;
 	}
 	pLS <- as.numeric(as.character(predict(object$fit,testData)));
 	if (is.null(parameters$probability))
