@@ -1283,9 +1283,9 @@ predict.FRESA_FILTERFIT <- function(object,...)
 	if (!is.null(object$Scale))
 	{
 		testData <- FRESAScale(testData,
-		method=object$scaleparm$method,
-		refMean=object$scaleparm$refMean,
-		refDisp=object$scaleparm$refDisp)$scaledData;
+		method=object$Scale$method,
+		refMean=object$Scale$refMean,
+		refDisp=object$Scale$refDisp)$scaledData;
 	}
 #	boxplot(testData[,object$selectedfeatures])
 	if (!is.null(object$pcaobj))
