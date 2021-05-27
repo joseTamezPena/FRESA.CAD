@@ -505,10 +505,15 @@ if (!requireNamespace("naivebayes", quietly = TRUE)) {
 	if (length(list(...)) == 0)
 	{
 #		print(colnames(data))
-		result <- list(fit = naivebayes::naive_bayes(formula,data,
+        fit = try (naivebayes::naive_bayes(formula,data,
 		laplace = 0.001,
 		usekernel = TRUE,
-		bw="SJ",adjust=1.25),
+		bw="SJ",adjust=1.25))
+		if (inherits(fit, "try-error"))
+		{
+	        fit = naivebayes::naive_bayes(formula,data);
+		}
+		result <- list(fit = fit,
 		pcaobj=pcaobj,
 		outcome=baseformula[2],
 		scaleparm=scaleparm,

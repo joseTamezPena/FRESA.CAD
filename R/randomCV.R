@@ -328,10 +328,19 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
                 indx <- 1:length(tb);
                 names(indx) <- tbnames;
                 ralea <- runif(length(dto));
-                nidx <- indx[as.character(dto)] + 1.0*(ralea > 0.60) - 1.0*(ralea < 0.40);
+                peturblen <- min(1,as.integer(0.05*length(tb)+0.5));
+                nidx <- indx[as.character(dto)] + peturblen*(ralea > 0.60) - peturblen*(ralea < 0.40);
                 nidx[nidx < 1] <- 1;
                 nidx[nidx > length(tb)] <- length(tb);
                 tobePerturbed[,nf] <- 0.5*(dto + as.numeric(names(tb[nidx])));
+              }
+              else
+              {
+                peturblen <- as.integer(0.05*length(dto))
+                ralea <- runif(length(dto));
+                nidx <- length(dto) + 1:length(dto) + peturblen*(ralea > 0.9) - peturblen*(ralea < 0.1);
+                nidx <- 1 + nidx %% length(dto);
+                tobePerturbed[,nf] <- dto[nidx];
               }
             }
           }
@@ -466,12 +475,22 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
               indx <- 1:length(tb);
               names(indx) <- tbnames;
               ralea <- runif(length(dto));
-              nidx <- indx[as.character(dto)] + 1.0*(ralea > (1.0 - nlthr)) - 1.0*(ralea < nlthr);
+              peturblen <- min(1,as.integer(addNoise*0.05*length(tb)+0.5))
+
+              nidx <- indx[as.character(dto)] + peturblen*(ralea > (1.0 - nlthr)) - peturblen*(ralea < nlthr);
               nidx[nidx < 1] <- 1;
               nidx[nidx > length(tb)] <- length(tb);
               dto <- 0.5*(dto + as.numeric(names(tb[nidx])));
 
               trainSet[,nf] <- dto + nlevel*noise;
+            }
+            else
+            {
+              peturblen <- as.integer(addNoise*0.05*length(dto))
+              ralea <- runif(length(dto));
+              nidx <- length(dto) + 1:length(dto) + peturblen*(ralea > (1.0 - nlthr/10)) - peturblen*(ralea < nlthr/10);
+              nidx <- 1 + nidx %% length(dto);
+              trainSet[,nf] <- dto[nidx];
             }
           }
          }
