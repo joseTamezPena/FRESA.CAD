@@ -310,8 +310,8 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
         samdup <- duplicated(sampleTrain)
         if (sum(samdup) > 0 )
         {
-          dupIDS <- paste(rownames(ssubsets[[jind]])[sampleTrain[samdup]],"D",sep="");
-          tobePerturbed <- as.data.frame(ssubsets[[jind]][sampleTrain[!samdup],])
+          noPerturbedTrain <- ssubsets[[jind]][sampleTrain[!samdup],];
+          tobePerturbed <- as.data.frame(ssubsets[[jind]][sampleTrain[samdup],])
           rownames(tobePerturbed) <- paste(rownames(tobePerturbed),"D",sep="");
           fnames <- !(colnames(ssubsets[[jind]]) %in% c(varsmod));
           cols <- sum(fnames);
@@ -321,7 +321,7 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
             for (nf in fnames)
             {
               dto <- tobePerturbed[,nf]
-              tb <- table(dto)
+              tb <- table(noPerturbedTrain[,nf])
               if (length(tb) > 5)
               {
                 tbnames <- names(tb);
@@ -329,22 +329,19 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
                 names(indx) <- tbnames;
                 ralea <- runif(length(dto));
                 peturblen <- min(1,as.integer(0.05*length(tb)+0.5));
-                nidx <- indx[as.character(dto)] + peturblen*(ralea > 0.60) - peturblen*(ralea < 0.40);
+                nidx <- indx[as.character(dto)] + floor(2.0*peturblen*(ralea - 0.5) + 0.5);
                 nidx[nidx < 1] <- 1;
                 nidx[nidx > length(tb)] <- length(tb);
                 tobePerturbed[,nf] <- 0.5*(dto + as.numeric(names(tb[nidx])));
               }
               else
               {
-                peturblen <- as.integer(0.05*length(dto))
-                ralea <- runif(length(dto));
-                nidx <- length(dto) + 1:length(dto) + peturblen*(ralea > 0.9) - peturblen*(ralea < 0.1);
-                nidx <- 1 + nidx %% length(dto);
-                tobePerturbed[,nf] <- dto[nidx];
+                tobechanged <- (runif(length(dto)) < 0.1);
+                tobePerturbed[tobechanged,nf] <- noPerturbedTrain[sample(nrow(noPerturbedTrain),sum(tobechanged)),nf];
               }
             }
           }
-          trainSet <- rbind(trainSet,ssubsets[[jind]][sampleTrain[!samdup],],tobePerturbed[dupIDS,]);
+          trainSet <- rbind(trainSet,noPerturbedTrain,tobePerturbed);
         }
         else
         {
@@ -475,9 +472,9 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
               indx <- 1:length(tb);
               names(indx) <- tbnames;
               ralea <- runif(length(dto));
-              peturblen <- min(1,as.integer(addNoise*0.05*length(tb)+0.5))
+              peturblen <- min(1,as.integer(nlevel*0.05*length(tb) + 0.5))
 
-              nidx <- indx[as.character(dto)] + peturblen*(ralea > (1.0 - nlthr)) - peturblen*(ralea < nlthr);
+              nidx <- indx[as.character(dto)] + floor(2.0*peturblen*(ralea - 0.5) + 0.5);
               nidx[nidx < 1] <- 1;
               nidx[nidx > length(tb)] <- length(tb);
               dto <- 0.5*(dto + as.numeric(names(tb[nidx])));
@@ -486,11 +483,8 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
             }
             else
             {
-              peturblen <- as.integer(addNoise*0.05*length(dto))
-              ralea <- runif(length(dto));
-              nidx <- length(dto) + 1:length(dto) + peturblen*(ralea > (1.0 - nlthr/10)) - peturblen*(ralea < nlthr/10);
-              nidx <- 1 + nidx %% length(dto);
-              trainSet[,nf] <- dto[nidx];
+              tobechanged <- (runif(length(dto)) < nlthr/5.0);
+              trainSet[tobechanged,nf] <- dto[sample(length(dto),sum(tobechanged))];
             }
           }
          }
