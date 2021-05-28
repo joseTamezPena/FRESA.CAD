@@ -322,23 +322,33 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
             {
               dto <- tobePerturbed[,nf]
               tb <- table(noPerturbedTrain[,nf])
+              
               if (length(tb) > 5)
               {
+#                if (nf == fnames[3])
+#                {
+#                  hist(noPerturbedTrain[,nf])
+#                  hist(tobePerturbed[,nf])
+#               }
                 tbnames <- names(tb);
                 indx <- 1:length(tb);
                 names(indx) <- tbnames;
                 ralea <- runif(length(dto),-1.0,1.0);
-                peturblen <- min(1,0.05*length(tb));
+                peturblen <- min(1,0.025*length(tb));
                 nidx <- indx[as.character(dto)] + floor(peturblen*ralea + 0.5);
                 nidx[nidx < 1] <- 1;
                 nidx[nidx > length(tb)] <- length(tb);
                 tobePerturbed[,nf] <- 0.5*(dto + as.numeric(names(tb[nidx])));
+#                if (nf == fnames[3])
+#                {
+#                  hist(tobePerturbed[,nf])
+#                }
               }
-              else
-              {
-                tobechanged <- (runif(length(dto)) < 0.1);
-                tobePerturbed[tobechanged,nf] <- noPerturbedTrain[sample(nrow(noPerturbedTrain),sum(tobechanged)),nf];
-              }
+#              else
+#              {
+#                tobechanged <- (runif(length(dto)) < 0.1);
+#                tobePerturbed[tobechanged,nf] <- noPerturbedTrain[sample(nrow(noPerturbedTrain),sum(tobechanged)),nf];
+#              }
             }
           }
           trainSet <- rbind(trainSet,noPerturbedTrain,tobePerturbed);
@@ -481,11 +491,11 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
 
               trainSet[,nf] <- dto + nlevel*noise;
             }
-            else
-            {
-              tobechanged <- (runif(length(dto)) < nlthr/5.0);
-              trainSet[tobechanged,nf] <- dto[sample(length(dto),sum(tobechanged))];
-            }
+#            else
+#            {
+#              tobechanged <- (runif(length(dto)) < nlthr/5.0);
+#              trainSet[tobechanged,nf] <- dto[sample(length(dto),sum(tobechanged))];
+#            }
           }
          }
       }
