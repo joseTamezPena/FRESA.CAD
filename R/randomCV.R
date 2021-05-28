@@ -327,9 +327,9 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
                 tbnames <- names(tb);
                 indx <- 1:length(tb);
                 names(indx) <- tbnames;
-                ralea <- runif(length(dto));
-                peturblen <- min(1,as.integer(0.05*length(tb)+0.5));
-                nidx <- indx[as.character(dto)] + floor(2.0*peturblen*(ralea - 0.5) + 0.5);
+                ralea <- runif(length(dto),-1.0,1.0);
+                peturblen <- min(1,0.05*length(tb));
+                nidx <- indx[as.character(dto)] + floor(peturblen*ralea + 0.5);
                 nidx[nidx < 1] <- 1;
                 nidx[nidx > length(tb)] <- length(tb);
                 tobePerturbed[,nf] <- 0.5*(dto + as.numeric(names(tb[nidx])));
@@ -471,10 +471,10 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
               tbnames <- names(tb);
               indx <- 1:length(tb);
               names(indx) <- tbnames;
-              ralea <- runif(length(dto));
-              peturblen <- min(1,as.integer(nlevel*0.05*length(tb) + 0.5))
+              ralea <- runif(length(dto),-1.0,1.0);
+              peturblen <- min(1,nlthr*0.05*length(tb))
 
-              nidx <- indx[as.character(dto)] + floor(2.0*peturblen*(ralea - 0.5) + 0.5);
+              nidx <- indx[as.character(dto)] + floor(peturblen*ralea + 0.5);
               nidx[nidx < 1] <- 1;
               nidx[nidx > length(tb)] <- length(tb);
               dto <- 0.5*(dto + as.numeric(names(tb[nidx])));
