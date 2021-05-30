@@ -97,6 +97,6 @@ FRESAScale <- function(data,refFrame=NULL,method=c("Norm","Order","OrderLogit","
 		}
 	}
 
-	result <- list(scaledData=data,refMean=refMean,refDisp=refDisp,strata=strata,method=method);
+	result <- list(scaledData=as.data.frame(data),refMean=refMean,refDisp=refDisp,strata=strata,method=method);
 	return (result);
 }

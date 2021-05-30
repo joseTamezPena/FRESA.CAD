@@ -1232,10 +1232,10 @@ filteredFit <- function(formula = formula, data=NULL, filtermethod=univariate_Wi
 	fm <- names(fm)
 	usedFeatures <-  c(Outcome,fm);
 	data <- data[,usedFeatures]
-	if (Scale != "none")
+	if ((Scale != "none") && (length(fm) > 1) )
 	{
-		scaleparm <- FRESAScale(data[,fm],method=Scale);
-		data[,fm] <- scaleparm$scaledData;
+		scaleparm <- FRESAScale(as.data.frame(data[,fm]),method=Scale);
+		data[,fm] <- as.data.frame(scaleparm$scaledData);
 		scaleparm$scaledData <- NULL;
 	}
 #	cat ("Here 3")
@@ -1285,6 +1285,7 @@ filteredFit <- function(formula = formula, data=NULL, filtermethod=univariate_Wi
 					classLen=length(table(data[,Outcome])),
 					Scale = scaleparm,
 					binOutcome = binOutcome,
+					Outcome = Outcome,
 					pcaobj = pcaobj
 					);
 	class(result) <- c("FRESA_FILTERFIT");
@@ -1300,10 +1301,10 @@ predict.FRESA_FILTERFIT <- function(object,...)
 {
 	parameters <- list(...);
 	testData <- parameters[[1]];
-	testData <- testData[,object$usedFeatures]
+	testData <- as.data.frame(testData[,object$usedFeatures])
 	if (!is.null(object$Scale))
 	{
-		testData <- FRESAScale(testData,
+		testData[,object$selectedfeatures] <- FRESAScale(as.data.frame(testData[,object$selectedfeatures]),
 		method=object$Scale$method,
 		refMean=object$Scale$refMean,
 		refDisp=object$Scale$refDisp)$scaledData;
