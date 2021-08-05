@@ -6,7 +6,10 @@
 	All features significatly associated to the outcome will be decorrelated
 }
 \usage{
-	featureDecorrelation(data=NULL,refdata=NULL,Outcome=NULL,loops=20,thr=0.80,unipvalue=0.05,useWhite=TRUE,...)
+	featureDecorrelation(data=NULL,Outcome=NULL,
+                         refdata=NULL,baseFeatures=NULL,loops=20,
+                         thr=0.80,unipvalue=0.05,useDeCorr=TRUE,...)
+	
 	predictDecorrelate(decorrelatedobject,testData)
 }
 \arguments{
@@ -19,6 +22,9 @@
 	\item{refdata}{
 	The frame used to get the correlation and lm formula 
 	}
+	\item{baseFeatures}{
+	A vector of features to be used as the base vectors. 
+	}
 	\item{loops}{
 	the maxumum number of loops
 	}
@@ -28,8 +34,8 @@
 	\item{unipvalue}{
 	association p-value
 	}
-	\item{useWhite}{
-	 if TRUE, the returned matrix will use the estimated whitening Matrix
+	\item{useDeCorr}{
+	 if TRUE, the returned matrix will use the estimated decorrelation Matrix
 	}
 	\item{...}{
 	parameters passed to the adjuting method.

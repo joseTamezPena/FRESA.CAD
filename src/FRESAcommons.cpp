@@ -18,6 +18,13 @@
  
  
 #include "FRESAcommons.h" 
+
+
+/* from src/nmath/wilcox.c */
+
+//extern void wilcox_free(void);
+
+
  
 #define EPS 1e-4		 
  
@@ -1763,18 +1770,31 @@ double wilcoxtest(const vec &xt,const vec &y , double mu, bool paired,const std:
 		 
         if(exact && !ties)  
         { 
-        	 if(tail=="greater") 
-                pvalue =R::pwilcox(stat - 1, nx, ny, 0,0); 
-             else if(tail=="less") pvalue =R::pwilcox(stat, nx, ny,1,0); 
+        	 if(tail=="greater")
+			 {
+                pvalue = R::pwilcox(stat - 1, nx, ny, 0,0); 
+			 }
+             else if(tail=="less") 
+			 {
+				 pvalue = R::pwilcox(stat, nx, ny,1,0); 
+			 }
              else 
                    { 
                    	double p; 
-                       if(stat > (nx * ny / 2.0)) 
-                           p =R::pwilcox(stat - 1, nx, ny, 0,0); 
-                       else 
-                           p =R::pwilcox(stat, nx, ny,1,0); 
-                        pvalue =std::min(2.0 * p, 1.0); 
-                   } 
+                       if(stat > (nx * ny / 2.0))
+					   {						   
+                           p = R::pwilcox(stat - 1, nx, ny, 0,0); 
+					   }
+                       else
+					   {						   
+                           p = R::pwilcox(stat, nx, ny,1,0);
+					   }
+                        pvalue = std::min(2.0 * p, 1.0); 	
+                   }
+				   
+#ifdef RDEVEL
+			R::wilcox_free();
+#endif 
         } 
         else  
         { 

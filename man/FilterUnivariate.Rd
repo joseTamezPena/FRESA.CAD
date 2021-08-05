@@ -8,13 +8,15 @@
 \alias{correlated_Remove}
 \alias{univariate_cox}
 \alias{univariate_BinEnsemble}
+\alias{univariate_KS}
+\alias{univariate_DTS}
+\alias{univariate_Strata}
 \title{Univariate Filters}
 
 \description{
     Returns the top set of features that are statistically associated with the outcome.
 }
 \usage{
-
 univariate_Logit(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="BH", 
                  uniTest=c("zIDI","zNRI"),limit=0,...,n=0)
 univariate_residual(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="BH",
@@ -32,9 +34,11 @@ univariate_correlation(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="BH",
                        method = "kendall",limit=0,...,n=0)
 univariate_cox(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="BH",
                      limit=0,...)
-univariate_BinEnsemble(data=NULL, Outcome=NULL,limit=0,adjustMethod="BH",...)
+univariate_BinEnsemble(data,Outcome, pvalue=0.2,limit=0,adjustMethod="BH",...)
+univariate_Strata(data,Outcome,pvalue=0.2,limit=0,
+                   adjustMethod="BH",
+                   unifilter=univariate_BinEnsemble,strata="Gender",...)
 correlated_Remove(data=NULL,fnames=NULL,thr=0.999,isDataCorMatrix=FALSE)
-
 }
 \arguments{
     \item{data}{
@@ -63,9 +67,15 @@ correlated_Remove(data=NULL,fnames=NULL,thr=0.999,isDataCorMatrix=FALSE)
     }
     \item{fnames}{
     The list of features to test inside the correlated_Remove function
-    }
+    }    
     \item{thr}{
     The maximum correlation to allow between features
+    }
+    \item{unifilter}{
+    The filter function to be stratified
+    }
+    \item{strata}{
+    The feature to be used for data stratification
     }
     \item{...}{
     Parameters to be passed to the correlated_Remove function
@@ -159,3 +169,4 @@ Named vector with the adjusted p-values or the list of no-correlated features fo
     }
 }
 \keyword{Feature_Filtering}
+

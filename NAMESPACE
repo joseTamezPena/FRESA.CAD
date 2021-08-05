@@ -127,11 +127,12 @@ S3method(predict, FRESA_FILTERFIT)
 importFrom(Rcpp, evalCpp)
 importFrom("graphics", "abline", "barplot", "boxplot", "legend","lines", "par", "plot", "title")
 importFrom("stats", "binom.test", "binomial", "coef", "cor.test","IQR",
-     "ecdf", "formula", "ks.test", "lm", "model.frame",
+     "ecdf", "formula", "ks.test", "lm", "model.frame", "pt",
      "model.matrix", "na.exclude", "na.omit", "pf", "pnorm",
      "predict", "qnorm", "quantile", "rnorm", "sd", "t.test",
      "terms", "wilcox.test", "glm", "median", "weighted.mean", 
-	 "runif", "p.adjust", "lowess", "complete.cases","pchisq","qchisq")
+     "runif", "p.adjust", "lowess", "complete.cases", "pchisq", 
+     "qchisq", "loess", "dnorm", "prop.test", "smooth.spline")
 importFrom("stats", "na.pass")
 importFrom("stats", "density")
 importFrom("stats", "cor")

@@ -23,10 +23,13 @@
  
 #include <RcppArmadillo.h> 
 #include <R.h> 
+
 #include <Rmath.h> 
+
 #ifdef _OPENMP 
 #include <omp.h> 
 #endif 
+
 #include <R_ext/Utils.h> 
 #include <exception> 
 #include <iostream> 
@@ -41,6 +44,7 @@
  
 using namespace arma; 
 using namespace Rcpp; 
+
 static const double THRESH = 36.0436534112975; 
 static const double MTHRESH = -36.0436534112975; 
 static const double INVEPS = 1.0/2.220446e-16; 

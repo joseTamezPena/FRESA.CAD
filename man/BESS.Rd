@@ -1,12 +1,15 @@
 \name{BESS}
 \alias{BESS}
 \alias{BESS_GSECTION}
+\alias{BESS_EBIC}
 \title{CV BeSS fit}
 \description{
 	Fits a \code{BeSS::bess} object to the data, and return the selected features  
 }
 \usage{
 	BESS(formula = formula, data=NULL, method="sequential", ic.type="BIC",...)
+    BESS_GSECTION(formula = formula, data=NULL, method="gsection", ic.type="NULL",...)
+    BESS_EBIC(formula = formula, data=NULL, ic.type="EBIC",...)
 }
 
 \arguments{
