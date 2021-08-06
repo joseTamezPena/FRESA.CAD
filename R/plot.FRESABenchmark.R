@@ -160,7 +160,7 @@ function(x,...)
 					tb <- table((x$testPredictions[,i] > th1),(x$testPredictions[,j] > th2))
 					if (length(tb) > 3)
 					{
-						pmcnemar[i-1,j-1] <- epiR::epi.kappa(tb)$mcnemar$p.value;
+						pmcnemar[i-1,j-1] <- stats::mcnemar.test(tb)$p.value;
 						mcnemar[i-1,j-1] <- -log10(max(pmcnemar[i-1,j-1],0.0001));
 					}
 					else
@@ -659,7 +659,7 @@ function(x,...)
 		# 			tb <- table((x$testPredictions[,i] > th1),(x$testPredictions[,j] > th2))
 		# 			if (length(tb) > 3)
 		# 			{
-		# 				pmcnemar[i-1,j-1] <- epiR::epi.kappa(tb)$mcnemar$p.value;
+		# 				pmcnemar[i-1,j-1] <- stats::mcnemar.test(tb)$p.value;
 		# 				mcnemar[i-1,j-1] <- -log10(max(pmcnemar[i-1,j-1],0.0001));
 		# 			}
 		# 			else

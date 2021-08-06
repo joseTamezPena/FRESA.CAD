@@ -1792,9 +1792,9 @@ double wilcoxtest(const vec &xt,const vec &y , double mu, bool paired,const std:
                         pvalue = std::min(2.0 * p, 1.0); 	
                    }
 				   
-#ifdef RDEVEL
-			R::wilcox_free();
-#endif 
+//Will be included in R 4.2.0
+//			R::wilcox_free();
+
         } 
         else  
         { 
