@@ -99,7 +99,7 @@ export(predict.FRESA_FILTERFIT)
 export(featureDecorrelation)
 export(predictDecorrelate);
 
-useDynLib(FRESA.CAD,.registration = TRUE)
+useDynLib(FRESA.CAD,.registration = TRUE, .fixes = "C_")
 
 import(stringr,miscTools,Hmisc,pROC)
 

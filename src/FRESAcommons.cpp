@@ -18,12 +18,16 @@
  
  
 #include "FRESAcommons.h" 
+#include "Rinternals.h"
+#include "Rversion.h"
+#include <stdlib.h> // for NULL
+#include <R_ext/Rdynload.h>
 
+using namespace R; 
 
-/* from src/nmath/wilcox.c */
-
-//extern void wilcox_free(void);
-
+#if R_VERSION < R_Version(4, 2, 0)
+extern "C" void wilcox_free(void);
+#endif
 
  
 #define EPS 1e-4		 
@@ -1792,9 +1796,7 @@ double wilcoxtest(const vec &xt,const vec &y , double mu, bool paired,const std:
                         pvalue = std::min(2.0 * p, 1.0); 	
                    }
 				   
-//Will be included in R 4.2.0
-//			R::wilcox_free();
-
+			wilcox_free();
         } 
         else  
         { 
