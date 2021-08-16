@@ -11,6 +11,7 @@ Changes from FRESA.CAD 3.1.1 to FRESA.CAD version 3.3.1
 		filteredFit with normalization and PCA
 	Bugs:
 	-Try added to prediction, to avoid crashing errors.
+	- Calls to epiR::epi.tests updated
 	Minor Changes:
 	-FRESAScale OrderLogit function nows retunrs values form -2 to 2.
 	-ENS changed to ensemble
