@@ -12,7 +12,7 @@
       predictionStats_binary(predictions, plotname="", center=FALSE,...)
       predictionStats_regression(predictions, plotname="",...)
       predictionStats_ordinal(predictions,plotname="",...)
-      predictionStats_survival(predictions,plotname="",...)
+      predictionStats_survival(predictions,plotname="",atriskthr=1.0,...)
 
 }
 \arguments{
@@ -24,6 +24,9 @@
 	}
 	\item{center}{
 		For binary predictions indicates if the prediction is around zero 
+	}
+	\item{atriskthr}{
+		For survival predictions indicates the threshoold for at risk subjects. 
 	}
 	\item{...}{
 		Extra parameters to be passed to the plot function.

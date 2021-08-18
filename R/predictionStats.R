@@ -1,4 +1,4 @@
-predictionStats_survival <-  function(predictions, plotname="",...)
+predictionStats_survival <-  function(predictions, plotname="", atriskthr=1.0, ...)
 {
 	if(!sum(predictions[,4] == 0) == length(predictions[,4]))
 	{
@@ -10,48 +10,42 @@ predictionStats_survival <-  function(predictions, plotname="",...)
 		CIFollowUp <- concordance95ci(datatest = data, followUp = TRUE)
 		data <- data.frame(times=predictions[,1],preds=-predictions[,6])
 		CIRisk <- concordance95ci(datatest = data, followUp = FALSE)
-		newData <- data.frame(times=predictions[,1],status=predictions[,2],preds=predictions[,6]);
-		Curves <- survival::survfit(survival::Surv(times, status) ~ preds>=median(preds),newData)
-		
-		function (fit, scale, k = 2, ...) 
+		if (class(atriskthr) != "numeric") 
 		{
-			edf <- sum(!is.na(fit$coefficients))
-			loglik <- fit$loglik[length(fit$loglik)]
-			c(edf, -2 * loglik + k * edf)
+			atriskthr <- median(predictions[,6]);
 		}
-		
-		#Curves <- survival::survfitBSWiMS <- survival::survfit(Surv(predictions[,1], predictions[,2]) ~ predictions[,6]>=median(predictions[,6]))
+		groups = predictions[,6] >= atriskthr
+		labelsplot <- c("Other",sprintf("At Risk > %5.2f",atriskthr));
+		paletteplot <- c("#00bbff", "#ff0000")
+#		if (atriskthr > 1.0)
+#		{
+#			groups = groups - 1*(predictions[,6] <= 1.0/atriskthr)
+#			labelsplot <- c("Mid Risk","Low Risk", "High Risk")
+#			paletteplot <- c("yellow","green", "red")
+#		}
+		newData <- data.frame(times=predictions[,1],status=predictions[,2],preds=predictions[,6],groups = groups);
+		Curves <- survival::survfit(survival::Surv(times, status) ~ groups,newData)
+
+        LogRankE <- EmpiricalSurvDiff(times=newData$times,
+                  status=newData$status,
+                  groups=newData$groups,
+                  plots=plotname!="")
 		if(plotname!="")
 		{
-			 graph <- survminer::ggsurvplot(Curves, data=newData, conf.int = TRUE, legend.labs=c("Low Risk", "High Risk"),
-                        palette = c("#00bbff", "#ff0000"),
+			 graph <- survminer::ggsurvplot(Curves, data=newData, conf.int = TRUE, legend.labs=labelsplot,
+                        palette = paletteplot,
                         ggtheme = ggplot2::theme_bw() + ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5, face = "bold", size = 30)),
                         title = plotname,
                         risk.table = TRUE,
                         tables.height = 0.2,
                         tables.theme = survminer::theme_cleantable())
       		print(graph)
-			# graph <- try(survminer::ggsurvplot(Curves, data=newData, conf.int = TRUE, legend.labs=c("Low Risk", "High Risk"),
-			# 					palette = c("#00bbff", "#ff0000"),
-			# 					ggtheme = ggplot2::theme_bw() + ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5, face = "bold", size = 30)),
-			# 					title = plotname,
-			# 					risk.table = TRUE,
-			# 					tables.height = 0.2,
-			# 					tables.theme = survminer::theme_cleantable()))
-			# # if (!inherits(graph, "try-error"))
-			# {
-			# 	print(graph)
-			# }
-			# else{
-			# 	warning("Survplot failed");
-			# }
-			#plot(Curves,main=plotname)
 		}
 		
-		LogRank <- survival::survdiff(Surv(predictions[,1], predictions[,2]) ~ predictions[,6]>=median(predictions[,6]))
+		LogRank <- survival::survdiff(Surv(predictions[,1], predictions[,2]) ~ predictions[,6] >= atriskthr )
 		LogRank <- cbind(LogRank$chisq,  1 - pchisq(LogRank$chisq, length(LogRank$n) - 1));
 		colnames(LogRank) <- cbind("chisq","pvalue");
-		return( list(CIFollowUp=CIFollowUp, CIRisk = CIRisk, LogRank = LogRank, Curves = Curves) );
+		return( list(CIFollowUp=CIFollowUp, CIRisk = CIRisk, LogRank = LogRank, Curves = Curves,LogRankE = LogRankE) );
 	}
 	else{
 		return( list(CIFollowUp=rep(0,nrow(predictions)), CIRisk = rep(0,nrow(predictions)), LogRank = rep(0,nrow(predictions)), Curves = NULL) );
