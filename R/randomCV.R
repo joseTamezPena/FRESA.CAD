@@ -24,6 +24,16 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
   survpredict <- function(currentModel,Dataset,TestDataset,selectedFeatures)
   {
     theSurvData <-Dataset;
+    if (!is.null(currentModel$fit))
+    {
+      predi_t <- predict(currentModel,TestDataset);
+      tpred <- attr(predi_t,"dataAdjusted")
+      if (!is.null(tpred))
+      {
+        TestDataset <- tpred
+      }
+      currentModel <- currentModel$fit;
+    }
     fclass <- class(currentModel)
     if (length(fclass)>1) fclass <- fclass[1];
     
@@ -39,53 +49,29 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
     if(length(selectedFeatures)==0)
     {
       warning("Method did not select any features")
-      return(list(martingaleResid=rep(NA,nrow(theSurvData)),
-                  linearPredictors=rep(NA,nrow(theSurvData)),
-                  followUpTimes=rep(NA,nrow(theSurvData)),
-                  risks = list(fit=rep(NA,nrow(theSurvData)),se.fit=rep(NA,nrow(theSurvData))),
-                  hr = rep(NA,nrow(theSurvData))));
+      return(list(martingaleResid=rep(NA,nrow(TestDataset)),
+                  linearPredictors=rep(NA,nrow(TestDataset)),
+                  followUpTimes=rep(NA,nrow(TestDataset)),
+                  risks = list(fit=rep(NA,nrow(TestDataset)),se.fit=rep(NA,nrow(TestDataset))),
+                  hr = rep(NA,nrow(TestDataset))));
     }
     
+    baseformula <- as.character(theformula);
+    formulaCox <- as.formula(paste(paste(baseformula[2],"~"), paste(selectedFeatures, collapse='+')));
+    cox <- try(survival::coxph(formula=formulaCox, data=theSurvData));
+
     if (fclass == "FRESA_GLMNET")
     {
-      #Creating lasso object
-      baseformula <- as.character(theformula);
-      formulaCox <- as.formula(paste(paste(baseformula[2],"~"), paste(selectedFeatures, collapse='+')));
-      cox <- try(survival::coxph(formula=formulaCox, data=theSurvData));
-      #changing the coef to the ones with lasso
       cox$coefficients <- currentModel$coef[1:numberCoeficients];
     }
     if (fclass == "fitFRESA")
     {
-      #Creating lasso object
-      # theSurvData <- testSet
-      # selectedFeatures <- selectedFeaturesSet[[1]];
-      # infinitos <- currentModel$bagging$bagged.model$coefficients[is.infinite(currentModel$bagging$bagged.model$coefficients)];
-      # if(length(infinitos)>0){
-      #   cat(infinitos)
-      # }
-      baseformula <- as.character(theformula);
-      formulaCox <- as.formula(paste(paste(baseformula[2],"~"), paste(selectedFeatures, collapse='+')));
-      cox <- try(survival::coxph(formula=formulaCox,data=theSurvData));
-      #changing the coef to the ones with lasso
-      cox$coefficients<-currentModel$bagging$bagged.model$coefficients[-c(1)][1:numberCoeficients];
-      #cox$coefficients<-currentModel$BSWiMS.model$back.model$coefficients[-c(1)]
+        cox$coefficients <- currentModel$bagging$bagged.model$coefficients[-c(1)][1:numberCoeficients];
     }
     if(fclass=="FRESA_BESS")
     {
-      baseformula <- as.character(theformula);
-      formulaCox <- as.formula(paste(paste(baseformula[2],"~ "), paste(selectedFeatures, collapse='+')));
-      cox <- try(survival::coxph(formula=formulaCox,data=theSurvData));
-      #changing the coef to the ones with lasso
-      names(currentModel$fit$bestmodel$coefficients)<-selectedFeatures;
-      cox$coefficients<-currentModel$fit$bestmodel$coefficients[1:numberCoeficients];
-    }
-    if(fclass=="coxph.null")
-    {
-      
-      baseformula <- as.character(theformula);
-      formulaCox <- as.formula(paste(paste(baseformula[2],"~"), paste(selectedFeatures, collapse='+')));
-      cox <- try(survival::coxph(formula=formulaCox,data=theSurvData));
+      names(currentModel$fit$bestmodel$coefficients) <- selectedFeatures;
+      cox$coefficients <- currentModel$fit$bestmodel$coefficients[1:numberCoeficients];
     }
     
     if (!inherits(cox,"try-error") && class(cox)!="list")
@@ -111,20 +97,20 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
       }
       else{
         warning("Cox Fit Follow-up Times Error");
-        return(list(martingaleResid=rep(0,nrow(theSurvData)),
-                    linearPredictors=rep(0,nrow(theSurvData)),
-                    followUpTimes=rep(0,nrow(theSurvData)),
-                    risks = list(fit=rep(0,nrow(theSurvData)),se.fit=rep(0,nrow(theSurvData))),
-                    hr = rep(0,nrow(theSurvData))));
+        return(list(martingaleResid=rep(0,nrow(TestDataset)),
+                    linearPredictors=rep(0,nrow(TestDataset)),
+                    followUpTimes=rep(0,nrow(TestDataset)),
+                    risks = list(fit=rep(0,nrow(TestDataset)),se.fit=rep(0,nrow(TestDataset))),
+                    hr = rep(0,nrow(TestDataset))));
       }
     }
     else{
       warning("Cox Fit Error");
-        return(list(martingaleResid=rep(0,nrow(theSurvData)),
-                    linearPredictors=rep(0,nrow(theSurvData)),
-                    followUpTimes=rep(0,nrow(theSurvData)),
-                    risks = list(fit=rep(0,nrow(theSurvData)),se.fit=rep(0,nrow(theSurvData))),
-                    hr = rep(0,nrow(theSurvData))));
+        return(list(martingaleResid=rep(0,nrow(TestDataset)),
+                    linearPredictors=rep(0,nrow(TestDataset)),
+                    followUpTimes=rep(0,nrow(TestDataset)),
+                    risks = list(fit=rep(0,nrow(TestDataset)),se.fit=rep(0,nrow(TestDataset))),
+                    hr = rep(0,nrow(TestDataset))));
     }
   }
   
