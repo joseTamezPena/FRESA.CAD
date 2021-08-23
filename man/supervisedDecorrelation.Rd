@@ -6,9 +6,11 @@
 	All features significatly associated to the outcome will be decorrelated
 }
 \usage{
-	featureDecorrelation(data=NULL,Outcome=NULL,
-                         refdata=NULL,baseFeatures=NULL,loops=20,
-                         thr=0.80,unipvalue=0.05,useDeCorr=TRUE,...)
+	featureDecorrelation(data=NULL,thr=0.80,
+	                     refdata=NULL,Outcome=NULL,
+	                     baseFeatures=NULL,unipvalue=0.05,
+	                     useDeCorr=TRUE,maxLoops=20,wmax=0.5,...)
+
 	
 	predictDecorrelate(decorrelatedobject,testData)
 }
@@ -16,20 +18,17 @@
 	\item{data}{
 	The dataframe whose features will de decorrelated
 	}
-	\item{Outcome}{
-	The target outcome
+	\item{thr}{
+	correlation threshold for feature selection
 	}
 	\item{refdata}{
 	The frame used to get the correlation and lm formula 
 	}
+	\item{Outcome}{
+	The target outcome
+	}
 	\item{baseFeatures}{
 	A vector of features to be used as the base vectors. 
-	}
-	\item{loops}{
-	the maxumum number of loops
-	}
-	\item{thr}{
-	correlation threshold for feature selection
 	}
 	\item{unipvalue}{
 	association p-value
@@ -37,14 +36,14 @@
 	\item{useDeCorr}{
 	 if TRUE, the returned matrix will use the estimated decorrelation Matrix
 	}
+	\item{maxLoops}{
+	the maxumum number of loops
+	}
+	\item{wmax}{
+	controls the threshold weight. wmax==1 set to thr.
+	}
 	\item{...}{
 	parameters passed to the adjuting method.
-	}
-	\item{decorrelatedobject}{
-	The dataframe created by the featureDecorrelation function
-	}
-	\item{testData}{
-	Test data to decorrelate
 	}
 }
 

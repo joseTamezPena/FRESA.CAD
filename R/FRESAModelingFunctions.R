@@ -97,7 +97,8 @@ KNN_method <- function(formula = formula, data=NULL, ...)
 
 	baseformula <- as.character(formula);
 	usedFeatures <- colnames(data)[!(colnames(data) %in% baseformula[2])]
-	tlabs <- attr(terms(formula,data=data),"term.labels");
+#	tlabs <- attr(terms(formula,data=data),"term.labels");
+	tlabs <- attr(terms(formula),"term.labels");
 	if (length(tlabs) > 0)
 	{
 		usedFeatures <- tlabs;

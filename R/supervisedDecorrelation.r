@@ -1,4 +1,4 @@
-featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,baseFeatures=NULL,loops=20,thr=0.80,unipvalue=0.05,useDeCorr=TRUE,...)
+featureDecorrelation <- function(data=NULL,thr=0.80,refdata=NULL,Outcome=NULL,baseFeatures=NULL,unipvalue=0.05,useDeCorr=TRUE,maxLoops=20,wmax=0.5,...)
 {
 
   dataids <- rownames(data)
@@ -27,7 +27,6 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,baseFeatur
 #  print(length(varincluded));
 
   
-  wmax = 0.5;
   models <- NULL
   
   cormat <- abs(cor(refdata[,varincluded],method="spearman"))
@@ -55,7 +54,7 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,baseFeatur
   if (length(varincluded) > 1000) cat (length(baseFeatures),":")
 
 
-  while ((addedlist > 0) && (lp < loops))
+  while ((addedlist > 0) && (lp < maxLoops))
   {
     lp = lp + 1;
     addedlist <- 0;
@@ -65,6 +64,10 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,baseFeatur
     topfeat <- colnames(cormat);
     names(topfeat) <- topfeat;
     thr2 <- thr;
+    if (length(varincluded) > 1000) 
+    {
+        cat("maxCor:",mmaxcor," thr:",thr2,":");
+    }
     if (thr2 < mmaxcor)
     {
       thr2 <- wmax*mmaxcor + (1.0-wmax)*thr;
@@ -186,6 +189,16 @@ featureDecorrelation <- function(data=NULL, Outcome=NULL,refdata=NULL,baseFeatur
       }
       if (length(varincluded) > 1000) cat("}");
       if (length(varincluded) > 1000) cat("[");
+      colsd <- apply(refdata[,varincluded],2,sd,na.rm = TRUE);
+      if (sum(colsd==0) > 0)
+      {
+        if (length(varincluded) > 1000) cat(sum(colsd==0));
+        zerovar <- varincluded[colsd==0];
+        for (zcheck in zerovar)
+        {
+          refdata[,zcheck] <- refdata[,zcheck] + rnorm(nrow(refdata),0,1e-10);
+        }
+      }
       cormat <- abs(cor(refdata[,varincluded],method="spearman"))
       diag(cormat) <- 0;
       topFeatures <- unique(c(topFeatures,intopfeat));
