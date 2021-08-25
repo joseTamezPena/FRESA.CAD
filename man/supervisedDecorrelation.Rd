@@ -9,7 +9,7 @@
 	featureDecorrelation(data=NULL,thr=0.80,
 	                     refdata=NULL,Outcome=NULL,
 	                     baseFeatures=NULL,unipvalue=0.05,
-	                     useDeCorr=TRUE,maxLoops=20,wmax=0.5,
+	                     useDeCorr=TRUE,maxLoops=20,wmax=0.0,
 	                     verbose=FALSE,...)
 
 	
