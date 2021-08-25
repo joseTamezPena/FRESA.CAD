@@ -40,7 +40,7 @@ featureDecorrelation <- function(data=NULL,thr=0.80,refdata=NULL,Outcome=NULL,ba
 
     if ( !is.null(Outcome) && length(baseFeatures)==0 )
     {
-        outcomep <- univariate_correlation(dataAdjusted[,c(Outcome,varincluded)],Outcome,method="spearman",limit=0,pvalue=0.20,thr=thr) # the top associated features to the outcome
+        outcomep <- univariate_correlation(dataAdjusted[,c(Outcome,varincluded)],Outcome,method="spearman",limit=0,pvalue=0.40,thr = 0.9*thr) # the top associated features to the outcome
         baseFeatures <- names(outcomep);
   #      print(baseFeatures);
     }
@@ -177,9 +177,13 @@ featureDecorrelation <- function(data=NULL,thr=0.80,refdata=NULL,Outcome=NULL,ba
            DeCorrmatrix[,uncorrelatedFetures] <-  DeCorrmatrix %*% betamatrix[,uncorrelatedFetures];
         }
         betamatrix <- NULL;
-        if (thr2 > 1.001*thr)
+        if (thr2 > 1.005*thr)
         {
           wmax <- 0.5*wmax;
+        }
+        else
+        {
+          wmax <- 0.0;
         }
         if (verbose) cat (addedlist,":")
   #       cat (addedlist,":")
