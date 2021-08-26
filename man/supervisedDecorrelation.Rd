@@ -9,7 +9,7 @@
 	featureDecorrelation(data=NULL,thr=0.80,
 	                     refdata=NULL,Outcome=NULL,
 	                     baseFeatures=NULL,unipvalue=0.05,
-	                     useDeCorr=TRUE,maxLoops=20,wmax=0.0,
+	                     useDeCorr=TRUE,maxLoops=20,
 	                     verbose=FALSE,...)
 
 	
@@ -39,9 +39,6 @@
 	}
 	\item{maxLoops}{
 	the maxumum number of loops
-	}
-	\item{wmax}{
-	controls the threshold weight. wmax==1 set to thr.
 	}
 	\item{verbose}{
 	if TRUE, it will display internal evolution of algorithm.
