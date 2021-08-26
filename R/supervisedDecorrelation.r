@@ -72,7 +72,7 @@ featureDecorrelation <- function(data=NULL,thr=0.80,refdata=NULL,Outcome=NULL,ba
         thr2 <- wmax*mmaxcor + (1.0-wmax)*thr;
       }
       ordcor <- maxcor
-      ordcor <- 0.9999*maxcor + 0.0001*apply(cormat,2,mean)
+      ordcor <- 0.95*maxcor + 0.05*apply(cormat,2,mean)
       if (length(baseFeatures) > 0)
       {
         ordcor[topfeat %in% baseFeatures] <- ordcor[topfeat %in% baseFeatures] + 1;
@@ -85,7 +85,7 @@ featureDecorrelation <- function(data=NULL,thr=0.80,refdata=NULL,Outcome=NULL,ba
         colnames(betamatrix) <- varincluded;
         rownames(betamatrix) <- varincluded;
         topfeat <- topfeat[order(-ordcor[topfeat])];
-        topfeat <- unique(c(correlated_Remove(cormat,topfeat,thr = thr2,isDataCorMatrix=TRUE),topfeat[topfeat %in% baseFeatures]));
+        topfeat <- unique(c(correlated_Remove(cormat,topfeat,thr = thr,isDataCorMatrix=TRUE),topfeat[topfeat %in% baseFeatures]));
         intopfeat <- character();
         if (verbose) 
         {
@@ -94,7 +94,7 @@ featureDecorrelation <- function(data=NULL,thr=0.80,refdata=NULL,Outcome=NULL,ba
         for (feat in topfeat)
         {
           corlist <- cormat[,feat];
-          corlist <- corlist[corlist >= thr];
+          corlist <- corlist[corlist >= thr2];
           varlist <- names(corlist)
           varlist <- varlist[!(varlist %in% topfeat)]
           varlist <- varlist[!(varlist %in% decorrelatedFetureList)]
@@ -117,7 +117,7 @@ featureDecorrelation <- function(data=NULL,thr=0.80,refdata=NULL,Outcome=NULL,ba
                 names(adjusted) <- varlist;
                 for (vl in 1:length(models))
                 {
-                  if (models[[vl]]$pval < unipvalue)
+                  if (models[[vl]]$pval <= unipvalue)
                   {
                     adjusted[models[[vl]]$feature] <- TRUE;
                     if (is.null(models[[vl]]$model$coef))
