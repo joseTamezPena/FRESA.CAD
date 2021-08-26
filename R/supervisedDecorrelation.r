@@ -34,7 +34,7 @@ featureDecorrelation <- function(data=NULL,thr=0.80,refdata=NULL,Outcome=NULL,ba
   DeCorrmatrix <- NULL;
   if ( !is.null(Outcome) && length(baseFeatures)==0 )
   {
-      outcomep <- univariate_correlation(data,Outcome,method="spearman",limit=0,pvalue=0.40,thr = max(0.9,1.1*thr)) # the top associated features to the outcome
+      outcomep <- univariate_correlation(data,Outcome,method="spearman",limit=0,pvalue=0.20,thr = 0.5) # the top associated features to the outcome
       baseFeatures <- names(outcomep);
   }
   
