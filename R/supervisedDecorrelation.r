@@ -23,6 +23,7 @@ featureDecorrelation <- function(data=NULL,thr=0.80,refdata=NULL,Outcome=NULL,ba
   varincluded <- colnames(refdata)[!(colnames(refdata) %in% Outcome)];
   colsd <- apply(refdata[,varincluded],2,sd,na.rm = TRUE);
   varincluded <- varincluded[colsd > 0];
+  totFeatures <- length(varincluded);
 
   
   models <- NULL
@@ -30,18 +31,19 @@ featureDecorrelation <- function(data=NULL,thr=0.80,refdata=NULL,Outcome=NULL,ba
   cormat <- abs(cor(refdata[,varincluded],method="spearman"))
   diag(cormat) <- 0;
   maxcor <- apply(cormat,2,max)
+  totcorr <- sum(cormat >= thr); 
   varincluded <- names(maxcor)[maxcor >= thr];
   DeCorrmatrix <- NULL;
   if ( !is.null(Outcome) && length(baseFeatures)==0 )
   {
-      outcomep <- univariate_correlation(data,Outcome,method="spearman",limit=0,pvalue=0.20,thr = 0.5) # the top associated features to the outcome
+      outcomep <- univariate_correlation(data,Outcome,method="spearman",limit=0,pvalue=0.20,thr = 0.25) # the top associated features to the outcome
       baseFeatures <- names(outcomep);
   }
   lastintopfeat <- character();
   lastdecorrelated <- character();
   if (length(varincluded) > 1)
   {
-    unipvalue <- unipvalue*sqrt(length(varincluded))/ncol(data); ## Adjusting for false association
+    unipvalue <- 4.0*unipvalue*sqrt(totcorr)/totFeatures; ## Adjusting for false association
     bvarincluded <- character();
     if (length(baseFeatures) > 0)
     {    
@@ -95,11 +97,11 @@ featureDecorrelation <- function(data=NULL,thr=0.80,refdata=NULL,Outcome=NULL,ba
           for (feat in topfeat)
           {
             corlist <- cormat[,feat];
-            corlist <- corlist[corlist >= thr];
+            corlist <- corlist[corlist > thr];
             varlist <- names(corlist)
             varlist <- varlist[!(varlist %in% topfeat)]
             varlist <- varlist[!(varlist %in% decorrelatedFetureList)]
-            varlist <- varlist[!(varlist %in% baseFeatures)]
+#            varlist <- varlist[!(varlist %in% baseFeatures)]
             if (length(varlist) > 0)
             {
                dvarlist <- cbind(varlist,varlist)
