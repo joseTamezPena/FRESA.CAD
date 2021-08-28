@@ -15,6 +15,7 @@ featureDecorrelation <- function(data=NULL,thr=0.80,refdata=NULL,Outcome=NULL,ba
   {
     baseFeatures <- character()
   }
+  AbaseFeatures <- character()
   addedlist <- 1;
   lp = 0;
   uncorrelatedFetures <- character();
@@ -34,9 +35,10 @@ featureDecorrelation <- function(data=NULL,thr=0.80,refdata=NULL,Outcome=NULL,ba
   totcorr <- sum(cormat >= thr); 
   varincluded <- names(maxcor)[maxcor >= thr];
   DeCorrmatrix <- NULL;
+  outcomep <- numeric();
   if ( !is.null(Outcome) && length(baseFeatures)==0 )
   {
-      outcomep <- univariate_correlation(data,Outcome,method="spearman",limit=0,pvalue=0.20,thr = 0.25) # the top associated features to the outcome
+      outcomep <- univariate_correlation(data,Outcome,method="spearman",limit=0,pvalue=0.20,thr = 0.5) # the top associated features to the outcome
       baseFeatures <- names(outcomep);
   }
   lastintopfeat <- character();
@@ -45,21 +47,22 @@ featureDecorrelation <- function(data=NULL,thr=0.80,refdata=NULL,Outcome=NULL,ba
   {
     unipvalue <- 4.0*unipvalue*sqrt(totcorr)/totFeatures; ## Adjusting for false association
     bvarincluded <- character();
+    baseIncluded <- character();
     if (length(baseFeatures) > 0)
     {    
-      inincluded <- varincluded[varincluded %in% baseFeatures];
-      if (length(inincluded) > 1)
+      baseIncluded <- varincluded[varincluded %in% baseFeatures];
+      names(baseIncluded) <- baseIncluded;
+      if (length(baseIncluded) > 1)
       {
-        bcormat <-  cormat[inincluded,]
+        bcormat <-  cormat[baseIncluded,]
         bmaxcor <- apply(bcormat,2,max)
         bvarincluded <- names(bmaxcor)[bmaxcor >= thr];
-#        varincluded <- c(inincluded,bvarincluded);
         bcormat <- NULL;
       }
     }
 #    if ((length(varincluded) > 1) || is.null(Outcome) )
     {
-      if (verbose) cat ("\n Included:",length(varincluded),", Uni p:",unipvalue,", Base:",length(baseFeatures),", In Included:",length(inincluded),", Base Cor:",length(bvarincluded))
+      if (verbose) cat ("\n Included:",length(varincluded),", Uni p:",unipvalue,", Base:",length(baseFeatures),", In Included:",length(baseIncluded),", Base Cor:",length(bvarincluded))
       
       DeCorrmatrix <- diag(length(varincluded));
       colnames(DeCorrmatrix) <- varincluded;
@@ -75,13 +78,17 @@ featureDecorrelation <- function(data=NULL,thr=0.80,refdata=NULL,Outcome=NULL,ba
 
         maxcor <- apply(cormat,2,max)
         mmaxcor <- max(maxcor);
-        topfeat <- colnames(cormat);
+        topfeat <- varincluded;
         names(topfeat) <- topfeat;
         ordcor <- maxcor
-        ordcor <- 0.95*maxcor + 0.045*apply(1*(cormat >= thr),2,mean) + 0.005*apply(cormat,2,mean)
+        ordcor <- 0.99*maxcor + 0.009*apply(1*(cormat >= thr),2,mean) + 0.0001*apply(cormat,2,mean)
         if (length(baseFeatures) > 0)
         {
-          ordcor[topfeat %in% baseFeatures] <- ordcor[topfeat %in% baseFeatures] + 1;
+          ordcor[baseIncluded] <- ordcor[baseIncluded] + 2;
+        }
+        if (length(AbaseFeatures) > 0)
+        {
+          ordcor[AbaseFeatures] <- ordcor[AbaseFeatures] + 1;
         }
         topfeat <- topfeat[maxcor[topfeat] >= thr];
         if (length(topfeat)>0)
@@ -91,17 +98,22 @@ featureDecorrelation <- function(data=NULL,thr=0.80,refdata=NULL,Outcome=NULL,ba
           colnames(betamatrix) <- varincluded;
           rownames(betamatrix) <- varincluded;
           topfeat <- topfeat[order(-ordcor[topfeat])];
-          topfeat <- unique(c(correlated_Remove(cormat,topfeat,thr = thr,isDataCorMatrix=TRUE),topfeat[topfeat %in% baseFeatures]));
+#          topfeat <- unique(c(correlated_Remove(cormat,topfeat,thr = thr,isDataCorMatrix=TRUE),topfeat[topfeat %in% baseIncluded]));
+          topfeat <- unique(c(baseIncluded[baseIncluded %in% topfeat],correlated_Remove(cormat,topfeat,thr = thr,isDataCorMatrix=TRUE)));
           intopfeat <- character();
-          if (verbose) cat(", Top:",length(topfeat));
+          if (verbose) 
+          {
+            cat(", Top:",length(topfeat));
+          }
           for (feat in topfeat)
           {
             corlist <- cormat[,feat];
-            corlist <- corlist[corlist > thr];
+            corlist <- corlist[corlist >= thr];
             varlist <- names(corlist)
             varlist <- varlist[!(varlist %in% topfeat)]
             varlist <- varlist[!(varlist %in% decorrelatedFetureList)]
-#            varlist <- varlist[!(varlist %in% baseFeatures)]
+            varlist <- varlist[!(varlist %in% baseIncluded)]
+            varlist <- varlist[!(varlist %in% AbaseFeatures)]
             if (length(varlist) > 0)
             {
                dvarlist <- cbind(varlist,varlist)
@@ -120,9 +132,9 @@ featureDecorrelation <- function(data=NULL,thr=0.80,refdata=NULL,Outcome=NULL,ba
                   names(adjusted) <- varlist;
                   for (vl in 1:length(models))
                   {
-                    if (models[[vl]]$pval <= unipvalue)
+                    adjusted[models[[vl]]$feature] <- (models[[vl]]$pval <= unipvalue);
+                    if (adjusted[models[[vl]]$feature])
                     {
-                      adjusted[models[[vl]]$feature] <- TRUE;
                       if (is.null(models[[vl]]$model$coef))
                       {
                         betamatrix[feat,models[[vl]]$feature] <- 1.0;
@@ -134,19 +146,23 @@ featureDecorrelation <- function(data=NULL,thr=0.80,refdata=NULL,Outcome=NULL,ba
                         {
                           betamatrix[feat,models[[vl]]$feature] <- -1.0*models[[vl]]$model$coef[2];
                         }
+                        else
+                        {
+                            adjusted[models[[vl]]$feature] <- FALSE;
+                        }
                       }
                     }
                   }
-                adjusted[is.na(adjusted)] <- FALSE;
-                varlist <- varlist[adjusted];
-                if (length(varlist) > 0)
-                {
-                    dataAdjusted[,c(feat,varlist)] <- adataframe[,c(feat,varlist)];
-                    refdata[,c(feat,varlist)] <- adataframe[refdataids,c(feat,varlist)];
-                    intopfeat <- c(intopfeat,feat);      
-                    countf[varlist] <- countf[varlist] + 1;
-                    decorrelatedFetureList <- unique(c(decorrelatedFetureList,varlist));
-                }
+                  adjusted[is.na(adjusted)] <- FALSE;
+                  varlist <- varlist[adjusted];
+                  if (length(varlist) > 0)
+                  {
+                      dataAdjusted[,c(feat,varlist)] <- adataframe[,c(feat,varlist)];
+                      refdata[,c(feat,varlist)] <- adataframe[refdataids,c(feat,varlist)];
+                      intopfeat <- c(intopfeat,feat);      
+                      countf[varlist] <- countf[varlist] + 1;
+                      decorrelatedFetureList <- unique(c(decorrelatedFetureList,varlist));
+                  }
               }
             }
           }
@@ -156,9 +172,9 @@ featureDecorrelation <- function(data=NULL,thr=0.80,refdata=NULL,Outcome=NULL,ba
              DeCorrmatrix[,decorrelatedFetureList] <-  DeCorrmatrix %*% as.matrix(betamatrix[,decorrelatedFetureList]);
           }
           betamatrix <- NULL;
-          if ( (lp == 1) && is.null(Outcome) )
+          if (lp == 1)
           {
-            baseFeatures <- unique(c(baseFeatures,intopfeat));
+            AbaseFeatures <- unique(c(AbaseFeatures,intopfeat));
           }
           colsd <- apply(refdata[,varincluded],2,sd,na.rm = TRUE);
           if (sum(colsd==0) > 0)
@@ -169,8 +185,6 @@ featureDecorrelation <- function(data=NULL,thr=0.80,refdata=NULL,Outcome=NULL,ba
               refdata[,zcheck] <- refdata[,zcheck] + rnorm(nrow(refdata),0,1e-10);
             }
           }
-          cormat <- abs(cor(refdata[,varincluded],method="spearman"))
-          diag(cormat) <- 0;
           topFeatures <- unique(c(topFeatures,intopfeat));
           if (verbose) 
           {
@@ -189,6 +203,8 @@ featureDecorrelation <- function(data=NULL,thr=0.80,refdata=NULL,Outcome=NULL,ba
           }          
           lastdecorrelated <- decorrelatedFetureList;
           lastintopfeat <- intopfeat;
+          cormat <- abs(cor(refdata[,varincluded],method="spearman"))
+          diag(cormat) <- 0;
         }
 
       }
@@ -212,7 +228,7 @@ featureDecorrelation <- function(data=NULL,thr=0.80,refdata=NULL,Outcome=NULL,ba
             }
           }
           correlatedToBase <- correlatedToBase[!(correlatedToBase %in% baseFeatures)];
-          if (verbose) cat (",Cor to Base:",length(correlatedToBase),"\n")
+          if (verbose) cat (",Cor to Base:",length(correlatedToBase),", ABase:",length(AbaseFeatures),"\n")
         }
       }
     }
@@ -229,6 +245,7 @@ featureDecorrelation <- function(data=NULL,thr=0.80,refdata=NULL,Outcome=NULL,ba
   attr(dataAdjusted,"baseFeatures") <- baseFeatures;
   attr(dataAdjusted,"useDeCorr") <- useDeCorr;
   attr(dataAdjusted,"correlatedToBase") <- correlatedToBase;
+  attr(dataAdjusted,"AbaseFeatures") <- AbaseFeatures;
   return(dataAdjusted)
 }
 
