@@ -45,7 +45,7 @@ featureDecorrelation <- function(data=NULL,thr=0.80,refdata=NULL,Outcome=NULL,ba
   lastdecorrelated <- character();
   if (length(varincluded) > 1)
   {
-    unipvalue <- 4.0*unipvalue*sqrt(totcorr)/totFeatures; ## Adjusting for false association
+    unipvalue <- min(0.05,4.0*unipvalue*sqrt(totcorr)/totFeatures); ## Adjusting for false association
     bvarincluded <- character();
     baseIncluded <- character();
     if (length(baseFeatures) > 0)
