@@ -2,13 +2,13 @@
 \alias{featureAdjustment}
 \title{Adjust each listed variable to the provided set of covariates}
 \description{
-	This function fits the candidate variables to the provided model,for each strata, on a control population.
+	This function fits the candidate variables to the provided model formula,for each strata, on a control population.
 	If the variance of the residual (the fitted observation minus the real observation) is reduced significantly, then, such residual is used in the resulting data frame.
 	Otherwise, the control mean is subtracted to the observation.
 }
 \usage{
 	featureAdjustment(variableList,
-	                  baseModel,
+	                  baseFormula,
 	                  strata = NA,
 	                  data,
 	                  referenceframe,
@@ -22,11 +22,11 @@
 	\item{variableList}{
 		A data frame with two columns. The first one must have the names of the candidate variables and the other one the description of such variables
 	}
-	\item{baseModel}{
-		A string of the type "1 + var1 + var2" that defines the model to which variables will be fitted
+	\item{baseFormula}{
+		A string of the type "var1 +...+ varn" that defines the model formula to which variables will be fitted
 	}
 	\item{strata}{
-		The name of the column in \code{data} that stores the variable that will be used to stratify the model
+		The name of the column in \code{data} that stores the variable that will be used to stratify the fitting
 	}
 	\item{data}{
 		A data frame where all variables are stored in different columns

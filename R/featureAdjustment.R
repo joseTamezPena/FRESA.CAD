@@ -1,5 +1,5 @@
 featureAdjustment <-
-function(variableList,baseModel,strata=NA,data,referenceframe,type=c("LM","GLS","RLM","NZLM","SPLINE","MARS","LOESS"),pvalue=0.05,correlationGroup = "ID",...) 
+function(variableList,baseFormula,strata=NA,data,referenceframe,type=c("LM","GLS","RLM","NZLM","SPLINE","MARS","LOESS"),pvalue=0.05,correlationGroup = "ID",...) 
 {
 
 if (!requireNamespace("nlme", quietly = TRUE)) {
@@ -12,7 +12,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 	install.packages("mda", dependencies = TRUE)
 }
 	type <- match.arg(type);
-	## the reference frame will be used to predict a variable from the basemodel. At output the residuals are returned.
+	## the reference frame will be used to predict a variable from the baseFormula. At output the residuals are returned.
 	## strata is a numeric column varname in the data frame from 0 to S, where S is the maximum number of strata
 	colnamesList <- as.vector(variableList[,1]);
 	size = length(colnamesList);
@@ -33,7 +33,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 	created = 0;
 	models <- list();
 	idx <- 1; 
-	tbbaseModel <- NULL;
+	tbbaseFormula <- NULL;
 	AdjustedFrame <- NULL;
 	isContinous <- FALSE;
 	datamodel <- NULL;
@@ -56,9 +56,9 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 		}
 		if ((nrow(cstrata)>1) && ( nrow(cstrataref)>1))
 		{
-			if (sum(str_count(baseModel,"\\+")) == 0)
+			if (sum(str_count(baseFormula,"\\+")) == 0)
 			{
-				datamodel <- cstrataref[,baseModel]
+				datamodel <- cstrataref[,baseFormula]
 				isContinous <- length(table(datamodel)) > 5;
 			}
 			for (i in 1:size)
@@ -69,7 +69,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 				{
 					avgref <- mean(dtacolumn,na.rm = TRUE);
 					ress1 <- dtacolumn - avgref;
-					ftm1 <- paste(colnamesList[i],paste(" ~ ",baseModel));
+					ftm1 <- paste(colnamesList[i],paste(" ~ ",baseFormula));
 					ftmp <- formula(ftm1);
 					mfref <- model.frame(ftmp,cstrataref);
 					mfstrata <- model.frame(ftmp,cstrata);
@@ -89,11 +89,11 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 						}
 					}
 					modelRLM <- modellm;
-#					f <- summary(modellm)$fstatistic
-#					pft <- pf(f[1],f[2],f[3],lower.tail=FALSE);
-#					if (is.na(pft)) pft <- 1.0;
-#					if (is.na(plm)) plm <- 1.0;
-#					plm <- min(plm,0.5*pft)
+					f <- summary(modellm)$fstatistic
+					pft <- pf(f[1],f[2],f[3],lower.tail=FALSE);
+					if (is.na(pft)) pft <- 1.0;
+					plm <- min(plm,pft)
+					p <- min(p,pft)
 					switch(type,
     					LOESS =
 						{
@@ -299,7 +299,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 								{
 									if (class(model) == "mars")
 									{
-										cstrata[,colnamesList[i]] <- avgref + cstrata[,colnamesList[i]] - as.numeric(predict(model,cstrata[,baseModel]));
+										cstrata[,colnamesList[i]] <- avgref + cstrata[,colnamesList[i]] - as.numeric(predict(model,cstrata[,baseFormula]));
 									}
 									else
 									{
@@ -313,7 +313,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 								{
 									if (class(model) == "smooth.spline")
 									{
-										cstrata[,colnamesList[i]] <-  avgref + cstrata[,colnamesList[i]] - predict(model,cstrata[,baseModel])$y;
+										cstrata[,colnamesList[i]] <-  avgref + cstrata[,colnamesList[i]] - predict(model,cstrata[,baseFormula])$y;
 									}
 									else
 									{
