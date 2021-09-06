@@ -10,7 +10,9 @@
 	                     refdata=NULL,Outcome=NULL,
 	                     baseFeatures=NULL,unipvalue=0.05,
 	                     useDeCorr=TRUE,maxLoops=20,
-	                     verbose=FALSE,...)
+	                     verbose=FALSE,
+	                     method=c("spearman","pearson", "kendall"),
+	                     ...)
 
 	
 	predictDecorrelate(decorrelatedobject,testData)
@@ -42,6 +44,9 @@
 	}
 	\item{verbose}{
 	if TRUE, it will display internal evolution of algorithm.
+	}
+	\item{method}{
+	method pased to correlation function.
 	}
 	\item{...}{
 	parameters passed to the adjuting method.

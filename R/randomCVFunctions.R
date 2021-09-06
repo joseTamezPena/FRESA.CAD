@@ -219,33 +219,38 @@ if (!requireNamespace("twosamples", quietly = TRUE)) {
 }
 
 
-univariate_KS <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="BH",limit=0,...,n = 0)
+univariate_filter <- function(data=NULL, Outcome=NULL, pvalue=0.2,pvalueMethod=wilcox.test, adjustMethod="BH",limit=0,...,n = 0)
 {
-
 	varlist <-colnames(data);
-  if (class(data[,Outcome]) == "factor") data[,Outcome] <- as.numeric(as.character(data[,Outcome]));
-	case <- subset(data,get(Outcome) == 1);
-	control <- subset(data,get(Outcome) == 0);
 	varlist <- varlist[Outcome != varlist];
-	unitPvalues <- numeric(length(varlist));
+	unitPvalues <- rep(1.0,length(varlist));
 	names(unitPvalues) <- varlist;
+
+	outcomes <- as.character(data[,Outcome]);
+	outlist <- unique(outcomes)
 	
-	for (j in varlist) 
+	for (oft in outlist[-1])
 	{
-		tb <- table(data[,j],data[,Outcome])
-		if (nrow(tb) > 5)
+		case <- subset(data,outcomes == oft);
+		control <- subset(data,outcomes != oft);
+		for (j in varlist) 
 		{
-			 pval <- ks.test(control[,j],case[,j],na.action = na.exclude)$p.value; 
+			tb <- table(data[,j],outcomes == oft)
+			if (nrow(tb) > 5)
+			{
+				 pval <- pvalueMethod(control[,j],case[,j],na.action = na.exclude)$p.value; 
+			}
+			else
+			{
+				pval <- prop.test(tb)$p.value
+			}
+			if (inherits(pval, "try-error")) {pval <- 1.0;}
+			if (is.null(pval)) { pval <- 1.0; }
+			if (is.na(pval)) {pval <- 1.0;}
+			unitPvalues[j] <- min(unitPvalues[j],pval);
 		}
-		else
-		{
-			pval <- prop.test(tb)$p.value
-		}
-		if (inherits(pval, "try-error")) {pval <- 1.0;}
-		if (is.null(pval)) { pval <- 1.0; }
-		if (is.na(pval)) {pval <- 1.0;}
-		unitPvalues[j] <- pval;
 	}
+
   	unitPvalues <- unitPvalues[order(unitPvalues)];
   	unadjusted <- unitPvalues;
 	unitPvalues <- p.adjust(unitPvalues,adjustMethod,n=max(n,length(unitPvalues)));
@@ -268,102 +273,195 @@ univariate_KS <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="BH"
 }
 
 
+univariate_KS <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="BH",limit=0,...,n = 0)
+{
+	unitPvalues <- univariate_filter(data=data,
+										Outcome=Outcome,
+										pvalue=pvalue,
+										pvalueMethod=ks.test,
+										adjustMethod=adjustMethod,
+										limit=limit,
+										...,
+										n = n)
+	# varlist <-colnames(data);
+    # if (class(data[,Outcome]) == "factor") data[,Outcome] <- as.numeric(as.character(data[,Outcome]));
+	# case <- subset(data,get(Outcome) == 1);
+	# control <- subset(data,get(Outcome) == 0);
+	# varlist <- varlist[Outcome != varlist];
+	# unitPvalues <- numeric(length(varlist));
+	# names(unitPvalues) <- varlist;
+	
+	# for (j in varlist) 
+	# {
+		# tb <- table(data[,j],data[,Outcome])
+		# if (nrow(tb) > 5)
+		# {
+			 # pval <- ks.test(control[,j],case[,j],na.action = na.exclude)$p.value; 
+		# }
+		# else
+		# {
+			# pval <- prop.test(tb)$p.value
+		# }
+		# if (inherits(pval, "try-error")) {pval <- 1.0;}
+		# if (is.null(pval)) { pval <- 1.0; }
+		# if (is.na(pval)) {pval <- 1.0;}
+		# unitPvalues[j] <- pval;
+	# }
+  	# unitPvalues <- unitPvalues[order(unitPvalues)];
+  	# unadjusted <- unitPvalues;
+	# unitPvalues <- p.adjust(unitPvalues,adjustMethod,n=max(n,length(unitPvalues)));
+	# top <- unitPvalues[1];
+	# if ((top < 0.45) && (unadjusted[1] < 0.05))
+	# {
+		# top <- unitPvalues[unitPvalues <= 1.01*top];
+	# }
+	# unitPvalues <- unitPvalues[unitPvalues <= pvalue];
+	# if (length(unitPvalues) > 1) 
+	# {
+		# unitPvalues <- correlated_RemoveToLimit(data,unitPvalues,limit,...);
+	# }
+	# else 
+	# {
+		# unitPvalues <- top;
+	# }
+	# attr(unitPvalues,"Unadjusted") <- unadjusted;
+
+   return(unitPvalues);
+}
+
+
 univariate_Wilcoxon <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="BH",limit=0,...,n = 0)
 {
 
-	varlist <-colnames(data);
-  if (class(data[,Outcome]) == "factor") data[,Outcome] <- as.numeric(as.character(data[,Outcome]));
-	case <- subset(data,get(Outcome) == 1);
-	control <- subset(data,get(Outcome) == 0);
-	varlist <- varlist[Outcome != varlist];
-	unitPvalues <- numeric(length(varlist));
-	names(unitPvalues) <- varlist;
+	unitPvalues <- univariate_filter(data=data,
+										Outcome=Outcome,
+										pvalue=pvalue,
+										pvalueMethod=wilcox.test,
+										adjustMethod=adjustMethod,
+										limit=limit,
+										...,
+										n = n)
 
-	for (j in varlist) 
-	{
-		 pval <- wilcox.test(control[,j],case[,j],na.action = na.exclude)$p.value; 
-		 if (inherits(pval, "try-error")) {pval <- 1.0;}
-		 if (is.null(pval)) { pval <- 1.0; }
-		 if (is.na(pval)) {pval <- 1.0;}
-		 unitPvalues[j] <- pval;
-	}
+	# varlist <-colnames(data);
+  # if (class(data[,Outcome]) == "factor") data[,Outcome] <- as.numeric(as.character(data[,Outcome]));
+	# case <- subset(data,get(Outcome) == 1);
+	# control <- subset(data,get(Outcome) == 0);
+	# varlist <- varlist[Outcome != varlist];
+	# unitPvalues <- numeric(length(varlist));
+	# names(unitPvalues) <- varlist;
+
+	# for (j in varlist) 
+	# {
+		 # pval <- wilcox.test(control[,j],case[,j],na.action = na.exclude)$p.value; 
+		 # if (inherits(pval, "try-error")) {pval <- 1.0;}
+		 # if (is.null(pval)) { pval <- 1.0; }
+		 # if (is.na(pval)) {pval <- 1.0;}
+		 # unitPvalues[j] <- pval;
+	# }
   
-	unitPvalues <- unitPvalues[order(unitPvalues)];
-  	unadjusted <- unitPvalues;
-	unitPvalues <- p.adjust(unitPvalues,adjustMethod,n=max(n,length(unitPvalues)));
-	top <- unitPvalues[1];
-	if ((top < 0.45) && (unadjusted[1] < 0.05))
-	{
-		top <- unitPvalues[unitPvalues <= 1.01*top];
-	}
-	unitPvalues <- unitPvalues[unitPvalues <= pvalue];
-	if (length(unitPvalues) > 1) 
-	{
-		unitPvalues <- correlated_RemoveToLimit(data,unitPvalues,limit,...);
-	}
-	else 
-	{
-		unitPvalues <- top;
-	}
-   attr(unitPvalues,"Unadjusted") <- unadjusted;
+	# unitPvalues <- unitPvalues[order(unitPvalues)];
+  	# unadjusted <- unitPvalues;
+	# unitPvalues <- p.adjust(unitPvalues,adjustMethod,n=max(n,length(unitPvalues)));
+	# top <- unitPvalues[1];
+	# if ((top < 0.45) && (unadjusted[1] < 0.05))
+	# {
+		# top <- unitPvalues[unitPvalues <= 1.01*top];
+	# }
+	# unitPvalues <- unitPvalues[unitPvalues <= pvalue];
+	# if (length(unitPvalues) > 1) 
+	# {
+		# unitPvalues <- correlated_RemoveToLimit(data,unitPvalues,limit,...);
+	# }
+	# else 
+	# {
+		# unitPvalues <- top;
+	# }
+   # attr(unitPvalues,"Unadjusted") <- unadjusted;
    return(unitPvalues);
 }
 
 univariate_tstudent <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="BH",limit=0,...,n = 0)
 {
 
-	varlist <-colnames(data);
-  if (class(data[,Outcome]) == "factor") data[,Outcome] <- as.numeric(as.character(data[,Outcome]));
-	case <- subset(data,get(Outcome) == 1);
-	control <- subset(data,get(Outcome) == 0);
-	varlist <- varlist[Outcome != varlist];
-	unitPvalues <- numeric(length(varlist));
-	names(unitPvalues) <- varlist;
-	for (j in varlist) 
-	{
-		pval <- try(t.test(control[,j],case[,j],na.action = na.exclude)$p.value);
-		if (inherits(pval, "try-error")) {pval <- 1.0;}
-		if (is.null(pval)) { pval <- 1.0; }
-		if (is.na(pval)) {pval <- 1.0;}
-		unitPvalues[j] <-  pval;	
-	}
-	unitPvalues <- unitPvalues[order(unitPvalues)];
-  	unadjusted <- unitPvalues;
-	unitPvalues <- p.adjust(unitPvalues,adjustMethod,n=max(n,length(unitPvalues)));
-	top <- unitPvalues[1];
-	if ((top < 0.45) && (unadjusted[1] < 0.05))
-	{
-		top <- unitPvalues[unitPvalues <= 1.01*top];
-	}
-	unitPvalues <- unitPvalues[unitPvalues <= pvalue];
-	if (length(unitPvalues) > 1) 
-	{
-		unitPvalues <- correlated_RemoveToLimit(data,unitPvalues,limit,...);
-	}
-	else 
-	{
-		unitPvalues <- top;
-	}
-   attr(unitPvalues,"Unadjusted") <- unadjusted;
-   return(unitPvalues);
+	unitPvalues <- univariate_filter(data=data,
+										Outcome=Outcome,
+										pvalue=pvalue,
+										pvalueMethod=t.test,
+										adjustMethod=adjustMethod,
+										limit=limit,
+										...,
+										n = n)
+
+	# varlist <-colnames(data);
+  # if (class(data[,Outcome]) == "factor") data[,Outcome] <- as.numeric(as.character(data[,Outcome]));
+	# case <- subset(data,get(Outcome) == 1);
+	# control <- subset(data,get(Outcome) == 0);
+	# varlist <- varlist[Outcome != varlist];
+	# unitPvalues <- numeric(length(varlist));
+	# names(unitPvalues) <- varlist;
+	# for (j in varlist) 
+	# {
+		# pval <- try(t.test(control[,j],case[,j],na.action = na.exclude)$p.value);
+		# if (inherits(pval, "try-error")) {pval <- 1.0;}
+		# if (is.null(pval)) { pval <- 1.0; }
+		# if (is.na(pval)) {pval <- 1.0;}
+		# unitPvalues[j] <-  pval;	
+	# }
+	# unitPvalues <- unitPvalues[order(unitPvalues)];
+  	# unadjusted <- unitPvalues;
+	# unitPvalues <- p.adjust(unitPvalues,adjustMethod,n=max(n,length(unitPvalues)));
+	# top <- unitPvalues[1];
+	# if ((top < 0.45) && (unadjusted[1] < 0.05))
+	# {
+		# top <- unitPvalues[unitPvalues <= 1.01*top];
+	# }
+	# unitPvalues <- unitPvalues[unitPvalues <= pvalue];
+	# if (length(unitPvalues) > 1) 
+	# {
+		# unitPvalues <- correlated_RemoveToLimit(data,unitPvalues,limit,...);
+	# }
+	# else 
+	# {
+		# unitPvalues <- top;
+	# }
+   # attr(unitPvalues,"Unadjusted") <- unadjusted;
+    return(unitPvalues);
 }
 
 univariate_correlation <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="BH", method = "kendall",limit=0,...,n = 0)
 {
 
-  if (class(data[,Outcome]) == "factor") data[,Outcome] <- as.numeric(as.character(data[,Outcome]));
-	varlist <-colnames(data);
+	varlist <- colnames(data);
 	varlist <- varlist[Outcome != varlist];
-	unitPvalues <- numeric(length(varlist));
+	unitPvalues <- rep(1.0,length(varlist));
 	names(unitPvalues) <- varlist;
-
-	for (j in varlist) 
+	
+    if (class(data[,Outcome]) == "factor") 
 	{
-		pval <- try(cor.test(data[,Outcome],data[,j],na.action = na.exclude,method = method)$p.value);
-		if (inherits(pval, "try-error")) {pval <- 1.0;}
-		if (is.null(pval)) { pval <- 1.0; }
-		if (is.na(pval)) {pval <- 1.0;}
-		unitPvalues[j] <-  pval;
+		outcomes <- as.character(data[,Outcome]);
+		outlist <- unique(outcomes);
+		for (ots in outlist[-1])
+		{
+			for (j in varlist) 
+			{
+				pval <- try(cor.test(1*(outcomes==ots),data[,j],na.action = na.exclude,method = method)$p.value);
+				if (inherits(pval, "try-error")) {pval <- 1.0;}
+				if (is.null(pval)) { pval <- 1.0; }
+				if (is.na(pval)) {pval <- 1.0;}
+				unitPvalues[j] <- min(unitPvalues[j],pval);
+			}
+		}
+	}
+	else
+	{
+		for (j in varlist) 
+		{
+			pval <- try(cor.test(data[,Outcome],data[,j],na.action = na.exclude,method = method)$p.value);
+			if (inherits(pval, "try-error")) {pval <- 1.0;}
+			if (is.null(pval)) { pval <- 1.0; }
+			if (is.na(pval)) {pval <- 1.0;}
+			unitPvalues[j] <-  pval;
+		}
 	}
   	unitPvalues <- unitPvalues[order(unitPvalues)];
   	unadjusted <- unitPvalues;

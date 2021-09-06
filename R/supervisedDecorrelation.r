@@ -1,7 +1,18 @@
-featureDecorrelation <- function(data=NULL,thr=0.80,refdata=NULL,Outcome=NULL,baseFeatures=NULL,unipvalue=0.05,useDeCorr=TRUE,maxLoops=20,verbose=FALSE,...)
+featureDecorrelation <- function(data=NULL,
+                                  thr=0.80,
+                                  refdata=NULL,
+                                  Outcome=NULL,
+                                  baseFeatures=NULL,
+                                  unipvalue=0.05,
+                                  useDeCorr=TRUE,
+                                  maxLoops=20,
+                                  verbose=FALSE,
+                                  method=c("spearman","pearson","kendall"),
+                                  ...)
 {
 
   dataids <- rownames(data)
+  method <- match.arg(method);
 
   if (is.null(refdata))
   {
@@ -29,7 +40,7 @@ featureDecorrelation <- function(data=NULL,thr=0.80,refdata=NULL,Outcome=NULL,ba
   
   models <- NULL
   
-  cormat <- abs(cor(refdata[,varincluded],method="spearman"))
+  cormat <- abs(cor(refdata[,varincluded],method=method))
   diag(cormat) <- 0;
   maxcor <- apply(cormat,2,max)
   totcorr <- sum(cormat >= thr); 
@@ -38,7 +49,7 @@ featureDecorrelation <- function(data=NULL,thr=0.80,refdata=NULL,Outcome=NULL,ba
   outcomep <- numeric();
   if ( !is.null(Outcome) && length(baseFeatures)==0 )
   {
-      outcomep <- univariate_correlation(data,Outcome,method="spearman",limit=0,pvalue=0.20,thr = 0.5) # the top associated features to the outcome
+      outcomep <- univariate_correlation(data,Outcome,method=method,limit=0,pvalue=0.20,thr = 0.5) # the top associated features to the outcome
       baseFeatures <- names(outcomep);
   }
   lastintopfeat <- character();
@@ -206,7 +217,7 @@ featureDecorrelation <- function(data=NULL,thr=0.80,refdata=NULL,Outcome=NULL,ba
             }
           }
           topFeatures <- unique(c(topFeatures,intopfeat));
-          cormat <- abs(cor(refdata[,varincluded],method="spearman"))
+          cormat <- abs(cor(refdata[,varincluded],method=method))
           diag(cormat) <- 0;
           if (verbose) 
           {
@@ -251,7 +262,7 @@ featureDecorrelation <- function(data=NULL,thr=0.80,refdata=NULL,Outcome=NULL,ba
           correlatedToBase <- correlatedToBase[!(correlatedToBase %in% baseFeatures)];
           if (verbose) 
           {
-              cormat <- abs(cor(dataAdjusted[,varincluded],method="spearman"))
+              cormat <- abs(cor(dataAdjusted[,varincluded],method=method))
               diag(cormat) <- 0;
               cat (",",max(cormat),". Cor to Base:",length(correlatedToBase),", ABase:",length(AbaseFeatures),"\n")
           }
