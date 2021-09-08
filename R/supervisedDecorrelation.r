@@ -49,7 +49,7 @@ featureDecorrelation <- function(data=NULL,
   outcomep <- numeric();
   if ( !is.null(Outcome) && length(baseFeatures)==0 )
   {
-      outcomep <- univariate_correlation(data,Outcome,method=method,limit=0,pvalue=0.20,thr = 0.5) # the top associated features to the outcome
+      outcomep <- univariate_correlation(data,Outcome,method=method,limit=0,pvalue=0.20,thr = 0.99*thr) # the top associated features to the outcome
       baseFeatures <- names(outcomep);
   }
   lastintopfeat <- character();
@@ -132,6 +132,10 @@ featureDecorrelation <- function(data=NULL,
             varlist <- varlist[!(varlist %in% decorrelatedFetureList)]
             varlist <- varlist[!(varlist %in% baseIncluded)]
             varlist <- varlist[!(varlist %in% AbaseFeatures)]
+            if ((lp < 4) && !(feat %in% baseIncluded))
+            {
+              varlist <- varlist[!(varlist %in% bvarincluded)]
+            }
             varlist <- names(corlist)
             # if (verbose) 
             # {
