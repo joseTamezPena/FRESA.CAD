@@ -245,6 +245,15 @@ featureDecorrelation <- function(data=NULL,
         if (length(varincluded) > 1)
         {
           dataAdjusted[,varincluded] <- as.matrix(data[,varincluded]) %*% DeCorrmatrix;
+          colsd <- apply(dataAdjusted[,varincluded],2,sd,na.rm = TRUE);
+          if (sum(colsd==0) > 0)
+          {
+            zerovar <- varincluded[colsd==0];
+            for (zcheck in zerovar)
+            {
+              dataAdjusted[,zcheck] <- dataAdjusted[,zcheck] + rnorm(nrow(dataAdjusted),0,1e-10);
+            }
+          }
 
           correlatedToBase <- varincluded[varincluded %in% baseFeatures];
           if (length(correlatedToBase) > 1)
