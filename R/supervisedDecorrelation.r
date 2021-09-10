@@ -44,7 +44,7 @@ featureDecorrelation <- function(data=NULL,
   diag(cormat) <- 0;
   maxcor <- apply(cormat,2,max)
   totcorr <- sum(cormat >= thr); 
-  varincluded <- names(maxcor)[maxcor >= thr];
+  varincluded <- names(maxcor)[maxcor >= 0.5*thr];
   DeCorrmatrix <- NULL;
   outcomep <- numeric();
   if ( !is.null(Outcome) && length(baseFeatures)==0 )
