@@ -54,6 +54,7 @@ featureDecorrelation <- function(data=NULL,
   }
   lastintopfeat <- character();
   lastdecorrelated <- character();
+  totused <- character();
   if (length(varincluded) > 1)
   {
     unipvalue <- min(0.05,4.0*unipvalue*sqrt(totcorr)/totFeatures); ## Adjusting for false association
@@ -204,6 +205,7 @@ featureDecorrelation <- function(data=NULL,
           if (addedlist > 0)
           {
              DeCorrmatrix[,decorrelatedFetureList] <-  DeCorrmatrix %*% as.matrix(betamatrix[,decorrelatedFetureList]);
+             totused <- unique(c(totused,intopfeat,decorrelatedFetureList));
           }
           betamatrix <- NULL;
           if (lp == 1)
@@ -225,7 +227,7 @@ featureDecorrelation <- function(data=NULL,
           diag(cormat) <- 0;
           if (verbose) 
           {
-            cat (", Added:",addedlist,", Zero Std:",sum(colsd==0),", Max Cor:",max(cormat));
+            cat (", Tot Used:",length(totused),", Added:",addedlist,", Zero Std:",sum(colsd==0),", Max Cor:",max(cormat));
 #            if (lp > 5)
 #           {
 #              cat(",",decorrelatedFetureList[1],":",intopfeat[1]);
@@ -243,8 +245,11 @@ featureDecorrelation <- function(data=NULL,
         }
 
       }
+      varincluded <- totused;
       if (useDeCorr)
       {
+        DeCorrmatrix <- DeCorrmatrix[,varincluded]
+        DeCorrmatrix <- DeCorrmatrix[varincluded,]
         dataAdjusted <- data
         if (length(varincluded) > 1)
         {
@@ -283,7 +288,10 @@ featureDecorrelation <- function(data=NULL,
       }
     }
   }
-  dataAdjusted <- dataAdjusted[dataids,];
+  else
+  {
+    dataAdjusted <- dataAdjusted[dataids,];
+  }
   
   
   
