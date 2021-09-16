@@ -79,7 +79,15 @@
 	\item{useDeCorr}{
 		If TRUE the estimated DeCorrmatrix matrix was used for decorrelation
 	}
+	\item{correlatedToBase}{
+		List of correlated featuers to baseFeatures 
+	}
+	\item{AbaseFeatures}{
+		List of independent base features suplementing baseFeatures
+	}
 }
+
+
 
 \author{Jose G. Tamez-Pena}
 \seealso{\code{featureAdjustment}}

@@ -65,30 +65,37 @@ rpredict <-	function(currentModel,DataSet,asFactor=FALSE,classLen=2,...)
 			}
 			else
 			{
-				pred <-as.numeric(pred$posterior[,2]);
+				pred <- pred$posterior;
+				if (classLen==2)
+				{
+					pred <-as.numeric(pred[,2]);
+				}
 			}
 		}
-		if (class(pred)[1] == "factor")
+		else
 		{
-			pred <- as.numeric(as.character(pred));
-		}
-		if (class(pred)[1] == "array")
-		{
-			pnames <- colnames(pred);
-			pred <- pnames[apply(pred[,,1],1,which.max)];
-			pred <- as.numeric(pred);
-		}
-		if (class(pred)[1] == "matrix") 
-		{
-			if (ncol(pred)>1)
+#			if (class(pred)[1] == "factor")
+#			{
+#				pred <- as.numeric(as.character(pred));
+#			}
+			if (class(pred)[1] == "array")
 			{
 				pnames <- colnames(pred);
-				pred <- pnames[apply(pred,1,which.max)];
+				pred <- pnames[apply(pred[,,1],1,which.max)];
 				pred <- as.numeric(pred);
 			}
-			else
+			if (class(pred)[1] == "matrix") 
 			{
-				pred <- as.numeric(pred);
+				if (ncol(pred)>1)
+				{
+					pnames <- colnames(pred);
+					pred <- pnames[apply(pred,1,which.max)];
+					pred <- as.numeric(pred);
+				}
+				else
+				{
+					pred <- as.numeric(pred);
+				}
 			}
 		}
 	}

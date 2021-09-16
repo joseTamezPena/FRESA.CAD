@@ -485,31 +485,34 @@ if (!requireNamespace("naivebayes", quietly = TRUE)) {
 	pcaobj <- NULL;
 	scaleparm <- NULL;
 	numclases <- length(table(data[,baseformula[2]]))
-	if (pca && (nrow(data) > 2*ncol(data)) && (ncol(data) > 3))
+	if (pca && (ncol(data) > 3))
 	{
 		outcome <- data[,baseformula[2]];
 		data <- as.data.frame(data[,!(colnames(data) %in% baseformula[2])]);
 		if (normalize)
 		{
 			scaleparm <- FRESAScale(data,method="OrderLogit");
-			pcaobj <- prcomp(scaleparm$scaledData,center = FALSE);
+			pcaobj <- prcomp(scaleparm$scaledData,center = FALSE,tol=0.025);
 			scaleparm$scaledData <- NULL
 		}
 		else
 		{
-			pcaobj <- prcomp(data,center = FALSE);
+			pcaobj <- prcomp(data,center = FALSE,tol=0.025);
 		}
-		data <- as.data.frame(cbind(as.numeric(as.character(outcome)),pcaobj$x));
+		data <- as.data.frame(cbind(outcome,pcaobj$x));
 		colnames(data) <- c(baseformula[2],colnames(pcaobj$x));
-		data[,baseformula[2]] <- as.factor(data[,baseformula[2]])
+		data[,baseformula[2]] <- as.factor(outcome)
 	}
 	if (length(list(...)) == 0)
 	{
-#		print(colnames(data))
-        fit <- try (naivebayes::naive_bayes(formula,data,
-		laplace = 0.001,
+		laplace = 1.0e-6/nrow(data);
+#		prior = rep(1.0/numclases,numclases);
+		prior = NULL;
+#		print(prior)
+        fit <- try (naivebayes::naive_bayes(formula,data,prior=prior,
+		laplace = laplace,
 		usekernel = TRUE,
-		bw="SJ",adjust=1.25), silent=TRUE)
+		bw="SJ",adjust=1.10,window="optcosine"), silent=TRUE)
 		if (inherits(fit, "try-error"))
 		{
 #			print("Error. Try again")
@@ -517,16 +520,15 @@ if (!requireNamespace("naivebayes", quietly = TRUE)) {
 			{
 				if (length(table(data[,fn])) < 5)
 				{
-					data[,fn] <- data[,fn] + rnorm(nrow(data),0,0.10);
+					data[,fn] <- data[,fn] + rnorm(nrow(data),0,0.01*sd(data[,fn]));
 				}
 			}
-	        fit <- try(naivebayes::naive_bayes(formula,data,
-			laplace = 0.001,
-			usekernel = TRUE,
-			bw="SJ",adjust=1.25), silent=TRUE);
+	        fit <- try(naivebayes::naive_bayes(formula,data,prior=prior,
+			laplace = laplace,
+			usekernel = TRUE), silent=TRUE);
 			if (inherits(fit, "try-error")) 
 			{
-				fit <- naivebayes::naive_bayes(formula,data);
+				fit <- naivebayes::naive_bayes(formula,data,prior=prior,laplace = laplace);
 			}
 
 		}
@@ -563,7 +565,8 @@ predict.FRESA_NAIVEBAYES <- function(object,...)
 		testData <- as.data.frame(as.matrix(testData[,usedcolumns]));
 		colnames(testData) <- usedcolumns;
 	}
-	pLS <- as.numeric(as.character(predict(object$fit,testData)));
+	pLS <- predict(object$fit,testData);
+#	pLS <- as.numeric(as.character(predict(object$fit,testData)));
 	if (is.null(parameters$probability))
 	{
 		if (object$numClases == 2)
@@ -1251,9 +1254,9 @@ filteredFit <- function(formula = formula, data=NULL, filtermethod=univariate_Wi
 		if (binOutcome)
 		{
 			controlSet <- subset(data,get(Outcome) == 0)
-			if ((nrow(controlSet) > 2*length(usedFeatures)))
+			if (length(usedFeatures) > 2)
 			{
-				pcaobj <- prcomp(controlSet[,fm],center = (Scale == "none"), scale.= (Scale == "none"));
+				pcaobj <- prcomp(controlSet[,fm],center = (Scale == "none"), scale.= (Scale == "none"),tol=0.025);
 				data <- as.data.frame(cbind(data[,Outcome],as.data.frame(predict(pcaobj,data[,fm]))));
 				colnames(data) <- c(Outcome,colnames(pcaobj$x));
 				if (isFactor)
@@ -1264,7 +1267,7 @@ filteredFit <- function(formula = formula, data=NULL, filtermethod=univariate_Wi
 		}
 		else
 		{
-			pcaobj <- prcomp(data[,fm],center = (Scale == "none"), scale.= (Scale == "none"));
+			pcaobj <- prcomp(data[,fm],center = (Scale == "none"), scale.= (Scale == "none"),tol=0.025);
 			data <- as.data.frame(cbind(data[,Outcome],as.data.frame(pcaobj$x)));
 			colnames(data) <- c(Outcome,colnames(pcaobj$x));
 			if (isFactor)
@@ -1358,19 +1361,19 @@ ClustClass <- function(formula = formula, data=NULL, filtermethod=univariate_KS,
 	datapca <- as.data.frame(data[,selectedfeatures]);
 	pcaobj <- NULL;
 	scaleparm <- NULL;
-	if (pca && ((nrow(datapca) > 2*ncol(datapca)) && (ncol(datapca) > 3)))
+	if (pca &&  (ncol(datapca) > 3))
 	{
 		rank. = max(3,as.integer(length(selectedfeatures)/3+0.5));
 		rank. = min(rank.,length(selectedfeatures))
 		if (normalize)
 		{
 			scaleparm <- FRESAScale(datapca,method="OrderLogit");
-			pcaobj <- prcomp(scaleparm$scaledData,center = FALSE,rank.=rank. );
+			pcaobj <- prcomp(scaleparm$scaledData,center = FALSE,rank.=rank.,tol=0.05);
 			scaleparm$scaledData <- NULL
 		}
 		else
 		{
-			pcaobj <- prcomp(datapca,center = TRUE,rank.=rank.);
+			pcaobj <- prcomp(datapca,center = TRUE,rank.=rank.,tol=0.05);
 		}
 		datapca <- as.data.frame(pcaobj$x);
 	}

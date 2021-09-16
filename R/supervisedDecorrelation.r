@@ -64,13 +64,17 @@ featureDecorrelation <- function(data=NULL,
     {    
       baseIncluded <- varincluded[varincluded %in% baseFeatures];
       names(baseIncluded) <- baseIncluded;
-      if (length(baseIncluded) > 1)
+      if (length(baseIncluded) > 0)
       {
-        bcormat <-  cormat[baseIncluded,]
-        bmaxcor <- apply(bcormat,2,max)
+        bcormat <-  cormat[baseIncluded,];
+        bmaxcor <- bcormat;
+        if (length(baseIncluded) > 1)
+        {
+          bmaxcor <- apply(bcormat,2,max)
+        }
         bvarincluded <- names(bmaxcor)[bmaxcor >= thr];
         bcormat <- NULL;
-      }
+      } 
     }
 #    if ((length(varincluded) > 1) || is.null(Outcome) )
     {
