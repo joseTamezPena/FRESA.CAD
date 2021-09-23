@@ -442,9 +442,10 @@ predictDecorrelate <- function(decorrelatedobject,testData)
     testData[,colnames(decorMat)] <- as.matrix(testData[,rownames(decorMat)]) %*% decorMat
     AbaseFeatures <- attr(decorrelatedobject,"AbaseFeatures")
     baseFeatures <- attr(decorrelatedobject,"baseFeatures")
+    varincluded <- attr(decorrelatedobject,"varincluded")
     newnames <- colnames(testData)
     newnames[newnames %in% c(AbaseFeatures,baseFeatures)] <- paste("Ba_",newnames[newnames %in% c(AbaseFeatures,baseFeatures)],sep="") 
-    newnames[newnames %in% colnames(decorMat)] <- paste("De_",newnames[newnames %in% colnames(decorMat)],sep="")
+    newnames[newnames %in% varincluded] <- paste("De_",newnames[newnames %in% varincluded],sep="")
     colnames(testData) <- newnames
   }
   else
