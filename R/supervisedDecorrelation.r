@@ -15,6 +15,7 @@ featureDecorrelation <- function(data=NULL,
 		install.packages("Rfast", dependencies = TRUE)
 	} 
 
+  method <- match.arg(method);
   useFastCor <- method=="fast";
   if (useFastCor) 
   {
@@ -58,7 +59,6 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
 
 
   dataids <- rownames(data)
-  method <- match.arg(method);
 
   if (is.null(refdata))
   {
@@ -358,15 +358,18 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
 
       }
       betamatrix <- NULL;
-      varincluded <- varincluded[varincluded %in% totused];
+      tmparincluded <- varincluded
+      varincluded <- tmparincluded[tmparincluded %in% totused];
+#      alphaincluded <- tmparincluded[tmparincluded %in% totalpha];
+      alphaincluded <- tmparincluded[tmparincluded %in% totused];
       if (useDeCorr)
       {
-        DeCorrmatrix <- DeCorrmatrix[varincluded,varincluded]
+        DeCorrmatrix <- DeCorrmatrix[alphaincluded,varincluded]
         dataAdjusted <- data
         if (length(varincluded) > 1)
         {
 #          dataAdjusted[,varincluded] <- as.matrix(data[,varincluded]) %*% DeCorrmatrix;
-          dataAdjusted[,varincluded] <- Rfast::mat.mult(as.matrix(data[,varincluded]),DeCorrmatrix);
+          dataAdjusted[,varincluded] <- Rfast::mat.mult(as.matrix(data[,alphaincluded]),DeCorrmatrix);
           colsd <- apply(dataAdjusted[,varincluded],2,sd,na.rm = TRUE);
           if (sum(colsd==0) > 0)
           {
@@ -404,6 +407,10 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
               diag(cormat) <- 0;
               cat (",",max(cormat),". Cor to Base:",length(correlatedToBase),", ABase:",length(AbaseFeatures),"\n")
           }
+          newnames <- colnames(dataAdjusted)
+          newnames[newnames %in% c(AbaseFeatures,baseFeatures)] <- paste("Ba_",newnames[newnames %in% c(AbaseFeatures,baseFeatures)],sep="") 
+          newnames[newnames %in% varincluded] <- paste("De_",newnames[newnames %in% varincluded],sep="")
+          colnames(dataAdjusted) <- newnames
         }
       }
       else
@@ -432,7 +439,13 @@ predictDecorrelate <- function(decorrelatedobject,testData)
   if (attr(decorrelatedobject,"useDeCorr") && !is.null(attr(decorrelatedobject,"DeCorrmatrix")))
   {
     decorMat <- attr(decorrelatedobject,"DeCorrmatrix")
-    testData[,colnames(decorMat)] <- as.matrix(testData[,colnames(decorMat)]) %*% decorMat
+    testData[,colnames(decorMat)] <- as.matrix(testData[,rownames(decorMat)]) %*% decorMat
+    AbaseFeatures <- attr(decorrelatedobject,"AbaseFeatures")
+    baseFeatures <- attr(decorrelatedobject,"baseFeatures")
+    newnames <- colnames(testData)
+    newnames[newnames %in% c(AbaseFeatures,baseFeatures)] <- paste("Ba_",newnames[newnames %in% c(AbaseFeatures,baseFeatures)],sep="") 
+    newnames[newnames %in% colnames(decorMat)] <- paste("De_",newnames[newnames %in% colnames(decorMat)],sep="")
+    colnames(testData) <- newnames
   }
   else
   {
