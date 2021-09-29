@@ -78,7 +78,14 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
   uncorrelatedFetures <- character();
   countf <- numeric(ncol(refdata));
   names(countf) <- colnames(refdata);
-  varincluded <- colnames(refdata)[!(colnames(refdata) %in% Outcome)];
+  if (!is.null(Outcome))
+  {
+    varincluded <- colnames(refdata)[!(colnames(refdata) %in% Outcome)];
+  }
+  else
+  {
+    varincluded <- colnames(refdata);
+  }
   colsd <- apply(refdata[,varincluded],2,sd,na.rm = TRUE);
   varincluded <- varincluded[colsd > 0];
   totFeatures <- length(varincluded);
@@ -439,7 +446,8 @@ predictDecorrelate <- function(decorrelatedobject,testData)
   if (attr(decorrelatedobject,"useDeCorr") && !is.null(attr(decorrelatedobject,"DeCorrmatrix")))
   {
     decorMat <- attr(decorrelatedobject,"DeCorrmatrix")
-    testData[,colnames(decorMat)] <- as.matrix(testData[,rownames(decorMat)]) %*% decorMat
+#    testData[,colnames(decorMat)] <- as.matrix(testData[,rownames(decorMat)]) %*% decorMat
+    testData[,colnames(decorMat)] <- Rfast::mat.mult(as.matrix(testData[,rownames(decorMat)]),decorMat);
     AbaseFeatures <- attr(decorrelatedobject,"AbaseFeatures")
     baseFeatures <- attr(decorrelatedobject,"baseFeatures")
     varincluded <- attr(decorrelatedobject,"varincluded")
