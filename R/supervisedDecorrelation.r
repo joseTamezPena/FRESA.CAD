@@ -293,7 +293,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
              alphaused <- varincluded[varincluded %in% intopfeat];
              totalphaused <- varincluded[varincluded %in% totalpha];
 #             DeCorrmatrix[,decorrelatedFetureList] <-  DeCorrmatrix %*% as.matrix(betamatrix[,decorrelatedFetureList]);
-              if ((addedlist > 1) || (length(totalphaused) > 1))              
+              if ((addedlist > 1) && (length(totalphaused) > 1))              
               {
                 DeCorrmatrix[totalphaused,colused] <-  Rfast::mat.mult( as.matrix(DeCorrmatrix[totalphaused,allused]),
                                                                                 as.matrix(betamatrix[allused,colused])
@@ -301,14 +301,17 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
               }
               else
               {
-                DeCorrmatrix[totalphaused,colused] <-  sum(as.numeric(DeCorrmatrix[totalphaused,allused])*
-                                                               as.numeric(betamatrix[allused,colused]));
+                DeCorrmatrix[,decorrelatedFetureList] <-  DeCorrmatrix %*% as.matrix(betamatrix[,decorrelatedFetureList]);
+#                DeCorrmatrix[totalphaused,colused] <-  sum(as.numeric(DeCorrmatrix[totalphaused,allused])*
+#                                                               as.numeric(betamatrix[allused,colused]));
+#                DeCorrmatrix[totalphaused,colused] <-  sum(as.numeric(DeCorrmatrix[totalphaused,allused])*
+#                                                               as.numeric(betamatrix[allused,colused]));
               }
              if (useFastCor)
              {
                 if (verbose) cat("|")
 #                refdata[,varincluded] <- as.matrix(dataAdjusted[refdataids,varincluded]) %*% DeCorrmatrix
-                if (( length(colused) > 1) || (length(alphaused) >1 ))
+                if (( length(colused) > 1) || (length(alphaused) > 1 ))
                 {
                   refdata[,colused] <- refdata[,colused] + Rfast::mat.mult(as.matrix(refdata[,alphaused]),as.matrix(betamatrix[alphaused,colused]))
                 }
