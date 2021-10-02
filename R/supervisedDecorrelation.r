@@ -293,20 +293,36 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
              alphaused <- varincluded[varincluded %in% intopfeat];
              totalphaused <- varincluded[varincluded %in% totalpha];
 #             DeCorrmatrix[,decorrelatedFetureList] <-  DeCorrmatrix %*% as.matrix(betamatrix[,decorrelatedFetureList]);
-              if ((addedlist > 1) && (length(totalphaused) > 1))              
+              if ((addedlist == 1) && (length(totalphaused) == 1))
               {
-                DeCorrmatrix[totalphaused,colused] <-  Rfast::mat.mult( as.matrix(DeCorrmatrix[totalphaused,allused]),
-                                                                                as.matrix(betamatrix[allused,colused])
-                                                                                );
+                DeCorrmatrix[totalphaused,colused] <-  sum(as.numeric(DeCorrmatrix[totalphaused,allused])*
+                                                               as.numeric(betamatrix[allused,colused]));
               }
               else
               {
-                DeCorrmatrix[,decorrelatedFetureList] <-  DeCorrmatrix %*% as.matrix(betamatrix[,decorrelatedFetureList]);
-#                DeCorrmatrix[totalphaused,colused] <-  sum(as.numeric(DeCorrmatrix[totalphaused,allused])*
-#                                                               as.numeric(betamatrix[allused,colused]));
-#                DeCorrmatrix[totalphaused,colused] <-  sum(as.numeric(DeCorrmatrix[totalphaused,allused])*
-#                                                               as.numeric(betamatrix[allused,colused]));
+                if (length(totalphaused) > 1)
+                {
+                  DeCorrmatrix[totalphaused,colused] <-  Rfast::mat.mult( as.matrix(DeCorrmatrix[totalphaused,allused]),
+                                                                                as.matrix(betamatrix[allused,colused])
+                                                                                );
+                }
+                else
+                {
+                   cat("..no Fast..[",length(totalphaused),"][",length(allused),"][",length(colused),"]")
+                   mtx1 <- t(as.matrix(DeCorrmatrix[totalphaused,allused]))
+                   mtx2 <- as.matrix(betamatrix[allused,colused])
+#                   cat("(",nrow(mtx1),",",ncol(mtx1),")(",nrow(mtx2),",",ncol(mtx2),")");
+                  DeCorrmatrix[totalphaused,colused] <- mtx1  %*% mtx2;
+                }
               }
+#              { 
+#                cat("..no Fast..")
+#                  cat("*")
+#                  DeCorrmatrix[,decorrelatedFetureList] <-  DeCorrmatrix %*% as.matrix(betamatrix[,decorrelatedFetureList]);
+#                }
+#                DeCorrmatrix[totalphaused,colused] <-  sum(as.numeric(DeCorrmatrix[totalphaused,allused])*
+#                                                               as.numeric(betamatrix[allused,colused]));
+#              }
              if (useFastCor)
              {
                 if (verbose) cat("|")
