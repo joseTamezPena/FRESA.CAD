@@ -86,7 +86,7 @@ predictionStats_ordinal <-  function(predictions,plotname="",...)
     ScoresOutcome <- predictions[,1]
     if (nchar(plotname) > 0) 
     {
-      boxplot(predictions[,2] ~ ScoresOutcome,main = plotname,xlab = "Outcome" ,ylab = "Prediction",...)
+      boxplot(predictions[,2] ~ ScoresOutcome,main = plotname,...)
     }
     ct <-  DescTools::KendallTauB(ScoresOutcome,as.integer(predictions[,2]+0.5),conf.level = 0.95)
     bias <- mean(predictions[,2] - ScoresOutcome)

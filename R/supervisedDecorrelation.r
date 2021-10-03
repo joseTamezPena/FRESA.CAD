@@ -189,23 +189,10 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
             corlist <- cormat[,feat];
             corlist <- corlist[corlist >= thr];
             varlist <- names(corlist)
-#            if (verbose) 
-#            {
-#              if (length(topfeat)<10) print(varlist)
-#            }
             varlist <- varlist[!(varlist %in% topfeat)]
             varlist <- varlist[!(varlist %in% decorrelatedFetureList)]
             varlist <- varlist[!(varlist %in% baseIncluded)]
             varlist <- varlist[!(varlist %in% AbaseFeatures)]
-            if ((lp < 4) && !(feat %in% baseIncluded))
-            {
-              varlist <- varlist[!(varlist %in% bvarincluded)]
-            }
-            varlist <- names(corlist)
-            # if (verbose) 
-            # {
-              # if (length(topfeat) < 10) print(varlist)
-            # }
             if (length(varlist) > 0)
             {
                if (useFastCor)
@@ -239,13 +226,6 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
                     for (vl in 1:length(models))
                     {
                       adjusted[models[[vl]]$feature] <- (models[[vl]]$pval < unipvalue);
-                      # if (verbose) 
-                      # {
-                        # if ((length(topfeat)<10)&& (vl < 3)) 
-                        # {
-                          # cat("Base: ",feat," Cor: ",models[[vl]]$feature," Pvalue=",models[[vl]]$pval,":",models[[vl]]$model$coef[2],"\n")
-                        # }
-                      # }
                       if (adjusted[models[[vl]]$feature])
                       {
                         if (is.null(models[[vl]]$model$coef))
@@ -257,7 +237,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
                         {
                           if (!is.na(models[[vl]]$model$coef[2]))
                           {
-                            betamatrix[feat,models[[vl]]$feature] <- -1.0*models[[vl]]$model$coef[2];
+                              betamatrix[feat,models[[vl]]$feature] <- -1.0*models[[vl]]$model$coef[2];
                           }
                           else
                           {
@@ -266,7 +246,6 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
                         }
                       }
                     }
-                    adjusted[is.na(adjusted)] <- FALSE;
                     varlist <- varlist[adjusted];
                     if (length(varlist) > 0)
                     {
@@ -308,32 +287,33 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
                 }
                 else
                 {
-                   cat("..no Fast..[",length(totalphaused),"][",length(allused),"][",length(colused),"]")
                    mtx1 <- t(as.matrix(DeCorrmatrix[totalphaused,allused]))
                    mtx2 <- as.matrix(betamatrix[allused,colused])
-#                   cat("(",nrow(mtx1),",",ncol(mtx1),")(",nrow(mtx2),",",ncol(mtx2),")");
-                  DeCorrmatrix[totalphaused,colused] <- mtx1  %*% mtx2;
+                   cat("..no Fast..[",ncol(mtx1),"][",nrow(mtx2),"]")
+                   DeCorrmatrix[totalphaused,colused] <- mtx1 %*% mtx2;
                 }
               }
-#              { 
-#                cat("..no Fast..")
-#                  cat("*")
-#                  DeCorrmatrix[,decorrelatedFetureList] <-  DeCorrmatrix %*% as.matrix(betamatrix[,decorrelatedFetureList]);
-#                }
-#                DeCorrmatrix[totalphaused,colused] <-  sum(as.numeric(DeCorrmatrix[totalphaused,allused])*
-#                                                               as.numeric(betamatrix[allused,colused]));
-#              }
              if (useFastCor)
              {
                 if (verbose) cat("|")
 #                refdata[,varincluded] <- as.matrix(dataAdjusted[refdataids,varincluded]) %*% DeCorrmatrix
-                if (( length(colused) > 1) || (length(alphaused) > 1 ))
+                if (( length(colused) == 1) && (length(alphaused) == 1 ))
                 {
-                  refdata[,colused] <- refdata[,colused] + Rfast::mat.mult(as.matrix(refdata[,alphaused]),as.matrix(betamatrix[alphaused,colused]))
+                  refdata[,colused] <- refdata[,colused] + sum(as.numeric(refdata[,alphaused])*as.numeric(betamatrix[alphaused,colused]))
                 }
                 else
                 {
-                  refdata[,colused] <- refdata[,colused] + sum(as.numeric(refdata[,alphaused])*as.numeric(betamatrix[alphaused,colused]))
+                  if (length(alphaused) > 1)
+                  {
+                    refdata[,colused] <- refdata[,colused] + Rfast::mat.mult(as.matrix(refdata[,alphaused]),as.matrix(betamatrix[alphaused,colused]))
+                  }
+                  else
+                  {
+                     mtx1 <- t(as.matrix(refdata[,alphaused]))
+                     mtx2 <- as.matrix(betamatrix[alphaused,colused])
+                     cat("..no Fast..[",ncol(mtx1),"][",nrow(mtx2),"]")
+                     refdata[,colused] <- refdata[,colused] + mtx1 %*% mtx2;
+                  }
                 }
              }
           }
@@ -366,15 +346,15 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
           if (verbose) 
           {
             cat (", Tot Used:",length(totused),", Added:",addedlist,", Zero Std:",sum(colsd==0),", Max Cor:",max(cormat));
-#            if (lp > 5)
-#           {
-#              cat(",",decorrelatedFetureList[1],":",intopfeat[1]);
-#            }
           }
           if ( (length(intopfeat) == length(lastintopfeat)) && (length(decorrelatedFetureList) == length(lastdecorrelated)) )
           {
             if ((sum(intopfeat %in% lastintopfeat) == length(intopfeat)) && (sum(decorrelatedFetureList %in% lastdecorrelated) == length(decorrelatedFetureList)))
             {
+              if (verbose) 
+              {
+                cat (decorrelatedFetureList);
+              }
               addedlist <- 0;
             }
           }          
@@ -387,15 +367,28 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
       tmparincluded <- varincluded
       varincluded <- tmparincluded[tmparincluded %in% totused];
 #      alphaincluded <- tmparincluded[tmparincluded %in% totalpha];
-      alphaincluded <- tmparincluded[tmparincluded %in% totused];
+#      alphaincluded <- tmparincluded[tmparincluded %in% totused];
       if (useDeCorr)
       {
-        DeCorrmatrix <- DeCorrmatrix[alphaincluded,varincluded]
+          if (verbose) 
+          {
+             if (useFastCor)
+             {
+              cormat <- abs(Rfast::cora(as.matrix(refdata[,varincluded])))
+             }
+             else
+             {
+              cormat <- abs(cor(refdata[,varincluded],method=method))
+            }
+            diag(cormat) <- 0;
+            cat ("[",max(cormat),"]")
+          }
+        DeCorrmatrix <- DeCorrmatrix[varincluded,varincluded]
         dataAdjusted <- data
         if (length(varincluded) > 1)
         {
 #          dataAdjusted[,varincluded] <- as.matrix(data[,varincluded]) %*% DeCorrmatrix;
-          dataAdjusted[,varincluded] <- Rfast::mat.mult(as.matrix(data[,alphaincluded]),DeCorrmatrix);
+          dataAdjusted[,varincluded] <- Rfast::mat.mult(as.matrix(data[,varincluded]),DeCorrmatrix);
           colsd <- apply(dataAdjusted[,varincluded],2,sd,na.rm = TRUE);
           if (sum(colsd==0) > 0)
           {
