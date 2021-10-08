@@ -9,7 +9,7 @@
 	featureDecorrelation(data=NULL,thr=0.80,
 	                     refdata=NULL,Outcome=NULL,
 	                     baseFeatures=NULL,unipvalue=0.05,
-	                     useDeCorr=TRUE,maxLoops=20,
+	                     useDeCorr=TRUE,maxLoops=100,
 	                     verbose=FALSE,
 	                     method=c("spearman","pearson", "kendall","fast"),
 	                     ...)
