@@ -111,7 +111,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
   outcomep <- numeric();
   if ( !is.null(Outcome) && length(baseFeatures)==0 )
   {
-      outcomep <- univariate_correlation(data,Outcome,method=method,limit=0,pvalue=0.20,thr = 0.99*thr) # the top associated features to the outcome
+      outcomep <- univariate_correlation(data,Outcome,method=method,limit=0,pvalue=2*unipvalue,thr = 0.999*thr) # the top associated features to the outcome
       baseFeatures <- names(outcomep);
   }
   lastintopfeat <- character();
@@ -120,7 +120,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
   totalpha <- character();
   if (length(varincluded) > 1)
   {
-    unipvalue <- min(0.05,4.0*unipvalue*sqrt(totcorr)/totFeatures); ## Adjusting for false association
+    unipvalue <- min(unipvalue,2.0*unipvalue*sqrt(totcorr)/totFeatures); ## Adjusting for false association
     bvarincluded <- character();
     baseIncluded <- character();
     if (length(baseFeatures) > 0)
@@ -191,7 +191,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
                 tobereviewed <- topfeat[!(topfeat %in% c(featAdded,feat))]
                 if ((length(tobereviewed) > 1) && (length(falive) > 1))
                 {
-                  maxcortp <- max(c(0.75*max(apply(cormat[falive,tobereviewed],2,max)),thr))
+                  maxcortp <- max(c(0.95*max(apply(cormat[falive,tobereviewed],2,max)),thr))
                 }
                 corlist <- cormat[,feat];
                 corlist <- corlist[corlist >= maxcortp];
@@ -318,8 +318,8 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
                   }
                   else
                   {
-                     mtx1 <- t(as.matrix(refdata[,alphaused]))
-                     mtx2 <- as.matrix(betamatrix[alphaused,colused])
+                     mtx1 <- as.matrix(refdata[,alphaused])
+                     mtx2 <- t(as.matrix(betamatrix[alphaused,colused]))
                      cat("..no Fast..[",ncol(mtx1),"][",nrow(mtx2),"]")
                      refdata[,colused] <- refdata[,colused] + mtx1 %*% mtx2;
                   }
