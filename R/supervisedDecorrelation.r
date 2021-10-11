@@ -158,14 +158,14 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
         topfeat <- varincluded;
         names(topfeat) <- topfeat;
         ordcor <- maxcor
-        ordcor <- 0.999*maxcor + 0.00001*apply(1*(cormat >= thr),2,mean)
+        ordcor <- 0.9*maxcor + 0.09*apply(1*(cormat >= thr),2,mean)
         if (length(baseFeatures) > 0)
         {
-          ordcor[baseIncluded] <- ordcor[baseIncluded] + 0.0009;
+          ordcor[baseIncluded] <- ordcor[baseIncluded] + 0.001;
         }
         if (length(AbaseFeatures) > 0)
         {
-          ordcor[AbaseFeatures] <- ordcor[AbaseFeatures] + 0.0009;
+          ordcor[AbaseFeatures] <- ordcor[AbaseFeatures] + 0.001;
         }
         
         topfeat <- topfeat[maxcor[topfeat] >= thr];
@@ -183,7 +183,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
           tobereviewed <- topfeat;
           featAdded <- character(1);
           featMarked <- character();
-          wcor <- 0.95;
+          wcor <- 0.90;
           lpct <- 0;
           bfeat <- unique(c(baseIncluded,AbaseFeatures))
           if (length(bfeat) > 0) 
@@ -197,7 +197,8 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
             topfeat <- topfeat[!(topfeat %in% featMarked)]
             for (feat in topfeat)
             {
-                falive <- varincluded[!(varincluded %in% unique(c(decorrelatedFetureList,bfeat)))]
+                if (verbose && (feat==topfeat[1]))  cat("<");
+                falive <- varincluded[!(varincluded %in% c(decorrelatedFetureList,bfeat))]
                 tobereviewed <- topfeat[!(topfeat %in% c(featMarked,feat))]
                 if ((length(tobereviewed) > 1) && (length(falive) > 1))
                 {
@@ -213,6 +214,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
                 varlist <- names(corlist)
                 cormat[varlist,feat] <- 0;
                 varlist <- varlist[!(varlist %in% decorrelatedFetureList)]
+                if (verbose && (feat==topfeat[1]))  cat("%");
 
                 if (length(varlist) > 0)
                 {
@@ -283,11 +285,13 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
                       }
                   }
                 }
+                if (verbose && (feat==topfeat[1]))  cat(">");
                 if ((length(varlist) == 0) && (maxcortp == thr))
                 {
                     featMarked <- unique(c(featMarked,feat));
                 }
             }
+            if (verbose) cat("|",maxcortp,"|<",length(featAdded),">");
             if ((length(featAdded) == 0) && (maxcortp > thr))
             {
                wcor <- wcor - 0.1;
