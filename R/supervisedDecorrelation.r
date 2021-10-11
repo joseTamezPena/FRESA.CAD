@@ -178,8 +178,10 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
           topfeat <- topfeat[order(-ordcor[topfeat])];
           topfeat <- correlated_Remove(cormat,topfeat,thr = thr,isDataCorMatrix=TRUE)
            intopfeat <- character();
-          if (verbose)  cat(", Top:",length(topfeat));
+          toBeDecorrelated <- length(topfeat)
+          if (verbose)  cat(", Top:",toBeDecorrelated);
           maxcortp <- thr;
+          maxnotf <- thr;
           tobereviewed <- topfeat;
           featAdded <- character(1);
           featMarked <- character();
@@ -202,7 +204,8 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
                 tobereviewed <- topfeat[!(topfeat %in% c(featMarked,feat))]
                 if ((length(tobereviewed) > 1) && (length(falive) > 1))
                 {
-                  maxcortp <- max(c(wcor*max(apply(cormat[falive,tobereviewed],2,max)),thr))
+                  maxnotf <- max(apply(cormat[falive,tobereviewed],2,max))
+                  maxcortp <- max(c(wcor*maxnotf,thr))
                 }
                 else
                 {
@@ -286,20 +289,24 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
                   }
                 }
                 if (verbose && (feat==topfeat[1]))  cat(">");
-                if ((length(varlist) == 0) && (maxcortp == thr))
+                if ((length(varlist) == 0) && (maxnotf <= thr))
                 {
                     featMarked <- unique(c(featMarked,feat));
                 }
             }
-            if (verbose) cat("|",maxcortp,"|<",length(featAdded),">");
-            if ((length(featAdded) == 0) && (maxcortp > thr))
+            if (verbose) cat("|",maxnotf,"|<",length(featAdded),">{",length(featMarked),"}");
+            if ((toBeDecorrelated == (length(unique(c(featMarked,featAdded))))) && (maxnotf <= thr))
+            {
+              featAdded <- character();
+            }
+            if ((length(featAdded) == 0) && (maxnotf > thr))
             {
                wcor <- wcor - 0.1;
                featAdded <- character(1);
             }
           }
           addedlist <- length(decorrelatedFetureList);
-          if (verbose) cat("[",lpct,":",length(featMarked),":",maxcortp,"](",length(intopfeat),",",addedlist,",",length(totalpha),"),<")
+          if (verbose) cat("[",lpct,":",length(featMarked),":",maxnotf,"](",length(intopfeat),",",addedlist,",",length(totalpha),"),<")
           if (addedlist > 0)
           {
              mbetas <- c(intopfeat,decorrelatedFetureList);
