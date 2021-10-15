@@ -162,11 +162,11 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
 
         maxcor <- apply(cormat,2,max)
         
-        thr <- max(c(thr2,thr2 + wthr*(max(maxcor) - thr2)))
-        if (wthr > 0)
-        {
-          wthr <- wthr - 0.10;
-        }
+#        thr <- max(c(thr2,thr2 + wthr*(max(maxcor) - thr2)))
+#        if (wthr > 0)
+#        {
+#          wthr <- wthr - 0.10;
+#        }
 
         topfeat <- varincluded;
         names(topfeat) <- topfeat;
