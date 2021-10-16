@@ -237,7 +237,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
                 corlist <- corlist[corlist >= maxcortp];
 
                 varlist <- names(corlist)
-                cormat[varlist,feat] <- 0.99*maxcortp;
+                cormat[varlist,feat] <- 0.99*thr;
                 varlist <- varlist[!(varlist %in% decorrelatedFetureList)]
 
                 if (length(varlist) > 0)
