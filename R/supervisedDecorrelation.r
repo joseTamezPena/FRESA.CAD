@@ -169,7 +169,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
       bfeat <- unique(c(baseIncluded,AbaseFeatures))
       thr2 <- thr
       thr <- thr2*1.001;
-      wthr <- 0.75;
+      wthr <- 0.5;
       while (((addedlist > 0) || (thr > (thr2*1.0001))) && (lp < maxLoops)) 
       {
         lp = lp + 1;
@@ -340,7 +340,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
             }
             if ((length(featAdded) == 0) && (maxnotf > thr))
             {
-               wcor <- wcor - 0.1;
+               wcor <- wcor - 0.2;
                featAdded <- character(1);
             }
           }
@@ -447,7 +447,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
 
         if ((wthr > 0) && ((addedlist <= max(c(1.0,0.25*length(topfeat)))) || (length(intopfeat) <= 1)))
         {
-          wthr <- wthr - 0.10;
+          wthr <- wthr - 0.25;
         }
 
       }
