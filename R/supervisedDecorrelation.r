@@ -269,7 +269,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
                       {
                         featAdded <- c(featAdded,feat);
                         intopfeat <- unique(c(intopfeat,feat));
-                        if (verbose && (length(intopfeat) %% 100 == 99)) cat(".")
+                        if (verbose && (length(intopfeat) %% 100 == 99) && (lpct==1)) cat(".")
                         countf[varlist] <- countf[varlist] + 1;
                         decorrelatedFetureList <- c(decorrelatedFetureList,varlist);
                       }
