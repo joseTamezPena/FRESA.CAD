@@ -8,6 +8,7 @@ featureDecorrelation <- function(data=NULL,
                                   maxLoops=100,
                                   verbose=FALSE,
                                   method=c("fast","pearson","spearman","kendall"),
+                                  skipRelaxed=TRUE,
                                   ...)
 {
 
@@ -170,7 +171,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
       bfeat <- unique(c(baseIncluded,AbaseFeatures))
       thr2 <- thr
       thr <- thr2*1.001;
-      wthr <- 0.5 - 0.5*useFastCor;
+      wthr <- 0.5 - 0.5*skipRelaxed;
       while (((addedlist > 0) || (thr > (thr2*1.0001))) && (lp < maxLoops)) 
       {
         lp = lp + 1;
@@ -178,10 +179,6 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
 
         maxcor <- apply(cormat,2,max)
         cormat[cormat < thr2] <- 0;
-#        if (length(bfeat) > 0) 
-#        {
-#          cormat[bfeat,] <- 0;
-#        }
         
         thr <- max(c(thr2,thr2 + wthr*(max(maxcor) - thr2)))
 
@@ -213,7 +210,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
           tobereviewed <- topfeat;
           featAdded <- character(1);
           featMarked <- character();
-          wcor <- 0.95 - 0.95*useFastCor;
+          wcor <- 0.95 - 0.95*skipRelaxed;
           lpct <- 0;
           while (length(featAdded) > 0)
           {
@@ -335,7 +332,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
                 }
             }
 #            if (verbose) cat("|",maxnotf,"|<",length(featAdded),">{",length(featMarked),"}");
-            if (useFastCor || ((toBeDecorrelated == (length(unique(c(featMarked,featAdded))))) && (maxnotf <= thr)))
+            if (skipRelaxed || ((toBeDecorrelated == (length(unique(c(featMarked,featAdded))))) && (maxnotf <= thr)))
             {
               featAdded <- character();
             }
@@ -406,14 +403,6 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
              }
           }
           if (verbose) cat(">")
-#          if (lp == 1)
-#          {
-#            if (length(baseFeatures)==0)
-#            {
-#              AbaseFeatures <- intopfeat;
-#              names(AbaseFeatures) <- AbaseFeatures;
-#            }
-#          }
           colsd <- apply(refdata[,varincluded],2,sd,na.rm = TRUE);
           if (sum(colsd==0) > 0)
           {
@@ -460,19 +449,6 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
       varincluded <- tmparincluded[tmparincluded %in% totused];
       if (useDeCorr)
       {
-#          if (verbose) 
-#          {
-#             if (useFastCor)
-#             {
-#              cormat <- abs(Rfast::cora(as.matrix(refdata[,varincluded])))
-#            }
-#             else
-#             {
-#              cormat <- abs(cor(refdata[,varincluded],method=method))
-#            }
-#            diag(cormat) <- 0;
-#            cat ("[",max(cormat),"]")
-#          }
         DeCorrmatrix <- DeCorrmatrix[varincluded,varincluded]
         dataAdjusted <- data
         if (length(varincluded) > 1)
