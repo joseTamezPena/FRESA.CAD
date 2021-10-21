@@ -7,7 +7,7 @@ featureDecorrelation <- function(data=NULL,
                                   useDeCorr=TRUE,
                                   maxLoops=100,
                                   verbose=FALSE,
-                                  method=c("spearman","pearson","kendall","fast"),
+                                  method=c("fast","pearson","spearman","kendall"),
                                   ...)
 {
 
@@ -37,18 +37,31 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
       if (!inherits(modellm, "try-error"))
       {	
         f <- summary(modellm)$fstatistic
-        p <- pf(f[1],f[2],f[3],lower.tail=FALSE);
-        if (is.na(p)) p <- 1.0;
-        if (p < unipvalue)
+        if (!(any(is.na(f)) || any(is.nan(f))))
         {
-          betaCoef <- modellm$coef[2]
+          p <- try(pf(f[1],f[2],f[3],lower.tail=FALSE), silent=TRUE);
+          if (!inherits(p, "try-error"))
+          {
+            if (is.na(p)) p <- 1.0;
+            if (p < unipvalue)
+            {
+              betaCoef <- modellm$coef[2]
+            }
+          }
         }
       }
     }
     return (betaCoef)
   }
 #  cat(feat,"(",length(varlist),")","\n")
-  allBetaCoef <- apply(as.data.frame(refdata[,varlist]),2,getBetaCoefficient)
+  if (length(varlist) > 1)
+  {
+    allBetaCoef <- apply(as.data.frame(refdata[,varlist]),2,getBetaCoefficient)
+  }
+  else
+  {
+    allBetaCoef <- getBetaCoefficient(refdata[,varlist])
+  }
   allBetaCoef[is.na(allBetaCoef)] <- 0;
   allBetaCoef[is.nan(allBetaCoef)] <- 0;
   allBetaCoef[is.infinite(allBetaCoef)] <- 0;
@@ -263,10 +276,10 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
                    if (useFastCor)
                    {
                       prebetas <- getAllBetaCoefficients(feat,varlist);
-                      betamatrix[feat,varlist] <- -1.0*prebetas;
                       varlist <- varlist[prebetas != 0];
                       if (length(varlist) > 0)
                       {
+                        betamatrix[feat,varlist] <- -1.0*prebetas;
                         featAdded <- c(featAdded,feat);
                         intopfeat <- unique(c(intopfeat,feat));
                         if (verbose && (length(intopfeat) %% 100 == 99) && (lpct==1)) cat(".")
@@ -358,8 +371,8 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
 #             DeCorrmatrix[,decorrelatedFetureList] <-  DeCorrmatrix %*% as.matrix(betamatrix[,decorrelatedFetureList]);
               if ((addedlist == 1) && (length(totalphaused) == 1))
               {
-                DeCorrmatrix[totalphaused,colused] <-  sum(as.numeric(DeCorrmatrix[totalphaused,allused])*
-                                                               as.numeric(betamatrix[allused,colused]));
+                DeCorrmatrix[totalphaused,colused] <-  as.numeric(DeCorrmatrix[totalphaused,allused])*
+                                                               as.numeric(betamatrix[allused,colused]);
               }
               else
               {
@@ -383,7 +396,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
 #                refdata[,varincluded] <- as.matrix(dataAdjusted[refdataids,varincluded]) %*% DeCorrmatrix
                 if (( length(colused) == 1) && (length(alphaused) == 1 ))
                 {
-                  refdata[,colused] <- refdata[,colused] + sum(as.numeric(refdata[,alphaused])*as.numeric(betamatrix[alphaused,colused]))
+                  refdata[,colused] <- refdata[,colused] + as.numeric(refdata[,alphaused])*as.numeric(betamatrix[alphaused,colused])
                 }
                 else
                 {

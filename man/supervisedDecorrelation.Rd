@@ -11,7 +11,7 @@
 	                     baseFeatures=NULL,unipvalue=0.05,
 	                     useDeCorr=TRUE,maxLoops=100,
 	                     verbose=FALSE,
-	                     method=c("spearman","pearson", "kendall","fast"),
+	                     method=c("fast","pearson","spearman","kendall"),
 	                     ...)
 
 	
