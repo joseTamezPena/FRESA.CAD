@@ -238,8 +238,8 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
                 corlist <- corlist[corlist >= maxcortp];
 
                 varlist <- names(corlist)
-                cormat[varlist,feat] <- 0.99*thr;
                 varlist <- varlist[!(varlist %in% decorrelatedFetureList)]
+                ovarlist <- varlist;
 
                 if (length(varlist) > 0)
                 {
@@ -329,6 +329,8 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
                   }
                   fsocre[feat] <- fsocre[feat] + sum(cormat[varlist,feat])
                   fsocre[varlist] <- fsocre[varlist] - cormat[varlist,feat]
+                  cormat[ovarlist,feat] <- 0.99*thr;
+
                 }
 #                if (verbose && (feat==topfeat[1]))  cat(">");
                 if ((length(varlist) == 0) && (maxnotf <= thr2))
@@ -447,7 +449,6 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
         {
           wthr <- wthr - 0.25;
         }
-
       }
       betamatrix <- NULL;
       tmparincluded <- varincluded
