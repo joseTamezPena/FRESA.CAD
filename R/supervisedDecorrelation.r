@@ -92,6 +92,9 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
   {
     varincluded <- colnames(refdata);
   }
+  fsocre <- numeric(length(varincluded));
+  names(fsocre) <- varincluded;
+
   colsd <- apply(refdata[,varincluded],2,sd,na.rm = TRUE);
   varincluded <- varincluded[colsd > 0];
   totFeatures <- length(varincluded);
@@ -324,6 +327,8 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
                           }
                       }
                   }
+                  fsocre[feat] <- fsocre[feat] + sum(cormat[varlist,feat])
+                  fsocre[varlist] <- fsocre[varlist] - cormat[varlist,feat]
                 }
 #                if (verbose && (feat==topfeat[1]))  cat(">");
                 if ((length(varlist) == 0) && (maxnotf <= thr2))
@@ -496,6 +501,15 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
           newnames[newnames %in% c(AbaseFeatures,baseFeatures)] <- paste("Ba_",newnames[newnames %in% c(AbaseFeatures,baseFeatures)],sep="") 
           newnames[newnames %in% varincluded] <- paste("De_",newnames[newnames %in% varincluded],sep="")
           colnames(dataAdjusted) <- newnames
+          newnames <- colnames(DeCorrmatrix)
+          newnames[newnames %in% c(AbaseFeatures,baseFeatures)] <- paste("Ba_",newnames[newnames %in% c(AbaseFeatures,baseFeatures)],sep="") 
+          newnames[newnames %in% varincluded] <- paste("De_",newnames[newnames %in% varincluded],sep="")
+          colnames(DeCorrmatrix) <- newnames
+          fsocre[!(names(fsocre) %in% varincluded)] <- min(fsocre) - 1.0;
+          newnames <- names(fsocre)
+          newnames[newnames %in% c(AbaseFeatures,baseFeatures)] <- paste("Ba_",newnames[newnames %in% c(AbaseFeatures,baseFeatures)],sep="") 
+          newnames[newnames %in% varincluded] <- paste("De_",newnames[newnames %in% varincluded],sep="")
+          names(fsocre) <- newnames
         }
       }
       else
@@ -513,6 +527,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
   attr(dataAdjusted,"useDeCorr") <- useDeCorr;
   attr(dataAdjusted,"correlatedToBase") <- correlatedToBase;
   attr(dataAdjusted,"AbaseFeatures") <- AbaseFeatures;
+  attr(dataAdjusted,"fsocre") <- fsocre;
   return(dataAdjusted)
 }
 
@@ -522,7 +537,7 @@ predictDecorrelate <- function(decorrelatedobject,testData)
   {
     decorMat <- attr(decorrelatedobject,"DeCorrmatrix")
 #    testData[,colnames(decorMat)] <- as.matrix(testData[,rownames(decorMat)]) %*% decorMat
-    testData[,colnames(decorMat)] <- Rfast::mat.mult(as.matrix(testData[,rownames(decorMat)]),decorMat);
+    testData[,rownames(decorMat)] <- Rfast::mat.mult(as.matrix(testData[,rownames(decorMat)]),decorMat);
     AbaseFeatures <- attr(decorrelatedobject,"AbaseFeatures")
     baseFeatures <- attr(decorrelatedobject,"baseFeatures")
     varincluded <- attr(decorrelatedobject,"varincluded")
