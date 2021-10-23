@@ -327,8 +327,8 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
                           }
                       }
                   }
-                  fsocre[feat] <- fsocre[feat] + sum(cormat[varlist,feat])
-                  fsocre[varlist] <- fsocre[varlist] - cormat[varlist,feat]
+                  fsocre[feat] <- fsocre[feat] + sum(cormat[varlist,feat]^2)
+                  fsocre[varlist] <- fsocre[varlist] - cormat[varlist,feat]^2
                   cormat[ovarlist,feat] <- 0.99*thr;
 
                 }
