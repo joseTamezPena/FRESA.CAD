@@ -65,29 +65,32 @@
 	\item{adjustedFrame}{
 	The decorrelated data frame with the follwing attributes 
 	}
-	\item{topFeatures}{
-		The list of features that were decorrelated
+	\item{attr:topFeatures)}{
+		Attribute of adjustedFrame: The list of features that were decorrelated
 	}
-	\item{TotalAdjustments}{
-		The count of how many times was decorrelted
+	\item{attr:TotalAdjustments}{
+		Attribute of adjustedFrame: The count of how many times was decorrelted
 	}
-	\item{DeCorrmatrix}{
-		The Decorrelation matrix for linear models
+	\item{attr:DeCorrmatrix}{
+		Attribute of adjustedFrame: The Decorrelation matrix for linear models
 	}
-	\item{varincluded}{
-		The list of variables in the whitening matrix
+	\item{attr:varincluded}{
+		Attribute of adjustedFrame: The list of variables in the whitening matrix
 	}
-	\item{baseFeatures}{
-		The list of feetures used as base features
+	\item{attr:baseFeatures}{
+		Attribute of adjustedFrame: The list of feetures used as base features
 	}
-	\item{useDeCorr}{
-		If TRUE the estimated DeCorrmatrix matrix was used for decorrelation
+	\item{attr:useDeCorr}{
+		Attribute of adjustedFrame: If TRUE the estimated DeCorrmatrix matrix was used for decorrelation
 	}
-	\item{correlatedToBase}{
-		List of correlated featuers to baseFeatures 
+	\item{attr:correlatedToBase}{
+		Attribute of adjustedFrame: List of correlated featuers to baseFeatures 
 	}
-	\item{AbaseFeatures}{
-		List of independent base features suplementing baseFeatures
+	\item{attr:AbaseFeatures}{
+		Attribute of adjustedFrame: List of independent base features suplementing baseFeatures
+	}
+	\item{attr:fsocre}{
+		Attribute of adjustedFrame: List of the correlation score of each feature.
 	}
 }
 
