@@ -1490,7 +1490,7 @@ improvedRes improvedResidualsFunc(const vec &oldResiduals,const vec &newResidual
  
 	double rss1 = sum(square(oldResiduals)); 
 	 
-	if (rss1 > 1000*DOUBLEEPS) 
+	if (sqrt(rss1) > DOUBLEEPS) 
 	{ 
 		pvalue = 0.0; 
 		pwil = pvalue; 
@@ -1498,7 +1498,7 @@ improvedRes improvedResidualsFunc(const vec &oldResiduals,const vec &newResidual
 		ptstu =  pvalue; 
 		f_test =  pvalue; 
 		double rss2 = sum(square(newResiduals)); 
-		if (rss2 > DOUBLEEPS) 
+		if (sqrt(rss2) > 0.1*DOUBLEEPS) 
 		{ 
 //					Rcout << "\n 1:" << rss1 << " 2:" << rss2 << "\n"; 
 			int sw=0; 

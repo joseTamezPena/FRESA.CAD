@@ -55,6 +55,12 @@
 	\item{...}{
 	parameters passed to the adjuting method.
 	}
+	\item{decorrelatedobject}{
+	The returned datafrmae of the featureDecorrelation function
+	}
+	\item{testData}{
+	the new dataframe to be decorrelated
+	}
 }
 
 \details{

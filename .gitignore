@@ -83,3 +83,6 @@ src-i386/FRESAcommons.h
 src-x64/FRESACAD_init.cpp
 src-x64/FRESAcommons.cpp
 src-x64/FRESAcommons.h
+src-i386/FRESAcommons.cpp
+*.o
+src-x64/FRESAcommons.cpp

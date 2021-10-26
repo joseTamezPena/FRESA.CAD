@@ -228,7 +228,7 @@ univariate_filter <- function(data=NULL, Outcome=NULL, pvalue=0.2,pvalueMethod=w
 
 	outcomes <- as.character(data[,Outcome]);
 	outlist <- unique(outcomes)
-	
+	pvalue <- pvalue/(length(outlist) - 1.0)
 	for (oft in outlist[-1])
 	{
 		case <- subset(data,outcomes == oft);
@@ -440,6 +440,7 @@ univariate_correlation <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMe
 	{
 		outcomes <- as.character(data[,Outcome]);
 		outlist <- unique(outcomes);
+		pvalue <- pvalue/(length(outlist) - 1.0)
 		for (ots in outlist[-1])
 		{
 			for (j in varlist) 
