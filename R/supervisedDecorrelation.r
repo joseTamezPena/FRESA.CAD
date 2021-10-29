@@ -23,23 +23,22 @@ featureDecorrelation <- function(data=NULL,
     useDeCorr <- TRUE;
     method <- "pearson";
   }
+  minUniqueValues <- 5 # more than 5 values and is not factor
 
 getAllBetaCoefficients <- function(feat,varlist=NULL)
 {
-  
+  allBetaCoef <- numeric(length(varlist));
   featVector <- refdata[,feat]
 #  print(featVector[1:10])
+
   getBetaCoefficient <- function(x)
   {
     betaCoef <- 0;
-    if (class(x) != "factor")
-    {
-      modellm <- try(lm(x~featVector,model = FALSE,na.action=na.exclude))
-      if (!inherits(modellm, "try-error"))
-      {	
-        f <- summary(modellm)$coefficients
-        betaCoef <- modellm$coef[2]*(f[2,4] < unipvalue);
-      }
+    modellm <- try(lm(x~featVector,model = FALSE,na.action=na.exclude))
+    if (!inherits(modellm, "try-error"))
+    {	
+      f <- summary(modellm)$coefficients
+      betaCoef <- modellm$coef[2]*(f[2,4] < unipvalue);
     }
     return (betaCoef)
   }
@@ -95,8 +94,18 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
   fsocre <- numeric(length(varincluded));
   names(fsocre) <- varincluded;
 
-  colsd <- apply(refdata[,varincluded],2,sd,na.rm = TRUE);
-  varincluded <- varincluded[colsd > 0];
+
+  isFactor <- apply(refdata[,varincluded],2,class) == "factor";
+  isContinous <- unlist(lapply(apply(refdata[,varincluded],2,unique),length)) > minUniqueValues; 
+
+  varincluded <- varincluded[!isFactor & isContinous];
+#  print(sum(isFactor));
+#  print(sum(isContinous));
+#  print(sum(!isFactor & isContinous));
+#  print(length(varincluded));
+  
+  
+  
   totFeatures <- length(varincluded);
   
 
