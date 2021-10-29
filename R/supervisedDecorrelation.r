@@ -95,11 +95,11 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
   names(fsocre) <- varincluded;
 
 
-  isFactor <- apply(refdata[,varincluded],2,class) == "factor";
-  isContinous <- unlist(lapply(apply(refdata[,varincluded],2,unique),length)) > minUniqueValues; 
+  isFactor <- sapply(refdata[,varincluded],class) == "factor";
+  isContinous <- unlist(lapply(lapply(refdata[,varincluded],unique),length)) > minUniqueValues; 
 
   varincluded <- varincluded[!isFactor & isContinous];
-#  print(sum(isFactor));
+#  print(sum(!isFactor));
 #  print(sum(isContinous));
 #  print(sum(!isFactor & isContinous));
 #  print(length(varincluded));
