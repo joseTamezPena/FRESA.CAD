@@ -24,12 +24,15 @@ featureDecorrelation <- function(data=NULL,
     method <- "pearson";
   }
   minUniqueValues <- 5 # more than 5 values and is not factor
+  
+
 
 getAllBetaCoefficients <- function(feat,varlist=NULL)
 {
   allBetaCoef <- numeric(length(varlist));
   featVector <- refdata[,feat]
 #  print(featVector[1:10])
+
 
   getBetaCoefficient <- function(x)
   {
