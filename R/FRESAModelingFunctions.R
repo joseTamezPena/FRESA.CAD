@@ -904,9 +904,9 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 							secondPredict <- rpredict(secondModel,data);
 							d1 <-  abs(firstPredict - outcomedata);
 							d2 <-  abs(secondPredict - outcomedata);
-							nfirstSet <-  (d1 < (d2 + hysteresis)) | (d1 < (0.5 + hysteresis)) | (d2 > (0.5 - 0.5*hysteresis));
+							nfirstSet <-  (d1 <= d2) | (d1 < (0.5 + hysteresis));
 							changes <- sum(nfirstSet != firstSet) ;
-							nsecondSet <- (d2 < (d1 + hysteresis)) | (d2 < (0.5 + hysteresis)) | (d1 > (0.5 - 0.5*hysteresis)) | !nfirstSet;
+							nsecondSet <- (d2 <= d1) | (d2 < (0.5 + hysteresis));
 							changes <- changes + sum(nsecondSet != secondSet);
 						}
 					}
@@ -1059,7 +1059,7 @@ predict.FRESA_HLCM <- function(object,...)
 				prbclas[,n] <- attributes(classPred)$probabilities[,"1"];
 			}
 		}
-		wclas <- apply(prbclas,1,which.max)
+		prbclas[prbclas < 1.0e-10] <- 1.0e-10;
 		pmodel <- pLS;
 		nm <- length(object$alternativeModel);
 		for (n in 1:nm)
@@ -1067,17 +1067,11 @@ predict.FRESA_HLCM <- function(object,...)
 			ptmp <- rpredict(object$alternativeModel[[n]],testData);
 			pmodel <- cbind(pmodel,ptmp);
 		}
-		for (n in 1:nrow(testData))
-		{
-			pLS[n] <- pmodel[n,wclas[n]];
-		}
-		nm <- length(object$classModel);
-		pLS <- 0.5*(pLS + apply(pmodel*prbclas,1,sum)/(1.0e-10+apply(prbclas,1,sum)));
-		wt <- prbclas[,1]*(object$classfreq[1])^2;
+		pLS <- apply(pmodel*prbclas,1,sum)/apply(prbclas,1,sum);
+		wt <- prbclas[,1]*object$classfreq[1];
 		pLS <- wt*pLSOr + (1.0-wt)*pLS;
 		attr(pLS,"probabilities.class") <- prbclas;
 		attr(pLS,"probabilities.model") <- pmodel;
-		attr(pLS,"which.class") <- wclas;
 	}
 	return(pLS);
 }
