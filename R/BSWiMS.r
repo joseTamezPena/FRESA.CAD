@@ -19,6 +19,13 @@ NumberofRepeats=1)
 
 	a = as.numeric(Sys.time());
 	set.seed(a);
+	
+	if (loops==0)
+	{
+		loops <- 1;
+		maxCycles <- 1;
+		elimination.bootstrap.steps <- 0;
+	}
 
 #	cat(featureSize," <- F Size\n");
 
