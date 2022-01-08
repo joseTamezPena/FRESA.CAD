@@ -117,6 +117,10 @@ NumberofRepeats=1)
 			}
 			else
 			{
+				if (class(data[,Outcome]) == "factor")
+				{
+					data[,Outcome] <- as.numeric(as.character(data[,Outcome]));
+				}
 				univType = "LOGIT";
 				if (min(data[,Outcome]) != 0)
 				{
@@ -217,7 +221,7 @@ NumberofRepeats=1)
 	IIRMetricPDF <- NULL;
 	sdOutcome <- sd(theOutcome);
 	infraction <- 0;
-	cat("[");
+	if (loops > 1) cat("[");
 	equivalent = FALSE;
 	if (NumberofRepeats <= 0)
 	{
@@ -437,7 +441,7 @@ NumberofRepeats=1)
 				isInferior <- (length(termslist)==0);
 				if (!isInferior)
 				{
-					cat("+");
+					if (loops > 1) cat("+");
 					if (print) cat(cycles,":",size,":",nrow(variableList),":",metric,":",infraction,":",BSWiMS.model$back.formula,"\n");
 					if (equivalent)
 					{
@@ -522,7 +526,7 @@ NumberofRepeats=1)
 		}
 		if (NumberofRepeats>1) formula.list <- append(formula.list,"=-=End=-=");
 	}
-	cat("]");
+	if (loops > 1) cat("]");
 	if(is.null(unirank))
 	{
 		unirank <- invariableList;
