@@ -9,7 +9,7 @@
 	HLCM(formula = formula, 
 	                data=NULL,
 	                method=BSWiMS.model,
-	                hysteresis = 0.1,
+	                hysteresis = 0.25,
 					classMethod=KNN_method,
 					classModel.Control=NULL,
 					minsize=10,

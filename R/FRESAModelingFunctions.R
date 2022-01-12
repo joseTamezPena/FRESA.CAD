@@ -638,7 +638,7 @@ predict.FRESA_RIDGE <- function(object,...)
 }
 
 
-HLCM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis = 0.1,classMethod=KNN_method,classModel.Control=NULL,minsize=10,...)
+HLCM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis = 0.25,classMethod=KNN_method,classModel.Control=NULL,minsize=10,...)
 {
 	if (class(formula) == "character")
 	{
@@ -794,7 +794,7 @@ HLCM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis = 0
 	return(result);
 }
 
-HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis = 0.1,classMethod=KNN_method,classModel.Control=NULL,minsize=10,...)
+HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis = 0.25,classMethod=KNN_method,classModel.Control=NULL,minsize=10,...)
 {
 	if (class(formula) == "character")
 	{
@@ -846,25 +846,25 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 	nselected <- character();
 	fselected <- character();
 	allClassFeatures <- character();
+	truelimit <- 1.0 - hysteresis;
+	falselimit <- 0.5*truelimit;
 	if (length(selectedfeatures) > 0)
 	{
 		thePredict <- rpredict(orgModel,data);
 		outcomedata <- data[,Outcome];
 		d0 <-  abs(thePredict - outcomedata);
-		correct <- ((thePredict >= 0.5) == (outcomedata > 0));
 		originalSet <- (d0 <= 0.5 );
+		correct <- originalSet;
 		accuracy <- sum(correct)/nrow(data);
 		if (sum(1*(!correct),na.rm=TRUE) > minsize)
 		{
 			outcomedata <- data[,Outcome];
-			falseP <- (thePredict >= (0.5 - hysteresis)) & (outcomedata == 0);
-			falseN <- (thePredict <= (0.5 + hysteresis)) & (outcomedata == 1);
-			secondSet <- falseP | falseN;
-			trueP <- (thePredict >= (0.5 - hysteresis)) & (outcomedata == 1);
-			trueN <- (thePredict <= (0.5 + hysteresis)) & (outcomedata == 0);
-			firstSet <- trueP | trueN;
+			secondSet <- (d0 >= falselimit);
+			firstSet <- (d0 <= truelimit);
 			nfirstSet <- firstSet;
 			nsecondSet <- secondSet;
+			falseP <-  (thePredict >= 0.5) & (data[,Outcome] == 0);
+			falseN <-  (thePredict <= 0.5) & (data[,Outcome] == 1);
 			if ((sum(falseP) >= (minsize/2)) && (sum(falseN) >= (minsize/2)))
 			{
 				loops <- 0;
@@ -926,9 +926,9 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 						secondPredict <- rpredict(secondModel,data);
 						d1 <-  abs(firstPredict - outcomedata);
 						d2 <-  abs(secondPredict - outcomedata);
-						nfirstSet <-  (d1 < (d2 + hysteresis)) | (d1 < (0.5 - hysteresis));
+						nfirstSet <-  ( d1 < d2 ) | ( d1 <= truelimit );
 						changes <- sum(nfirstSet != firstSet) ;
-						nsecondSet <- (d2 < (d1 + hysteresis)) | (d2 < (0.5 - hysteresis));
+						nsecondSet <- (( d2 < (d1 + 0.5*hysteresis)) & (d2 <= truelimit)) | ( d1 >= falselimit );
 						changes <- changes + sum(nsecondSet != secondSet);
 					}
 					cat("(",changes,")");
