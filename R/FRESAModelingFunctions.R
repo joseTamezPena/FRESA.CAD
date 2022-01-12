@@ -760,7 +760,7 @@ HLCM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis = 0
 					classData[,Outcome] <- numeric(nrow(classData));
 					classData[correctSet[[i]],Outcome] <- 1;
 					classData[,Outcome] <- as.factor(classData[,Outcome]);
-					classFeatures <- names(univariate_KS(data=classData, Outcome=Outcome));
+					classFeatures <- names(univariate_KS(data=classData, Outcome=Outcome,pvalue = 0.01));
 					allClassFeatures <- c(allClassFeatures,classFeatures)
 
 					if (is.null(classModel.Control))
@@ -980,7 +980,7 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 				selectedfeatures <- unique(c(selectedfeatures,nselected,fselected));
 #				classData <- classData[,c(Outcome,selectedfeatures)]
 				classData[,Outcome] <- as.factor(1*originalSet);
-				classFeatures <- names(univariate_KS(data=classData, Outcome=Outcome));
+				classFeatures <- names(univariate_KS(data=classData, Outcome=Outcome,pvalue = 0.01));
 				allClassFeatures <- classFeatures
 				if (is.null(classModel.Control))
 				{
@@ -991,7 +991,7 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 					classModel[[1]] <- do.call(classMethod,c(list(formula(paste(Outcome,"~.")),classData[,c(Outcome,classFeatures)]),classModel.Control));
 				}
 				classData[,Outcome] <- as.factor(1*firstSet);
-				classFeatures <- names(univariate_KS(data=classData, Outcome=Outcome));
+				classFeatures <- names(univariate_KS(data=classData, Outcome=Outcome,pvalue = 0.01));
 				allClassFeatures <- c(allClassFeatures,classFeatures)
 				if (is.null(classModel.Control))
 				{
@@ -1004,7 +1004,7 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 				if (n > 1)
 				{
 					classData[,Outcome] <- as.factor(1*secondSet);
-					classFeatures <- names(univariate_KS(data=classData, Outcome=Outcome));
+					classFeatures <- names(univariate_KS(data=classData, Outcome=Outcome,pvalue = 0.01));
 					allClassFeatures <- c(allClassFeatures,classFeatures)
 					if (is.null(classModel.Control))
 					{
