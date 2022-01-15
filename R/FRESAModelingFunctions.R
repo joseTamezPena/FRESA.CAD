@@ -760,7 +760,7 @@ HLCM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis = 0
 					classData[,Outcome] <- numeric(nrow(classData));
 					classData[correctSet[[i]],Outcome] <- 1;
 					classData[,Outcome] <- as.factor(classData[,Outcome]);
-					classFeatures <- names(univariate_KS(data=classData, Outcome=Outcome,pvalue = 0.01));
+					classFeatures <- names(univariate_KS(data=classData, Outcome=Outcome,pvalue = 0.05));
 					allClassFeatures <- c(allClassFeatures,classFeatures)
 
 					if (is.null(classModel.Control))
@@ -856,6 +856,7 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 		originalSet <- (d0 <= 0.5 );
 		correct <- originalSet;
 		accuracy <- sum(correct)/nrow(data);
+		originalSet <- (d0 < falselimit);
 		if (sum(1*(!correct),na.rm=TRUE) > minsize)
 		{
 			outcomedata <- data[,Outcome];
@@ -928,7 +929,7 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 						d2 <-  abs(secondPredict - outcomedata);
 						nfirstSet <-  ( d1 < d2 ) | ( d1 <= truelimit );
 						changes <- sum(nfirstSet != firstSet) ;
-						nsecondSet <- (( d2 < (d1 + 0.5*hysteresis)) & (d2 <= truelimit)) | ( d1 >= falselimit );
+						nsecondSet <- (( d2 < (d1 + 0.25*hysteresis)) & (d2 <= truelimit)) | ( d1 >= falselimit );
 						changes <- changes + sum(nsecondSet != secondSet);
 					}
 					cat("(",changes,")");
@@ -970,53 +971,63 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 #					cat("<<",sum(originalSet),",",sum(firstSet),",",sum(secondSet),",",sum(errorSet),">>") 
 				}
 			}
-			if (n > 0)
+			if (n > 1)
 			{
-#				originalSet <- (d0 <= 0.5 );
-#				firstSet <- (d1 <= 0.5 ) | (d1 < d2);
-#				secondSet <- (d2 <= 0.5 + ) & (d1 >= (0.5 - 2*hysteresis)) ;
-				errorSet <- (d0 > 0.5) & (d1 > 0.5) & (d2 > 0.5);
-				cat("<",sum(originalSet),",",sum(firstSet),",",sum(secondSet),",",sum(errorSet),">") 
-				selectedfeatures <- unique(c(selectedfeatures,nselected,fselected));
-#				classData <- classData[,c(Outcome,selectedfeatures)]
-				classData[,Outcome] <- as.factor(1*originalSet);
-				classFeatures <- names(univariate_KS(data=classData, Outcome=Outcome,pvalue = 0.01));
-				allClassFeatures <- classFeatures
-				if (is.null(classModel.Control))
+				originalSet <- (d0 <= falselimit);
+				firstSet <- (d1 <= truelimit) & (d1 < d2) & firstSet;
+				secondSet <- (d2 <= truelimit) & (d2 < (d1 + 0.25*hysteresis)) & secondSet;
+				if (sum(secondSet) > minsize)
 				{
-					classModel[[1]] <- classMethod(formula(paste(Outcome,"~.")),classData[,c(Outcome,classFeatures)]);
-				}
-				else
-				{
-					classModel[[1]] <- do.call(classMethod,c(list(formula(paste(Outcome,"~.")),classData[,c(Outcome,classFeatures)]),classModel.Control));
-				}
-				classData[,Outcome] <- as.factor(1*firstSet);
-				classFeatures <- names(univariate_KS(data=classData, Outcome=Outcome,pvalue = 0.01));
-				allClassFeatures <- c(allClassFeatures,classFeatures)
-				if (is.null(classModel.Control))
-				{
-					classModel[[2]] <- classMethod(formula(paste(Outcome,"~.")),classData[,c(Outcome,classFeatures)]);
-				}
-				else
-				{
-					classModel[[2]] <- do.call(classMethod,c(list(formula(paste(Outcome,"~.")),classData[,c(Outcome,classFeatures)]),classModel.Control));
-				}
-				if (n > 1)
-				{
+
+	#Check for statistical significance of second set. If not do not, there is no latent class
 					classData[,Outcome] <- as.factor(1*secondSet);
-					classFeatures <- names(univariate_KS(data=classData, Outcome=Outcome,pvalue = 0.01));
-					allClassFeatures <- c(allClassFeatures,classFeatures)
-					if (is.null(classModel.Control))
+					classpFeatures <- univariate_BinEnsemble(data=classData, Outcome=Outcome,pvalue = 0.05);
+					
+					if (classpFeatures[1] <= 0.05) # If significant then go ahead
 					{
-						classModel[[3]] <- classMethod(formula(paste(Outcome,"~.")),classData[,c(Outcome,classFeatures)]);
+						errorSet <- (d0 > 0.5) & (d1 > 0.5) & (d2 > 0.5);
+						cat("[p=",classpFeatures[1],",",length(classpFeatures),"]<",sum(originalSet),",",sum(firstSet),",",sum(secondSet),",",sum(errorSet),">") 
+						selectedfeatures <- unique(c(selectedfeatures,nselected,fselected));
+						classData[,Outcome] <- as.factor(1*originalSet);
+						classFeatures <- names(classpFeatures);
+						allClassFeatures <- classFeatures
+						if (is.null(classModel.Control))
+						{
+							classModel[[1]] <- classMethod(formula(paste(Outcome,"~.")),classData[,c(Outcome,classFeatures)]);
+						}
+						else
+						{
+							classModel[[1]] <- do.call(classMethod,c(list(formula(paste(Outcome,"~.")),classData[,c(Outcome,classFeatures)]),classModel.Control));
+						}
+						classData[,Outcome] <- as.factor(1*firstSet);
+						if (is.null(classModel.Control))
+						{
+							classModel[[2]] <- classMethod(formula(paste(Outcome,"~.")),classData[,c(Outcome,classFeatures)]);
+						}
+						else
+						{
+							classModel[[2]] <- do.call(classMethod,c(list(formula(paste(Outcome,"~.")),classData[,c(Outcome,classFeatures)]),classModel.Control));
+						}
+						classData[,Outcome] <- as.factor(1*secondSet);
+						if (is.null(classModel.Control))
+						{
+							classModel[[3]] <- classMethod(formula(paste(Outcome,"~.")),classData[,c(Outcome,classFeatures)]);
+						}
+						else
+						{
+							classModel[[3]] <- do.call(classMethod,c(list(formula(paste(Outcome,"~.")),classData[,c(Outcome,classFeatures)]),classModel.Control));
+						}
+						classData[,Outcome] <- 1*originalSet + 2*firstSet + 4*secondSet;
 					}
 					else
 					{
-						classModel[[3]] <- do.call(classMethod,c(list(formula(paste(Outcome,"~.")),classData[,c(Outcome,classFeatures)]),classModel.Control));
+						alternativeModel <- list();
 					}
 				}
-				classData[,Outcome] <- 1*originalSet + 2*firstSet + 4*secondSet;
-				allClassFeatures <- unique(allClassFeatures);
+				else
+				{
+					alternativeModel <- list();
+				}
 			}
 			else
 			{
