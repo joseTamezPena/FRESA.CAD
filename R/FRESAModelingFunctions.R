@@ -975,7 +975,7 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 			{
 				originalSet <- (d0 <= falselimit);
 				firstSet <- (d1 <= truelimit) & (d1 < d2) & firstSet;
-				secondSet <- (d2 <= truelimit) & (d2 < (d1 + 0.25*hysteresis)) & secondSet;
+				secondSet <- (d2 <= truelimit) & (d2 < (d1 + 0.25*hysteresis)) & secondSet | !firstSet;
 				if (sum(secondSet) > minsize)
 				{
 
