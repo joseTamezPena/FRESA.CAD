@@ -41,7 +41,10 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
     if (!inherits(modellm, "try-error"))
     {	
       f <- summary(modellm)$coefficients
-      betaCoef <- modellm$coef[2]*(f[2,4] < unipvalue);
+      if (nrow(f)>1)
+      {
+        betaCoef <- modellm$coef[2]*(f[2,4] < unipvalue);
+      }
     }
     return (betaCoef)
   }
