@@ -1,4 +1,4 @@
-featureDecorrelation <- function(data=NULL,
+GDSMTDecorrelation <- function(data=NULL,
                                   thr=0.80,
                                   refdata=NULL,
                                   Outcome=NULL,

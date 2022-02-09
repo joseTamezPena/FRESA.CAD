@@ -14,7 +14,14 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 	type <- match.arg(type);
 	## the reference frame will be used to predict a variable from the baseFormula. At output the residuals are returned.
 	## strata is a numeric column varname in the data frame from 0 to S, where S is the maximum number of strata
-	colnamesList <- as.vector(variableList[,1]);
+	if (class(variableList) == "character" )
+	{
+		colnamesList <- variableList;
+	}
+	else
+	{
+		colnamesList <- as.vector(variableList[,1]);
+	}
 	size = length(colnamesList);
 	if (!is.na(strata)) 
 	{
