@@ -1,12 +1,12 @@
-\name{GDSMTDecorrelation}
-\alias{GDSMTDecorrelation}
+\name{GDSTMDecorrelation}
+\alias{GDSTMDecorrelation}
 \alias{predictDecorrelate}
 \title{Supervised decorrelation of dataframe features}
 \description{
 	All features significatly associated to the outcome will be decorrelated
 }
 \usage{
-	GDSMTDecorrelation(data=NULL,thr=0.80,
+	GDSTMDecorrelation(data=NULL,thr=0.80,
 	                     refdata=NULL,Outcome=NULL,
 	                     baseFeatures=NULL,unipvalue=0.05,
 	                     useDeCorr=TRUE,maxLoops=100,
@@ -56,7 +56,7 @@
 	parameters passed to the adjuting method.
 	}
 	\item{decorrelatedobject}{
-	The returned datafrmae of the GDSMTDecorrelation function
+	The returned datafrmae of the GDSTMDecorrelation function
 	}
 	\item{testData}{
 	the new dataframe to be decorrelated
