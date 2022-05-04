@@ -95,7 +95,7 @@
 	\item{attr:AbaseFeatures}{
 		Attribute of adjustedFrame: List of independent base features suplementing baseFeatures
 	}
-	\item{attr:fsocre}{
+	\item{attr:fscore}{
 		Attribute of adjustedFrame: List of the correlation score of each feature.
 	}
 }

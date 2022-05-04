@@ -217,7 +217,7 @@ NumberofRepeats=1)
 		oridinalModels <- list(theScores=theScores,data=data,formulas=NULL)
 		class(oridinalModels) <- c("fitFRESA","ordinalFit");
 	}
-	halfSocres <- as.integer(totScores/2+0.5);
+	halfscores <- as.integer(totScores/2+0.5);
 	IIRMetricPDF <- NULL;
 	sdOutcome <- sd(theOutcome);
 	infraction <- 0;
