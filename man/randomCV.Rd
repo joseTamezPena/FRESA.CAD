@@ -17,8 +17,9 @@
              featureSelection.control=NULL,
              asFactor=FALSE,
              addNoise=FALSE,
-             classSamplingType=c("Augmented","NoAugmented",
-                                 "Proportional","Balanced","LOO"),
+             classSamplingType=c("Balanced","Proportional",
+                                  "NoAugmented","Augmented",
+                                 ,"LOO"),
               testingSet=NULL,
              ...
              )
