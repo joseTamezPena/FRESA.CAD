@@ -505,7 +505,7 @@ if (!requireNamespace("naivebayes", quietly = TRUE)) {
 	}
 	if (length(list(...)) == 0)
 	{
-		laplace = 1.0e-6/nrow(data);
+		laplace = 1.0/ncol(data);
 #		prior = rep(1.0/numclases,numclases);
 		prior = NULL;
 #		print(prior)
