@@ -73,7 +73,7 @@ FRESAScale <- function(data,refFrame=NULL,method=c("Norm","Order","OrderLogit","
 						refRange <- 0.5*(refmax-refmin);
 						meanRange <- 0.5*(refmax+refmin);
 						refRange[refRange == 0] <- 1.0;
-						refMean <- apply(datRefUses,2,median, na.rm = TRUE);
+						refMean <- 0.5*(apply(datRefUses,2,median, na.rm = TRUE) + apply(datRefUses,2,mean,trim = 0.25, na.rm = TRUE));
 						refDisp <- apply(datRefUses,2,IQR, na.rm = TRUE);
 						refMean[refDisp == 0] <- meanRange[refDisp == 0];
 						refDisp[refDisp == 0] <- refRange[refDisp == 0];
