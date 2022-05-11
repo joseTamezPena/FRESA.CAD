@@ -12,6 +12,8 @@
 	            filtermethod.control=list(pvalue=0.10,limit=0.1),
 	            Scale="none",
 	            PCA=FALSE,
+	            DECOR=FALSE,
+	            DECOR.control=list(thr=0.80,method="fast",type="NZLM"),
 	            ...
 	            )
 }
@@ -36,6 +38,12 @@
 	}
 	\item{PCA}{
 	Estimate the PCA
+	}
+	\item{DECOR}{
+	Decorrelate the input data using FCA and the GDSTM
+	}
+	\item{DECOR.control}{
+	Parameters to the decorrelation function
 	}
 	\item{...}{
 	parameters for the fitting function

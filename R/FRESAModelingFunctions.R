@@ -1107,7 +1107,16 @@ predict.FRESA_HLCM <- function(object,...)
 }
 
 
-filteredFit <- function(formula = formula, data=NULL, filtermethod=univariate_Wilcoxon, fitmethod=e1071::svm,filtermethod.control=list(pvalue=0.10,limit=0.1),Scale="none",PCA=FALSE,...)
+filteredFit <- function(formula = formula, data=NULL, 
+							filtermethod=univariate_Wilcoxon, 
+							fitmethod=e1071::svm,
+							filtermethod.control=list(pvalue=0.10,limit=0.1),
+							Scale="none",
+							PCA=FALSE,
+							DECOR=FALSE,
+							DECOR.control=list(thr=0.80,method="fast",type="NZLM"),
+							...
+						)
 {
 	if (class(formula) == "character")
 	{
@@ -1123,7 +1132,32 @@ filteredFit <- function(formula = formula, data=NULL, filtermethod=univariate_Wi
 	fm <- fm[!(fm %in% dependent)]
 
 	scaleparm <- NULL;
-#	cat ("Here 1")
+	
+	if ((Scale != "none") && (length(fm) > 1) )
+	{
+		scaleparm <- FRESAScale(as.data.frame(data[,fm]),method=Scale);
+		data[,fm] <- as.data.frame(scaleparm$scaledData);
+		scaleparm$scaledData <- NULL;
+	}
+	
+	GDSTM <- NULL;
+	pcaobj <- NULL;
+	transColnames <- NULL;
+
+	if (DECOR && (length(fm) > 1))
+	{
+		if (is.null(DECOR.control))
+		{
+			data <- GDSTMDecorrelation(data,Outcome=Outcome);
+		}
+		else
+		{
+			data <- do.call(GDSTMDecorrelation,c(list(data,Outcome=Outcome),DECOR.control));
+		}
+		GDSTM <- attr(data,"GDSTM")
+		attr(data,"GDSTM") <- NULL
+		transColnames <- colnames(data);
+	}
 	
 	if (is.null(filtermethod.control))
 	{
@@ -1138,15 +1172,6 @@ filteredFit <- function(formula = formula, data=NULL, filtermethod=univariate_Wi
 	fm <- names(fm)
 	usedFeatures <-  c(Outcome,fm);
 	data <- data[,usedFeatures]
-	if ((Scale != "none") && (length(fm) > 1) )
-	{
-		scaleparm <- FRESAScale(as.data.frame(data[,fm]),method=Scale);
-		data[,fm] <- as.data.frame(scaleparm$scaledData);
-		scaleparm$scaledData <- NULL;
-	}
-#	cat ("Here 3")
-	
-	pcaobj <- NULL;
 
 
 	binOutcome <- length(table(data[,Outcome])) == 2
@@ -1178,36 +1203,8 @@ filteredFit <- function(formula = formula, data=NULL, filtermethod=univariate_Wi
 			}
 		}
 	}
-#	cat ("Here 4:",ncol(data),"\n")
 	
 	fit <- try(fitmethod(formula,data,...));
-	
-	# if (PCA)
-	# {
-	  # vs <- NULL;
-	  # if (!is.null(fit$importance))
-	  # {
-		# vs <- fit$importance[,1];
-	  # }
-	  # if (!is.null(fit$variable.importance))
-	  # {
-		# vs <- fit$variable.importance;
-	  # }
-	  # if (!is.null(vs))
-	  # {
-		# if (length(vs)>1)
-		# {
-		  # if (length(vs) > 2) vs <- vs[order(-vs)];
-		  # if (sum(vs > 0.0) > 1)
-		  # {
-			# vs <- vs[vs > 0.0];							
-		  # }
-		  # fm <- names(vs);
-		# }
-	  # }
-	 # }
-
-	
 	
 	parameters <- list(...);
 	result <- list(fit=fit,
@@ -1220,7 +1217,9 @@ filteredFit <- function(formula = formula, data=NULL, filtermethod=univariate_Wi
 					Scale = scaleparm,
 					binOutcome = binOutcome,
 					Outcome = Outcome,
-					pcaobj = pcaobj
+					pcaobj = pcaobj,
+					GDSTM = GDSTM,
+					transColnames = transColnames
 					);
 	class(result) <- c("FRESA_FILTERFIT");
 	if (inherits(fit, "try-error"))
@@ -1235,15 +1234,21 @@ predict.FRESA_FILTERFIT <- function(object,...)
 {
 	parameters <- list(...);
 	testData <- parameters[[1]];
-	testData <- as.data.frame(testData[,object$usedFeatures])
 	if (!is.null(object$Scale))
 	{
-		testData[,object$selectedfeatures] <- FRESAScale(as.data.frame(testData[,object$selectedfeatures]),
-		method=object$Scale$method,
-		refMean=object$Scale$refMean,
-		refDisp=object$Scale$refDisp)$scaledData;
+		testData <- FRESAScale(as.data.frame(testData),
+								method=object$Scale$method,
+								refMean=object$Scale$refMean,
+								refDisp=object$Scale$refDisp
+							  )$scaledData;
 	}
 #	boxplot(testData[,object$selectedfeatures])
+	if (!is.null(object$GDSTM))
+	{
+	    testData[,rownames(object$GDSTM)] <- Rfast::mat.mult(as.matrix(testData[,rownames(object$GDSTM)]),object$GDSTM);
+		colnames(testData) <- object$transColnames;
+	}
+	testData <- as.data.frame(testData[,object$usedFeatures])
 	if (!is.null(object$pcaobj))
 	{
 		pcapred <- predict(object$pcaobj,testData[,object$selectedfeatures]);
