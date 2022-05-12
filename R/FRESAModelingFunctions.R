@@ -1132,14 +1132,6 @@ filteredFit <- function(formula = formula, data=NULL,
 	fm <- fm[!(fm %in% dependent)]
 
 	scaleparm <- NULL;
-	
-	if ((Scale != "none") && (length(fm) > 1) )
-	{
-		scaleparm <- FRESAScale(as.data.frame(data[,fm]),method=Scale);
-		data[,fm] <- as.data.frame(scaleparm$scaledData);
-		scaleparm$scaledData <- NULL;
-	}
-	
 	GDSTM <- NULL;
 	pcaobj <- NULL;
 	transColnames <- NULL;
@@ -1159,6 +1151,14 @@ filteredFit <- function(formula = formula, data=NULL,
 		transColnames <- colnames(data);
 	}
 	
+	if ((Scale != "none") && (length(fm) > 1) )
+	{
+		scaleparm <- FRESAScale(as.data.frame(data[,fm]),method=Scale);
+		data[,fm] <- as.data.frame(scaleparm$scaledData);
+		scaleparm$scaledData <- NULL;
+	}
+	
+	
 	if (is.null(filtermethod.control))
 	{
 		fm <- filtermethod(data,Outcome);
@@ -1168,7 +1168,12 @@ filteredFit <- function(formula = formula, data=NULL,
 		fm <- do.call(filtermethod,c(list(data,Outcome),filtermethod.control));
 	}
 	filtout <- fm;
-#	cat ("Here 2")
+	if (length(fm) > 1)
+	{
+		medianpvalue <- median(fm);
+		maxpvalue <- medianpvalue*1.0e6 + 1.0e-6;
+		fm <- fm[fm <= maxpvalue];
+	}
 	fm <- names(fm)
 	usedFeatures <-  c(Outcome,fm);
 	data <- data[,usedFeatures]
@@ -1234,6 +1239,11 @@ predict.FRESA_FILTERFIT <- function(object,...)
 {
 	parameters <- list(...);
 	testData <- parameters[[1]];
+	if (!is.null(object$GDSTM))
+	{
+	    testData[,rownames(object$GDSTM)] <- Rfast::mat.mult(as.matrix(testData[,rownames(object$GDSTM)]),object$GDSTM);
+		colnames(testData) <- object$transColnames;
+	}
 	if (!is.null(object$Scale))
 	{
 		testData <- FRESAScale(as.data.frame(testData),
@@ -1241,12 +1251,6 @@ predict.FRESA_FILTERFIT <- function(object,...)
 								refMean=object$Scale$refMean,
 								refDisp=object$Scale$refDisp
 							  )$scaledData;
-	}
-#	boxplot(testData[,object$selectedfeatures])
-	if (!is.null(object$GDSTM))
-	{
-	    testData[,rownames(object$GDSTM)] <- Rfast::mat.mult(as.matrix(testData[,rownames(object$GDSTM)]),object$GDSTM);
-		colnames(testData) <- object$transColnames;
 	}
 	testData <- as.data.frame(testData[,object$usedFeatures])
 	if (!is.null(object$pcaobj))
