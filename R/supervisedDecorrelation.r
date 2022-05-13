@@ -397,7 +397,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
                 {
                    mtx1 <- t(as.matrix(DeCorrmatrix[totalphaused,allused]))
                    mtx2 <- as.matrix(betamatrix[allused,colused])
-                   cat("..no Fast..[",ncol(mtx1),"][",nrow(mtx2),"]")
+#                   cat("..no Fast..[",ncol(mtx1),"][",nrow(mtx2),"]")
                    DeCorrmatrix[totalphaused,colused] <- mtx1 %*% mtx2;
                 }
               }
@@ -419,7 +419,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
                   {
                      mtx1 <- as.matrix(refdata[,alphaused])
                      mtx2 <- t(as.matrix(betamatrix[alphaused,colused]))
-                     cat("..no Fast..[",ncol(mtx1),"][",nrow(mtx2),"]")
+#                     cat("..no Fast..[",ncol(mtx1),"][",nrow(mtx2),"]")
                      refdata[,colused] <- refdata[,colused] + mtx1 %*% mtx2;
                   }
                 }
