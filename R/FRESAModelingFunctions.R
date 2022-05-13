@@ -1149,6 +1149,8 @@ filteredFit <- function(formula = formula, data=NULL,
 		GDSTM <- attr(data,"GDSTM")
 		attr(data,"GDSTM") <- NULL
 		transColnames <- colnames(data);
+		fm <- colnames(data)
+		fm <- fm[!(fm %in% dependent)]
 	}
 	
 	if ((Scale != "none") && (length(fm) > 1) )
