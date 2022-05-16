@@ -19,7 +19,7 @@
              addNoise=FALSE,
              classSamplingType=c("Balanced","Proportional",
                                   "NoAugmented","Augmented",
-                                 ,"LOO"),
+                                  "LOO"),
               testingSet=NULL,
              ...
              )
