@@ -1,3 +1,9 @@
+Changes from FRESA.CAD 3.4.1 to FRESA.CAD version 3.4.1
+	Enhancements:
+		Feature Decorrelation has been enhanced with fast predictions.
+		Now it has a predict funtion, and embeded into Filteredfit() funtion.
+		Filteredfit() now removes features with p-values greater than the median p-value.
+
 Changes from FRESA.CAD 3.1.1 to FRESA.CAD version 3.3.1
 	Enhancements:
 		nearestNeighborImpute now can handle longitudinal datasets
