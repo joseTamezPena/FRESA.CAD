@@ -2,7 +2,11 @@ Changes from FRESA.CAD 3.4.1 to FRESA.CAD version 3.4.1
 	Enhancements:
 		Feature Decorrelation has been enhanced with fast predictions.
 		Now it has a predict funtion, and embeded into Filteredfit() funtion.
+		Univariate filters now work with categorical outcomes
 		Filteredfit() now removes features with p-values greater than the median p-value.
+		Rewrite part of the code in latent class modeling HLCM_EM()
+	 Interface Changes:
+		Now RandomCV uses balanced training as default option
 
 Changes from FRESA.CAD 3.1.1 to FRESA.CAD version 3.3.1
 	Enhancements:
