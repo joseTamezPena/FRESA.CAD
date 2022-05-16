@@ -1,4 +1,4 @@
-Changes from FRESA.CAD 3.4.1 to FRESA.CAD version 3.4.1
+Changes from FRESA.CAD 3.3.1 to FRESA.CAD version 3.4.1
 	Enhancements:
 		Feature Decorrelation has been enhanced with fast predictions.
 		Now it has a predict funtion, and embeded into Filteredfit() funtion.
