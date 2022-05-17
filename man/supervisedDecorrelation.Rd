@@ -100,8 +100,49 @@
 	}
 }
 
-
-
 \author{Jose G. Tamez-Pena}
+
+\examples{
+
+	# load FRESA.CAD library
+#	library("FRESA.CAD")
+
+# iris data set
+	data('iris')
+
+	colors <- c("red","green","blue")
+	names(colors) <- names(table(iris$Species))
+	classcolor <- colors[iris$Species]
+
+	#Decorrelating with usupervised basis and correlation goal set to 0.25
+	system.time(irisDecor <- GDSTMDecorrelation(iris,thr=0.25))
+	
+	## The transformation matrix is stored at "GDSTM" attribute
+	GDSTM <- attr(irisDecor,"GDSTM")
+	print(GDSTM)
+
+	#Decorrelating with supervised basis and correlation goal set to 0.25
+	system.time(irisDecorOutcome <- GDSTMDecorrelation(iris,Outcome="Species",thr=0.25))
+	## The transformation matrix is stored at "GDSTM" attribute
+	GDSTM <- attr(irisDecorOutcome,"GDSTM")
+	print(GDSTM)
+
+	features <- colnames(iris[,sapply(iris,is,"numeric")])
+	irisPCA <- prcomp(iris[,features]);
+	print(irisPCA$rotation)
+
+	## Plot the transformed sets
+	plot(iris[,features],col=classcolor,main="Raw IRIS")
+
+	plot(as.data.frame(irisPCA$x),col=classcolor,main="PCA IRIS")
+
+	featuresDecor <- colnames(irisDecor[,sapply(irisDecor,is,"numeric")])
+	plot(irisDecor[,featuresDecor],col=classcolor,main="Unsupervised FCA IRIS")
+
+
+	featuresDecor <- colnames(irisDecorOutcome[,sapply(irisDecorOutcome,is,"numeric")])
+	plot(irisDecorOutcome[,featuresDecor],col=classcolor,main="Supervised FCA IRIS")
+}
+
 \seealso{\code{featureAdjustment}}
-\keyword{Data Conditioning}
+\keyword{Data Transformations}
