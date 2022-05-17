@@ -14,11 +14,11 @@ function(formula,data,OptType=c("Binary","Residual"),pvalue=0.05,filter.p.value=
 	bagg=NULL;
 
 	type = "LM";
-	if (class(formula)=="character")
+	if (inherits(formula,"character"))
 	{
 		formula <- formula(formula);
 	}
-	if (class(formula)=="formula")
+	if (inherits(formula,"formula"))
 	{
 		featureSize = ncol(data)-1;
 		OptType <- match.arg(OptType)

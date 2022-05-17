@@ -63,7 +63,7 @@ sprintf("%0.1f", ticks)))
 	variableList <- colnames(data)
 	names(variableList) <- colnames(data)
   }
-  if (class(variableList)=="data.frame")
+  if (inherits(variableList,"data.frame"))
   {
     vnames <- as.vector(variableList[,1]);
   }
@@ -185,7 +185,7 @@ sprintf("%0.1f", ticks)))
 	  rowcolors <- colorRampPalette(outcomeColors)(n = nr)[index];
 	  
 	  orderData <- orderData[,-1];
-	  if (class(Scale) == "logical")
+	  if (inherits(Scale,"logical"))
 	  {
 		if (Scale) orderData <- scale(orderData);
 	  }
@@ -195,17 +195,17 @@ sprintf("%0.1f", ticks)))
 #	  print(nclass)
 	  
 	  colorange = FALSE;
-	  if (class(Scale) == "logical")
+	  if (inherits(Scale,"logical"))
 	  {
 		colorange = !Scale;
 	  }
-	  if (class(Scale) == "numeric")
+	  if (inherits(Scale,"numeric"))
 	  {
 		colorange = TRUE;
 	  }
 	  if (colorange)
 	  {
-			if (class(Scale) == "numeric")
+			if (inherits(Scale,"numeric"))
 			{
 				kmin <- Scale[1];
 				kmax <- Scale[2];

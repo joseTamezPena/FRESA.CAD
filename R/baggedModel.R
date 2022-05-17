@@ -15,7 +15,7 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 #	cat(length(modelFormulas)," :Bagging\n",modelFormulas[1],"\n");
 	model <- NULL;
 	wts <- 0.0;
-	if (class(modelFormulas)=="list")
+	if (inherits(modelFormulas,"list"))
 	{ 
 		listformulas <- modelFormulas;
 		modelFormulas <- character();

@@ -161,7 +161,7 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
   theTime <- NULL;
   varsmod <- NULL;
   isSurv <- FALSE;
-  if (class(theOutcome)=="formula")
+  if (inherits(theOutcome,"formula"))
   {
     theformula <- theOutcome;
     varsmod <- all.vars(theformula);
@@ -189,7 +189,7 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
   selectedFeaturesSet <- list();
   testClases <- ((classLen < 10) && (min(dataTable) >= 5));
   BootReplace = FALSE;
-  if (class(trainFraction) == "character")
+  if (inherits(trainFraction,"character"))
   {
 	 BootReplace <- (trainFraction == "Bootstrap");
 	 trainFraction <- 0.5 + 0.5*BootReplace;
@@ -379,7 +379,7 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
     }
     
     selnames <- character();
-    if (class(featureSelectionFunction) == "list")
+    if (inherits(featureSelectionFunction,"list"))
     {
       if (!is.null(featureSelectionFunction[[rept]]))
       {
@@ -400,7 +400,7 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
     }
     else
     {
-      if (class(featureSelectionFunction) == "function")
+      if (inherits(featureSelectionFunction,"function"))
       {
         #				print(tracemem(trainSet))
         if (!is.null(featureSelection.control))

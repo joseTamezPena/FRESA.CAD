@@ -75,7 +75,7 @@ predict.FRESAsignature <- function(object, ...)
 	}
 	else
 	{
-		if (class(object$fit$caseTamplate) == "list")
+		if (inherits(object$fit$caseTamplate,"list"))
 		{
 			wts <- object$wts;
 		}
@@ -254,7 +254,7 @@ GLMNET <- function(formula = formula, data=NULL,coef.thr=0.001,s="lambda.min",..
 	cf <- coef(result$fit,s);
 	selectedFeatures <- character();
 	lcoef <- numeric();
-	if (class(cf) == "list")
+	if (inherits(cf,"list"))
 	{
 		lcoef <- list();
 		for (cl in 1:length(cf))
@@ -409,7 +409,7 @@ predict.FRESA_BESS <- function(object,...)
 			colnames(newdata) <- c("y",paste("xbest",object$selectedfeatures,sep=""))
 			object$fit$bestmodel$formula <- formula(paste("y~",paste(colnames(newdata)[-1],collapse = " + ")))
 			object$fit$bestmodel$terms <- terms(object$fit$bestmodel$formula)
-			if (class(object$fit$bestmodel) != "coxph")
+			if (!inherits(object$fit$bestmodel,"coxph"))
 			{
 				pLS <- predict(object$fit$bestmodel,newdata,type=type);
 			}
@@ -481,7 +481,7 @@ if (!requireNamespace("naivebayes", quietly = TRUE)) {
 	 install.packages("naivebayes", dependencies = TRUE)
 } 
 	baseformula <- as.character(formula);
-	if (class(data[,baseformula[2]]) != "factor") data[,baseformula[2]] <- as.factor(data[,baseformula[2]])
+	if (!inherits(data[,baseformula[2]],"factor")) data[,baseformula[2]] <- as.factor(data[,baseformula[2]])
 	pcaobj <- NULL;
 	scaleparm <- NULL;
 	numclases <- length(table(data[,baseformula[2]]))
@@ -640,7 +640,7 @@ predict.FRESA_RIDGE <- function(object,...)
 
 HLCM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis = 0.25,classMethod=KNN_method,classModel.Control=NULL,minsize=10,...)
 {
-	if (class(formula) == "character")
+	if (inherits(formula, "character"))
 	{
 		formula <- formula(formula);
 	}
@@ -796,7 +796,7 @@ HLCM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis = 0
 
 HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis = 0.25,classMethod=KNN_method,classModel.Control=NULL,minsize=10,...)
 {
-	if (class(formula) == "character")
+	if (inherits(formula, "character"))
 	{
 		formula <- formula(formula);
 	}
@@ -905,7 +905,7 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 						if ((sum(secondSet) > minsize))
 						{
 							n <- 2;
-							if (class(secondModel) == "numeric")
+							if (inherits(secondModel,"numeric"))
 							{
 								secondModel <- sum(seconddata[,Outcome])/nrow(seconddata);
 								cat("{",sum(nrow(seconddata)),"}")
@@ -1074,7 +1074,7 @@ predict.FRESA_HLCM <- function(object,...)
 			else
 			{
 				classPred <- predict(object$classModel[[n]],testData);
-				if (class(classPred) == "numeric")
+				if (inherits(classPred,"numeric"))
 				{
 				  	prbclas[,n] <- classPred;
 				}
@@ -1118,7 +1118,7 @@ filteredFit <- function(formula = formula, data=NULL,
 							...
 						)
 {
-	if (class(formula) == "character")
+	if (inherits(formula, "character"))
 	{
 		formula <- formula(formula);
 	}
@@ -1182,7 +1182,7 @@ filteredFit <- function(formula = formula, data=NULL,
 
 
 	binOutcome <- length(table(data[,Outcome])) == 2
-	isFactor <- class(data[,Outcome]) == "factor"
+	isFactor <- inherits(data[,Outcome], "factor")
 	if (PCA && (length(fm) > 1))
 	{
 		if (binOutcome)
@@ -1273,7 +1273,7 @@ predict.FRESA_FILTERFIT <- function(object,...)
 
 ClustClass <- function(formula = formula, data=NULL, filtermethod=univariate_KS, clustermethod=GMVECluster, classmethod=LASSO_1SE,filtermethod.control=list(pvalue=0.1,limit=21),clustermethod.control=list(p.threshold = 0.95,p.samplingthreshold = 0.5),classmethod.control=list(family = "binomial"),pca=TRUE,normalize=TRUE)
 {
-	if (class(formula) == "character")
+	if (inherits(formula, "character"))
 	{
 		formula <- formula(formula);
 	}
@@ -1411,7 +1411,7 @@ predict.CLUSTER_CLASS <- function(object,...)
 
 GMVEBSWiMS <- function(formula = formula, data=NULL, GMVE.control = list(p.threshold = 0.95,p.samplingthreshold = 0.5), ...)
 {
-	if (class(formula) == "character")
+	if (inherits(formula, "character"))
 	{
 		formula <- formula(formula);
 	}

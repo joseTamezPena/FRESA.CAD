@@ -259,7 +259,7 @@ BinaryBenchmark <-	function(theData = NULL, theOutcome = "Class", reps = 100, tr
 		referenceName = "BSWiMS";
 		referenceFilterName = "BSWiMS";
 	}
-	if (class(referenceCV) == "list")
+	if (inherits(referenceCV,"list"))
 	{
 		elapcol <- names(referenceCV[[1]]$theTimes) == "elapsed"
 		TheCVEvaluations <- referenceCV;
@@ -438,7 +438,7 @@ BinaryBenchmark <-	function(theData = NULL, theOutcome = "Class", reps = 100, tr
 
 ######################Filters	####################################	
 	
-	if (class(referenceCV) != "list")
+	if (!inherits(referenceCV,"list"))
 	{
 		classnames <- colnames(test_Predictions);
 		cat("KNN\n")

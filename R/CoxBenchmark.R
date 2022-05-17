@@ -152,7 +152,7 @@ CoxBenchmark <-  function(theData = NULL, theOutcome = "Class", reps = 100, trai
     methods <- c(referenceName);
     theFiltersets <- c(referenceName);
   }
-  if (class(referenceCV) == "list")
+  if (inherits(referenceCV,"list"))
   {
     elapcol <- names(referenceCV[[1]]$theTimes) == "elapsed"
     TheCVEvaluations <- referenceCV;
@@ -406,7 +406,7 @@ CoxBenchmark <-  function(theData = NULL, theOutcome = "Class", reps = 100, trai
   
   ######################Filters  #################################### 
   
-  if (class(referenceCV) != "list")
+  if (!inherits(referenceCV,"list"))
   {
     classnames <- colnames(test_Predictions);
     cat("Cox\n")

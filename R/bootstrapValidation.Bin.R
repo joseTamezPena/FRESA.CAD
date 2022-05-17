@@ -2,7 +2,7 @@ bootstrapValidation_Bin <-
 function(fraction=1.00,loops=200,model.formula,Outcome,data,type=c("LM","LOGIT","COX"),plots=FALSE,best.model.formula=NULL)
 {
 
-	if (class(model.formula) == "character")
+	if (inherits(model.formula,"character"))
 	{
 		model.formula = formula(model.formula);
 	}
@@ -17,7 +17,7 @@ function(fraction=1.00,loops=200,model.formula,Outcome,data,type=c("LM","LOGIT",
 	}
 	else
 	{
-		if (class(best.model.formula) == "character")
+		if (inherits(best.model.formula,"character"))
 		{
 			best.model.formula = formula(best.model.formula);
 		}

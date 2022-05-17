@@ -9,7 +9,7 @@ if (!requireNamespace("class", quietly = TRUE)) {
 #	print(as.character(model.formula))
 #	cat(Outcome,"\n")
 	varlist <- NULL;
-	if (class(model.formula) == "character")
+	if (inherits(model.formula,"character"))
 	{
 		if (length(model.formula)==1)
 		{
@@ -20,7 +20,7 @@ if (!requireNamespace("class", quietly = TRUE)) {
 			varlist <- model.formula;
 		}
 	}
-	if (class(model.formula) == "formula")
+	if (inherits(model.formula,"formula"))
 	{
 		varlist <- as.character(model.formula)
 		varlist <- all.vars(formula(paste(Outcome,"~",varlist[3])));

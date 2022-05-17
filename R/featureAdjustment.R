@@ -14,7 +14,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 	type <- match.arg(type);
 	## the reference frame will be used to predict a variable from the baseFormula. At output the residuals are returned.
 	## strata is a numeric column varname in the data frame from 0 to S, where S is the maximum number of strata
-	if (class(variableList) == "character" )
+	if (inherits(variableList,"character"))
 	{
 		colnamesList <- variableList;
 	}
@@ -238,7 +238,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 							{ 
 								if (p < pvalue)
 								{
-									if (class(model) == "mars")
+									if (inherits(model,"mars"))
 									{
 										cstrata[,colnamesList[i]] <- avgref + cstrata[,colnamesList[i]] - as.numeric(predict(model,cstrata[,baseFormula]));
 									}
@@ -252,7 +252,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 							{ 
 								if (p < pvalue)
 								{
-									if (class(model) == "smooth.spline")
+									if (inherits(model,"smooth.spline"))
 									{
 										cstrata[,colnamesList[i]] <-  avgref + cstrata[,colnamesList[i]] - predict(model,cstrata[,baseFormula])$y;
 									}

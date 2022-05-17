@@ -112,7 +112,7 @@ GMVECluster <- function(dataset, p.threshold=0.975,samples=10000,p.samplingthres
 			minunit <- 2.0*apply(intdata,2,IQR)/ndata;
 			for (i in 1:p)
 			{
-				if (class(intdata[,i]) == "integer")
+				if (inherits(intdata[,i],"integer"))
 				{
 					intdata[,i] <- as.numeric(intdata[,i]+max(1.0,minunit[i])*rnorm(ndata));
 				} 

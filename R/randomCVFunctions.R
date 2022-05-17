@@ -99,7 +99,7 @@ correlated_RemoveToLimit <- function(data,unitPvalues,limit=0,thr=0.975,maxLoops
 univariate_Logit <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="BH", uniTest=c("zIDI","zNRI"),limit=0,...,n = 0)
 {
 	varlist <-colnames(data);
-  if (class(data[,Outcome]) == "factor") data[,Outcome] <- as.numeric(as.character(data[,Outcome]));
+    if (inherits(data[,Outcome],"factor")) data[,Outcome] <- as.numeric(as.character(data[,Outcome]));
 	varlist <- varlist[Outcome != varlist];
 	varlist <- cbind(varlist,varlist);
 	uniTest <- match.arg(uniTest);
@@ -133,7 +133,7 @@ univariate_Logit <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="
 univariate_residual <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="BH",uniTest=c("Ftest","Binomial","Wilcox","tStudent"),type=c("LM","LOGIT"),limit=0,...,n = 0)
 {
 	varlist <- colnames(data);
-  if (class(data[,Outcome]) == "factor") data[,Outcome] <- as.numeric(as.character(data[,Outcome]));
+    if (inherits(data[,Outcome],"factor")) data[,Outcome] <- as.numeric(as.character(data[,Outcome]));
 	varlist <- varlist[Outcome != varlist];
 	varlist <- cbind(varlist,varlist)
 	uniTest <- match.arg(uniTest);
@@ -172,7 +172,7 @@ if (!requireNamespace("twosamples", quietly = TRUE)) {
 } 
 
 	varlist <-colnames(data);
-  if (class(data[,Outcome]) == "factor") data[,Outcome] <- as.numeric(as.character(data[,Outcome]));
+    if (inherits(data[,Outcome], "factor")) data[,Outcome] <- as.numeric(as.character(data[,Outcome]));
 	case <- subset(data,get(Outcome) == 1);
 	control <- subset(data,get(Outcome) == 0);
 	varlist <- varlist[Outcome != varlist];
@@ -284,7 +284,7 @@ univariate_KS <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="BH"
 										...,
 										n = n)
 	# varlist <-colnames(data);
-    # if (class(data[,Outcome]) == "factor") data[,Outcome] <- as.numeric(as.character(data[,Outcome]));
+    # if (inherits(data[,Outcome], "factor")) data[,Outcome] <- as.numeric(as.character(data[,Outcome]));
 	# case <- subset(data,get(Outcome) == 1);
 	# control <- subset(data,get(Outcome) == 0);
 	# varlist <- varlist[Outcome != varlist];
@@ -343,7 +343,7 @@ univariate_Wilcoxon <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMetho
 										n = n)
 
 	# varlist <-colnames(data);
-  # if (class(data[,Outcome]) == "factor") data[,Outcome] <- as.numeric(as.character(data[,Outcome]));
+    # if (inherits(data[,Outcome], "factor")) data[,Outcome] <- as.numeric(as.character(data[,Outcome]));
 	# case <- subset(data,get(Outcome) == 1);
 	# control <- subset(data,get(Outcome) == 0);
 	# varlist <- varlist[Outcome != varlist];
@@ -393,7 +393,7 @@ univariate_tstudent <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMetho
 										n = n)
 
 	# varlist <-colnames(data);
-  # if (class(data[,Outcome]) == "factor") data[,Outcome] <- as.numeric(as.character(data[,Outcome]));
+    # if (inherits(data[,Outcome], "factor")) data[,Outcome] <- as.numeric(as.character(data[,Outcome]));
 	# case <- subset(data,get(Outcome) == 1);
 	# control <- subset(data,get(Outcome) == 0);
 	# varlist <- varlist[Outcome != varlist];
@@ -436,7 +436,7 @@ univariate_correlation <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMe
 	unitPvalues <- rep(1.0,length(varlist));
 	names(unitPvalues) <- varlist;
 	
-    if (class(data[,Outcome]) == "factor") 
+    if (inherits(data[,Outcome], "factor")) 
 	{
 		outcomes <- as.character(data[,Outcome]);
 		outlist <- unique(outcomes);
@@ -491,7 +491,7 @@ mRMR.classic_FRESA <- function(data=NULL, Outcome=NULL,feature_count=0,...)
 	   install.packages("mRMRe", dependencies = TRUE)
 	} 
 
-  if (class(data[,Outcome]) == "factor") data[,Outcome] <- as.numeric(as.character(data[,Outcome]));
+    if (inherits(data[,Outcome], "factor")) data[,Outcome] <- as.numeric(as.character(data[,Outcome]));
 	if (feature_count == 0)
 	{
 		feature_count <- min(c(nrow(data)-1,ncol(data)-1));
@@ -539,7 +539,7 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
   names(varcount) <- colnames(data);
   names(rankVar) <- colnames(data);
 
-  if (class(data[,Outcome]) == "factor") data[,Outcome] <- as.numeric(as.character(data[,Outcome]));
+  if (inherits(data[,Outcome], "factor")) data[,Outcome] <- as.numeric(as.character(data[,Outcome]));
   
   data <- data[,c(Outcome,correlated_Remove(data,colnames(data)[!(colnames(data) %in% Outcome)]))]
 

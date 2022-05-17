@@ -37,7 +37,7 @@ NumberofRepeats=1)
 	if (featureSize==0) featureSize = ncol(data)-1;
 	nfeat <- ncol(data)-1;
 #	cat(size,":",pvalue,":",update.pvalue[1],":",elimination.pValue,": fs=",featureSize,"\n")
-	if (class(formula)=="character")
+	if (inherits(formula,"character"))
 	{
 		formula <- str_replace_all(formula,"[.]","1");
 		baseformula <- formula;
@@ -117,7 +117,7 @@ NumberofRepeats=1)
 			}
 			else
 			{
-				if (class(data[,Outcome]) == "factor")
+				if (inherits(data[,Outcome], "factor"))
 				{
 					data[,Outcome] <- as.numeric(as.character(data[,Outcome]));
 				}

@@ -2,7 +2,7 @@ rankInverseNormalDataFrame <-
 function(variableList,data,referenceframe,strata=NA) 
 {
   
-	if (class(variableList)=="character")
+	if (inherits(variableList,"character"))
 	{
 		colnamesList <- variableList;
 	}
