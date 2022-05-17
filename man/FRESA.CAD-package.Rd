@@ -14,7 +14,7 @@ Utilities include functions for: univariate/longitudinal analysis, data conditio
     \tabular{ll}{
         Package: \tab FRESA.CAD\cr
         Type: \tab Package\cr
-        Version: \tab 3.4.1\cr
+        Version: \tab 3.4.2\cr
         Date: \tab 2022-05-16\cr
         License: \tab LGPL (>= 2)\cr
     }

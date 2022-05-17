@@ -1,7 +1,7 @@
 Package: FRESA.CAD
 Type: Package
 Title: Feature Selection Algorithms for Computer Aided Diagnosis
-Version: 3.4.1
+Version: 3.4.2
 Date: 2022-05-16
 Author: Jose Gerardo Tamez-Pena, Antonio Martinez-Torteya, Israel Alanis and Jorge Orozco
 Maintainer: Jose Gerardo Tamez-Pena <jose.tamezpena@tec.mx>
