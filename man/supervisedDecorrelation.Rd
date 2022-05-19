@@ -66,7 +66,7 @@
 \details{
  The dataframe will be analyzed and significantly correlated features whose correlation 
  is larger than the user supplied threshold will be decorrelated. 
- Basis Feature selection may be based on Outcome or by default in Top correlation
+ Basis feature selection may be based on Outcome association or by an unsupervised method. 
  The default options will run the decorrelation using fast matrix operations using \code{Rfast};
  hence, Pearson correlation will be used to estimate the GDSTM. 
 }
