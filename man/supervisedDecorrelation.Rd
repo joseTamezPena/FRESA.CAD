@@ -1,9 +1,9 @@
 \name{GDSTMDecorrelation}
 \alias{GDSTMDecorrelation}
 \alias{predictDecorrelate}
-\title{Supervised decorrelation of dataframe features}
+\title{Decorrelation of data frames}
 \description{
-	All features significatly associated to the outcome will be decorrelated
+	All continous features that with significant correlation will be decorrelated
 }
 \usage{
 	GDSTMDecorrelation(data=NULL,thr=0.80,
@@ -23,40 +23,40 @@
 	The dataframe whose features will de decorrelated
 	}
 	\item{thr}{
-	correlation threshold for feature selection
+	The maximum allowed correlation.
 	}
 	\item{refdata}{
-	The frame used to get the correlation and lm formula 
+	Option: A data frame that may be used to decorrelate the target dataframe 
 	}
 	\item{Outcome}{
-	The target outcome
+	The target outcome for supervised basis
 	}
 	\item{baseFeatures}{
-	A vector of features to be used as the base vectors. 
+	A vector of features to be used as basis vectors. 
 	}
 	\item{unipvalue}{
-	association p-value
+	Maximum p-value for correlation significance
 	}
 	\item{useDeCorr}{
-	 if TRUE, the returned matrix will use the estimated decorrelation Matrix
+	 if TRUE, the transformation matrix (GDSTM) will be computed
 	}
 	\item{maxLoops}{
-	the maxumum number of loops
+	the maxumum number of iteration loops
 	}
 	\item{verbose}{
 	if TRUE, it will display internal evolution of algorithm.
 	}
 	\item{method}{
-	method pased to correlation function.
+	if not set to "fast" the method will be pased to the \code{cor()} function.
 	}
 	\item{skipRelaxed}{
 	is set to FALSE it will use relaxed convergence
 	}
 	\item{...}{
-	parameters passed to the adjuting method.
+	parameters passed to the \code{featureAdjustment} function.
 	}
 	\item{decorrelatedobject}{
-	The returned datafrmae of the GDSTMDecorrelation function
+	The returned dataframe of the \code{GDSTMDecorrelation} function
 	}
 	\item{testData}{
 	the new dataframe to be decorrelated
@@ -64,39 +64,43 @@
 }
 
 \details{
- The data-frame will be analyzed and correlated features will be decorrelated. Feature selection may be based on Outcome or by default in Top correlation
+ The dataframe will be analyzed and significantly correlated features whose correlation 
+ is larger than the user supplied threshold will be decorrelated. 
+ Basis Feature selection may be based on Outcome or by default in Top correlation
+ The default options will run the decorrelation using fast matrix operations using \code{Rfast};
+ hence, Pearson correlation will be used to estimate the GDSTM. 
 }
 
 \value{
-	\item{adjustedFrame}{
+	\item{decorrelatedDataframe}{
 	The decorrelated data frame with the follwing attributes 
 	}
 	\item{attr:topFeatures)}{
 		Attribute of adjustedFrame: The list of features that were decorrelated
 	}
 	\item{attr:TotalAdjustments}{
-		Attribute of adjustedFrame: The count of how many times was decorrelted
+		Attribute of adjustedFrame: The count of how many iteration were required
 	}
-	\item{attr:DeCorrmatrix}{
-		Attribute of adjustedFrame: The Decorrelation matrix for linear models
+	\item{attr:GDSTM}{
+		Attribute of adjustedFrame: The Decorrelation matrix with the beta coefficients
 	}
 	\item{attr:varincluded}{
-		Attribute of adjustedFrame: The list of variables in the whitening matrix
+		Attribute of adjustedFrame: The list of input variables used in GDSTM
 	}
 	\item{attr:baseFeatures}{
-		Attribute of adjustedFrame: The list of feetures used as base features
+		Attribute of adjustedFrame: The list of features used as base features for supervised basis
 	}
 	\item{attr:useDeCorr}{
-		Attribute of adjustedFrame: If TRUE the estimated DeCorrmatrix matrix was used for decorrelation
+		Attribute of adjustedFrame: If TRUE the estimated GDSTM is used for decorrelation
 	}
 	\item{attr:correlatedToBase}{
-		Attribute of adjustedFrame: List of correlated featuers to baseFeatures 
+		Attribute of adjustedFrame: List of correlated features to the base features 
 	}
 	\item{attr:AbaseFeatures}{
-		Attribute of adjustedFrame: List of independent base features suplementing baseFeatures
+		Attribute of adjustedFrame: List of unsupervised basis features
 	}
 	\item{attr:fscore}{
-		Attribute of adjustedFrame: List of the correlation score of each feature.
+		Attribute of adjustedFrame: The score of each feature.
 	}
 }
 
@@ -127,8 +131,10 @@
 	GDSTM <- attr(irisDecorOutcome,"GDSTM")
 	print(GDSTM)
 
+	## Compute PCA 
 	features <- colnames(iris[,sapply(iris,is,"numeric")])
 	irisPCA <- prcomp(iris[,features]);
+	## The PCA transformation
 	print(irisPCA$rotation)
 
 	## Plot the transformed sets
