@@ -74,7 +74,7 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
       cox$coefficients <- currentModel$fit$bestmodel$coefficients[1:numberCoeficients];
     }
     
-    if (!inherits(cox,"try-error") && class(cox)!="list")
+    if (!inherits(cox,"try-error") && !inherits(cox,"list") )
     {
       followUpTimes <- try(predict(cox,newdata=TestDataset,type="expected"))
       if (!inherits(followUpTimes,"try-error"))

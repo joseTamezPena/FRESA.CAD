@@ -47,7 +47,7 @@ function (model.formula,data,type = c("LOGIT", "LM","COX","SVM"),fitFRESA=TRUE,.
 	}
 	else
 	{
-		if (class(model.formula) != "formula")
+		if ( !inherits(model.formula,"formula") )
 		{
 			cat(paste(as.character(cl)," No Formula \n"));
 			warning ("No Formula");

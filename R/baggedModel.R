@@ -257,7 +257,7 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 							basecoef <- abs(model$coefficients)+1e-6;
 							names(basecoef) <- names(model$coefficients);
 							
-							if ((type=="COX")&&(class(model)!="fitFRESA"))
+							if ((type=="COX") && !inherits(model,"fitFRESA"))
 							{
 								avgLogPvalues <- numeric(length(model$coefficients));
 								names(avgLogPvalues) <- names(model$coefficients);
@@ -386,7 +386,7 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 														residual <- as.vector(abs(curprediction-theoutcome));
 														onames <- names(out$coefficients);
 														znames <- onames;
-														if ((type!="COX")||(class(out)=="fitFRESA")) znames <- onames[-1];
+														if ((type!="COX") || inherits(out,"fitFRESA")) znames <- onames[-1];
 														if (predtype=="linear")
 														{
 															gvar <- getVar.Res(out,data=EquTrainSet,Outcome=Outcome,type=type,testData=data)

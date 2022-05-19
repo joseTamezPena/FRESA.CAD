@@ -10,7 +10,7 @@ predictionStats_survival <-  function(predictions, plotname="", atriskthr=1.0, .
 		CIFollowUp <- concordance95ci(datatest = data, followUp = TRUE)
 		data <- data.frame(times=predictions[,1],preds=-predictions[,6])
 		CIRisk <- concordance95ci(datatest = data, followUp = FALSE)
-		if (class(atriskthr) != "numeric") 
+		if ( !inherits(atriskthr,"numeric") ) 
 		{
 			atriskthr <- median(predictions[,6]);
 		}

@@ -5,7 +5,7 @@ function(fraction=1.00,loops=200,model.formula,Outcome,data,type=c("LM","LOGIT",
     type <- match.arg(type);
 	basemodel <- modelFitting(model.formula,data,type,TRUE)
 	bootmodel <- basemodel;
-	if (class(model.formula) != "formula")
+	if ( !inherits(model.formula,"formula") )
 	{
 		model.formula <- formula(model.formula);
 	}
@@ -15,7 +15,7 @@ function(fraction=1.00,loops=200,model.formula,Outcome,data,type=c("LM","LOGIT",
 	}
 	else
 	{
-		if (class(bestmodel.formula) != "formula")
+		if ( !inherits(bestmodel.formula,"formula") )
 		{
 #			cat("NRI with :",bestmodel.formula,"\n");
 			bestmodel.formula <- formula(bestmodel.formula);
