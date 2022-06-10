@@ -794,7 +794,7 @@ HLCM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis = 0
 	return(result);
 }
 
-HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis = 0.25,classMethod=KNN_method,classModel.Control=NULL,minsize=10,...)
+HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis = 0.10,classMethod=KNN_method,classModel.Control=NULL,minsize=10,...)
 {
 	if (inherits(formula, "character"))
 	{
@@ -846,8 +846,8 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 	nselected <- character();
 	fselected <- character();
 	allClassFeatures <- character();
-	truelimit <- 1.0 - hysteresis;
-	falselimit <- 0.5*truelimit;
+	truelimit <- 0.5 + hysteresis;
+	falselimit <- 0.5 - hysteresis;
 	if (length(selectedfeatures) > 0)
 	{
 		thePredict <- rpredict(orgModel,data);
@@ -927,9 +927,9 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 						secondPredict <- rpredict(secondModel,data);
 						d1 <-  abs(firstPredict - outcomedata);
 						d2 <-  abs(secondPredict - outcomedata);
-						nfirstSet <-  ( d1 < d2 ) | ( d1 <= truelimit );
-						changes <- sum(nfirstSet != firstSet) ;
-						nsecondSet <- (( d2 < (d1 + 0.25*hysteresis)) & (d2 <= truelimit)) | ( d1 >= falselimit );
+						nfirstSet <-  ( d1 <= (d2 + 0.5*hysteresis) ) & (d1 <= truelimit);
+						changes <- sum(nfirstSet != firstSet);
+						nsecondSet <- ( d2 <= (d1 + 0.5*hysteresis) ) & (d2 <= truelimit);
 						changes <- changes + sum(nsecondSet != secondSet);
 					}
 					cat("(",changes,")");
@@ -973,24 +973,27 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 			}
 			if (n > 1)
 			{
-				originalSet <- (d0 <= falselimit);
-				firstSet <- (d1 <= truelimit) & (d1 < d2) & firstSet;
-				secondSet <- (d2 <= truelimit) & (d2 < (d1 + 0.25*hysteresis)) & secondSet | !firstSet;
+				originalSet <- (d0 < falselimit);
+				firstSet <- ( d1 <= (d2 + 0.5*hysteresis) ) & (d1 <= truelimit) ;
+				secondSet <- ( d2 <= (d1 + 0.5*hysteresis) ) & (d2 <= truelimit);
 				if (sum(secondSet) > minsize)
 				{
 
 	#Check for statistical significance of second set. If not do not, there is no latent class
+					classData[,Outcome] <- as.factor(1*firstSet);
+					classpFeatures <- univariate_KS(data=classData, Outcome=Outcome,pvalue = 0.025);
 					classData[,Outcome] <- as.factor(1*secondSet);
-					classpFeatures <- univariate_BinEnsemble(data=classData, Outcome=Outcome,pvalue = 0.05);
+					classpFeatures <- c(classpFeatures,univariate_KS(data=classData, Outcome=Outcome,pvalue = 0.025));
+					classpFeatures <- classpFeatures[order(classpFeatures)]
 					
 					if (classpFeatures[1] <= 0.05) # If significant then go ahead
 					{
 						errorSet <- (d0 > 0.5) & (d1 > 0.5) & (d2 > 0.5);
 						cat("[p=",classpFeatures[1],",",length(classpFeatures),"]<",sum(originalSet),",",sum(firstSet),",",sum(secondSet),",",sum(errorSet),">") 
-						selectedfeatures <- unique(c(selectedfeatures,nselected,fselected));
 						classData[,Outcome] <- as.factor(1*originalSet);
-						classFeatures <- names(classpFeatures);
+						classFeatures <- unique(names(classpFeatures));
 						allClassFeatures <- classFeatures
+						selectedfeatures <- unique(c(selectedfeatures,nselected,fselected,classFeatures));
 						if (is.null(classModel.Control))
 						{
 							classModel[[1]] <- classMethod(formula(paste(Outcome,"~.")),classData[,c(Outcome,classFeatures)]);
@@ -1097,7 +1100,8 @@ predict.FRESA_HLCM <- function(object,...)
 			ptmp <- rpredict(object$alternativeModel[[n]],testData);
 			pmodel <- cbind(pmodel,ptmp);
 		}
-		pLS <- apply(pmodel*prbclas,1,sum)/apply(prbclas,1,sum);
+		lmodels <- c(2:length(object$classModel));
+		pLS <- apply(pmodel[,lmodels]*prbclas[,lmodels],1,sum)/apply(prbclas[,lmodels],1,sum);
 		wt <- prbclas[,1]*object$classfreq[1];
 		pLS <- wt*pLSOr + (1.0-wt)*pLS;
 		attr(pLS,"probabilities.class") <- prbclas;
