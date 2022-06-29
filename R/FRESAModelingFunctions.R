@@ -877,7 +877,7 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 					changes <- 0;
 					firstSet <- nfirstSet;
 					secondSet <- nsecondSet;
-					firstdata <- data[firstSet,];
+					firstdata <- data[firstSet,c(Outcome,selectedfeatures)];
 					seconddata <- data[secondSet,];
 					tb1 <- table(firstdata[,Outcome]);
 					tb2 <- table(seconddata[,Outcome]);
@@ -927,9 +927,9 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 						secondPredict <- rpredict(secondModel,data);
 						d1 <-  abs(firstPredict - outcomedata);
 						d2 <-  abs(secondPredict - outcomedata);
-						nfirstSet <-  ( d1 <= (d2 + 0.5*hysteresis) ) & (d1 <= truelimit);
+						nfirstSet <-  ( d1 <= (d2 + hysteresis) );
 						changes <- sum(nfirstSet != firstSet);
-						nsecondSet <- ( d2 <= (d1 + 0.5*hysteresis) ) & (d2 <= truelimit);
+						nsecondSet <- ( d2 <= (d1 + hysteresis) );
 						changes <- changes + sum(nsecondSet != secondSet);
 					}
 					cat("(",changes,")");
@@ -974,8 +974,8 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 			if (n > 1)
 			{
 				originalSet <- (d0 < falselimit);
-				firstSet <- ( d1 <= (d2 + 0.5*hysteresis) ) & (d1 <= truelimit) ;
-				secondSet <- ( d2 <= (d1 + 0.5*hysteresis) ) & (d2 <= truelimit);
+				firstSet <- ( d1 <= (d2 + hysteresis) ) 
+				secondSet <- ( d2 <= (d1 + hysteresis) );
 				if (sum(secondSet) > minsize)
 				{
 
