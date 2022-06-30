@@ -927,9 +927,9 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 						secondPredict <- rpredict(secondModel,data);
 						d1 <-  abs(firstPredict - outcomedata);
 						d2 <-  abs(secondPredict - outcomedata);
-						nfirstSet <-  ( d1 <= (d2 + hysteresis) );
+						nfirstSet <-  (( d1 < (d2 + hysteresis) ) & (d1 < truelimit)) | (( d1 < d2 ) & (d1 >= truelimit));
 						changes <- sum(nfirstSet != firstSet);
-						nsecondSet <- ( d2 <= (d1 + hysteresis) );
+						nsecondSet <- (( d2 < (d1 + hysteresis) ) & (d2 < truelimit)) | (( d2 < d1 ) & (d2 >= truelimit));;
 						changes <- changes + sum(nsecondSet != secondSet);
 					}
 					cat("(",changes,")");
@@ -974,16 +974,16 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 			if (n > 1)
 			{
 				originalSet <- (d0 < falselimit);
-				firstSet <- ( d1 <= (d2 + hysteresis) ) 
-				secondSet <- ( d2 <= (d1 + hysteresis) );
+				firstSet <- (( d1 < (d2 + hysteresis) ) & (d1 < truelimit)) | (( d1 < d2 ) & (d1 >= truelimit));
+				secondSet <- (( d2 < (d1 + hysteresis) ) & (d2 < truelimit)) | (( d2 < d1 ) & (d2 >= truelimit));
 				if (sum(secondSet) > minsize)
 				{
 
 	#Check for statistical significance of second set. If not do not, there is no latent class
 					classData[,Outcome] <- as.factor(1*firstSet);
-					classpFeatures <- univariate_KS(data=classData, Outcome=Outcome,pvalue = 0.025);
+					classpFeatures <- univariate_KS(data=classData, Outcome=Outcome,pvalue = 0.025,thr=0.9);
 					classData[,Outcome] <- as.factor(1*secondSet);
-					classpFeatures <- c(classpFeatures,univariate_KS(data=classData, Outcome=Outcome,pvalue = 0.025));
+					classpFeatures <- c(classpFeatures,univariate_KS(data=classData, Outcome=Outcome,pvalue = 0.025,thr=0.9));
 					classpFeatures <- classpFeatures[order(classpFeatures)]
 					
 					if (classpFeatures[1] <= 0.05) # If significant then go ahead
