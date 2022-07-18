@@ -785,7 +785,7 @@ ClassMetric95ci <- function(datatest,nss=4000)
 			{
 				cpre[n] <- NA;
 			}
-			if (is.na(csen) || is.na(cpre))
+			if (is.na(csen[n]) || is.na(cpre[n]))
 			{
 				cF1[n] <- NA;
 			}

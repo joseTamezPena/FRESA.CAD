@@ -917,9 +917,9 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 						secondPredict <- rpredict(secondModel,data);
 						d1 <-  abs(firstPredict - outcomedata);
 						d2 <-  abs(secondPredict - outcomedata);
-						nfirstSet <-  (d1 < d2) | (d1 < 0.5*falselimit);
+						nfirstSet <-  (d1 <= d2) | (d1 < falselimit);
 						changes <- sum(nfirstSet != firstSet) ;
-						nsecondSet <- (d2 < d1) | (d2 < 0.5*falselimit);
+						nsecondSet <- (d2 < (d1 + hysteresis)) | (d2 < falselimit);
 						changes <- changes + sum(nsecondSet != secondSet);
 					}
 					cat("[(",changes,")<",length(firstModel$selectedfeatures),",",length(secondModel$selectedfeatures),">]");
