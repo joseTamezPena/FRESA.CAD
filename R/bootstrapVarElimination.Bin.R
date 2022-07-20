@@ -172,7 +172,7 @@ bootstrapVarElimination_Bin <- function (object,pvalue=0.05,Outcome="Class",data
 		{
 			if (!is.null(bk$bootval))
 			{	
-				if (!is.na(testAccuracy) && !is.null(testAccuracy))
+				if (!any(is.na(testAccuracy)) && !any(is.null(testAccuracy)))
 				{
 					if (testAccuracy[2] >= bestAccuracy[1])
 					{
