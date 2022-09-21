@@ -9,6 +9,6 @@ Description: Contains a set of utilities for building and testing statistical mo
 License: LGPL (>= 2)
 Depends: Rcpp (>= 0.10.0),stringr,miscTools,Hmisc,pROC
 LinkingTo: Rcpp, RcppArmadillo
-Suggests: nlme,rpart,gplots,RColorBrewer,class,cvTools,glmnet,randomForest,survival, e1071,MASS,naivebayes,mRMRe,epiR,DescTools, irr,survminer,BeSS,ggplot2,robustbase,mda,twosamples,Rfast
+Suggests: nlme,rpart,gplots,RColorBrewer,class,cvTools,glmnet,randomForest,survival, e1071,MASS,naivebayes,mRMRe,epiR,DescTools, irr,survminer,BeSS,ggplot2,robustbase,mda,twosamples,Rfast,whitening
 Packaged: 2022-05-19 20:01:22 UTC; jtamez
 NeedsCompilation: yes

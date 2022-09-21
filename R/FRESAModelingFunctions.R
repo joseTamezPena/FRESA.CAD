@@ -1134,12 +1134,13 @@ filteredFit <- function(formula = formula, data=NULL,
 							fitmethod=e1071::svm,
 							filtermethod.control=list(pvalue=0.10,limit=0.1),
 							Scale="none",
-							PCA=FALSE,
+							WHITE="PCA",
 							DECOR=FALSE,
 							DECOR.control=list(thr=0.80,method="fast",type="NZLM"),
 							...
 						)
 {
+
 	if (inherits(formula, "character"))
 	{
 		formula <- formula(formula);
@@ -1152,10 +1153,12 @@ filteredFit <- function(formula = formula, data=NULL,
 	}
 	fm <- colnames(data)
 	fm <- fm[!(fm %in% dependent)]
+	usedFeatures <-  c(Outcome,fm);
 
 	scaleparm <- NULL;
 	GDSTM <- NULL;
 	pcaobj <- NULL;
+	ccaobj <- NULL;
 	transColnames <- NULL;
 
 	if (DECOR && (length(fm) > 1))
@@ -1181,31 +1184,34 @@ filteredFit <- function(formula = formula, data=NULL,
 		data[,fm] <- as.data.frame(scaleparm$scaledData);
 		scaleparm$scaledData <- NULL;
 	}
-	
-	
-	if (is.null(filtermethod.control))
+	filtout <- filtermethod
+	if (!is.null(filtermethod))
 	{
-		fm <- filtermethod(data,Outcome);
+		
+		if (is.null(filtermethod.control))
+		{
+			fm <- filtermethod(data,Outcome);
+		}
+		else
+		{
+			fm <- do.call(filtermethod,c(list(data,Outcome),filtermethod.control));
+		}
+		filtout <- fm;
+		if (length(fm) > 1)
+		{
+			medianpvalue <- median(fm);
+			maxpvalue <- medianpvalue*1.0e6 + 1.0e-6;
+			fm <- fm[fm <= maxpvalue];
+		}
+		fm <- names(fm)
+		usedFeatures <-  c(Outcome,fm);
 	}
-	else
-	{
-		fm <- do.call(filtermethod,c(list(data,Outcome),filtermethod.control));
-	}
-	filtout <- fm;
-	if (length(fm) > 1)
-	{
-		medianpvalue <- median(fm);
-		maxpvalue <- medianpvalue*1.0e6 + 1.0e-6;
-		fm <- fm[fm <= maxpvalue];
-	}
-	fm <- names(fm)
-	usedFeatures <-  c(Outcome,fm);
 	data <- data[,usedFeatures]
 
 
 	binOutcome <- length(table(data[,Outcome])) == 2
 	isFactor <- inherits(data[,Outcome], "factor")
-	if (PCA && (length(fm) > 1))
+	if (WHITE=="PCA" && (length(fm) > 1))
 	{
 		if (binOutcome)
 		{
@@ -1232,6 +1238,22 @@ filteredFit <- function(formula = formula, data=NULL,
 			}
 		}
 	}
+	if (WHITE=="CCA" && (length(fm) > 1))
+	{
+		if (!requireNamespace("whitening", quietly = TRUE)) {
+			 install.packages("whitening", dependencies = TRUE)
+		}
+		mx <- as.matrix(data[,fm]);
+		ccaobj <- whitening::scca(mx, mx,verbose=FALSE);
+		CCAX <- as.data.frame(tcrossprod( scale(mx), ccaobj$WX ))
+		data <- as.data.frame(cbind(data[,Outcome],CCAX));
+		colnames(data) <-  c(Outcome,colnames(CCAX));
+		if (isFactor)
+		{
+			data[,Outcome] <-as.factor(data[,Outcome])
+		}
+#		cat(colnames(data));
+	}
 	
 	fit <- try(fitmethod(formula,data,...));
 	
@@ -1247,6 +1269,7 @@ filteredFit <- function(formula = formula, data=NULL,
 					binOutcome = binOutcome,
 					Outcome = Outcome,
 					pcaobj = pcaobj,
+					ccaobj = ccaobj,
 					GDSTM = GDSTM,
 					transColnames = transColnames
 					);
@@ -1282,6 +1305,14 @@ predict.FRESA_FILTERFIT <- function(object,...)
 		pcapred <- predict(object$pcaobj,testData[,object$selectedfeatures]);
 		testData <- as.data.frame(cbind(testData[,object$usedFeatures[1]],pcapred));
 		colnames(testData) <-  c(object$usedFeatures[1],colnames(pcapred));
+	}
+	if (!is.null(object$ccaobj))
+	{
+		mx <- as.matrix(testData[,object$selectedfeatures]);
+		CCAX <- as.data.frame(tcrossprod( scale(mx), object$ccaobj$WX ))
+		testData <- as.data.frame(cbind(testData[,object$usedFeatures[1]],CCAX));
+		colnames(testData) <-  c(object$usedFeatures[1],colnames(CCAX));
+#		cat(colnames(testData));
 	}
 	
 	probability <- FALSE;

@@ -11,7 +11,7 @@
 	            fitmethod=e1071::svm,
 	            filtermethod.control=list(pvalue=0.10,limit=0.1),
 	            Scale="none",
-	            PCA=FALSE,
+				WHITE="PCA",
 	            DECOR=FALSE,
 	            DECOR.control=list(thr=0.80,method="fast",type="NZLM"),
 	            ...
@@ -36,8 +36,8 @@
 	\item{Scale}{
 	Scale the data using the provided method
 	}
-	\item{PCA}{
-	Estimate the PCA
+	\item{WHITE}{
+	Whittening process: "PCA" or "CCA"
 	}
 	\item{DECOR}{
 	Decorrelate the input data using FCA and the GDSTM
