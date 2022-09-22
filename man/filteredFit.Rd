@@ -2,16 +2,17 @@
 \alias{filteredFit}
 \title{A generic fit method with a filtered step for feature selection}
 \description{
-	Sequential application of feature selection method followed by optional scaling, PCA then fitting algorithm
+	Sequential application of decorrelation, scaling, feature selection, and PCA/Whitening then fit
 }
 \usage{	
     filteredFit(formula = formula, 
 	            data=NULL,
-	            filtermethod=univariate_Wilcoxon,
+	            filtermethod=univariate_KS,
 	            fitmethod=e1071::svm,
-	            filtermethod.control=list(pvalue=0.10,limit=0.1),
+	            filtermethod.control=list(pvalue=0.10,limit=0),
 	            Scale="none",
-				WHITE="PCA",
+				PCA=FALSE,
+				WHITE=c("none","CCA"),
 	            DECOR=FALSE,
 	            DECOR.control=list(thr=0.80,method="fast",type="NZLM"),
 	            ...
@@ -36,11 +37,14 @@
 	\item{Scale}{
 	Scale the data using the provided method
 	}
+	\item{PCA}{
+	Decorrelate the input data using PCA
+	}
 	\item{WHITE}{
 	Whittening process: "PCA" or "CCA"
 	}
 	\item{DECOR}{
-	Decorrelate the input data using FCA and the GDSTM
+	Decorrelate the input data estimating the GDSTM
 	}
 	\item{DECOR.control}{
 	Parameters to the decorrelation function

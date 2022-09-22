@@ -1130,17 +1130,19 @@ predict.FRESA_HLCM <- function(object,...)
 
 
 filteredFit <- function(formula = formula, data=NULL, 
-							filtermethod=univariate_Wilcoxon, 
+							filtermethod=univariate_KS, 
 							fitmethod=e1071::svm,
-							filtermethod.control=list(pvalue=0.10,limit=0.1),
+							filtermethod.control=list(pvalue=0.10,limit=0),
 							Scale="none",
-							WHITE="PCA",
+							PCA=FALSE,
+							WHITE=c("none","CCA"),
 							DECOR=FALSE,
 							DECOR.control=list(thr=0.80,method="fast",type="NZLM"),
 							...
 						)
 {
 
+	WHITE <- match.arg(WHITE);
 	if (inherits(formula, "character"))
 	{
 		formula <- formula(formula);
@@ -1176,8 +1178,12 @@ filteredFit <- function(formula = formula, data=NULL,
 		transColnames <- colnames(data);
 		fm <- colnames(data)
 		fm <- fm[!(fm %in% dependent)]
+		usedFeatures <-  c(Outcome,fm);
 	}
-	
+	if (!PCA && (WHITE=="CCA") && (Scale == "none"))
+	{
+		Scale <- "Norm"
+	}
 	if ((Scale != "none") && (length(fm) > 1) )
 	{
 		scaleparm <- FRESAScale(as.data.frame(data[,fm]),method=Scale);
@@ -1199,8 +1205,8 @@ filteredFit <- function(formula = formula, data=NULL,
 		filtout <- fm;
 		if (length(fm) > 1)
 		{
-			medianpvalue <- median(fm);
-			maxpvalue <- medianpvalue*1.0e6 + 1.0e-6;
+			selpvalue <- sqrt(median(fm)*(min(fm)+1.0e-12));
+			maxpvalue <- selpvalue*1.0e3 + 1.0e-6;
 			fm <- fm[fm <= maxpvalue];
 		}
 		fm <- names(fm)
@@ -1211,7 +1217,7 @@ filteredFit <- function(formula = formula, data=NULL,
 
 	binOutcome <- length(table(data[,Outcome])) == 2
 	isFactor <- inherits(data[,Outcome], "factor")
-	if (WHITE=="PCA" && (length(fm) > 1))
+	if (PCA && (length(fm) > 1))
 	{
 		if (binOutcome)
 		{
@@ -1238,14 +1244,15 @@ filteredFit <- function(formula = formula, data=NULL,
 			}
 		}
 	}
-	if (WHITE=="CCA" && (length(fm) > 1))
+	if (!PCA && (WHITE=="CCA") && (length(fm) > 1))
 	{
 		if (!requireNamespace("whitening", quietly = TRUE)) {
 			 install.packages("whitening", dependencies = TRUE)
 		}
 		mx <- as.matrix(data[,fm]);
 		ccaobj <- whitening::scca(mx, mx,verbose=FALSE);
-		CCAX <- as.data.frame(tcrossprod( scale(mx), ccaobj$WX ))
+		ccaobj$WY <- NULL
+		CCAX <- as.data.frame(tcrossprod( mx, ccaobj$WX ))
 		data <- as.data.frame(cbind(data[,Outcome],CCAX));
 		colnames(data) <-  c(Outcome,colnames(CCAX));
 		if (isFactor)
@@ -1309,7 +1316,7 @@ predict.FRESA_FILTERFIT <- function(object,...)
 	if (!is.null(object$ccaobj))
 	{
 		mx <- as.matrix(testData[,object$selectedfeatures]);
-		CCAX <- as.data.frame(tcrossprod( scale(mx), object$ccaobj$WX ))
+		CCAX <- as.data.frame(tcrossprod( mx, object$ccaobj$WX ))
 		testData <- as.data.frame(cbind(testData[,object$usedFeatures[1]],CCAX));
 		colnames(testData) <-  c(object$usedFeatures[1],colnames(CCAX));
 #		cat(colnames(testData));
