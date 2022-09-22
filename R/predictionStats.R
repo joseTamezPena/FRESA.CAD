@@ -247,10 +247,10 @@ predictionStats_binary <-  function(predictions, plotname="", center=FALSE,...)
     if (length(pm$predictionTable) > 2 )
     {
       ci <- epiR::epi.tests(pm$predictionTable);
-      accc <- ci$detail$diag.ac;
+      accc <- ci$detail[5,c(2:4)];
       berror <- class95ci$berci;
-      sensitivity <- ci$detail$se;
-      specificity <- ci$detail$sp;
+      sensitivity <- ci$detail[3,c(2:4)];
+      specificity <- ci$detail[4,c(2:4)];
     }
     else
     {
