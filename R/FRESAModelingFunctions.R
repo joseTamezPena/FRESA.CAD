@@ -1263,11 +1263,17 @@ filteredFit <- function(formula = formula, data=NULL,
 	}
 	
 	fit <- try(fitmethod(formula,data,...));
+	selectedfeatures <- fm;
+	if (!is.null(fit$selectedfeatures))
+	{
+		selectedfeatures <- fit$selectedfeatures;
+	}
 	
 	parameters <- list(...);
 	result <- list(fit=fit,
 					filter=filtout,
-					selectedfeatures = fm,
+					processedFeatures = fm,
+					selectedfeatures = selectedfeatures,
 					usedFeatures = usedFeatures,
 					parameters=parameters,
 					asFactor=(class(data[,Outcome])=="factor"),
@@ -1309,13 +1315,13 @@ predict.FRESA_FILTERFIT <- function(object,...)
 	testData <- as.data.frame(testData[,object$usedFeatures])
 	if (!is.null(object$pcaobj))
 	{
-		pcapred <- predict(object$pcaobj,testData[,object$selectedfeatures]);
+		pcapred <- predict(object$pcaobj,testData[,object$processedFeatures]);
 		testData <- as.data.frame(cbind(testData[,object$usedFeatures[1]],pcapred));
 		colnames(testData) <-  c(object$usedFeatures[1],colnames(pcapred));
 	}
 	if (!is.null(object$ccaobj))
 	{
-		mx <- as.matrix(testData[,object$selectedfeatures]);
+		mx <- as.matrix(testData[,object$processedFeatures]);
 		CCAX <- as.data.frame(tcrossprod( mx, object$ccaobj$WX ))
 		testData <- as.data.frame(cbind(testData[,object$usedFeatures[1]],CCAX));
 		colnames(testData) <-  c(object$usedFeatures[1],colnames(CCAX));
