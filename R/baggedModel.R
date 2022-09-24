@@ -423,8 +423,8 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 #															print(coef_Panalysis);
 															coef_Panalysis[coef_Panalysis == Inf] <- 100.0;
 														}
-														avgLogPvalues[znames] <- avgLogPvalues[znames] + coef_Panalysis;
 														coef_Panalysis[coef_Panalysis > 100.0] <- 100.0;
+														avgLogPvalues[znames] <- avgLogPvalues[znames] + coef_Panalysis;
 														Rwts <- sum(coef_Panalysis) - 2*length(coef_Panalysis);
 #														cat(Rwts," : ",(varOutcome-mean(residual^2))/varOutcome," : ",modelFormulas[n],"  <- Wts \n")
 														if (Rwts <= 0) Rwts <- 1.0e-4;
