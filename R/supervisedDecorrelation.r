@@ -84,6 +84,8 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
     baseFeatures <- character()
   }
   AbaseFeatures <- character()
+  bfeat <- unique(c(baseFeatures,AbaseFeatures))
+  
   addedlist <- 1;
   lp = 0;
   uncorrelatedFetures <- character();
@@ -140,10 +142,15 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
       if (!is.null(Outcome))
       {
           outcomep <- univariate_correlation(data[,c(Outcome,varincluded)],Outcome,method=method,limit=0,pvalue=2*unipvalue,thr = 0.999*thr) # the top associated features to the outcome
-          if (length(baseFeatures)==0) baseFeatures <- names(outcomep);
           asociatedtoOutcome <- attr(outcomep,"Unadjusted")
           asociatedtoOutcome <- p.adjust(asociatedtoOutcome,"BH"); # adjusting for false discovery the unadjusted pvalues
           asociatedtoOutcome <- names(asociatedtoOutcome[asociatedtoOutcome < unipvalue])
+          if (length(baseFeatures)==0) 
+          {
+            baseFeatures <- names(outcomep);
+            baseFeatures <- baseFeatures[baseFeatures %in% asociatedtoOutcome];
+            baseFeatures <- as.character(correlated_Remove(cormat,baseFeatures,thr = 0.999*thr,isDataCorMatrix=TRUE))
+          }
           outcomep <- NULL;
     #      print(asociatedtoOutcome)
       }
@@ -158,7 +165,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
                       0.02*(apply(cormat,2,sum)/(0.001 + apply(1*(cormat >= thr),2,sum))) +
                       0.02*apply(cormat,2,mean)
          AbaseFeatures <- AbaseFeatures[order(-ordcor[AbaseFeatures])];
-         AbaseFeatures <- as.character(correlated_Remove(cormat,AbaseFeatures,thr = thr,isDataCorMatrix=TRUE))
+         AbaseFeatures <- as.character(correlated_Remove(cormat,AbaseFeatures,thr = 0.999*thr,isDataCorMatrix=TRUE))
       }
       unipvalue <- min(unipvalue,2.0*unipvalue*sqrt(totcorr)/totFeatures); ## Adjusting for false association
       bvarincluded <- character();
@@ -175,7 +182,10 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
           {
             bmaxcor <- apply(bcormat,2,max)
           }
-          bvarincluded <- names(bmaxcor)[bmaxcor >= thr];
+          bvarincluded <- names(bmaxcor)[bmaxcor > thr];
+          cmcor <- cormat[baseIncluded,baseIncluded];
+#          print(cm <- apply(cmcor,2,max))
+#          print(cm[cm > thr])
           bcormat <- NULL;
         } 
       }
@@ -206,9 +216,10 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
         ordcor <- 0.95*maxcor + 
                   0.02*(apply(cormat,2,sum)/(0.001 + apply(1*(cormat >= thr2),2,sum))) +
                   0.02*apply(cormat,2,mean)
+
         if (length(bfeat) > 0)
         {
-          ordcor[bfeat] <- ordcor[bfeat] + 0.01;
+          ordcor[bfeat] <- ordcor[bfeat] + 10.00;
         }
         
         topfeat <- topfeat[maxcor[topfeat] >= thr];
@@ -238,7 +249,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
             for (feat in topfeat)
             {
 #                if (verbose && (feat==topfeat[1]))  cat("<");
-                falive <- varincluded[!(varincluded %in% c(decorrelatedFetureList,bfeat))]
+                falive <- varincluded[!(varincluded %in% decorrelatedFetureList)]
                 tobereviewed <- topfeat[!(topfeat %in% c(featMarked,feat))]
                 if ((length(tobereviewed) > 1) && (length(falive) > 1))
                 {
@@ -250,31 +261,31 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
                   maxcortp <- thr;
                 }
                 corlist <- cormat[,feat];
-                corlist <- corlist[corlist >= maxcortp];
+                corlist <- corlist[corlist > maxcortp];
 
                 varlist <- names(corlist)
-                varlist <- varlist[!(varlist %in% decorrelatedFetureList)]
+                varlist <- varlist[!(varlist %in% c(unique(decorrelatedFetureList,bfeat)))]
                 ovarlist <- varlist;
 
                 if (length(varlist) > 0)
                 {
-                    if (length(asociatedtoOutcome) > 0)
-                    {
-                      if (feat %in% asociatedtoOutcome)
-                      {
-                        varlist <- varlist[(varlist %in% asociatedtoOutcome)]
-                      }
-                      else
-                      {
-                        varlist <- varlist[!(varlist %in% asociatedtoOutcome)]
-                      }
-                      if (length(varlist) == 0)
-                      {
+#                    if (length(asociatedtoOutcome) > 0)
+#                    {
+#                      if (feat %in% asociatedtoOutcome)
+#                      {
+#                        varlist <- varlist[(varlist %in% asociatedtoOutcome)]
+#                      }
+#                      else
+#                      {
+#                        varlist <- varlist[!(varlist %in% asociatedtoOutcome)]
+#                      }
+#                      if (length(varlist) == 0)
+#                      {
 #                        if (verbose && (feat==topfeat[1]))  cat("[",feat %in% asociatedtoOutcome,"]");
-                        varlist <- names(corlist)
-                        varlist <- varlist[!(varlist %in% decorrelatedFetureList)]
-                      }
-                    }
+#                        varlist <- names(corlist)
+#                        varlist <- varlist[!(varlist %in% decorrelatedFetureList)]
+#                      }
+#                    }
 #                   if (verbose && (feat==topfeat[1]))  cat("(",length(varlist),")");
                    if (useFastCor)
                    {
@@ -515,15 +526,15 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
               cat ("[",lp,"],",max(cormat),". Cor to Base:",length(correlatedToBase),", ABase:",length(AbaseFeatures),"\n")
           }
           newnames <- colnames(dataAdjusted)
-          newnames[newnames %in% c(AbaseFeatures,baseFeatures)] <- paste("Ba_",newnames[newnames %in% c(AbaseFeatures,baseFeatures)],sep="") 
+          newnames[newnames %in% bfeat] <- paste("Ba_",newnames[newnames %in% bfeat],sep="") 
           newnames[newnames %in% varincluded] <- paste("De_",newnames[newnames %in% varincluded],sep="")
           colnames(dataAdjusted) <- newnames
           newnames <- colnames(DeCorrmatrix)
-          newnames[newnames %in% c(AbaseFeatures,baseFeatures)] <- paste("Ba_",newnames[newnames %in% c(AbaseFeatures,baseFeatures)],sep="") 
+          newnames[newnames %in% bfeat] <- paste("Ba_",newnames[newnames %in% bfeat],sep="") 
           newnames[newnames %in% varincluded] <- paste("De_",newnames[newnames %in% varincluded],sep="")
           colnames(DeCorrmatrix) <- newnames
           newnames <- names(fscore)
-          newnames[newnames %in% c(AbaseFeatures,baseFeatures)] <- paste("Ba_",newnames[newnames %in% c(AbaseFeatures,baseFeatures)],sep="") 
+          newnames[newnames %in% bfeat] <- paste("Ba_",newnames[newnames %in% bfeat],sep="") 
           newnames[newnames %in% varincluded] <- paste("De_",newnames[newnames %in% varincluded],sep="")
           names(fscore) <- newnames
         }
@@ -558,7 +569,8 @@ predictDecorrelate <- function(decorrelatedobject,testData)
     baseFeatures <- attr(decorrelatedobject,"baseFeatures")
     varincluded <- attr(decorrelatedobject,"varincluded")
     newnames <- colnames(testData)
-    newnames[newnames %in% c(AbaseFeatures,baseFeatures)] <- paste("Ba_",newnames[newnames %in% c(AbaseFeatures,baseFeatures)],sep="") 
+    bfeat <- unique(c(AbaseFeatures,baseFeatures))
+    newnames[newnames %in% bfeat] <- paste("Ba_",newnames[newnames %in% bfeat],sep="") 
     newnames[newnames %in% varincluded] <- paste("De_",newnames[newnames %in% varincluded],sep="")
     colnames(testData) <- newnames
   }
@@ -569,3 +581,25 @@ predictDecorrelate <- function(decorrelatedobject,testData)
   return (testData)
 }
 
+getDerivedCoefficients <- function(decorrelatedobject)
+{
+  CoeffList <- list();
+  nonZeronames <- character();
+  GDSTM <- attr(decorrelatedobject,"GDSTM")
+  namecol <- colnames(GDSTM);
+
+  n=1;
+  for (i in 1:ncol(GDSTM))
+  {
+    associ <- abs(GDSTM[,i])>0;
+    if (sum(associ) > 1)
+    {
+      nonZeronames <- append(nonZeronames,namecol[i]);
+      CoeffList[[n]] <- GDSTM[associ,i];
+      n=n+1;
+    }
+  }
+  names(CoeffList) <- nonZeronames;
+  
+  return (CoeffList)
+}

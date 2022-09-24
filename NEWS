@@ -1,4 +1,4 @@
-Changes from FRESA.CAD 3.3.1 to FRESA.CAD version 3.4.2
+Changes from FRESA.CAD 3.3.1 to FRESA.CAD version 3.4.3
 	Enhancements:
 		Feature Decorrelation changed name now is: GDSTMDecorrelation() and it has been enhanced with fast predictions.
 		Now it has a predict funtion, and embeded into Filteredfit() funtion.

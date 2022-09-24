@@ -97,7 +97,8 @@ export(univariate_cox)
 export(filteredFit)
 export(predict.FRESA_FILTERFIT)
 export(GDSTMDecorrelation)
-export(predictDecorrelate);
+export(predictDecorrelate)
+export(getDerivedCoefficients)
 
 useDynLib(FRESA.CAD,.registration = TRUE, .fixes = "C_")
 
