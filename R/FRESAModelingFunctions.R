@@ -1167,11 +1167,11 @@ filteredFit <- function(formula = formula, data=NULL,
 	{
 		if (is.null(DECOR.control))
 		{
-			data <- GDSTMDecorrelation(data,Outcome=Outcome);
+			data <- GDSTMDecorrelation(data);
 		}
 		else
 		{
-			data <- do.call(GDSTMDecorrelation,c(list(data,Outcome=Outcome),DECOR.control));
+			data <- do.call(GDSTMDecorrelation,c(list(data),DECOR.control));
 		}
 		GDSTM <- attr(data,"GDSTM")
 		attr(data,"GDSTM") <- NULL
