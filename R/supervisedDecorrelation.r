@@ -190,6 +190,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
       rownames(DeCorrmatrix) <- varincluded;
 
       cormat <- cormat[varincluded,varincluded];
+      baseFeatures <- baseIncluded;
       bfeat <- unique(c(baseIncluded,AbaseFeatures))
       thr2 <- thr
       thr <- thr2*1.001;
