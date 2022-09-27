@@ -99,13 +99,24 @@ correlated_RemoveToLimit <- function(data,unitPvalues,limit=0,thr=0.975,maxLoops
 univariate_Logit <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="BH", uniTest=c("zIDI","zNRI"),limit=0,...,n = 0)
 {
 	varlist <-colnames(data);
-    if (inherits(data[,Outcome],"factor")) data[,Outcome] <- as.numeric(as.character(data[,Outcome]));
+#    if (inherits(data[,Outcome],"factor")) data[,Outcome] <- as.numeric(as.character(data[,Outcome]));
 	varlist <- varlist[Outcome != varlist];
+	nvar <- length(varlist);
 	varlist <- cbind(varlist,varlist);
 	uniTest <- match.arg(uniTest);
-	univ <- ForwardSelection.Model.Bin(nrow(varlist),1.0,0.0,1,"1",Outcome,varlist,data,1,type="LOGIT",selectionType=uniTest);
-	unitPvalues <- 2.0*(1.0 - pnorm(univ$base.Zvalues));
-	unitPvalues[unitPvalues > 1.0] <- 1.0;
+	outcomes <- data[,Outcome];
+	outlist <- unique(outcomes)
+	pvalue <- pvalue/sqrt(length(outlist) - 1.0)
+	unitPvalues <- rep(1.0,nvar);
+	for (oft in outlist[-1])
+	{
+		datat <- rbind(subset(data,outcomes == oft),subset(data,outcomes != oft))
+		datat[,Outcome] <- 1*(datat[,Outcome] == oft);
+		univ <- ForwardSelection.Model.Bin(nrow(varlist),1.0,0.0,1,"1",Outcome,varlist,datat,1,type="LOGIT",selectionType=uniTest);
+		pval <- 2.0*(1.0 - pnorm(univ$base.Zvalues));
+		pval[pval > 1.0] <- 1.0;
+		unitPvalues <- pmin(unitPvalues,pval);
+	}
 
 	names(unitPvalues) <-  varlist[,1];
 	unitPvalues <- unitPvalues[order(unitPvalues)];
@@ -133,15 +144,29 @@ univariate_Logit <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="
 univariate_residual <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="BH",uniTest=c("Ftest","Binomial","Wilcox","tStudent"),type=c("LM","LOGIT"),limit=0,...,n = 0)
 {
 	varlist <- colnames(data);
-    if (inherits(data[,Outcome],"factor")) data[,Outcome] <- as.numeric(as.character(data[,Outcome]));
+#    if (inherits(data[,Outcome],"factor")) data[,Outcome] <- as.numeric(as.character(data[,Outcome]));
 	varlist <- varlist[Outcome != varlist];
+	nvar <- length(varlist);
 	varlist <- cbind(varlist,varlist)
 	uniTest <- match.arg(uniTest);
 	type <- match.arg(type);
 
-	univ <- ForwardSelection.Model.Res(nrow(varlist),1.0,0.0,1,"1",Outcome,varlist,data,1,type=type,testType=uniTest);
-	unitPvalues <- 2.0*(1.0 - pnorm(univ$base.Zvalues));
-	unitPvalues[unitPvalues > 1.0] <- 1.0;
+	outcomes <- data[,Outcome];
+	outlist <- unique(outcomes)
+	pvalue <- pvalue/sqrt(length(outlist) - 1.0)
+	unitPvalues <- rep(1.0,nvar);
+	for (oft in outlist[-1])
+	{
+		datat <- rbind(subset(data,outcomes == oft),subset(data,outcomes != oft))
+		datat[,Outcome] <- 1*(datat[,Outcome] == oft);
+		univ <- ForwardSelection.Model.Res(nrow(varlist),1.0,0.0,1,"1",Outcome,varlist,datat,1,type=type,testType=uniTest);
+		pval <- 2.0*(1.0 - pnorm(univ$base.Zvalues));
+		pval[pval > 1.0] <- 1.0;
+		unitPvalues <- pmin(unitPvalues,pval);
+	}
+
+
+
 #	print(unitPvalues);
 	names(unitPvalues) <- varlist[,1];
 	unitPvalues <- unitPvalues[order(unitPvalues)];
@@ -228,7 +253,7 @@ univariate_filter <- function(data=NULL, Outcome=NULL, pvalue=0.2,pvalueMethod=w
 
 	outcomes <- as.character(data[,Outcome]);
 	outlist <- unique(outcomes)
-	pvalue <- pvalue/(length(outlist) - 1.0)
+	pvalue <- pvalue/sqrt(length(outlist) - 1.0)
 	for (oft in outlist[-1])
 	{
 		case <- subset(data,outcomes == oft);
@@ -440,7 +465,7 @@ univariate_correlation <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMe
 	{
 		outcomes <- as.character(data[,Outcome]);
 		outlist <- unique(outcomes);
-		pvalue <- pvalue/(length(outlist) - 1.0)
+		pvalue <- pvalue/sqrt(length(outlist) - 1.0);
 		for (ots in outlist[-1])
 		{
 			for (j in varlist) 
@@ -539,7 +564,7 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
   names(varcount) <- colnames(data);
   names(rankVar) <- colnames(data);
 
-  if (inherits(data[,Outcome], "factor")) data[,Outcome] <- as.numeric(as.character(data[,Outcome]));
+#  if (inherits(data[,Outcome], "factor")) data[,Outcome] <- as.numeric(as.character(data[,Outcome]));
   
   data <- data[,c(Outcome,correlated_Remove(data,colnames(data)[!(colnames(data) %in% Outcome)]))]
 
@@ -569,7 +594,7 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
 
 
 	pvaltest <- univariate_residual(data,Outcome,pvalue=pvalue,limit=-1,uniTest="tStudent",type="LOGIT",adjustMethod=adjustMethod);
-#cat("->tstudent")
+	#cat("->tstudent")
 	 geomMeanpVal <- geomMeanpVal*(attr(pvaltest,"Unadjusted")[names(geomMeanpVal)]);
 	 maxPval <- pmax(maxPval,attr(pvaltest,"Unadjusted")[names(geomMeanpVal)]);
 	 minPval <- pmin(minPval,attr(pvaltest,"Unadjusted")[names(geomMeanpVal)]);
@@ -592,44 +617,45 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
   both <- pmin(pvaltest[features],allf[features]);
   allf <- c(pvaltest[!(names(pvaltest) %in% features)],allf[!(names(allf) %in% features)],both);
 
+# Removing the largest p-value
   expgeom <- 1.0/(length(pvallist)-1);
-  maxPval[maxPval < 1.0e-12] <- 1.0e-12;
+  maxPval[maxPval < 1.0e-16] <- 1.0e-16;
   geomMeanpVal <- (geomMeanpVal/maxPval)^expgeom;
 
 #  print(names(allf))
   
-  limitmrmr = length(allf) + 1;
-  if ((limit > 0) && (limit < 1.0))
-  {
-	limitmrmr = min(length(allf),limit*(ncol(data)-1));
-  } 
-  else if (limit > 2)
-  {
-	limitmrmr = min((ncol(data)-1),limit);
-  }
+#  limitmrmr = length(allf) + 1;
+#  if ((limit > 0) && (limit < 1.0))
+#  {
+#	limitmrmr = min(length(allf),limit*(ncol(data)-1));
+#  } 
+#  else if (limit > 2)
+#  {
+#	limitmrmr = min((ncol(data)-1),limit);
+#  }
 
-  if (limitmrmr < 2 ) limitmrmr = 2;
+#  if (limitmrmr < 2 ) limitmrmr = 2;
   
-  selfeat <- names(geomMeanpVal[geomMeanpVal<0.1]);
-  if (length(selfeat) <= limitmrmr)
-  {
-  	selfeat <- names(geomMeanpVal[order(geomMeanpVal)])[1:min(limitmrmr+1,(ncol(data)-1))];
-  }
-  mRMRf <- mRMR.classic_FRESA(data[,c(Outcome,selfeat)],Outcome,feature_count = limitmrmr)
+#  selfeat <- names(geomMeanpVal[geomMeanpVal<0.1]);
+#  if (length(selfeat) <= limitmrmr)
+#  {
+#  	selfeat <- names(geomMeanpVal[order(geomMeanpVal)])[1:min(limitmrmr+1,(ncol(data)-1))];
+#  }
+#  mRMRf <- mRMR.classic_FRESA(data[,c(Outcome,selfeat)],Outcome,feature_count = limitmrmr)
 #  cat("->mRMRf")
-   
-  mRMRf <- mRMRf[mRMRf > 0];
-  varcount[names(mRMRf)] <- varcount[names(mRMRf)] + 1;
-  rankVar[names(mRMRf)] <- rankVar[names(mRMRf)] + c(1:length(mRMRf));
-  pvallist$mRMR <- mRMRf;
-  if (length(mRMRf) > 0)
-  {
-    missing <- !(names(mRMRf) %in% names(allf))
-    allf <- c(allf,mRMRf[missing])
-	powgeom <- 1.0/expgeom;
-	expgeom <- 1.0/(powgeom + 1.0);
-	geomMeanpVal[names(mRMRf)] <- ((geomMeanpVal[names(mRMRf)]^powgeom)*minPval[names(mRMRf)])^expgeom; # Adjusting mRMR selected features
-  }
+#   
+#  mRMRf <- mRMRf[mRMRf > 0];
+#  varcount[names(mRMRf)] <- varcount[names(mRMRf)] + 1;
+# rankVar[names(mRMRf)] <- rankVar[names(mRMRf)] + c(1:length(mRMRf));
+# pvallist$mRMR <- mRMRf;
+#  if (length(mRMRf) > 0)
+#  {
+#    missing <- !(names(mRMRf) %in% names(allf))
+#    allf <- c(allf,mRMRf[missing])
+#	powgeom <- 1.0/expgeom;
+#	expgeom <- 1.0/(powgeom + 1.0);
+#	geomMeanpVal[names(mRMRf)] <- ((geomMeanpVal[names(mRMRf)]^powgeom)*minPval[names(mRMRf)])^expgeom; # Adjusting mRMR selected features
+#  }
 
   geomMeanpVal <- geomMeanpVal[order(geomMeanpVal-varcount[names(geomMeanpVal)])];
   allf <- p.adjust(geomMeanpVal,adjustMethod);
