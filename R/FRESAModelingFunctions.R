@@ -1268,6 +1268,32 @@ filteredFit <- function(formula = formula, data=NULL,
 	{
 		selectedfeatures <- fit$selectedfeatures;
 	}
+	else
+	{
+		 vs <- NULL;
+          if (!is.null(fit$importance))
+          {
+            vs <- fit$importance[,1];
+          }
+          if (!is.null(fit$variable.importance))
+          {
+            vs <- fit$variable.importance;
+          }
+          if (!is.null(vs))
+          {
+            #						print(vs)
+            if (length(vs)>1)
+            {
+              if (length(vs) > 2) vs <- vs[order(-vs)];
+              if (sum(vs > 0.0) > 1)
+              {
+                vs <- vs[vs > 0.0];							
+              }
+              selectedfeatures <- names(vs);
+            }
+          }
+	}
+
 	
 	parameters <- list(...);
 	result <- list(fit=fit,

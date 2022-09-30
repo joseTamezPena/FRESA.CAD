@@ -192,6 +192,8 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
       cormat <- cormat[varincluded,varincluded];
       baseFeatures <- baseIncluded;
       bfeat <- unique(c(baseIncluded,AbaseFeatures))
+      bfeat <- as.character(correlated_Remove(cormat,bfeat,thr = 0.75*thr,isDataCorMatrix=TRUE));
+
       thr2 <- thr
       thr <- thr2*1.001;
       wthr <- 0.5 - 0.5*skipRelaxed;
@@ -226,7 +228,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
           rownames(betamatrix) <- varincluded;
           topfeat <- topfeat[order(-ordcor[topfeat])];
           topfeat <- correlated_Remove(cormat,topfeat,thr = thr,isDataCorMatrix=TRUE)
-           intopfeat <- character();
+          intopfeat <- character();
           toBeDecorrelated <- length(topfeat)
           if (verbose)  cat(lp,", Top:",toBeDecorrelated,"<",thr,">");
           maxcortp <- thr;
@@ -259,7 +261,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
                 corlist <- corlist[corlist > maxcortp];
 
                 varlist <- names(corlist)
-                varlist <- varlist[!(varlist %in% c(unique(decorrelatedFetureList,bfeat)))]
+                varlist <- varlist[!(varlist %in% unique(c(decorrelatedFetureList,bfeat)))]
                 ovarlist <- varlist;
 
                 if (length(varlist) > 0)
@@ -492,7 +494,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
             }
           }
 
-          correlatedToBase <- varincluded[varincluded %in% baseFeatures];
+          correlatedToBase <- varincluded[varincluded %in% bfeat];
           if (length(correlatedToBase) > 1)
           {
             correlatedToBase <- apply(DeCorrmatrix[correlatedToBase,] != 0,2,sum)
@@ -505,7 +507,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
               correlatedToBase <- varincluded[DeCorrmatrix[correlatedToBase,] != 0]
             }
           }
-          correlatedToBase <- correlatedToBase[!(correlatedToBase %in% baseFeatures)];
+          correlatedToBase <- correlatedToBase[!(correlatedToBase %in% bfeat)];
           if (verbose) 
           {
              if (useFastCor)
@@ -545,6 +547,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
   attr(dataAdjusted,"GDSTM") <- DeCorrmatrix;
   attr(dataAdjusted,"varincluded") <- varincluded;
   attr(dataAdjusted,"baseFeatures") <- baseFeatures;
+  attr(dataAdjusted,"uniqueBase") <- bfeat;
   attr(dataAdjusted,"useDeCorr") <- useDeCorr;
   attr(dataAdjusted,"correlatedToBase") <- correlatedToBase;
   attr(dataAdjusted,"AbaseFeatures") <- AbaseFeatures;
@@ -559,11 +562,9 @@ predictDecorrelate <- function(decorrelatedobject,testData)
     decorMat <- attr(decorrelatedobject,"GDSTM")
 #    testData[,colnames(decorMat)] <- as.matrix(testData[,rownames(decorMat)]) %*% decorMat
     testData[,rownames(decorMat)] <- Rfast::mat.mult(as.matrix(testData[,rownames(decorMat)]),decorMat);
-    AbaseFeatures <- attr(decorrelatedobject,"AbaseFeatures")
-    baseFeatures <- attr(decorrelatedobject,"baseFeatures")
     varincluded <- attr(decorrelatedobject,"varincluded")
     newnames <- colnames(testData)
-    bfeat <- unique(c(AbaseFeatures,baseFeatures))
+    bfeat <- attr(decorrelatedobject,"uniqueBase")
     newnames[newnames %in% bfeat] <- paste("Ba_",newnames[newnames %in% bfeat],sep="") 
     newnames[newnames %in% varincluded] <- paste("De_",newnames[newnames %in% varincluded],sep="")
     colnames(testData) <- newnames
