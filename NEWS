@@ -1,4 +1,19 @@
-Changes from FRESA.CAD 3.3.1 to FRESA.CAD version 3.4.3
+Changes from FRESA.CAD 3.4.1 to FRESA.CAD version 3.4.3
+	Enhancements:
+		UnivariateFilters:
+			All binary filters can handle multi class outcomes
+		FilteredFit:
+			Filteredfit now can handle CCA
+			Now you can disable univariate filter
+		Latent Class code revision.
+ 	 Bugs:
+	 	PredictionStats
+			-Fix interfase issue with newes version of epiR
+	   GDSTMDecorrelation bug with unaltered basis fixed.
+	 Other:
+	 	Code cleaning. Removing commented code.
+	 	
+Changes from FRESA.CAD 3.3.1 to FRESA.CAD version 3.4.2
 	Enhancements:
 		Feature Decorrelation changed name now is: GDSTMDecorrelation() and it has been enhanced with fast predictions.
 		Now it has a predict funtion, and embeded into Filteredfit() funtion.
