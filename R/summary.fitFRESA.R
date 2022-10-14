@@ -148,6 +148,10 @@ summary.fitFRESA <- function(object,type=c("Improvement","Residual"),ci=c(0.025,
 				cis = cbind(object$baggingAnalysis$coefficients+lowci,object$baggingAnalysis$coefficients,object$baggingAnalysis$coefficients+hici);
 				cis = exp(cis);
 				cinames <- c("lower","OR","upper");
+				if (object$type == "COX")
+				{
+					cinames <- c("lower","HR","upper");
+				}
 			}
 			else
 			{
