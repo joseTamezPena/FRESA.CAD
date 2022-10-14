@@ -187,17 +187,11 @@ CoxBenchmark(theData = NULL, theOutcome = "Class", reps = 100, trainFraction = 0
 	\item{CIRiskTable}{
   		the matrix of the concordance index on Risk with the 95 CI 
   }
-  \item{CIFollowUpTable}{
-  		the matrix of the concordance index on Follow-up times with the 95 CI 
-  }
   \item{LogRankTable}{
   		the matrix of the LogRank Test with the 95 CI 
   }
   \item{CIRisksTable_filter}{
   	 	the matrix of the concordance index on Risk with the 95 CI for the filter methods
-  }
-  \item{CIFollowUpTable_filter}{
-  	 	the matrix of the concordance index on Follow-up times with the 95 CI for the filter methods 
   }
   \item{LogRankTable_filter}{
   		the matrix of the LogRank Test with the 95 CI for the filter methods

@@ -32,11 +32,9 @@ CoxBenchmark <-  function(theData = NULL, theOutcome = "Class", reps = 100, trai
   senTable_filter <- NULL
   speTable_filter <- NULL
   
-  CIFollowUPTable <- NULL 
   CIRisksTable <- NULL 
   LogRankTable <- NULL
   
-  CIFollowUPTable_filter <- NULL 
   CIRisksTable_filter <- NULL 
   LogRankTable_filter <- NULL
   fmeth_0 <- NULL;
@@ -46,7 +44,6 @@ CoxBenchmark <-  function(theData = NULL, theOutcome = "Class", reps = 100, trai
     #rcvFilter_reference <- cpFinal$TheCVEvaluations$Reference$testPredictions
     rcvFilter_reference <- FRESA.CAD::randomCV(theData,theOutcome,clasfun,trainSampleSets = referenceCV$trainSamplesSets,featureSelectionFunction = referenceCV$selectedFeaturesSet);
     cStats <- predictionStats_survival(rcvFilter_reference$survMedianTest,plotname="Cox with BSWiMS");
-    CIFollowUPTable_filter <- rbind(CIFollowUPTable_filter,cStats$CIFollowUp);
     CIRisksTable_filter <- rbind(CIRisksTable_filter,cStats$CIRisk);
     LogRankTable_filter <- rbind(LogRankTable_filter,cStats$LogRank);
     #Stats binary
@@ -64,7 +61,6 @@ CoxBenchmark <-  function(theData = NULL, theOutcome = "Class", reps = 100, trai
     if (!inherits(rcvLASSO, "try-error"))
 	  {
       cStats <- predictionStats_survival(rcvFilter_LASSO$survMedianTest,plotname="Cox with LASSO");
-      CIFollowUPTable_filter <- rbind(CIFollowUPTable_filter,cStats$CIFollowUp);
       CIRisksTable_filter <- rbind(CIRisksTable_filter,cStats$CIRisk);
       LogRankTable_filter <- rbind(LogRankTable_filter,cStats$LogRank);
       #Stats binary
@@ -81,7 +77,6 @@ CoxBenchmark <-  function(theData = NULL, theOutcome = "Class", reps = 100, trai
     if (!inherits(rcvLASSO, "try-error"))
 	  {
       cStats <- predictionStats_survival(rcvFilter_BESS$survMedianTest,plotname="Cox with BESS");
-      CIFollowUPTable_filter <- rbind(CIFollowUPTable_filter,cStats$CIFollowUp);
       CIRisksTable_filter <- rbind(CIRisksTable_filter,cStats$CIRisk);
       LogRankTable_filter <- rbind(LogRankTable_filter,cStats$LogRank);
       
@@ -99,7 +94,6 @@ CoxBenchmark <-  function(theData = NULL, theOutcome = "Class", reps = 100, trai
     if (!inherits(rcvLASSO, "try-error"))
 	  {
       cStats <- predictionStats_survival(rcvFilter_UniCox$survMedianTest,"Cox with Univariate cox Feature Selection");
-      CIFollowUPTable_filter <- rbind(CIFollowUPTable_filter,cStats$CIFollowUp);
       CIRisksTable_filter <- rbind(CIRisksTable_filter,cStats$CIRisk);
       LogRankTable_filter <- rbind(LogRankTable_filter,cStats$LogRank);
       
@@ -112,8 +106,7 @@ CoxBenchmark <-  function(theData = NULL, theOutcome = "Class", reps = 100, trai
       speTable_filter <- rbind(speTable_filter,binaryStats$specificity)
     }
 
-    result <- list(CIFollowUPTable_filter = CIFollowUPTable_filter,
-                   CIRisksTable_filter = CIRisksTable_filter,
+    result <- list(CIRisksTable_filter = CIRisksTable_filter,
                    LogRankTable_filter = LogRankTable_filter,
                    accciTable_filter = accciTable_filter,
                    errorciTable_filter = errorciTable_filter,
@@ -159,7 +152,6 @@ CoxBenchmark <-  function(theData = NULL, theOutcome = "Class", reps = 100, trai
     for (i in 1:length(referenceCV))
     {
       cStats <- predictionStats_survival(referenceCV[[i]]$survMedianTest,plotname = names(referenceCV)[i]);
-      CIFollowUPTable <- rbind(CIFollowUPTable,cStats$CIFollowUp);
       CIRisksTable <- rbind(CIRisksTable,cStats$CIRisk);
       LogRankTable <- rbind(LogRankTable,cStats$LogRank);
       #referenceCV <- cpFinal$TheCVEvaluations$Reference
@@ -184,7 +176,6 @@ CoxBenchmark <-  function(theData = NULL, theOutcome = "Class", reps = 100, trai
   else
   {
     cStats <- predictionStats_survival(referenceCV$survMedianTest,plotname = referenceName);
-    CIFollowUPTable <- rbind(CIFollowUPTable,cStats$CIFollowUp);
     CIRisksTable <- rbind(CIRisksTable,cStats$CIRisk);
     LogRankTable <- rbind(LogRankTable,cStats$LogRank);
     binaryPreds <- referenceCV$survMedianTest[,c("Outcome","LinearPredictorsMedian")]
@@ -214,7 +205,6 @@ CoxBenchmark <-  function(theData = NULL, theOutcome = "Class", reps = 100, trai
 	{
       methods <- cbind(methods,"LASSO");
 		  cStats <- predictionStats_survival(rcvLASSO$survMedianTest,plotname = "LASSO");
-      CIFollowUPTable <- rbind(CIFollowUPTable,cStats$CIFollowUp);
       CIRisksTable <- rbind(CIRisksTable,cStats$CIRisk);
       LogRankTable <- rbind(LogRankTable,cStats$LogRank);
       
@@ -242,7 +232,6 @@ CoxBenchmark <-  function(theData = NULL, theOutcome = "Class", reps = 100, trai
 	{
     methods <- cbind(methods,"RIDGE");
     cStats <- predictionStats_survival(rcvGLMNET_RIDGE$survMedianTest,plotname = "GLMNET_RIDGE");
-    CIFollowUPTable <- rbind(CIFollowUPTable,cStats$CIFollowUp);
     CIRisksTable <- rbind(CIRisksTable,cStats$CIRisk);
     LogRankTable <- rbind(LogRankTable,cStats$LogRank);
     
@@ -270,7 +259,6 @@ CoxBenchmark <-  function(theData = NULL, theOutcome = "Class", reps = 100, trai
 	{
     methods <- cbind(methods,"ELASTICNET");
     cStats <- predictionStats_survival(rcvGLMNET_ELASTICNET$survMedianTest,plotname = "GLMNET_ELASTICNET");
-    CIFollowUPTable <- rbind(CIFollowUPTable,cStats$CIFollowUp);
     CIRisksTable <- rbind(CIRisksTable,cStats$CIRisk);
     LogRankTable <- rbind(LogRankTable,cStats$LogRank);
     
@@ -297,12 +285,9 @@ CoxBenchmark <-  function(theData = NULL, theOutcome = "Class", reps = 100, trai
 	{
     methods <- cbind(methods,"BESS");
     cStats <- predictionStats_survival(rcvBESS$survMedianTest,plotname = "BeSS");
-    CIFollowUPTable <- rbind(CIFollowUPTable,cStats$CIFollowUp);
     CIRisksTable <- rbind(CIRisksTable,cStats$CIRisk);
     LogRankTable <- rbind(LogRankTable,cStats$LogRank);
     
-    #rcvBESS <- cpFinal$TheCVEvaluations$BESS
-    #rcvBESS$survMedianTest[,"LinearPredictorsMedian"] <- -rcvBESS$survMedianTest[,"LinearPredictorsMedian"]
     binaryPreds <- rcvBESS$survMedianTest[,c("Outcome","LinearPredictorsMedian")];
     binaryStats <- predictionStats_binary(binaryPreds,"BeSS");
     accciTable <- rbind(accciTable,binaryStats$accc);
@@ -326,7 +311,6 @@ CoxBenchmark <-  function(theData = NULL, theOutcome = "Class", reps = 100, trai
 	{
     methods <- cbind(methods,"BeSS.SEQUENTIAL");
     cStats <- predictionStats_survival(rcvBESSSequential$survMedianTest,plotname = "BeSS.SEQUENTIAL");
-    CIFollowUPTable <- rbind(CIFollowUPTable,cStats$CIFollowUp);
     CIRisksTable <- rbind(CIRisksTable,cStats$CIRisk);
     LogRankTable <- rbind(LogRankTable,cStats$LogRank);
     
@@ -353,7 +337,6 @@ CoxBenchmark <-  function(theData = NULL, theOutcome = "Class", reps = 100, trai
 	{
     methods <- cbind(methods,"BeSS.SEQUENTIAL.BIC");
     cStats <- predictionStats_survival(rcvBESSSequentialBIC$survMedianTest,plotname = "BeSS.SEQUENTIAL.BIC");
-    CIFollowUPTable <- rbind(CIFollowUPTable,cStats$CIFollowUp);
     CIRisksTable <- rbind(CIRisksTable,cStats$CIRisk);
     LogRankTable <- rbind(LogRankTable,cStats$LogRank);
     binaryPreds <- rcvBESSSequentialBIC$survMedianTest[,c("Outcome","LinearPredictorsMedian")]
@@ -377,7 +360,7 @@ CoxBenchmark <-  function(theData = NULL, theOutcome = "Class", reps = 100, trai
   
  
 
-  predictions <- c("MartinGale","LinearPredictors","FollowUpTimes","Risks");
+  predictions <- c("LinearPredictors","Risks");
   columnNamesMethods <- NULL;
   
   for(x in methods)
@@ -391,7 +374,6 @@ CoxBenchmark <-  function(theData = NULL, theOutcome = "Class", reps = 100, trai
   colnames(test_Predictions) <- c("Times","Outcome",columnNamesMethods);
   thesets <- c("Survival Algorithm")
   theMethod <- methods;
-  rownames(CIFollowUPTable) <- theMethod;
   rownames(CIRisksTable) <- theMethod;
   rownames(LogRankTable) <- theMethod;
   rownames(accciTable) <- theMethod;
@@ -411,8 +393,7 @@ CoxBenchmark <-  function(theData = NULL, theOutcome = "Class", reps = 100, trai
     classnames <- colnames(test_Predictions);
     cat("Cox\n")
     fmeth <- FilterMethod(survival::coxph,"Cox")
-    CIFollowUPTable_filter <- rbind(CIFollowUPTable_filter,fmeth$CIFollowUPTable_filter);
-    CIRisksTable_filter <- rbind(CIRisksTable_filter,fmeth$CIFollowUPTable_filter);
+    CIRisksTable_filter <- rbind(CIRisksTable_filter,fmeth$CIRisksTable_filter);
     LogRankTable_filter <- rbind(LogRankTable_filter,fmeth$LogRankTable_filter);
     accciTable_filter <- rbind(accciTable_filter,fmeth$accciTable_filter)
     errorciTable_filter <- rbind(errorciTable_filter,fmeth$errorciTable_filter)
@@ -493,8 +474,8 @@ CoxBenchmark <-  function(theData = NULL, theOutcome = "Class", reps = 100, trai
   
   result <- list(errorciTable = errorciTable,accciTable = accciTable,aucTable = aucTable,senTable = senTable,speTable = speTable,
                  errorciTable_filter = errorciTable_filter,accciTable_filter = accciTable_filter,aucTable_filter = aucTable_filter,senTable_filter = senTable_filter,speTable_filter = speTable_filter,
-                 CIRisksTable = CIRisksTable,CIFollowUPTable = CIFollowUPTable,LogRankTable = LogRankTable,
-                 CIRisksTable_filter = CIRisksTable_filter,CIFollowUPTable_filter = CIFollowUPTable_filter,LogRankTable_filter = LogRankTable_filter,
+                 CIRisksTable = CIRisksTable,LogRankTable = LogRankTable,
+                 CIRisksTable_filter = CIRisksTable_filter,LogRankTable_filter = LogRankTable_filter,
                  times = list(Reference = referenceCV$theTimes,LASSO = rcvLASSO$theTimes, RIDGE = rcvGLMNET_RIDGE$theTimes, ELASTICNET = rcvGLMNET_ELASTICNET, BESS = rcvBESS$theTimes, BESS.SEQUENTIAL = rcvBESSSequential$theTimes, BESS.SEQUENTIAL.BIC=rcvBESSSequentialBIC$theTimes),
                  jaccard = jaccard,
                  featsize = featsize,

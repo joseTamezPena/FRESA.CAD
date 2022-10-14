@@ -540,27 +540,20 @@ function(x,...)
 		testCIRisksmin <- min(bpCIRisks$ciTable$low95);
 		testCIRisksmax <- max(bpCIRisks$ciTable$top95);
 		
-		x$CIFollowUPTable[is.na(x$CIFollowUPTable)] <- 0;
-		bpCIFollowUP <- barPlotCiError(as.matrix(x$CIFollowUPTable),metricname = "CIndexFollowUP",thesets = x$thesets,themethod = x$theMethod,main = paste(prefix,"Concordance"),offsets = c(0.5,1),ho=0.5,args.legend = args.legend,col = terrain.colors(length(x$theMethod)),...);
-		testCIFollowUP <- bpCIFollowUP$ciTable$mean;
-		testCIFollowUPmin <- min(bpCIFollowUP$ciTable$low95);
-		testCIFollowUPmax <- max(bpCIFollowUP$ciTable$top95);
 
 		metrics <- rbind(BER = testBalancedError,
 							ACC = testACC[brnames],
 							AUC = testAUC[brnames],
 							SEN = testSEN[brnames],
 							SPE = testSPE[brnames],
-							CIRisks = testCIRisks[brnames],
-							CIFollowUp = testCIFollowUP[brnames]
+							CIRisks = testCIRisks[brnames]
 						);
 		barPlotsCI <- list(BER=bpBER,
 							ACC=bpACC,
 							AUC=bpAUC,
 							SEN=bpSEN,
 							SPE=bpSPE,
-							CIRisks = bpCIRisks[brnames],
-							CIFollowUp = bpCIFollowUP[brnames]
+							CIRisks = bpCIRisks[brnames]
 							);
 
 		metrics_filter <- NULL;
@@ -612,19 +605,13 @@ function(x,...)
 			testFilCIRisksmin <- min(apply(bpCIRisks_filter$ciTable$low95,2,min));
 			testFilCIRisksmax <- max(apply(bpCIRisks_filter$ciTable$top95,2,max));
 
-			x$CIFollowUPTable_filter[is.na(x$CIFollowUPTable_filter)] <- 0;
-			bpCIFollowUP_filter <- barPlotCiError(as.matrix(x$CIFollowUPTable_filter),metricname = "CIFollowUP",thesets = x$theFiltersets,themethod = x$theClassMethod,main = paste(prefix,"Concordance"),offsets = c(0.5,1),ho=0.5,args.legend = list(bg = "white",x = "bottomleft"),col = terrain.colors(length(x$theClassMethod)),...)
-			testFilCIFollowUP <- apply(bpCIFollowUP_filter$ciTable$mean,2,median);
-			testFilCIFollowUPmin <- min(apply(bpCIFollowUP_filter$ciTable$low95,2,min));
-			testFilCIFollowUPmax <- max(apply(bpCIFollowUP_filter$ciTable$top95,2,max));
 
 			metrics_filter <- rbind(BER = testFilBalancedError,
 								ACC = testFilACC[brnames],
 								AUC = testFilAUC[brnames],
 								SEN = testFilSEN[brnames],
 								SPE = testFilSPE[brnames],
-								CIRisks = testFilCIRisks[brnames],
-								CIFollowUp = testFilCIFollowUP[brnames]
+								CIRisks = testFilCIRisks[brnames]
 								);
 
 			barPlotsCI_filter <- list(BER=bpBER_filter,
@@ -632,8 +619,7 @@ function(x,...)
 									SEN=bpSEN_filter,
 									AUC=bpAUC_filter,
 									SPE=bpSPE_filter,
-									CIRisks = bpCIRisks_filter,
-									CIFollowUp = bpCIFollowUP_filter
+									CIRisks = bpCIRisks_filter
 								);
 
 			minMaxMetrics <- list(BER = c(min(testBalancedErrormin,testFilBalancedErrormin),max(testBalancedErrormax,testFilBalancedErrormax)),
@@ -642,74 +628,11 @@ function(x,...)
 						SEN = c(min(testSENmin,testFilSENmin),max(testSENmax,testFilSENmax)),
 						SPE = c(min(testSPEmin,testFilSPEmin),max(testSPEmax,testFilSPEmax)),
 						CIDX = c(min(testFilCIDXmin,testFilCIDXmin),max(testFilCIDXmax,testFilCIDXmax)),
-						CIRisks =  c(min(testCIRisksmin,testFilCIRisksmin),max(testCIRisksmax,testFilCIRisksmax)),
-						CIFollowUp =  c(min(testCIFollowUPmin,testFilCIFollowUPmin),max(testCIFollowUPmax,testFilCIFollowUPmax))
+						CIRisks =  c(min(testCIRisksmin,testFilCIRisksmin),max(testCIRisksmax,testFilCIRisksmax))
 						);
 		}
-		# mcnemar <- matrix(0,ncol = ncol(x$testPredictions)-1,nrow=ncol(x$testPredictions)-1)
-		# pmcnemar <- matrix(1,ncol = ncol(x$testPredictions)-1,nrow=ncol(x$testPredictions)-1)
-		# if ((ncol(x$testPredictions)-1) > 2)
-		# {
-		# 	for (i in 2:(ncol(x$testPredictions)-1))
-		# 	{
-		# 		for (j in (i+1):ncol(x$testPredictions))
-		# 		{
-		# 			th1 <- 0.5*((min(x$testPredictions[,i]) >= 0.0) && (max(x$testPredictions[,i]) <= 1.0));
-		# 			th2 <- 0.5*((min(x$testPredictions[,j]) >= 0.0) && (max(x$testPredictions[,j]) <= 1.0));
-		# 			tb <- table((x$testPredictions[,i] > th1),(x$testPredictions[,j] > th2))
-		# 			if (length(tb) > 3)
-		# 			{
-		# 				pmcnemar[i-1,j-1] <- stats::mcnemar.test(tb)$p.value;
-		# 				mcnemar[i-1,j-1] <- -log10(max(pmcnemar[i-1,j-1],0.0001));
-		# 			}
-		# 			else
-		# 			{
-		# 				pmcnemar[i-1,j-1] <- 0;
-		# 				mcnemar[i-1,j-1] <- 5;
-		# 			}
-		# 			pmcnemar[j-1,i-1] <- pmcnemar[i-1,j-1];
-		# 			mcnemar[j-1,i-1] <- mcnemar[i-1,j-1];
-		# 		}
-		# 	}
-		# 	mcnemar[is.nan(mcnemar)] <- 6;
-		# 	colnames(mcnemar) <- colnames(x$testPredictions)[-1]
-		# 	rownames(mcnemar) <- colnames(x$testPredictions)[-1]
-		# 	colnames(pmcnemar) <- colnames(x$testPredictions)[-1]
-		# 	rownames(pmcnemar) <- colnames(x$testPredictions)[-1]
-		# 	par(op);
-		# 	par(mfrow = c(1,1),mar = c(2,2,2,2));
-		# 	gplots::heatmap.2(mcnemar,trace = "none",mar = c(5,10),col=rev(heat.colors(8)),main = "p(Method A = Method B)",cexRow = 0.65,cexCol = 0.75,srtCol = 25,key.xlab="-log(p)",xlab="Method B", ylab="Method A")
-		# 	par(op);
-		# }
 
-		# AUCtable <- matrix(0,ncol = ncol(x$testPredictions)-1,nrow=ncol(x$testPredictions)-1)
-		# pAUCtable <- matrix(1,ncol = ncol(x$testPredictions)-1,nrow=ncol(x$testPredictions)-1)
-		# if ((ncol(x$testPredictions)-1) > 2)
-		# {
-		# 	for (i in 2:ncol(x$testPredictions))
-		# 	{
-		# 		for (j in 2:ncol(x$testPredictions))
-		# 		{
-		# 			roct <- roc.test(roc(x$testPredictions$Outcome,x$testPredictions[,i],quiet = TRUE),
-		# 							roc(x$testPredictions$Outcome,x$testPredictions[,j],quiet = TRUE),
-		# 							alternative="less")
-		# 			pAUCtable[i-1,j-1] <-  roct$p.value;
-		# 			AUCtable[i-1,j-1] <- -log10(max(pAUCtable[i-1,j-1],0.0001));
-		# 		}
-		# 	}
-		# 	AUCtable[is.nan(AUCtable)] <- 0.0;
-		# 	colnames(AUCtable) <- colnames(x$testPredictions)[-1]
-		# 	rownames(AUCtable) <- colnames(x$testPredictions)[-1]
-		# 	colnames(pAUCtable) <- colnames(x$testPredictions)[-1]
-		# 	rownames(pAUCtable) <- colnames(x$testPredictions)[-1]
-		# 	par(op);
-		# 	par(mfrow = c(1,1),mar = c(2,2,2,2));
-		# 	topf <- apply(AUCtable,1,mean)
-		# 	gplots::heatmap.2(AUCtable[order(topf),],trace = "none",mar = c(5,10),col=rev(heat.colors(8)),Rowv=FALSE,dendrogram = "column",cexRow = 0.65,cexCol = 0.75,srtCol = 25,key.xlab="-log(p)",main = "p(ROC_AUC A > ROC_AUC B)",xlab="Method B",ylab="Method A")
-		# 	par(op);
-		# }
-		
-		result <- list(metrics = metrics, barPlotsCI = barPlotsCI,metrics_filter=metrics_filter,barPlotsCI_filter=barPlotsCI_filter, minMaxMetrics = minMaxMetrics);#,mcnemar=pmcnemar,AUCtable=pAUCtable);
+		result <- list(metrics = metrics, barPlotsCI = barPlotsCI,metrics_filter=metrics_filter,barPlotsCI_filter=barPlotsCI_filter, minMaxMetrics = minMaxMetrics);
 	}
 
 	par(op);

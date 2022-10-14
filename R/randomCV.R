@@ -49,9 +49,8 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
     if(length(selectedFeatures)==0)
     {
       warning("Method did not select any features")
-      return(list(martingaleResid=rep(NA,nrow(TestDataset)),
+      return(list(
                   linearPredictors=rep(NA,nrow(TestDataset)),
-                  followUpTimes=rep(NA,nrow(TestDataset)),
                   risks = list(fit=rep(NA,nrow(TestDataset)),se.fit=rep(NA,nrow(TestDataset))),
                   hr = rep(NA,nrow(TestDataset))));
     }
@@ -76,39 +75,33 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
     
     if (!inherits(cox,"try-error") && !inherits(cox,"list") )
     {
-      followUpTimes <- try(predict(cox,newdata=TestDataset,type="expected"))
-      if (!inherits(followUpTimes,"try-error"))
+      #risk
+      risks <- try(predict(cox,newdata=TestDataset,type="risk"))
+      if (!inherits(risks,"try-error"))
       {
-        #Martingale resid 
-        martingaleResid <- (as.integer(as.matrix(TestDataset[theOutcome]))-1) - followUpTimes
+#        
+#
         #linear predictos
         linearPredictors <- predict(cox,newdata=TestDataset,type="lp")
-        #risk
-        #risks <- predict(cox,type="risk",se.fit=TRUE)
-        risks <- predict(cox,newdata=TestDataset,type="risk")
         
         hr <- round(coef(summary(cox))[,2],3)
-        survPreds <- list(martingaleResid=martingaleResid,
-                          linearPredictors=linearPredictors,
-                          followUpTimes=followUpTimes,
+        survPreds <- list(linearPredictors=linearPredictors,
                           risks = risks,
                           hr = hr)
         return (survPreds)
       }
       else{
         warning("Cox Fit Follow-up Times Error");
-        return(list(martingaleResid=rep(0,nrow(TestDataset)),
+        return(list(
                     linearPredictors=rep(0,nrow(TestDataset)),
-                    followUpTimes=rep(0,nrow(TestDataset)),
                     risks = list(fit=rep(0,nrow(TestDataset)),se.fit=rep(0,nrow(TestDataset))),
                     hr = rep(0,nrow(TestDataset))));
       }
     }
     else{
       warning("Cox Fit Error");
-        return(list(martingaleResid=rep(0,nrow(TestDataset)),
+        return(list(
                     linearPredictors=rep(0,nrow(TestDataset)),
-                    followUpTimes=rep(0,nrow(TestDataset)),
                     risks = list(fit=rep(0,nrow(TestDataset)),se.fit=rep(0,nrow(TestDataset))),
                     hr = rep(0,nrow(TestDataset))));
     }
@@ -592,9 +585,9 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
           {
             #SURVPREDICT
             survPreds <- survpredict(currentModel,trainSet,testSet,selectedFeaturesSet[[rept]]);
-            csurvTestPredictions <- cbind(testSet[,theTime],testSet[,theOutcome],rep(rept,nrow(testSet)),as.vector(survPreds$martingaleResid),survPreds$linearPredictors,as.vector(survPreds$followUpTimes),as.vector(survPreds$risks));
+            csurvTestPredictions <- cbind(testSet[,theTime],testSet[,theOutcome],rep(rept,nrow(testSet)),survPreds$linearPredictors,as.vector(survPreds$risks));
             survPreds <- survpredict(currentModel,trainSet,trainSet,selectedFeaturesSet[[rept]]);
-            csurvTrainPredictions <- cbind(trainSet[,theTime],trainSet[,theOutcome],rep(rept,nrow(trainSet)),as.vector(survPreds$martingaleResid),survPreds$linearPredictors,as.vector(survPreds$followUpTimes),as.vector(survPreds$risks));
+            csurvTrainPredictions <- cbind(trainSet[,theTime],trainSet[,theOutcome],rep(rept,nrow(trainSet)),survPreds$linearPredictors,as.vector(survPreds$risks));
             rownames(csurvTestPredictions) <- rownames(testSet)
             rownames(csurvTrainPredictions) <- rownames(trainSet)
             survTestPredictions <- rbind(survTestPredictions, csurvTestPredictions)
@@ -669,18 +662,10 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
   boxstaTest <- NULL;
   boxstaTrain <- NULL;
   #Surv
-  medianMartingaleResidSurvTest <- NULL;
-  medianMartingaleResidSurvTrain <- NULL;
-  boxstaMartingaleResidSurvTest <- NULL;
-  boxstaMartingaleResidSurvTrain <- NULL;
   medianLinearPredictorsSurvTest <- NULL;
   medianLinearPredictorsSurvTrain <- NULL;
   boxstaLinearPredictorsSurvTest <- NULL;
   boxstaLinearPredictorsSurvTrain <- NULL;
-  medianFollowUpTimesSurvTest <- NULL;
-  medianFollowUpTimesSurvTrain <- NULL;
-  boxstaFollowUpTimesSurvTest <- NULL;
-  boxstaFollowUpTimesSurvTrain <- NULL;
   medianRisksSurvTest <- NULL;
   medianRisksSurvTrain <- NULL;
   boxstaRisksSurvTest <- NULL;
@@ -739,13 +724,13 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
   
   #[,theTime],testSet[,theOutcome]
   medianSurvTest <- data.frame(matrix(0, ncol = 6, nrow = nrow(theData)))
-  colnames(medianSurvTest) <- c("Times","Outcome","MartinGaleMedian","LinearPredictorsMedian","FollowUpTimesMedian","RisksMedian");
+  colnames(medianSurvTest) <- c("Times","Outcome","LinearPredictorsMedian","RisksMedian");
   rownames(medianSurvTest) <- rownames(theData)
   medianSurvTest[,1] = theData[,theTime]
   medianSurvTest[,2] = theData[,theOutcome]
   
   medianSurvTrain <- data.frame(matrix(0, ncol = 6, nrow = nrow(theData)))
-  colnames(medianSurvTrain) <- c("Times","Outcome","MartinGaleMedian","LinearPredictorsMedian","FollowUpTimesMedian","RisksMedian");
+  colnames(medianSurvTrain) <- c("Times","Outcome","LinearPredictorsMedian","RisksMedian");
   rownames(medianSurvTrain) <- rownames(theData)
   medianSurvTrain[,1] = theData[,theTime]
   medianSurvTrain[,2] = theData[,theOutcome]
@@ -755,21 +740,8 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
   {
     if (ncol(survTestPredictions) == 7)
     {
-      colnames(survTestPredictions) <- c("Times","Outcome","Model","MartinGale","LinearPredictors","FollowUpTimes","Risks");
-      colnames(survTrainPredictions) <- c("Times","Outcome","Model","MartinGale","LinearPredictors","FollowUpTimes","Risks");
-    }
-    
-    #   ######################Martin Gale#################################### 
-    boxstaMartingaleResidSurvTest <- try(boxplot(as.numeric(as.character(survTestPredictions[,4]))~rownames(survTestPredictions),plot = FALSE));
-    if (!inherits(boxstaMartingaleResidSurvTest, "try-error"))
-    {
-      medianSurvTest[boxstaMartingaleResidSurvTest$names,3] <- boxstaMartingaleResidSurvTest$stats[3,]
-    }
-    
-    boxstaMartingaleResidSurvTrain <- try(boxplot(as.numeric(as.character(survTrainPredictions[,4]))~rownames(survTrainPredictions),plot = FALSE));
-    if (!inherits(boxstaMartingaleResidSurvTrain, "try-error"))
-    {
-      medianSurvTrain[boxstaMartingaleResidSurvTrain$names,3] <- boxstaMartingaleResidSurvTrain$stats[3,]
+      colnames(survTestPredictions) <- c("Times","Outcome","Model","LinearPredictors","Risks");
+      colnames(survTrainPredictions) <- c("Times","Outcome","Model","LinearPredictors","Risks");
     }
     
     #   ######################Linear Predictors####################################  
@@ -783,19 +755,6 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
     if (!inherits(boxstaLinearPredictorsSurvTrain, "try-error"))
     {
       medianSurvTrain[boxstaLinearPredictorsSurvTrain$names,4] <- boxstaLinearPredictorsSurvTrain$stats[3,]
-    }
-    
-    #   ######################Follow Up Times####################################  
-    boxstaFollowUpTimesSurvTest <- try(boxplot(as.numeric(as.character(survTestPredictions[,6]))~rownames(survTestPredictions),plot = FALSE));
-    if (!inherits(boxstaFollowUpTimesSurvTest, "try-error"))
-    {
-      medianSurvTest[boxstaFollowUpTimesSurvTest$names,5] <- boxstaFollowUpTimesSurvTest$stats[3,]
-    }
-    
-    boxstaFollowUpTimesSurvTrain <- try(boxplot(as.numeric(as.character(survTrainPredictions[,6]))~rownames(survTrainPredictions),plot = FALSE));
-    if (!inherits(boxstaFollowUpTimesSurvTrain, "try-error"))
-    {
-      medianSurvTrain[boxstaFollowUpTimesSurvTrain$names,5] <- boxstaFollowUpTimesSurvTrain$stats[3,]
     }
     
     #   ######################Risks####################################  
@@ -822,13 +781,11 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
                   boxstaTrain = boxstaTrain,
                   survMedianTest = medianSurvTest,
                   survMedianTrain = medianSurvTrain,
-                  survBoxstaTest = list(martingaleResid=boxstaMartingaleResidSurvTest,
+                  survBoxstaTest = list(
                                         linearPredictors=boxstaLinearPredictorsSurvTest,
-                                        followUpTimes=boxstaFollowUpTimesSurvTest,
                                         risks=boxstaRisksSurvTest),
-                  survBoxstaTrain = list(martingaleResid=boxstaMartingaleResidSurvTrain,
+                  survBoxstaTrain = list(
                                          linearPredictors=boxstaLinearPredictorsSurvTrain,
-                                         followUpTimes=boxstaFollowUpTimesSurvTrain,
                                          risks=boxstaRisksSurvTrain),
                   survHR = survHR,
                   trainSamplesSets = trainSamplesSets,

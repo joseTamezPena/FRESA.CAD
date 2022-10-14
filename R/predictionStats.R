@@ -6,24 +6,16 @@ predictionStats_survival <-  function(predictions, plotname="", atriskthr=1.0, .
 			install.packages("survminer", dependencies = TRUE)
 		}
 
-		data <- data.frame(times=predictions[,1],preds=predictions[,5])
-		CIFollowUp <- concordance95ci(datatest = data, followUp = TRUE)
-		data <- data.frame(times=predictions[,1],preds=-predictions[,6])
-		CIRisk <- concordance95ci(datatest = data, followUp = FALSE)
+		data <- data.frame(times=predictions[,1],preds= -predictions[,4])
+		CIRisk <- concordance95ci(datatest = data, ExpectedEvents = FALSE)
 		if ( !inherits(atriskthr,"numeric") ) 
 		{
-			atriskthr <- median(predictions[,6]);
+			atriskthr <- median(predictions[,4]);
 		}
-		groups = predictions[,6] >= atriskthr
+		groups = predictions[,4] >= atriskthr
 		labelsplot <- c("Other",sprintf("At Risk > %5.2f",atriskthr));
 		paletteplot <- c("#00bbff", "#ff0000")
-#		if (atriskthr > 1.0)
-#		{
-#			groups = groups - 1*(predictions[,6] <= 1.0/atriskthr)
-#			labelsplot <- c("Mid Risk","Low Risk", "High Risk")
-#			paletteplot <- c("yellow","green", "red")
-#		}
-		newData <- data.frame(times=predictions[,1],status=predictions[,2],preds=predictions[,6],groups = groups);
+		newData <- data.frame(times=predictions[,1],status=predictions[,2],preds=predictions[,4],groups = groups);
 		Curves <- survival::survfit(survival::Surv(times, status) ~ groups,newData)
 
         LogRankE <- EmpiricalSurvDiff(times=newData$times,
@@ -42,17 +34,17 @@ predictionStats_survival <-  function(predictions, plotname="", atriskthr=1.0, .
       		print(graph)
 		}
 		
-		LogRank <- survival::survdiff(Surv(predictions[,1], predictions[,2]) ~ predictions[,6] >= atriskthr )
+		LogRank <- survival::survdiff(Surv(predictions[,1], predictions[,2]) ~ predictions[,4] >= atriskthr )
 		LogRank <- cbind(LogRank$chisq,  1 - pchisq(LogRank$chisq, length(LogRank$n) - 1));
 		colnames(LogRank) <- cbind("chisq","pvalue");
-		return( list(CIFollowUp=CIFollowUp, CIRisk = CIRisk, LogRank = LogRank, Curves = Curves,LogRankE = LogRankE) );
+		return( list(CIRisk = CIRisk, LogRank = LogRank, Curves = Curves,LogRankE = LogRankE,groups=groups) );
 	}
 	else{
-		return( list(CIFollowUp=rep(0,nrow(predictions)), CIRisk = rep(0,nrow(predictions)), LogRank = rep(0,nrow(predictions)), Curves = NULL) );
+		return( list(CIRisk = rep(0,nrow(predictions)), LogRank = rep(0,nrow(predictions)), Curves = NULL) );
 	}
 }
 
-concordance95ci <- function(datatest,nss=1000,followUp=FALSE)
+concordance95ci <- function(datatest,nss=1000,ExpectedEvents=FALSE)
 {
   sz <- nrow(datatest)
   sesci <- c(0,0,0);
@@ -62,7 +54,7 @@ concordance95ci <- function(datatest,nss=1000,followUp=FALSE)
     for (i in 1:nss)
     {
       bootsample <- datatest[sample(sz,sz,replace=TRUE),];
-      if(followUp)
+      if(ExpectedEvents)
       {
         ses[i] <- rcorr.cens(bootsample[,1], bootsample[,2], outx = TRUE)[1]
       }
@@ -251,6 +243,9 @@ predictionStats_binary <-  function(predictions, plotname="", center=FALSE,...)
       berror <- class95ci$berci;
       sensitivity <- ci$detail[3,c(2:4)];
       specificity <- ci$detail[4,c(2:4)];
+	  rownames(accc) <- NULL
+	  rownames(sensitivity) <- NULL
+	  rownames(specificity) <- NULL
     }
     else
     {
