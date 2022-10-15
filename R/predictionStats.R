@@ -6,8 +6,15 @@ predictionStats_survival <-  function(predictions, plotname="", atriskthr=1.0, .
 			install.packages("survminer", dependencies = TRUE)
 		}
 
-		data <- data.frame(times=predictions[,1],preds= -predictions[,4])
-		CIRisk <- concordance95ci(datatest = data, ExpectedEvents = FALSE)
+		data1 <- data.frame(times=predictions[,1],status=predictions[,2],preds= 1.0/predictions[,4])
+		CIRisk <- concordance95ci(datatest = data1)
+		data2 <- data.frame(times=numeric(nrow(predictions)),status=predictions[,2],preds= predictions[,3])
+		CILp <- concordance95ci(datatest = data2)
+
+		onlycases <- predictions[,2]>0
+		datatest <- data.frame(times=predictions[onlycases,1],preds= 1.0/predictions[onlycases,4])
+		spearmanCI <- sperman95ci(datatest)
+		
 		if ( !inherits(atriskthr,"numeric") ) 
 		{
 			atriskthr <- median(predictions[,4]);
@@ -37,30 +44,31 @@ predictionStats_survival <-  function(predictions, plotname="", atriskthr=1.0, .
 		LogRank <- survival::survdiff(Surv(predictions[,1], predictions[,2]) ~ predictions[,4] >= atriskthr )
 		LogRank <- cbind(LogRank$chisq,  1 - pchisq(LogRank$chisq, length(LogRank$n) - 1));
 		colnames(LogRank) <- cbind("chisq","pvalue");
-		return( list(CIRisk = CIRisk, LogRank = LogRank, Curves = Curves,LogRankE = LogRankE,groups=groups) );
+		return( list(CIRisk = CIRisk,CILp=CILp,spearmanCI=spearmanCI, LogRank = LogRank, Curves = Curves,LogRankE = LogRankE,groups=groups) );
 	}
 	else{
 		return( list(CIRisk = rep(0,nrow(predictions)), LogRank = rep(0,nrow(predictions)), Curves = NULL) );
 	}
 }
 
-concordance95ci <- function(datatest,nss=1000,ExpectedEvents=FALSE)
+concordance95ci <- function(datatest,nss=1000)
 {
   sz <- nrow(datatest)
   sesci <- c(0,0,0);
+  isROCAUC <- sum(datatest$times)==0;
   if (sz>2)
   {
     ses <- numeric(nss);
     for (i in 1:nss)
     {
       bootsample <- datatest[sample(sz,sz,replace=TRUE),];
-      if(ExpectedEvents)
+      if(isROCAUC)
       {
-        ses[i] <- rcorr.cens(bootsample[,1], bootsample[,2], outx = TRUE)[1]
+        ses[i] <- rcorr.cens(bootsample$preds, bootsample$status)[1]
       }
       else
       {
-        ses[i] <- rcorr.cens(bootsample[,1], bootsample[,2])[1]
+        ses[i] <- rcorr.cens(bootsample$preds, Surv(bootsample$times,bootsample$status))[1]
       }
     }
     sesci <- quantile(ses, probs = c(0.5,0.025,0.975),na.rm = TRUE);
@@ -198,10 +206,6 @@ predictionStats_binary <-  function(predictions, plotname="", center=FALSE,...)
 		predictions <- predictions[!is.na(predictions[,2]),]
 	}	
     if (center) predictions[,2] <- predictions[,2] - 0.5;
-#	if (min(predictions[,2]) >= 0)
-#	{
-#		predictions[,2] <- predictions[,2] - 0.5;
-#	}
 	
     pm <- NULL;
 	citest <- NULL;
