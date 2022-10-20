@@ -268,6 +268,7 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 								names(avgLogPvalues) <- names(model$coefficients)[-1];
 							}
 							addedZvalues <- avgLogPvalues;
+							addedCoef <- avgLogPvalues;
 							baggingAnalysis <- list();
 							baggingAnalysis$uMS_values <- avgLogPvalues;
 							baggingAnalysis$rMS_values <- avgLogPvalues;
@@ -277,10 +278,12 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 							baggingAnalysis$pF_values <- avgLogPvalues;
 							baggingAnalysis$pBin_values <- avgLogPvalues;
 							baggingAnalysis$mMSE_values <- avgLogPvalues;
+							baggingAnalysis$dMSE_values <- avgLogPvalues;
 							baggingAnalysis$uAcc_values <- avgLogPvalues;
 							baggingAnalysis$rAcc_values <- avgLogPvalues;
 							baggingAnalysis$uAUC_values <- avgLogPvalues;
 							baggingAnalysis$rAUC_values <- avgLogPvalues;
+							baggingAnalysis$dAUC_values <- avgLogPvalues;
 							baggingAnalysis$idi_values <- avgLogPvalues;
 							baggingAnalysis$nri_values <- avgLogPvalues;
 							baggingAnalysis$zidi_values <- avgLogPvalues;
@@ -390,31 +393,13 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 														if (predtype=="linear")
 														{
 															gvar <- getVar.Res(out,data=EquTrainSet,Outcome=Outcome,type=type,testData=data)
-															coef_Panalysis <- -log(gvar$FP.value); 
-															baggingAnalysis$uMS_values[znames] <- baggingAnalysis$uMS_values[znames] + gvar$unitestMSE;
-															baggingAnalysis$rMS_values[znames] <- baggingAnalysis$rMS_values[znames] + gvar$redtestMSE;
-															baggingAnalysis$NeRI_values[znames] <- baggingAnalysis$NeRI_values[znames] + gvar$NeRIs;
-															baggingAnalysis$pF_values[znames] <- baggingAnalysis$pF_values[znames] + log(gvar$FP.value);
-															baggingAnalysis$pt_values[znames] <- baggingAnalysis$pt_values[znames] + log(gvar$tP.value);
-															baggingAnalysis$pBin_values[znames] <- baggingAnalysis$pBin_values[znames] + log(gvar$BinP.value);
-															baggingAnalysis$pWilcox_values[znames] <- baggingAnalysis$pWilcox_values[znames] + log(gvar$WilcoxP.value);
-															baggingAnalysis$mMSE_values[znames] <- baggingAnalysis$mMSE_values[znames] + gvar$FullTestMSE;
+															coef_Panalysis <- -log(gvar$FP.value);
 														}
 														else
 														{
 															gvar <- getVar.Bin(out,data=EquTrainSet,Outcome=Outcome,type=type,testData=data)
 			#												cat("Equ: ",mean(EquTrainSet[,Outcome])," Data: ",mean(data[,Outcome]),"\n");
 															coef_Panalysis <- -log(1.0-pnorm(gvar$z.IDIs));
-															baggingAnalysis$uAcc_values[znames] <- baggingAnalysis$uAcc_values[znames] + gvar$uniTestAccuracy;
-															baggingAnalysis$rAcc_values[znames] <- baggingAnalysis$rAcc_values[znames] + gvar$redtestAccuracy;
-															baggingAnalysis$uAUC_values[znames] <- baggingAnalysis$uAUC_values[znames] + gvar$uniTestAUC;
-															baggingAnalysis$rAUC_values[znames] <- baggingAnalysis$rAUC_values[znames] + gvar$redtestAUC;
-															baggingAnalysis$idi_values[znames] <- baggingAnalysis$idi_values[znames] + gvar$IDIs;
-															baggingAnalysis$nri_values[znames] <- baggingAnalysis$nri_values[znames] + gvar$NRIs;
-															baggingAnalysis$zidi_values[znames] <- baggingAnalysis$zidi_values[znames] + gvar$z.IDIs;
-															baggingAnalysis$znri_values[znames] <- baggingAnalysis$znri_values[znames] + gvar$z.NRIs;
-															baggingAnalysis$mAUC_values[znames] <- baggingAnalysis$mAUC_values[znames] + gvar$fullTestAUC;
-															baggingAnalysis$mACC_values[znames] <- baggingAnalysis$mACC_values[znames] + gvar$fullTestAccuracy;
 														}
 #														print(coef_Panalysis);
 														infnum <- is.infinite(coef_Panalysis)
@@ -424,11 +409,45 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 															coef_Panalysis[coef_Panalysis == Inf] <- 100.0;
 														}
 														coef_Panalysis[coef_Panalysis > 100.0] <- 100.0;
-														avgLogPvalues[znames] <- avgLogPvalues[znames] + coef_Panalysis;
 														Rwts <- sum(coef_Panalysis) - 2*length(coef_Panalysis);
 #														cat(Rwts," : ",(varOutcome-mean(residual^2))/varOutcome," : ",modelFormulas[n],"  <- Wts \n")
 														if (Rwts <= 0) Rwts <- 1.0e-4;
 														wtsList <- c(wtsList,Rwts);
+														if (predtype=="linear")
+														{
+#															gvar <- getVar.Res(out,data=EquTrainSet,Outcome=Outcome,type=type,testData=data)
+#															coef_Panalysis <- -log(gvar$FP.value); 
+															baggingAnalysis$uMS_values[znames] <- baggingAnalysis$uMS_values[znames] + Rwts*gvar$unitestMSE;
+															baggingAnalysis$rMS_values[znames] <- baggingAnalysis$rMS_values[znames] + Rwts*gvar$redtestMSE;
+															baggingAnalysis$NeRI_values[znames] <- baggingAnalysis$NeRI_values[znames] + Rwts*gvar$NeRIs;
+															baggingAnalysis$pF_values[znames] <- baggingAnalysis$pF_values[znames] + Rwts*log(gvar$FP.value);
+															baggingAnalysis$pt_values[znames] <- baggingAnalysis$pt_values[znames] + Rwts*log(gvar$tP.value);
+															baggingAnalysis$pBin_values[znames] <- baggingAnalysis$pBin_values[znames] + Rwts*log(gvar$BinP.value);
+															baggingAnalysis$pWilcox_values[znames] <- baggingAnalysis$pWilcox_values[znames] + 
+																									Rwts*log(gvar$WilcoxP.value);
+															baggingAnalysis$mMSE_values[znames] <- baggingAnalysis$mMSE_values[znames] + Rwts*gvar$FullTestMSE;
+															baggingAnalysis$dMSE_values[znames] <- (baggingAnalysis$dMSE_values[znames] + 
+																									Rwts*(gvar$redtestMSE - gvar$FullTestMSE) );
+														}
+														else
+														{
+#															gvar <- getVar.Bin(out,data=EquTrainSet,Outcome=Outcome,type=type,testData=data)
+			#												cat("Equ: ",mean(EquTrainSet[,Outcome])," Data: ",mean(data[,Outcome]),"\n");
+#															coef_Panalysis <- -log(1.0-pnorm(gvar$z.IDIs));
+															baggingAnalysis$uAcc_values[znames] <- baggingAnalysis$uAcc_values[znames] + Rwts*gvar$uniTestAccuracy;
+															baggingAnalysis$rAcc_values[znames] <- baggingAnalysis$rAcc_values[znames] + Rwts*gvar$redtestAccuracy;
+															baggingAnalysis$uAUC_values[znames] <- baggingAnalysis$uAUC_values[znames] + Rwts*gvar$uniTestAUC;
+															baggingAnalysis$rAUC_values[znames] <- baggingAnalysis$rAUC_values[znames] + Rwts*gvar$redtestAUC;
+															baggingAnalysis$idi_values[znames] <- baggingAnalysis$idi_values[znames] + Rwts*gvar$IDIs;
+															baggingAnalysis$nri_values[znames] <- baggingAnalysis$nri_values[znames] + Rwts*gvar$NRIs;
+															baggingAnalysis$zidi_values[znames] <- baggingAnalysis$zidi_values[znames] + Rwts*gvar$z.IDIs;
+															baggingAnalysis$znri_values[znames] <- baggingAnalysis$znri_values[znames] + Rwts*gvar$z.NRIs;
+															baggingAnalysis$mAUC_values[znames] <- baggingAnalysis$mAUC_values[znames] + Rwts*gvar$fullTestAUC;
+															baggingAnalysis$dAUC_values[znames] <- (baggingAnalysis$dAUC_values[znames] + 
+																									Rwts*(gvar$fullTestAUC-gvar$redtestAUC) );
+															baggingAnalysis$mACC_values[znames] <- baggingAnalysis$mACC_values[znames] + Rwts*gvar$fullTestAccuracy;
+														}
+														avgLogPvalues[znames] <- avgLogPvalues[znames] + coef_Panalysis;
 														rnames <- append(rnames,tot_cycles)
 														outmeans <- out$coefficients;
 														wts = wts + Rwts;
@@ -438,7 +457,8 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 														baggingAnalysis$wts[znames] <- baggingAnalysis$wts[znames] + rep(Rwts,length(znames));
 														coefEvolution <- rbind(coefEvolution,c(Rwts,model$coefficients/wts));
 #														print(model$coefficients/wts);
-														addedZvalues[znames] <- addedZvalues[znames] + rep(1,length(znames));
+														addedZvalues[znames] <- addedZvalues[znames] + rep(Rwts,length(znames));
+														addedCoef[znames] <- addedCoef[znames] + rep(1,length(znames));
 														if (type=="COX")
 														{
 															fullmodelmeans <- abs(modelmeans[onames]);
@@ -506,7 +526,7 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 									{
 										model$estimations <- model$coefficients;
 									}
-									avgLogPvalues <- avgLogPvalues/addedZvalues;
+									avgLogPvalues <- avgLogPvalues/addedCoef;
 									baggingAnalysis$formula.list <- modelFormulas;
 									baggingAnalysis$uMS_values <- baggingAnalysis$uMS_values/addedZvalues;
 									baggingAnalysis$rMS_values <- baggingAnalysis$rMS_values/addedZvalues;
@@ -524,13 +544,15 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 									baggingAnalysis$zidi_values <- baggingAnalysis$zidi_values/addedZvalues;
 									baggingAnalysis$znri_values <- baggingAnalysis$znri_values/addedZvalues;
 									baggingAnalysis$mAUC_values <- baggingAnalysis$mAUC_values/addedZvalues;
+									baggingAnalysis$dAUC_values <- baggingAnalysis$dAUC_values/addedZvalues;
 									baggingAnalysis$mACC_values <- baggingAnalysis$mACC_values/addedZvalues;
 									baggingAnalysis$mMSE_values <- baggingAnalysis$mMSE_values/addedZvalues;
-									baggingAnalysis$wts <- baggingAnalysis$wts/addedZvalues;
+									baggingAnalysis$dMSE_values <- baggingAnalysis$dMSE_values/addedZvalues;
+									baggingAnalysis$wts <- baggingAnalysis$wts/addedCoef;
 									baggingAnalysis$RelativeFrequency <- VarFrequencyTable/fnrom;
 									baggingAnalysis$Jaccard.SM <- Jaccard.SM;
 									baggingAnalysis$n_bootstrap <- n_bootstrap;
-									baggingAnalysis$coeff_n_samples <- addedZvalues;
+									baggingAnalysis$coeff_n_samples <- addedCoef;
 									baggingAnalysis$observations <- observations;
 									baggingAnalysis$avgLogPvalues <- avgLogPvalues;
 

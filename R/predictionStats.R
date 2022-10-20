@@ -28,7 +28,7 @@ predictionStats_survival <-  function(predictions, plotname="", atriskthr=1.0, .
         LogRankE <- EmpiricalSurvDiff(times=newData$times,
                   status=newData$status,
                   groups=newData$groups,
-                  plots=plotname!="")
+                  plots=plotname!="",main=plotname)
 		if(plotname!="")
 		{
 			 graph <- survminer::ggsurvplot(Curves, data=newData, conf.int = TRUE, legend.labs=labelsplot,
