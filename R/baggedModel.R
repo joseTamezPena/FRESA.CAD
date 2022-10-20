@@ -98,6 +98,7 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 			coefEvolution <- NULL;
 			avgsize <- 0;
 			formulaNetwork <- NULL;
+			WformulaNetwork <- NULL;
 			coefList <- list();
 			formulaList <- list();
 			wtsList <- numeric();
@@ -123,6 +124,8 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 					formulaNetwork <- matrix(0,nrow=length(VarFrequencyTable),ncol = length(VarFrequencyTable))
 					dimnames(formulaNetwork) <- list(names(VarFrequencyTable),names(VarFrequencyTable))
 					m <- formulaNetwork
+					WformulaNetwork <- formulaNetwork
+
 					Jaccard.SM <- 0;
 					tota <- 0;
 					for (n in 1:loops)
@@ -409,6 +412,7 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 															coef_Panalysis[coef_Panalysis == Inf] <- 100.0;
 														}
 														coef_Panalysis[coef_Panalysis > 100.0] <- 100.0;
+														WformulaNetwork[znames,znames] <- WformulaNetwork[znames,znames] + coef_Panalysis%*%t(coef_Panalysis)
 														Rwts <- sum(coef_Panalysis) - 2*length(coef_Panalysis);
 #														cat(Rwts," : ",(varOutcome-mean(residual^2))/varOutcome," : ",modelFormulas[n],"  <- Wts \n")
 														if (Rwts <= 0) Rwts <- 1.0e-4;
@@ -558,6 +562,9 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 
 									model$baggingAnalysis <- baggingAnalysis;
 									model$linear.predictors <- predict(model);
+									WformulaNetwork <- sqrt(WformulaNetwork);
+									diag(WformulaNetwork) <- 0;
+									WformulaNetwork <- WformulaNetwork/max(WformulaNetwork);
 								}
 								else
 								{
@@ -623,6 +630,7 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 				   frequencyTable=VarFrequencyTable,
 				   averageSize=avgsize,
 				   formulaNetwork=formulaNetwork,
+				   WformulaNetwork=WformulaNetwork,
 				   Jaccard.SM = Jaccard.SM,
 				   coefEvolution=coefEvolution,
 				   avgLogPvalues=avgLogPvalues,
