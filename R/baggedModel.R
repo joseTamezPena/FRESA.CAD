@@ -397,14 +397,19 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 														{
 															gvar <- getVar.Res(out,data=EquTrainSet,Outcome=Outcome,type=type,testData=data)
 															coef_Panalysis <- -log(gvar$FP.value);
+															fitScore <- (varOutcome-gvar$FullTestMSE)/varOutcome;
+															coefscore <- (gvar$redtestMSE-gvar$FullTestMSE)/varOutcome;
 														}
 														else
 														{
 															gvar <- getVar.Bin(out,data=EquTrainSet,Outcome=Outcome,type=type,testData=data)
 			#												cat("Equ: ",mean(EquTrainSet[,Outcome])," Data: ",mean(data[,Outcome]),"\n");
 															coef_Panalysis <- -log(1.0-pnorm(gvar$z.IDIs));
+															fitScore <- 2.0*(gvar$fullTestAUC-0.5);
+															coefscore <- 2.0*(gvar$fullTestAUC-gvar$redtestAUC);
 														}
 #														print(coef_Panalysis);
+														coefscore[coefscore<=0] <- 1.0e-4;
 														infnum <- is.infinite(coef_Panalysis)
 														if (sum(infnum)>0)
 														{
@@ -412,9 +417,8 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 															coef_Panalysis[coef_Panalysis == Inf] <- 100.0;
 														}
 														coef_Panalysis[coef_Panalysis > 100.0] <- 100.0;
-														WformulaNetwork[znames,znames] <- WformulaNetwork[znames,znames] + coef_Panalysis%*%t(coef_Panalysis)
-														Rwts <- sum(coef_Panalysis) - 2*length(coef_Panalysis);
-#														cat(Rwts," : ",(varOutcome-mean(residual^2))/varOutcome," : ",modelFormulas[n],"  <- Wts \n")
+														WformulaNetwork[znames,znames] <- WformulaNetwork[znames,znames] + coefscore%*%t(coefscore)
+														Rwts <- fitScore + mean(coefscore);
 														if (Rwts <= 0) Rwts <- 1.0e-4;
 														wtsList <- c(wtsList,Rwts);
 														if (predtype=="linear")
