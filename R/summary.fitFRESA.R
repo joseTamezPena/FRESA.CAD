@@ -74,7 +74,7 @@ summary.fitFRESA <- function(object,type=c("Improvement","Residual"),ci=c(0.025,
 					# }
 					# else
 					{
-						azval <- qnorm(exp(-object$baggingAnalysis$avgLogPvalues[n]))
+						azval <- qnorm(10^(-object$baggingAnalysis$avgLogPvalues[n]))
 						lowci[n] <- zval1*abs(lowci[n]/azval);
 						hici[n] <- zval2*abs(hici[n]/azval);
 					}
@@ -143,7 +143,7 @@ summary.fitFRESA <- function(object,type=c("Improvement","Residual"),ci=c(0.025,
 					# }
 					# else
 					{
-						azval <- qnorm(exp(-object$baggingAnalysis$avgLogPvalues[n]))
+						azval <- qnorm(10^(-object$baggingAnalysis$avgLogPvalues[n]))
 						lowci[n] <- zval1*abs(lowci[n]/azval);
 						hici[n] <- zval2*abs(hici[n]/azval);
 					}

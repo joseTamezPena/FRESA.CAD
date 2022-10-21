@@ -396,20 +396,25 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 														if (predtype=="linear")
 														{
 															gvar <- getVar.Res(out,data=EquTrainSet,Outcome=Outcome,type=type,testData=data)
-															coef_Panalysis <- -log(gvar$FP.value);
+															coef_Panalysis <- -log10(gvar$FP.value);
 															fitScore <- (varOutcome-gvar$FullTestMSE)/varOutcome;
+															if (fitScore < 0) fitScore <- 0;
 															coefscore <- (gvar$redtestMSE-gvar$FullTestMSE)/varOutcome;
 														}
 														else
 														{
 															gvar <- getVar.Bin(out,data=EquTrainSet,Outcome=Outcome,type=type,testData=data)
 			#												cat("Equ: ",mean(EquTrainSet[,Outcome])," Data: ",mean(data[,Outcome]),"\n");
-															coef_Panalysis <- -log(1.0-pnorm(gvar$z.IDIs));
-															fitScore <- 2.0*(gvar$fullTestAUC-0.5);
+															coef_Panalysis <- -log10(1.0-pnorm(gvar$z.IDIs));
+															fitScore <- 2.0*(gvar$fullTestAUC - 0.5);
+															if (fitScore < 0) fitScore <- 0;
+															fitScore <- fitScore*fitScore;
 															coefscore <- 2.0*(gvar$fullTestAUC-gvar$redtestAUC);
+															coefscore[coefscore < 0] <- 0;
+															coefscore <- coefscore^2;
 														}
 #														print(coef_Panalysis);
-														coefscore[coefscore<=0] <- 1.0e-4;
+														coefscore[coefscore <= 0] <- 1.0e-4;
 														infnum <- is.infinite(coef_Panalysis)
 														if (sum(infnum)>0)
 														{
@@ -418,7 +423,9 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 														}
 														coef_Panalysis[coef_Panalysis > 100.0] <- 100.0;
 														WformulaNetwork[znames,znames] <- WformulaNetwork[znames,znames] + coefscore%*%t(coefscore)
-														Rwts <- fitScore + mean(coefscore);
+														Rwts <- sum(coef_Panalysis) - 2*length(coef_Panalysis);
+														if (Rwts <= 0) Rwts <- 1.0e-4;
+														Rwts <- Rwts*(fitScore + mean(coefscore));
 														if (Rwts <= 0) Rwts <- 1.0e-4;
 														wtsList <- c(wtsList,Rwts);
 														if (predtype=="linear")
