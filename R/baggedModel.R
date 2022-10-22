@@ -88,7 +88,7 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 #				maxTrainSamples <- as.integer((nrowcases+nrowcontrols)/2);
 				noequalSets <- (minTrainSamples < (0.75*maxTrainSamples));
 				nrep <- 1;
-				if (noequalSets) nrep <- 1+2*(as.integer(maxTrainSamples/minTrainSamples));
+				if (noequalSets) nrep <- 1 + (as.integer(3*maxTrainSamples/minTrainSamples + 0.5));
 #				cat(nrowcases,":",nrowcontrols,":",noequalSets,"Boot :",nrep,"\n")
 		#		cat(minTrainSamples,":",maxTrainSamples,":",noequalSets,"\n")
 			}
@@ -235,8 +235,8 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 							trainCaseses <- casesample;
 							trainControls <- controlsample;
 					#		print(thevars);
-							if (maxTrainSamples > nrowcases)  trainCaseses <- casesample[sample(1:nrowcases,maxTrainSamples,replace=TRUE),]
-							if (maxTrainSamples > nrowcontrols)  trainControls <- controlsample[sample(1:nrowcontrols,maxTrainSamples,replace=TRUE),]
+#							if (maxTrainSamples > nrowcases)  trainCaseses <- casesample[sample(1:nrowcases,minTrainSamples,replace=FALSE),]
+#							if (maxTrainSamples > nrowcontrols)  trainControls <- controlsample[sample(1:nrowcontrols,minTrainSamples,replace=FALSE),]
 							EquTrainSet <- rbind(trainCaseses,trainControls)
 #							cat("Cases: ",nrow(trainCaseses),"Controls: ",nrow(trainControls),"\n");
 						}
@@ -363,16 +363,20 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 											{
 												if (noequalSets)
 												{
-													if ( nrep > 1)
-													{
-														trainCaseses <- b_casesample[sample(1:nrowcases,maxTrainSamples,replace=TRUE),]
-														trainControls <- b_controlsample[sample(1:nrowcontrols,maxTrainSamples,replace=TRUE),]
-													}
-													else
-													{
-														if (maxTrainSamples > nrowcases) trainCaseses <- b_casesample[sample(1:nrowcases,maxTrainSamples,replace=TRUE),]
-														if (maxTrainSamples > nrowcontrols) trainControls <- b_controlsample[sample(1:nrowcontrols,maxTrainSamples,replace=TRUE),]
-													}
+													if (minTrainSamples < nrowcases) trainCaseses <- b_casesample[sample(1:nrowcases,minTrainSamples,replace=FALSE),]
+													if (minTrainSamples < nrowcontrols) trainControls <- b_controlsample[sample(1:nrowcontrols,minTrainSamples,replace=FALSE),]
+#												    trainCaseses <- b_casesample;
+#													trainControls <- b_controlsample;
+#													if ( nrep > 1)
+#													{
+#														if (maxTrainSamples > nrowcases) trainCaseses <- b_casesample[sample(1:nrowcases,minTrainSamples,replace=FALSE),]
+#														if (maxTrainSamples > nrowcontrols) trainControls <- b_controlsample[sample(1:nrowcontrols,minTrainSamples,replace=FALSE),]
+#													}
+													# else
+													# {
+													#if (maxTrainSamples > nrowcases) trainCaseses <- b_casesample[sample(1:nrowcases,minTrainSamples,replace=FALSE),]
+													#if (maxTrainSamples > nrowcontrols) trainControls <- b_controlsample[sample(1:nrowcontrols,minTrainSamples,replace=FALSE),]
+													# }
 													EquTrainSet <- rbind(trainCaseses,trainControls)
 													theoutcome <- EquTrainSet[,Outcome];
 													varOutcome <- var(theoutcome);
