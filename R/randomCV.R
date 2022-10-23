@@ -8,7 +8,7 @@ randomCV <-  function(theData = NULL,
                       featureSelection.control=NULL,
                       asFactor=FALSE,
                       addNoise=FALSE,
-                      classSamplingType=c("Balanced","Proportional","NoAugmented","Augmented","LOO"),
+                      classSamplingType=c("Proportional","Balanced","Augmented","LOO"),
                       testingSet=NULL,...)
 {
   formula.list <- NULL

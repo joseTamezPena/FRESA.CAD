@@ -524,7 +524,8 @@ NumberofRepeats=1)
 			formula.list <- append(formula.list,baseformula);
 			forward.selection.list <- append(forward.selection.list,forward.model$formula.list);
 		}
-		if (NumberofRepeats>1) formula.list <- append(formula.list,"=-=End=-=");
+#		if (NumberofRepeats>1) formula.list <- append(formula.list,"=-=End=-=");
+		formula.list <- append(formula.list,"=-=End=-=");
 	}
 	if (loops > 1) cat("]");
 	if(is.null(unirank))

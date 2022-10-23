@@ -17,8 +17,9 @@
              featureSelection.control=NULL,
              asFactor=FALSE,
              addNoise=FALSE,
-             classSamplingType=c("Balanced","Proportional",
-                                  "NoAugmented","Augmented",
+             classSamplingType=c("Proportional",
+                                  "Balanced",
+                                  "Augmented",
                                   "LOO"),
               testingSet=NULL,
              ...
@@ -58,8 +59,8 @@
 	\item{classSamplingType}{
 	if "Proportional": proportional to the data classes. 
 	"Augmented": Augment samples to balance training class
-	"NoAugmented": Avoid Data augmentation hece training may not be balanced
 	"Balanced": All class in training set have the same samples
+	"LOO": Leave one out per class
 	}
 	\item{testingSet}{
 	 An extra set for testing Models
@@ -102,6 +103,9 @@
 	}
 	\item{theTimes}{
 	The CPU time analysis
+	}
+	\item{formula.list}{
+	If fit method returns the formulas: the agregated list of formulas
 	}
 }
 \author{Jose G. Tamez-Pena}
