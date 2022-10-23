@@ -1,5 +1,17 @@
-randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL, trainFraction = 0.5, repetitions = 100,trainSampleSets=NULL,featureSelectionFunction=NULL,featureSelection.control=NULL,asFactor=FALSE,addNoise=FALSE,classSamplingType=c("Balanced","Proportional","NoAugmented","Augmented","LOO"),testingSet=NULL,...)
+randomCV <-  function(theData = NULL, 
+                      theOutcome = "Class",
+                      fittingFunction=NULL, 
+                      trainFraction = 0.5, 
+                      repetitions = 100,
+                      trainSampleSets=NULL,
+                      featureSelectionFunction=NULL,
+                      featureSelection.control=NULL,
+                      asFactor=FALSE,
+                      addNoise=FALSE,
+                      classSamplingType=c("Balanced","Proportional","NoAugmented","Augmented","LOO"),
+                      testingSet=NULL,...)
 {
+  formula.list <- NULL
   classSamplingType <- match.arg(classSamplingType);
   if (is.null(theData))
   {
@@ -570,6 +582,10 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
             }
           }
         }
+        if (!is.null(currentModel$formula.list))
+        {
+          formula.list <- c(formula.list,currentModel$formula.list)
+        }
         #				print(selectedFeaturesSet);
         if ((length(selectedFeaturesSet[[rept]])>0) || is.null(featureSelectionFunction))
         {
@@ -791,6 +807,7 @@ randomCV <-  function(theData = NULL, theOutcome = "Class",fittingFunction=NULL,
                   trainSamplesSets = trainSamplesSets,
                   selectedFeaturesSet = selectedFeaturesSet,
                   featureFrequency = featureFrequency,
+                  formula.list = formula.list,
                   jaccard = jaccard.sm,
                   theTimes = theTimes,
                   MADERROR = MADERROR,
