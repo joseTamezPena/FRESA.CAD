@@ -586,6 +586,16 @@ randomCV <-  function(theData = NULL,
         {
           formula.list <- c(formula.list,currentModel$formula.list)
         }
+        else
+        {
+          if (!is.null(currentModel$fit))
+          {
+            if (!is.null(currentModel$fit$formula.list))
+            {
+              formula.list <- c(formula.list,currentModel$fit$formula.list)
+            }
+          }
+        }
         #				print(selectedFeaturesSet);
         if ((length(selectedFeaturesSet[[rept]])>0) || is.null(featureSelectionFunction))
         {
