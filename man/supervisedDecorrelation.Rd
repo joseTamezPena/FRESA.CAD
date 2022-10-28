@@ -13,6 +13,7 @@
 	                     verbose=FALSE,
 	                     method=c("fast","pearson","spearman","kendall"),
 						 skipRelaxed=TRUE,
+						 corRank=FALSE,
 	                     ...)
 
 	
@@ -51,6 +52,9 @@
 	}
 	\item{skipRelaxed}{
 	is set to FALSE it will use relaxed convergence
+	}
+	\item{corRank}{
+	is set to TRUE it will correlation matrix to break ties.
 	}
 	\item{...}{
 	parameters passed to the \code{featureAdjustment} function.
