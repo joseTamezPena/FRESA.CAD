@@ -150,7 +150,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
           {
             baseFeatures <- names(outcomep);
             baseFeatures <- baseFeatures[baseFeatures %in% asociatedtoOutcome];
-            baseFeatures <- as.character(correlated_Remove(cormat,baseFeatures,thr = 0.95*thr,isDataCorMatrix=TRUE))
+            baseFeatures <- as.character(correlated_Remove(cormat,baseFeatures,thr = 0.75*thr,isDataCorMatrix=TRUE))
           }
           outcomep <- NULL;
     #      print(asociatedtoOutcome)
@@ -167,8 +167,8 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
                       0.02*apply(cormat,2,mean)
        }
       AbaseFeatures <- AbaseFeatures[order(-ordcor[AbaseFeatures])];
-      AbaseFeatures <- as.character(correlated_Remove(cormat,AbaseFeatures,thr = 0.95*thr,isDataCorMatrix=TRUE))
-      AbaseFeatures <- AbaseFeatures[order(maxcor[AbaseFeatures])];
+      AbaseFeatures <- as.character(correlated_Remove(cormat,AbaseFeatures,thr = 0.75*thr,isDataCorMatrix=TRUE))
+      AbaseFeatures <- AbaseFeatures[order(-maxcor[AbaseFeatures])];
       unipvalue <- min(unipvalue,2.0*unipvalue*sqrt(totcorr)/totFeatures); ## Adjusting for false association
       bvarincluded <- character();
       baseIncluded <- character();
@@ -237,10 +237,6 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
           topfeat <- topfeat[order(-ordcor[topfeat])];
           topfeat <- correlated_Remove(cormat,topfeat,thr = thr,isDataCorMatrix=TRUE)
           ordcor <- maxcor;
-          if (length(bfeat) > 0)
-          {
-            ordcor[bfeat] <- ordcor[bfeat] + 1000.00;
-          }
           topfeat <- topfeat[order(-ordcor[topfeat])];
           intopfeat <- character();
           toBeDecorrelated <- length(topfeat)
