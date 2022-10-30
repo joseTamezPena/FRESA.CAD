@@ -201,7 +201,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
 
       thr2 <- thr
       thr <- thr2*1.001;
-      wthr <- 0.5 - 0.5*skipRelaxed;
+      wthr <- 0.75 - 0.75*skipRelaxed;
       while (((addedlist > 0) || (thr > (thr2*1.0001))) && (lp < maxLoops)) 
       {
         lp = lp + 1;
@@ -276,22 +276,22 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
 
                 if (length(varlist) > 0)
                 {
-                    if (length(asociatedtoOutcome) > 0)
-                    {
-                      if (feat %in% asociatedtoOutcome)
-                      {
-                        varlist <- varlist[(varlist %in% asociatedtoOutcome)]
-                      }
-                      else
-                      {
-                        varlist <- varlist[!(varlist %in% asociatedtoOutcome)]
-                      }
-                      if (length(varlist) == 0)
-                      {
-                        if (verbose && (feat==topfeat[1]))  cat("[",feat %in% asociatedtoOutcome,"]");
-                        varlist <- ovarlist;
-                      }
-                    }
+                    # if (length(asociatedtoOutcome) > 0)
+                    # {
+                      # if (feat %in% asociatedtoOutcome)
+                      # {
+                        # varlist <- varlist[(varlist %in% asociatedtoOutcome)]
+                      # }
+                      # else
+                      # {
+                        # varlist <- varlist[!(varlist %in% asociatedtoOutcome)]
+                      # }
+                      # if (length(varlist) == 0)
+                      # {
+                        # if (verbose && (feat==topfeat[1]))  cat("[",feat %in% asociatedtoOutcome,"]");
+                        # varlist <- ovarlist;
+                      # }
+                    # }
                    if (verbose && (feat==topfeat[1]))  cat("(",length(varlist),")");
                    if (useFastCor)
                    {
