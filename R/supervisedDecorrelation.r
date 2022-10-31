@@ -8,7 +8,7 @@ GDSTMDecorrelation <- function(data=NULL,
                                   maxLoops=100,
                                   verbose=FALSE,
                                   method=c("fast","pearson","spearman","kendall"),
-                                  skipRelaxed=TRUE,
+                                  skipRelaxed=FALSE,
                                   corRank=FALSE,
                                   ...)
 {
