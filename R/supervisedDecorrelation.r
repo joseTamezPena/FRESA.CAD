@@ -397,9 +397,9 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
              alphaused <- varincluded[varincluded %in% intopfeat];
              totalphaused <- varincluded[varincluded %in% totalpha];
 #             DeCorrmatrix[,decorrelatedFetureList] <-  DeCorrmatrix %*% as.matrix(betamatrix[,decorrelatedFetureList]);
-              if ((addedlist == 1) && (length(totalphaused) == 1))
+              if ((colused == 1) && (length(totalphaused) == 1))
               {
-                DeCorrmatrix[totalphaused,colused] <-  as.numeric(DeCorrmatrix[totalphaused,allused])*
+                DeCorrmatrix[totalphaused,colused] <-  as.numeric(DeCorrmatrix[totalphaused,allused]) *
                                                                as.numeric(betamatrix[allused,colused]);
               }
               else
