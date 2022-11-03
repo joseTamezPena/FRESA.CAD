@@ -798,8 +798,8 @@ try {   // R_CStackLimit=(uintptr_t)-1;
 		if (fraction<1) 
 		{
 			zthr2 = zthr*std::sqrt(fraction);
+			if (zthr2<std::abs(qnorm(0.25,0,1))) zthr2 = std::abs(qnorm(0.25,0,1)); 
 		}
-		if (zthr2<std::abs(qnorm(0.1,0,1))) zthr2 = std::abs(qnorm(0.1,0,1)); 
 
 //		Rcout << "\n" <<pvalue<<" <-pv : z-> "<<zthr2<<" Cases: "<<  sizecases <<" Controls: "<<  sizecontrol << "\n";
 //		fprintf(arch,"Size=%d, Pvalue=%8.3f,Zthr=%8.3f, Cases= %d, Control= %d, Total=%d (%d,%d), f=%d\n",size,pvalue,zthr2,sizecases,sizecontrol,totSamples,casesample.n_cols,controlsample.n_cols,featuresize);
