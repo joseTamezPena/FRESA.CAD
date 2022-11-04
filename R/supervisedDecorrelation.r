@@ -10,6 +10,7 @@ GDSTMDecorrelation <- function(data=NULL,
                                   method=c("fast","pearson","spearman","kendall"),
                                   skipRelaxed=FALSE,
                                   corRank=FALSE,
+#                                  pcl=NULL,
                                   ...)
 {
 
@@ -17,6 +18,7 @@ GDSTMDecorrelation <- function(data=NULL,
 		install.packages("Rfast", dependencies = TRUE)
 	} 
 
+  
   method <- match.arg(method);
   useFastCor <- method=="fast";
   if (useFastCor) 
@@ -27,11 +29,12 @@ GDSTMDecorrelation <- function(data=NULL,
   minUniqueValues <- 5 # more than 5 values and is not factor
   
 
+featVector <<- data[,1];
 
 getAllBetaCoefficients <- function(feat,varlist=NULL)
 {
   allBetaCoef <- numeric(length(varlist));
-  featVector <- refdata[,feat]
+  featVector <<- refdata[,feat]
 #  print(featVector[1:10])
 
 
@@ -52,7 +55,15 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
 #  cat(feat,"(",length(varlist),")","\n")
   if (length(varlist) > 1)
   {
-    allBetaCoef <- apply(as.data.frame(refdata[,varlist]),2,getBetaCoefficient)
+#    if ((length(varlist) > 31) && !is.null(pcl))
+#    {
+#      clusterExport(cl=pcl, 'featVector')
+#      allBetaCoef <- parApply(pcl,refdata[,varlist],2,getBetaCoefficient)
+#    }
+#    else
+#    {
+      allBetaCoef <- apply(refdata[,varlist],2,getBetaCoefficient)
+#    }
   }
   else
   {
@@ -362,7 +373,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
                   }
                   fscore[feat] <- fscore[feat] + sum(cormat[varlist,feat]^2)
                   fscore[varlist] <- fscore[varlist] - cormat[varlist,feat]^2
-                  cormat[ovarlist,feat] <- 0.99*thr;
+                  cormat[ovarlist,feat] <- 0;
 
                 }
 #                if (verbose && (feat==topfeat[1]))  cat(">");
@@ -397,7 +408,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
              alphaused <- varincluded[varincluded %in% intopfeat];
              totalphaused <- varincluded[varincluded %in% totalpha];
 #             DeCorrmatrix[,decorrelatedFetureList] <-  DeCorrmatrix %*% as.matrix(betamatrix[,decorrelatedFetureList]);
-              if ((length(colused) == 1) && (length(totalphaused) == 1) && (length(allused) == 1))
+              if ((length(colused) == 1) && (length(allused) == 1))
               {
                 DeCorrmatrix[totalphaused,colused] <-  as.numeric(DeCorrmatrix[totalphaused,allused]) *
                                                                as.numeric(betamatrix[allused,colused]);
