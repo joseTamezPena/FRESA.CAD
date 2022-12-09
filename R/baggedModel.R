@@ -27,6 +27,8 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 	coefList <- NULL;
 	formulaList <- NULL;
 	wtsList <- NULL;
+	oF <- NULL;
+	nnmodel <- NULL;
 	if (length(modelFormulas) > 0)
 	{
 		if (modelFormulas[1] != "=-=End=-=")
@@ -223,6 +225,7 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 					}
 		#			cat("\nNum. Models:",loops," To Test:",length(vnames)," TopFreq:",fistfreq," Thrf:",thrsfreq," Removed:",removed,"\n")
 					model <- modelFitting(frma,data,type=type,fitFRESA=TRUE);
+					nnmodel <- model;
 					if (bmodelsize>1)
 					{
 						thevars <- all.vars(formula(frma));
@@ -376,8 +379,9 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 														formulaList[[coef_in]] <- modelFormulas[n];
 														coef_in <- coef_in +1;
 														tot_cycles = tot_cycles+1;
-														curprediction <- predict.fitFRESA(out,EquTrainSet,predtype)
-														residual <- as.vector(abs(curprediction-theoutcome));
+#														curprediction <- predict.fitFRESA(out,EquTrainSet,predtype)
+#														mpred <- cbind(mpred,predict.fitFRESA(out,data,predtype));
+#														residual <- as.vector(abs(curprediction-theoutcome));
 														onames <- names(out$coefficients);
 														znames <- onames;
 														if ((type!="COX") || inherits(out,"fitFRESA")) znames <- onames[-1];
@@ -623,6 +627,78 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 		Jaccard.SM <- 0;
 		coefEvolution <- NULL;
 	}
+	
+	if (!is.null(oF))
+	{
+		modelFormulas <- oF$modelFormulas;
+		if (length(names(VarFrequencyTable)) > 0)
+		{
+			loops <- length(modelFormulas);
+			if (loops>1)
+			{
+				mpred <- NULL;
+				out <- list();
+				for (n in 1:loops)
+				{
+					out[[n]] <- modelFitting(formula(modelFormulas[n]),data,type,fitFRESA=TRUE);
+					pred <- predict.fitFRESA(out[[n]],data,predtype);
+					mpred <- cbind(mpred,as.numeric(pred));
+				}
+				mpred <- as.data.frame(mpred)
+				mpred$Outcome <- data[,Outcome] 
+				nnmodel$coefficients <- nnmodel$coefficients*0;
+				
+				if (!is.null(timeOutcome))
+				{
+					mpred$timeOutcome <- data[,timeOutcome] 
+				}
+				twts <- 0;
+				if (type!="COX")
+				{
+#					print(modelFormulas)
+					if (loops<10)
+					{
+						wnnmodel <- modelFitting(formula("Outcome~."),mpred,type,fitFRESA=FALSE);
+						for (n in 1:loops)
+						{
+							nnmodel$coefficients[names(out[[n]]$coef)] <- nnmodel$coefficients[names(out[[n]]$coef)] + wnnmodel$coef[n+1]*out[[n]]$coef
+						}
+						twts <- sum(wnnmodel$coef[2:(loops+1)])
+					}
+					else
+					{
+						for (lrep in 1:(floor(3*loops/10+1.0)))
+						{
+							whichsample <- c(1:3,sample(c(4:loops),6,replace=FALSE));
+							snames <- c(colnames(mpred)[whichsample],"Outcome")
+							wnnmodel <- modelFitting(formula("Outcome~."),mpred[,snames],type,fitFRESA=FALSE);
+#							print(wnnmodel$coef)
+							for (n in 1:length(whichsample))
+							{
+								wmodel <- out[[whichsample[n]]];
+								nnmodel$coefficients[names(wmodel$coef)] <- nnmodel$coefficients[names(wmodel$coef)] + wnnmodel$coef[n+1]*wmodel$coef
+								twts <- twts + wnnmodel$coef[n+1];
+							}
+						}
+					}
+					nnmodel$coefficients <- nnmodel$coefficients/twts;
+					nnmodel$estimations <- nnmodel$coefficients
+				}
+				else
+				{
+					wnnmodel <- modelFitting(formula("Surv(timeOutcome,Outcome)~."),mpred,type,fitFRESA=FALSE);
+					for (n in 1:loops)
+					{
+						nnmodel$coefficients[names(out[[n]]$coef)] <- nnmodel$coefficients[names(out[[n]]$coef)] + wnnmodel$coef[n]*out[[n]]$coef
+					}
+					twts <- sum(wnnmodel$coef)
+					nnmodel$coefficients <- nnmodel$coefficients/twts;
+					modelmeans <- nnmodel$estimations[(length(nnmodel$coefficients)+1):2*length(nnmodel$coefficients)];
+					nnmodel$estimations <- c(nnmodel$coefficients,modelmeans);
+				}
+			}
+		}
+	}
 
   	result <- list(bagged.model=model,
 				   formula=frma,
@@ -633,7 +709,8 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 				   Jaccard.SM = Jaccard.SM,
 				   coefEvolution=coefEvolution,
 				   avgLogPvalues=avgLogPvalues,
-				   featureLocation=forder
+				   featureLocation=forder,
+				   nnmodel=nnmodel
 				   );
   
 	return (result);

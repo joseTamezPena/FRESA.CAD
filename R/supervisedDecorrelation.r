@@ -542,6 +542,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
               diag(cormat) <- 0;
               cat ("[",lp,"],",max(cormat),". Cor to Base:",length(correlatedToBase),", ABase:",length(AbaseFeatures),"\n")
           }
+#          banames <- colnames(DeCorrmatrix)[apply(DeCorrmatrix!=0,2,sum)==1]
           newnames <- colnames(dataAdjusted)
           newnames[newnames %in% bfeat] <- paste("Ba_",newnames[newnames %in% bfeat],sep="") 
           newnames[newnames %in% varincluded] <- paste("De_",newnames[newnames %in% varincluded],sep="")
