@@ -12,7 +12,9 @@ maxCycles=20,
 print=FALSE,
 plots=FALSE,
 featureSize=0,
-NumberofRepeats=1)
+NumberofRepeats=1,
+bagPredictType=c("Bag","wNN","Ens")
+)
 {
 	type <- match.arg(type);
 	testType <- match.arg(testType);
@@ -629,7 +631,8 @@ NumberofRepeats=1)
 		forward.selection.list=forward.selection.list,
 		oridinalModels=oridinalModels,
 		equivalent=equivalent,
-		selectedfeatures = selectedfeatures
+		selectedfeatures = selectedfeatures,
+		bagPredictType = bagPredictType
 	);
 	class(result) <- c("fitFRESA","BSWiMS");
 

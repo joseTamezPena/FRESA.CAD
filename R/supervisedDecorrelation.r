@@ -310,7 +310,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
                       varlist <- varlist[prebetas != 0];
                       if (length(varlist) > 0)
                       {
-                        betamatrix[feat,varlist] <- -1.0*prebetas;
+                        betamatrix[feat,varlist] <- -1.0*prebetas[prebetas != 0];
                         featAdded <- c(featAdded,feat);
                         intopfeat <- unique(c(intopfeat,feat));
                         if (verbose && (length(intopfeat) %% 100 == 99) && (lpct==1)) cat(".")

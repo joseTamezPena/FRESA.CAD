@@ -643,6 +643,8 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 					out[[n]] <- modelFitting(formula(modelFormulas[n]),data,type,fitFRESA=TRUE);
 					pred <- predict.fitFRESA(out[[n]],data,predtype);
 					mpred <- cbind(mpred,as.numeric(pred));
+					out[[n]] <- out[[n]]$coef
+					out[[n]] <- out[[n]][names(out[[n]]) %in% names(nnmodel$coefficients)]
 				}
 				mpred <- as.data.frame(mpred)
 				mpred$Outcome <- data[,Outcome] 
@@ -661,9 +663,10 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 						wnnmodel <- modelFitting(formula("Outcome~."),mpred,type,fitFRESA=FALSE);
 						for (n in 1:loops)
 						{
-							nnmodel$coefficients[names(out[[n]]$coef)] <- nnmodel$coefficients[names(out[[n]]$coef)] + wnnmodel$coef[n+1]*out[[n]]$coef
+							nnmodel$coefficients[names(out[[n]])] <- nnmodel$coefficients[names(out[[n]])] + wnnmodel$coef[n+1]*out[[n]]
 						}
 						twts <- sum(wnnmodel$coef[2:(loops+1)])
+						wnnmodel <- NULL
 					}
 					else
 					{
@@ -676,9 +679,10 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 							for (n in 1:length(whichsample))
 							{
 								wmodel <- out[[whichsample[n]]];
-								nnmodel$coefficients[names(wmodel$coef)] <- nnmodel$coefficients[names(wmodel$coef)] + wnnmodel$coef[n+1]*wmodel$coef
+								nnmodel$coefficients[names(wmodel)] <- nnmodel$coefficients[names(wmodel)] + wnnmodel$coef[n+1]*wmodel
 								twts <- twts + wnnmodel$coef[n+1];
 							}
+							wnnmodel <- NULL
 						}
 					}
 					nnmodel$coefficients <- nnmodel$coefficients/twts;
@@ -686,17 +690,40 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 				}
 				else
 				{
-					wnnmodel <- modelFitting(formula("Surv(timeOutcome,Outcome)~."),mpred,type,fitFRESA=FALSE);
-					for (n in 1:loops)
+					if (loops<10)
 					{
-						nnmodel$coefficients[names(out[[n]]$coef)] <- nnmodel$coefficients[names(out[[n]]$coef)] + wnnmodel$coef[n]*out[[n]]$coef
+						wnnmodel <- modelFitting(formula("Surv(timeOutcome,Outcome)~."),mpred,type,fitFRESA=FALSE);
+						for (n in 1:loops)
+						{
+							nnmodel$coefficients[names(out[[n]])] <- nnmodel$coefficients[names(out[[n]])] + wnnmodel$coef[n]*out[[n]]
+						}
+						twts <- sum(wnnmodel$coef)
 					}
-					twts <- sum(wnnmodel$coef)
+					else
+					{
+						for (lrep in 1:(floor(3*loops/10+1.0)))
+						{
+							whichsample <- c(1:3,sample(c(4:loops),6,replace=FALSE));
+							snames <- c(colnames(mpred)[whichsample],"Outcome","timeOutcome")
+							wnnmodel <- modelFitting(formula("Surv(timeOutcome,Outcome)~."),mpred[,snames],type,fitFRESA=FALSE);
+#							print(wnnmodel$coef)
+							for (n in 1:length(whichsample))
+							{
+								wmodel <- out[[whichsample[n]]];
+								nnmodel$coefficients[names(wmodel)] <- nnmodel$coefficients[names(wmodel)] + wnnmodel$coef[n]*wmodel
+								twts <- twts + wnnmodel$coef[n];
+							}
+							wnnmodel <- NULL
+						}
+					}
 					nnmodel$coefficients <- nnmodel$coefficients/twts;
-					modelmeans <- nnmodel$estimations[(length(nnmodel$coefficients)+1):2*length(nnmodel$coefficients)];
-					nnmodel$estimations <- c(nnmodel$coefficients,modelmeans);
+					nnmodel$estimations <- model$estimations
+					nnmodel$estimations[1:length(nnmodel$coefficients)] <- nnmodel$coefficients
+					wnnmodel <- NULL
 				}
 			}
+			environment(nnmodel$formula) <- globalenv();
+			environment(nnmodel$terms) <- globalenv();		
 		}
 	}
 

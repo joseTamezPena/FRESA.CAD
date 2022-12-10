@@ -25,7 +25,8 @@
 	            print=FALSE,
 	            plots=FALSE,
 	            featureSize=0,
-	            NumberofRepeats=1
+	            NumberofRepeats=1,
+	            bagPredictType=c("Bag","wNN","Ens")
 	            )
 }
 \arguments{
@@ -76,6 +77,9 @@
 	}
 	\item{NumberofRepeats}{
 		How many times the BSWiMS search will be repeated
+	}
+	\item{bagPredictType}{
+	    Type of prediction of the bagged formulas
 	}
 }
 \details{

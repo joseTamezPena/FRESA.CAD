@@ -457,6 +457,16 @@ function (object,...)
 					{
 						out <- predict(object$bagging$bagged.model,...);
 						attr(out,"model") <- "bagged";
+						if (object$bagPredictType[1]=="wNN")
+						{
+							out <- predict(object$bagging$nnmodel,...);
+							attr(out,"model") <- "wNN";
+						}
+						if (object$bagPredictType[1]=="Ens")
+						{
+							out <- (predict(object$bagging$bagged.model,...) + predict(object$bagging$nnmodel,...))/2.0;
+							attr(out,"model") <- "Ens";
+						}
 					}
 				}
 			}
