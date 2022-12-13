@@ -984,16 +984,16 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 
 	#Check for statistical significance of second set. If not do not, there is no latent class
 					classData[,Outcome] <- as.factor(1*firstSet);
-					classpFeatures <- univariate_KS(data=classData, Outcome=Outcome,pvalue = 0.20);
+					classpFeatures <- univariate_KS(data=classData, Outcome=Outcome,pvalue = 0.20,thr=0.90);
 					classData[,Outcome] <- as.factor(1*secondSet);
-					classpFeatures <- c(classpFeatures,univariate_KS(data=classData, Outcome=Outcome,pvalue = 0.20));
+					classpFeatures <- c(classpFeatures,univariate_KS(data=classData, Outcome=Outcome,pvalue = 0.20,thr=0.90));
 					classpFeatures <- classpFeatures[order(classpFeatures)]
 					
 					if (classpFeatures[1] <= 0.05) # If significant then go ahead
 					{
 						errorSet <- (d0 >= 0.5) & (d1 >= 0.5) & (d2 >= 0.5);
 #						cat("[p=",classpFeatures[1],",",length(classpFeatures),"]<",sum(originalSet),",",sum(firstSet),",",sum(secondSet),",",sum(errorSet),">") 
-						cat("<",sum(originalSet),",",sum(firstSet),",",sum(secondSet),",",sum(errorSet),",",length(nselected),">") 
+#						cat("<",sum(originalSet),",",sum(firstSet),",",sum(secondSet),",",sum(errorSet),",",length(nselected),">") 
 						classData[,Outcome] <- as.factor(1*originalSet);
 						classpFeatures <- univariate_KS(data=classData, Outcome=Outcome,pvalue = 0.20,thr=0.90);
 						classFeatures <- names(classpFeatures);
