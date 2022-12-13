@@ -459,13 +459,19 @@ function (object,...)
 						attr(out,"model") <- "bagged";
 						if (object$bagPredictType[1]=="wNN")
 						{
-							out <- predict(object$bagging$nnmodel,...);
-							attr(out,"model") <- "wNN";
+							if (!is.null(object$bagging$nnmodel))
+							{
+								out <- predict(object$bagging$nnmodel,...);
+								attr(out,"model") <- "wNN";
+							}
 						}
 						if (object$bagPredictType[1]=="Ens")
 						{
-							out <- (predict(object$bagging$bagged.model,...) + predict(object$bagging$nnmodel,...))/2.0;
-							attr(out,"model") <- "Ens";
+							if (!is.null(object$bagging$nnmodel))
+							{
+								out <- (predict(object$bagging$bagged.model,...) + predict(object$bagging$nnmodel,...))/2.0;
+								attr(out,"model") <- "Ens";
+							}
 						}
 					}
 				}

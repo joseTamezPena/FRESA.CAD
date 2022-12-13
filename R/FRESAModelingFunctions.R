@@ -851,7 +851,7 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 	allClassFeatures <- character();
 	truelimit <- 0.5 + hysteresis;
 	falselimit <- 0.5 - hysteresis;
-	cat(length(outcomeFeatures),"\n");
+#	cat(length(outcomeFeatures),"\n");
 	if (length(selectedfeatures) > 0)
 	{
 		thePredict <- rpredict(orgModel,data);
@@ -922,7 +922,7 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 						nsecondSet <- (d2 < (d1 + hysteresis)) | (d2 < falselimit);
 						changes <- changes + sum(nsecondSet != secondSet);
 					}
-					cat("[(",changes,")<",length(firstModel$selectedfeatures),",",length(secondModel$selectedfeatures),">]");
+#					cat("[(",changes,")<",length(firstModel$selectedfeatures),",",length(secondModel$selectedfeatures),">]");
 				}
 #				cat("[",sum(secondSet),"]")
 				if (n > 0)
@@ -984,9 +984,9 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 
 	#Check for statistical significance of second set. If not do not, there is no latent class
 					classData[,Outcome] <- as.factor(1*firstSet);
-					classpFeatures <- univariate_KS(data=classData, Outcome=Outcome,pvalue = 0.025);
+					classpFeatures <- univariate_KS(data=classData, Outcome=Outcome,pvalue = 0.20);
 					classData[,Outcome] <- as.factor(1*secondSet);
-					classpFeatures <- c(classpFeatures,univariate_KS(data=classData, Outcome=Outcome,pvalue = 0.025));
+					classpFeatures <- c(classpFeatures,univariate_KS(data=classData, Outcome=Outcome,pvalue = 0.20));
 					classpFeatures <- classpFeatures[order(classpFeatures)]
 					
 					if (classpFeatures[1] <= 0.05) # If significant then go ahead
@@ -995,7 +995,7 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 #						cat("[p=",classpFeatures[1],",",length(classpFeatures),"]<",sum(originalSet),",",sum(firstSet),",",sum(secondSet),",",sum(errorSet),">") 
 						cat("<",sum(originalSet),",",sum(firstSet),",",sum(secondSet),",",sum(errorSet),",",length(nselected),">") 
 						classData[,Outcome] <- as.factor(1*originalSet);
-						classpFeatures <- univariate_KS(data=classData, Outcome=Outcome,pvalue = 0.025,thr=0.90);
+						classpFeatures <- univariate_KS(data=classData, Outcome=Outcome,pvalue = 0.20,thr=0.90);
 						classFeatures <- names(classpFeatures);
 						allClassFeatures <- unique(c(allClassFeatures,classFeatures))
 						if (is.null(classModel.Control))
@@ -1007,7 +1007,7 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 							classModel[[1]] <- do.call(classMethod,c(list(formula(paste(Outcome,"~.")),classData[,c(Outcome,classFeatures)]),classModel.Control));
 						}
 						classData[,Outcome] <- as.factor(1*firstSet);
-						classpFeatures <- univariate_KS(data=classData, Outcome=Outcome,pvalue = 0.025,thr=0.90);
+						classpFeatures <- univariate_KS(data=classData, Outcome=Outcome,pvalue = 0.20,thr=0.90);
 						classFeatures <- names(classpFeatures);
 						allClassFeatures <- unique(c(allClassFeatures,classFeatures))
 						if (is.null(classModel.Control))
@@ -1019,7 +1019,7 @@ HLCM_EM <- function(formula = formula, data=NULL,method=BSWiMS.model,hysteresis 
 							classModel[[2]] <- do.call(classMethod,c(list(formula(paste(Outcome,"~.")),classData[,c(Outcome,classFeatures)]),classModel.Control));
 						}
 						classData[,Outcome] <- as.factor(1*secondSet);
-						classpFeatures <- univariate_KS(data=classData, Outcome=Outcome,pvalue = 0.05,thr=0.90);
+						classpFeatures <- univariate_KS(data=classData, Outcome=Outcome,pvalue = 0.20,thr=0.90);
 						classFeatures <- names(classpFeatures);
 						allClassFeatures <- unique(c(allClassFeatures,classFeatures))
 						if (is.null(classModel.Control))
@@ -1080,25 +1080,28 @@ predict.FRESA_HLCM <- function(object,...)
 		prbclas <- matrix(0,nrow=nrow(testData),ncol=nm);
 		for (n in 1:nm)
 		{
-			if (class(object$classModel[[n]])[1] == "FRESAKNN")
+			if (!is.null(object$classModel[[n]]))
 			{
-				classPred <- predict(object$classModel[[n]],testData);
-				prbclas[,n] <- classPred;
-			}
-			else
-			{
-				classPred <- predict(object$classModel[[n]],testData);
-				if (inherits(classPred,"numeric"))
+				if (class(object$classModel[[n]])[1] == "FRESAKNN")
 				{
-				  	prbclas[,n] <- classPred;
+					classPred <- predict(object$classModel[[n]],testData);
+					prbclas[,n] <- classPred;
 				}
 				else
 				{
-					classPred <- predict(object$classModel[[n]],testData,probability = TRUE);
-					prbclas[,n] <- attributes(classPred)$probabilities[,"1"];
-					if (is.null(prbclas[,n]))
+					classPred <- predict(object$classModel[[n]],testData);
+					if (inherits(classPred,"numeric"))
 					{
-					  	prbclas[,n] <- classPred;
+						prbclas[,n] <- classPred;
+					}
+					else
+					{
+						classPred <- predict(object$classModel[[n]],testData,probability = TRUE);
+						prbclas[,n] <- attributes(classPred)$probabilities[,"1"];
+						if (is.null(prbclas[,n]))
+						{
+							prbclas[,n] <- classPred;
+						}
 					}
 				}
 			}
@@ -1108,8 +1111,11 @@ predict.FRESA_HLCM <- function(object,...)
 		nm <- length(object$alternativeModel);
 		for (n in 1:nm)
 		{
-			ptmp <- rpredict(object$alternativeModel[[n]],testData);
-			pmodel <- cbind(pmodel,ptmp);
+			if (!is.null(object$alternativeModel[[n]]))
+			{
+				ptmp <- rpredict(object$alternativeModel[[n]],testData);
+				pmodel <- cbind(pmodel,ptmp);
+			}
 		}
 		lmodels <- c(2:length(object$classModel));
 		if (length(lmodels)>1)
