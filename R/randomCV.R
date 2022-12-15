@@ -764,7 +764,7 @@ randomCV <-  function(theData = NULL,
   # #Surv medians and boxsta
   if (!is.null(survTestPredictions) && length(rownames(survTestPredictions))>3)
   {
-    if (ncol(survTestPredictions) == 7)
+    if (ncol(survTestPredictions) == 5)
     {
       colnames(survTestPredictions) <- c("Times","Outcome","Model","LinearPredictors","Risks");
       colnames(survTrainPredictions) <- c("Times","Outcome","Model","LinearPredictors","Risks");
@@ -784,13 +784,13 @@ randomCV <-  function(theData = NULL,
     }
     
     #   ######################Risks####################################  
-    boxstaRisksSurvTest <- try(boxplot(as.numeric(as.character(survTestPredictions[,7]))~rownames(survTestPredictions),plot = FALSE));
+    boxstaRisksSurvTest <- try(boxplot(as.numeric(as.character(survTestPredictions[,5]))~rownames(survTestPredictions),plot = FALSE));
     if (!inherits(boxstaRisksSurvTest, "try-error"))
     {
       medianSurvTest[boxstaRisksSurvTest$names,6] <- boxstaRisksSurvTest$stats[3,]
     }
     
-    boxstaRisksSurvTrain <- try(boxplot(as.numeric(as.character(survTrainPredictions[,7]))~rownames(survTrainPredictions),plot = FALSE));
+    boxstaRisksSurvTrain <- try(boxplot(as.numeric(as.character(survTrainPredictions[,5]))~rownames(survTrainPredictions),plot = FALSE));
     if (!inherits(boxstaRisksSurvTrain, "try-error"))
     {
       medianSurvTrain[boxstaRisksSurvTrain$names,6] <- boxstaRisksSurvTrain$stats[3,]

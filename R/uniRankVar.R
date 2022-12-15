@@ -247,11 +247,25 @@ timeOutcome=NULL)
 					if (is.na(kendcor$estimate)) kendcor$estimate = 0;
 					if (kendcor$estimate > 0)
 					{
-						cstat <- rcorr.cens(datacolumn,dataoutcome, outx=FALSE)
+						if (type!="COX")
+						{
+							cstat <- rcorr.cens(datacolumn,dataoutcome, outx=FALSE)
+						}
+						else
+						{
+							cstat <- rcorr.cens(datacolumn,Surv(data[,timeOutcome],dataoutcome))
+						}
 					}
 					else
 					{
-						cstat <- rcorr.cens(datacolumn,-dataoutcome, outx=FALSE)
+						if (type!="COX")
+						{
+							cstat <- rcorr.cens(datacolumn,-dataoutcome, outx=FALSE)
+						}
+						else
+						{
+							cstat <- rcorr.cens(datacolumn,Surv(data[,timeOutcome],dataoutcome))
+						}
 					}
 				}
 			}
@@ -666,6 +680,7 @@ timeOutcome=NULL)
 					if (!inherits(lmodel, "try-error"))
 					{
 						modcoef <- summary(lmodel)$coefficients;
+#						if (j<5) print(modcoef)
 						sizecoef <- length(lmodel$coef);
 						if ((uniType=="Binary") && FullAnalysis)
 						{
@@ -855,14 +870,13 @@ timeOutcome=NULL)
 						{
 							if (uniType=="Binary")
 							{
-#								spredict <- predict.fitFRESA(lmodel,mdata, 'prob');
 								spredict <- predict.fitFRESA(lmodel,mdata, 'prob');
 								iprob <- .Call("improveProbCpp",basepredict,spredict,dataoutcome);
 								zIDI[varinserted] <- iprob$z.idi;
 							}
 						}
 						Beta[varinserted] <- modcoef[sizecoef,1];
-						ZGLM[varinserted] <- abs(modcoef[sizecoef,zcol]);
+						ZGLM[varinserted] <- modcoef[sizecoef,zcol];
 					}
 				}
 			}
@@ -902,7 +916,7 @@ timeOutcome=NULL)
 				},
 				Ztest=
 				{
-					orderframe <- with(orderframe,orderframe[order(-ZGLM),]);
+					orderframe <- with(orderframe,orderframe[order(-abs(ZGLM)),]);
 				},
 				AUC=
 				{
@@ -911,6 +925,10 @@ timeOutcome=NULL)
 				Kendall=
 				{
 					orderframe <- with(orderframe,orderframe[order(kendall.p),]);
+				},
+				CStat=
+				{
+					orderframe <- with(orderframe,orderframe[order(-cStatCorr),]);
 				},
 				{
 					orderframe <- with(orderframe,orderframe[order(-ROCAUC),]);
