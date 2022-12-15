@@ -11,8 +11,10 @@ univariate_cox <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="BH
   varlist <-colnames(data);
   varlist <- varlist[!varlist %in% featuresOnSurvivalObject[[1]]];
   
-  univ <- MultUnivariateCox(varlist,data,Outcome) 
-  univ <- univ[order(univ)];
+  univ <- MultUnivariateCox(varlist,data,Outcome)
+  univv <- as.numeric(univ);
+  names(univv) <- names(univ);
+  univ <- univv[order(univv)];
   unitPvalues <- p.adjust(univ,adjustMethod);
   unitPvalues <- unitPvalues[order(unitPvalues)];
   top <- unitPvalues[1];
