@@ -1,4 +1,4 @@
-univariate_cox <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="BH", limit=0,...)
+univariate_cox <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="BH", limit=0,...,n = 0)
 {
   # Outcome <- "pgstat"
   baseformula <- as.character(Outcome);
@@ -8,36 +8,50 @@ univariate_cox <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="BH
   featuresOnSurvival <- gsub("\\)", "", featuresOnSurvival)
   featuresOnSurvivalObject <- strsplit(featuresOnSurvival, ",")
   
-  varlist <-colnames(data);
+  varlist <- colnames(data);
   varlist <- varlist[!varlist %in% featuresOnSurvivalObject[[1]]];
   
-  univ <- MultUnivariateCox(varlist,data,Outcome)
-#  univv <- as.numeric(univ);
-#  names(univv) <- names(univ);
-#  univ <- univv[order(univ)];
-  univ <- univ[order(univ)];
-  unitPvalues <- p.adjust(univ,adjustMethod);
-#  unitPvalues <- unitPvalues[order(unitPvalues)];
-  top <- unitPvalues[1];
-  unitPvalues <- unitPvalues[unitPvalues <= pvalue];
-  #	print(unitPvalues)
-  if (length(unitPvalues) > 1)
-  {
-    #		unitPvalues <- unitPvalues[correlated_Remove(data,names(unitPvalues))];
-    unitPvalues <- try(correlated_RemoveToLimit(data,unitPvalues,limit,...));
-    if (!inherits(unitPvalues, "try-error"))
-		{
-      return(unitPvalues);
-    }
-    else{
-      return(top);
-    }
-  }
-  else
-  {
-    return(top);
-  }
+  # univ <- MultUnivariateCox(varlist,data,Outcome)
+  # univ <- univ[order(univ)];
+  # unitPvalues <- p.adjust(univ,adjustMethod);
+  # top <- unitPvalues[1];
+  # unitPvalues <- unitPvalues[unitPvalues <= pvalue];
+  # if (length(unitPvalues) > 1)
+  # {
+    # unitPvalues <- try(correlated_RemoveToLimit(data,unitPvalues,limit,...));
+    # if (!inherits(unitPvalues, "try-error"))
+		# {
+      # return(unitPvalues);
+    # }
+    # else{
+      # return(top);
+    # }
+  # }
+  # else
+  # {
+    # return(top);
+  # }
   
+    unitPvalues <- MultUnivariateCox(varlist,data,Outcome)
+    unitPvalues <- unitPvalues[order(unitPvalues)];
+    unadjusted <- unitPvalues;
+	unitPvalues <- p.adjust(unitPvalues,adjustMethod,n=max(n,length(unitPvalues)));
+	top <- unitPvalues[1];
+	if ((top < 0.45) && (unadjusted[1] < 0.05))
+	{
+		top <- unitPvalues[unitPvalues <= 1.01*top];
+	}
+	unitPvalues <- unitPvalues[unitPvalues <= pvalue];
+	if (length(unitPvalues) > 1) 
+	{
+		unitPvalues <- correlated_RemoveToLimit(data,unitPvalues,limit,...);
+	}
+	else 
+	{
+		unitPvalues <- top;
+	}
+	attr(unitPvalues,"Unadjusted") <- unadjusted;
+    return(unitPvalues);
 }
 
 MultUnivariateCox <- function(varlist = NULL,data = NULL,Outcome = NULL,...)
@@ -50,6 +64,7 @@ MultUnivariateCox <- function(varlist = NULL,data = NULL,Outcome = NULL,...)
   featuresOnSurvivalObject <- strsplit(featuresOnSurvival, ",")
   time <- as.numeric(unlist(data[featuresOnSurvivalObject[[1]][1]]))
   status <- as.numeric(unlist(data[featuresOnSurvivalObject[[1]][2]]))
+  srv <- Surv(time,status)
   
 #  univ_formulas <- sapply(varlist, function(x) as.formula(paste('Surv(time,status) ~ ', x)))
   
@@ -68,7 +83,7 @@ MultUnivariateCox <- function(varlist = NULL,data = NULL,Outcome = NULL,...)
 
   coxpvalue <- function(x)
   {
-    s <- summary(coxph(Surv(time,status) ~  x))
+    s <- summary(coxph(srv ~  x))
     return(s$wald["pvalue"])
   }
   pvalues <- apply(data[,varlist],2,coxpvalue);
