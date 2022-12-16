@@ -1202,11 +1202,11 @@ filteredFit <- function(formula = formula, data=NULL,
 		
 		if (is.null(filtermethod.control))
 		{
-			fm <- filtermethod(data,Outcome);
+			fm <- filtermethod(data,formula);
 		}
 		else
 		{
-			fm <- do.call(filtermethod,c(list(data,Outcome),filtermethod.control));
+			fm <- do.call(filtermethod,c(list(data,formula),filtermethod.control));
 		}
 		filtout <- fm;
 		if (length(fm) > 1)

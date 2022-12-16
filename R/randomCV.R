@@ -166,6 +166,7 @@ randomCV <-  function(theData = NULL,
   theTime <- NULL;
   varsmod <- NULL;
   isSurv <- FALSE;
+  oOutcome <- theOutcome
   if (inherits(theOutcome,"formula"))
   {
     theformula <- theOutcome;
@@ -410,7 +411,7 @@ randomCV <-  function(theData = NULL,
         #				print(tracemem(trainSet))
         if (!is.null(featureSelection.control))
         {
-          frank <- do.call(featureSelectionFunction,c(list(trainSet,theOutcome),featureSelection.control));
+          frank <- do.call(featureSelectionFunction,c(list(trainSet,oOutcome),featureSelection.control));
           if (length(frank)>0)
           {
             selectedFeaturesSet[[rept]] <- names(frank);

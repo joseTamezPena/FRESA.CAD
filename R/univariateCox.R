@@ -12,11 +12,12 @@ univariate_cox <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="BH
   varlist <- varlist[!varlist %in% featuresOnSurvivalObject[[1]]];
   
   univ <- MultUnivariateCox(varlist,data,Outcome)
-  univv <- as.numeric(univ);
-  names(univv) <- names(univ);
-  univ <- univv[order(univv)];
+#  univv <- as.numeric(univ);
+#  names(univv) <- names(univ);
+#  univ <- univv[order(univ)];
+  univ <- univ[order(univ)];
   unitPvalues <- p.adjust(univ,adjustMethod);
-  unitPvalues <- unitPvalues[order(unitPvalues)];
+#  unitPvalues <- unitPvalues[order(unitPvalues)];
   top <- unitPvalues[1];
   unitPvalues <- unitPvalues[unitPvalues <= pvalue];
   #	print(unitPvalues)
@@ -50,20 +51,28 @@ MultUnivariateCox <- function(varlist = NULL,data = NULL,Outcome = NULL,...)
   time <- as.numeric(unlist(data[featuresOnSurvivalObject[[1]][1]]))
   status <- as.numeric(unlist(data[featuresOnSurvivalObject[[1]][2]]))
   
-  univ_formulas <- sapply(varlist, function(x) as.formula(paste('Surv(time,status) ~ ', x)))
+#  univ_formulas <- sapply(varlist, function(x) as.formula(paste('Surv(time,status) ~ ', x)))
   
-  univ_models <- lapply(univ_formulas, function(x){survival::coxph(x, data = data)})
+#  univ_models <- lapply(univ_formulas, function(x){survival::coxph(x, data = data)})
   
   #signif(summary(univ_models$age)$wald["pvalue"], digits=2)
   # Extract data 
-  univ_results <- lapply(univ_models,
-                         function(x){ 
-                           x <- summary(x)
-                           p.value<-signif(x$wald["pvalue"], digits=2)
-                           return(p.value)
-                         })
-  pvalues <- as.matrix(univ_results)
-  names(pvalues)<-rownames(pvalues)
+#  univ_results <- lapply(univ_models,
+#                         function(x){ 
+#                           x <- summary(x)
+#                           p.value<-signif(x$wald["pvalue"], digits=2)
+#                           return(p.value)
+#                         })
+#  pvalues <- as.matrix(univ_results)
+#  names(pvalues)<-rownames(pvalues)
+
+  coxpvalue <- function(x)
+  {
+    s <- summary(coxph(Surv(time,status) ~  x))
+    return(s$wald["pvalue"])
+  }
+  pvalues <- apply(data[,varlist],2,coxpvalue);
+  names(pvalues) <- varlist;
   
   return(pvalues)
 }
