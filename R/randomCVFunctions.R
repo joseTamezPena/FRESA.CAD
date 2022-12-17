@@ -98,24 +98,45 @@ correlated_RemoveToLimit <- function(data,unitPvalues,limit=0,thr=0.975,maxLoops
 
 univariate_Logit <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="BH", uniTest=c("zIDI","zNRI"),limit=0,...,n = 0)
 {
-	varlist <-colnames(data);
-#    if (inherits(data[,Outcome],"factor")) data[,Outcome] <- as.numeric(as.character(data[,Outcome]));
-	varlist <- varlist[Outcome != varlist];
-	nvar <- length(varlist);
-	varlist <- cbind(varlist,varlist);
-	uniTest <- match.arg(uniTest);
-	outcomes <- data[,Outcome];
-	outlist <- unique(outcomes)
-	pvalue <- pvalue/sqrt(length(outlist) - 1.0)
-	unitPvalues <- rep(1.0,nvar);
-	for (oft in outlist[-1])
+	varlist <- colnames(data);
+	if (inherits(Outcome,"formula")) ## We assume that it is Survival Object
 	{
-		datat <- rbind(subset(data,outcomes == oft),subset(data,outcomes != oft))
-		datat[,Outcome] <- 1*(datat[,Outcome] == oft);
-		univ <- ForwardSelection.Model.Bin(nrow(varlist),1.0,0.0,1,"1",Outcome,varlist,datat,1,type="LOGIT",selectionType=uniTest);
-		pval <- 2.0*(1.0 - pnorm(univ$base.Zvalues));
-		pval[pval > 1.0] <- 1.0;
-		unitPvalues <- pmin(unitPvalues,pval);
+		  baseformula <- as.character(Outcome);
+		  baseformula[3] <- str_replace_all(baseformula[3],"[.]","1");
+		  baseformula <- paste(baseformula[2],"~",baseformula[3]);
+		  Outcome <- formula(baseformula);
+		  olist <- attr(terms(Outcome),"variables")
+
+		  dependent <- as.character(olist[[2]])
+		  timeOutcome = dependent[2];
+		  status = dependent[3];
+#		  print(c(status,timeOutcome));
+
+		  varlist <- varlist[!varlist %in% c(timeOutcome,status)];
+		  varlist <- cbind(varlist,varlist);
+		  univ <- ForwardSelection.Model.Bin(nrow(varlist),1.0,0.0,1,"1",status,varlist,data,1,type="COX",selectionType=uniTest,timeOutcome=timeOutcome);
+		  unitPvalues <- 2.0*(1.0 - pnorm(univ$base.Zvalues));
+		  unitPvalues[unitPvalues > 1.0] <- 1.0;
+	}
+	else
+	{ ## It is a standard binary outcome
+	#    if (inherits(data[,Outcome],"factor")) data[,Outcome] <- as.numeric(as.character(data[,Outcome]));
+		varlist <- varlist[Outcome != varlist];
+		nvar <- length(varlist);
+		varlist <- cbind(varlist,varlist);
+		uniTest <- match.arg(uniTest);
+		outcomes <- data[,Outcome];
+		outlist <- unique(outcomes)
+		pvalue <- pvalue/sqrt(length(outlist) - 1.0)
+		for (oft in outlist[-1])
+		{
+			datat <- rbind(subset(data,outcomes == oft),subset(data,outcomes != oft))
+			datat[,Outcome] <- 1*(datat[,Outcome] == oft);
+			univ <- ForwardSelection.Model.Bin(nrow(varlist),1.0,0.0,1,"1",Outcome,varlist,datat,1,type="LOGIT",selectionType=uniTest);
+			pval <- 2.0*(1.0 - pnorm(univ$base.Zvalues));
+			pval[pval > 1.0] <- 1.0;
+			unitPvalues <- pmin(unitPvalues,pval);
+		}
 	}
 
 	names(unitPvalues) <-  varlist[,1];
