@@ -141,8 +141,8 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
   }
   diag(cormat) <- 0;
   maxcor <- apply(cormat,2,max)
-  totcorr <- sum(cormat >= thr); 
-  varincluded <- names(maxcor)[maxcor >= 0.90*thr];
+  totcorr <- sum(cormat >= max(thr,0.5)); 
+  varincluded <- names(maxcor)[maxcor >= 0.95*thr];
   DeCorrmatrix <- NULL;
   asociatedtoOutcome <- character();
   lastintopfeat <- character();
@@ -153,7 +153,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
   {
       if (!is.null(Outcome))
       {
-          outcomep <- univariate_correlation(data[,c(Outcome,varincluded)],Outcome,method=method,limit=0,pvalue=0.5*unipvalue,thr = 0.75*thr) # the top associated features to the outcome
+          outcomep <- univariate_correlation(data[,c(Outcome,varincluded)],Outcome,method=method,limit=0,pvalue=0.5*unipvalue,thr = 0.95*thr) # the top associated features to the outcome
           asociatedtoOutcome <- attr(outcomep,"Unadjusted")
           asociatedtoOutcome <- p.adjust(asociatedtoOutcome,"BH"); # adjusting for false discovery the unadjusted pvalues
           asociatedtoOutcome <- names(asociatedtoOutcome[asociatedtoOutcome < 0.5*unipvalue])
@@ -161,7 +161,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
           {
             baseFeatures <- names(outcomep);
             baseFeatures <- baseFeatures[baseFeatures %in% asociatedtoOutcome];
-            baseFeatures <- as.character(correlated_Remove(cormat,baseFeatures,thr = 0.75*thr,isDataCorMatrix=TRUE))
+            baseFeatures <- as.character(correlated_Remove(cormat,baseFeatures,thr = 0.95*thr,isDataCorMatrix=TRUE))
           }
           outcomep <- NULL;
     #      print(asociatedtoOutcome)
@@ -178,9 +178,9 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
                       0.02*apply(cormat,2,mean)
        }
       AbaseFeatures <- AbaseFeatures[order(-ordcor[AbaseFeatures])];
-      AbaseFeatures <- as.character(correlated_Remove(cormat,AbaseFeatures,thr = 0.75*thr,isDataCorMatrix=TRUE))
+      AbaseFeatures <- as.character(correlated_Remove(cormat,AbaseFeatures,thr = 0.95*thr,isDataCorMatrix=TRUE))
       AbaseFeatures <- AbaseFeatures[order(-maxcor[AbaseFeatures])];
-      unipvalue <- min(unipvalue,2.0*unipvalue*sqrt(totcorr)/totFeatures); ## Adjusting for false association
+      unipvalue <- min(unipvalue,unipvalue*sqrt(totcorr)/totFeatures); ## Adjusting for false association
       bvarincluded <- character();
       baseIncluded <- character();
       if (length(baseFeatures) > 0)
@@ -208,7 +208,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
       cormat <- cormat[varincluded,varincluded];
       baseFeatures <- baseIncluded;
       bfeat <- unique(c(baseIncluded,AbaseFeatures))
-      bfeat <- as.character(correlated_Remove(cormat,bfeat,thr = 0.75*thr,isDataCorMatrix=TRUE));
+      bfeat <- as.character(correlated_Remove(cormat,bfeat,thr = 0.95*thr,isDataCorMatrix=TRUE));
 
       thr2 <- thr
       thr <- thr2*1.001;

@@ -33,7 +33,7 @@ predictionStats_survival <-  function(predictions, plotname="", atriskthr=1.0, .
 		{
 			 graph <- survminer::ggsurvplot(Curves, data=newData, conf.int = TRUE, legend.labs=labelsplot,
                         palette = paletteplot,
-                        ggtheme = ggplot2::theme_bw() + ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5, face = "bold", size = 30)),
+                        ggtheme = ggplot2::theme_bw() + ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5, face = "bold", size = 20)),
                         title = plotname,
                         risk.table = TRUE,
                         tables.height = 0.2,
