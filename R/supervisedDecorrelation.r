@@ -88,7 +88,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
     refdata <- data;
   }
   refdataids <- rownames(refdata);
-  dataAdjusted <- as.data.frame(rbind(data,refdata[!(refdataids %in% dataids),]));
+  dataTransformed <- as.data.frame(rbind(data,refdata[!(refdataids %in% dataids),]));
   topFeatures <- character()
   correlatedToBase <- character();
   if (is.null(baseFeatures))
@@ -324,7 +324,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
 #                     adataframe <- featureAdjustment(dvarlist,
                      adataframe <- featureAdjustment(varlist,
                                                     baseFormula=feat,
-                                                    data=dataAdjusted[,c(feat,varlist)],
+                                                    data=dataTransformed[,c(feat,varlist)],
                                                     referenceframe=refdata[,c(feat,varlist)],
                                                     pvalue = unipvalue,
                                                     ...
@@ -362,7 +362,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
                           if (length(varlist) > 0)
                           {
                               featAdded <- c(featAdded,feat);
-                              dataAdjusted[,c(feat,varlist)] <- adataframe[,c(feat,varlist)];
+                              dataTransformed[,c(feat,varlist)] <- adataframe[,c(feat,varlist)];
                               refdata[,c(feat,varlist)] <- adataframe[refdataids,c(feat,varlist)];
                               intopfeat <- unique(c(intopfeat,feat));      
                               if (verbose && (length(intopfeat) %% 100 == 99)) cat(".")
@@ -432,7 +432,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
              if (useFastCor)
              {
                 if (verbose) cat("|")
-#                refdata[,varincluded] <- as.matrix(dataAdjusted[refdataids,varincluded]) %*% DeCorrmatrix
+#                refdata[,varincluded] <- as.matrix(dataTransformed[refdataids,varincluded]) %*% DeCorrmatrix
                 if (( length(colused) == 1) && (length(alphaused) == 1 ))
                 {
                   refdata[,colused] <- refdata[,colused] + as.numeric(refdata[,alphaused])*as.numeric(betamatrix[alphaused,colused])
@@ -500,18 +500,18 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
       if (useDeCorr)
       {
         DeCorrmatrix <- DeCorrmatrix[varincluded,varincluded]
-        dataAdjusted <- data
+        dataTransformed <- data
         if (length(varincluded) > 1)
         {
-#          dataAdjusted[,varincluded] <- as.matrix(data[,varincluded]) %*% DeCorrmatrix;
-          dataAdjusted[,varincluded] <- Rfast::mat.mult(as.matrix(data[,varincluded]),DeCorrmatrix);
-          colsd <- apply(dataAdjusted[,varincluded],2,sd,na.rm = TRUE);
+#          dataTransformed[,varincluded] <- as.matrix(data[,varincluded]) %*% DeCorrmatrix;
+          dataTransformed[,varincluded] <- Rfast::mat.mult(as.matrix(data[,varincluded]),DeCorrmatrix);
+          colsd <- apply(dataTransformed[,varincluded],2,sd,na.rm = TRUE);
           if (sum(colsd==0) > 0)
           {
             zerovar <- varincluded[colsd==0];
             for (zcheck in zerovar)
             {
-              dataAdjusted[,zcheck] <- dataAdjusted[,zcheck] + rnorm(nrow(dataAdjusted),0,1e-10);
+              dataTransformed[,zcheck] <- dataTransformed[,zcheck] + rnorm(nrow(dataTransformed),0,1e-10);
             }
           }
 
@@ -533,20 +533,20 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
           {
              if (useFastCor)
              {
-              cormat <- abs(Rfast::cora(as.matrix(dataAdjusted[,varincluded])))
+              cormat <- abs(Rfast::cora(as.matrix(dataTransformed[,varincluded])))
              }
              else
              {
-              cormat <- abs(cor(dataAdjusted[,varincluded],method=method))
+              cormat <- abs(cor(dataTransformed[,varincluded],method=method))
              }
               diag(cormat) <- 0;
               cat ("[",lp,"],",max(cormat),". Cor to Base:",length(correlatedToBase),", ABase:",length(AbaseFeatures),"\n")
           }
 #          banames <- colnames(DeCorrmatrix)[apply(DeCorrmatrix!=0,2,sum)==1]
-          newnames <- colnames(dataAdjusted)
+          newnames <- colnames(dataTransformed)
           newnames[newnames %in% bfeat] <- paste("Ba_",newnames[newnames %in% bfeat],sep="") 
           newnames[newnames %in% varincluded] <- paste("De_",newnames[newnames %in% varincluded],sep="")
-          colnames(dataAdjusted) <- newnames
+          colnames(dataTransformed) <- newnames
           newnames <- colnames(DeCorrmatrix)
           newnames[newnames %in% bfeat] <- paste("Ba_",newnames[newnames %in% bfeat],sep="") 
           newnames[newnames %in% varincluded] <- paste("De_",newnames[newnames %in% varincluded],sep="")
@@ -559,22 +559,23 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
       }
       else
       {
-        dataAdjusted <- dataAdjusted[dataids,];
+        dataTransformed <- dataTransformed[dataids,];
       }
   }
   
   
-  attr(dataAdjusted,"topFeatures") <- unique(topFeatures);
-  attr(dataAdjusted,"TotalAdjustments") <- countf;
-  attr(dataAdjusted,"GDSTM") <- DeCorrmatrix;
-  attr(dataAdjusted,"varincluded") <- varincluded;
-  attr(dataAdjusted,"baseFeatures") <- baseFeatures;
-  attr(dataAdjusted,"uniqueBase") <- bfeat;
-  attr(dataAdjusted,"useDeCorr") <- useDeCorr;
-  attr(dataAdjusted,"correlatedToBase") <- correlatedToBase;
-  attr(dataAdjusted,"AbaseFeatures") <- AbaseFeatures;
-  attr(dataAdjusted,"fscore") <- fscore;
-  return(dataAdjusted)
+  attr(dataTransformed,"topFeatures") <- unique(topFeatures);
+  attr(dataTransformed,"TotalAdjustments") <- countf;
+  attr(dataTransformed,"GDSTM") <- DeCorrmatrix;
+  attr(dataTransformed,"varincluded") <- varincluded;
+  attr(dataTransformed,"baseFeatures") <- baseFeatures;
+  attr(dataTransformed,"uniqueBase") <- bfeat;
+  attr(dataTransformed,"useDeCorr") <- useDeCorr;
+  attr(dataTransformed,"correlatedToBase") <- correlatedToBase;
+  attr(dataTransformed,"AbaseFeatures") <- AbaseFeatures;
+  attr(dataTransformed,"fscore") <- fscore;
+  attr(dataTransformed,"unipvalue") <- unipvalue
+  return(dataTransformed)
 }
 
 predictDecorrelate <- function(decorrelatedobject,testData)
