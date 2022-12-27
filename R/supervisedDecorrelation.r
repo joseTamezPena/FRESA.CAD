@@ -180,9 +180,10 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
        cormat[cormat < thr] <- 0;
        if (corRank)
        {       
-         ordcor <- 0.95*maxcor + 
-                      0.03*(apply(cormat,2,sum)/(0.001 + apply(1*(cormat >= thr),2,sum))) +
-                      0.02*apply(cormat,2,mean)
+          gthrcor <- cormat
+          gthrcor[gthrcor >= thr] <- 1
+          ordcor <- maxcor + apply(gthrcor,2,sum);
+          gthrcor <- NULL
        }
       AbaseFeatures <- AbaseFeatures[order(-ordcor[AbaseFeatures])];
       AbaseFeatures <- as.character(correlated_Remove(cormat,AbaseFeatures,thr = 0.95*thr,isDataCorMatrix=TRUE))
@@ -235,15 +236,16 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
         names(topfeat) <- topfeat;
         ordcor <- maxcor;
         if (corRank)
-        {       
-          ordcor <- 0.95*maxcor + 
-                    0.03*(apply(cormat,2,sum)/(0.001 + apply(1*(cormat >= thr2),2,sum))) +
-                    0.02*apply(cormat,2,mean)
+        {     
+          gthrcor <- cormat
+          gthrcor[gthrcor >= thr] <- 1
+          ordcor <- maxcor + apply(gthrcor,2,sum);
+          gthrcor <- NULL
         }
 
         if (length(bfeat) > 0)
         {
-          ordcor[bfeat] <- ordcor[bfeat] + 1000.00;
+          ordcor[bfeat] <- ordcor[bfeat] + 10.0*ncol(cormat);
         }
         
         topfeat <- topfeat[maxcor[topfeat] >= thr];
@@ -255,8 +257,8 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
           rownames(betamatrix) <- varincluded;
           topfeat <- topfeat[order(-ordcor[topfeat])];
           topfeat <- correlated_Remove(cormat,topfeat,thr = thr,isDataCorMatrix=TRUE)
-          ordcor <- maxcor;
-          topfeat <- topfeat[order(-ordcor[topfeat])];
+#          ordcor <- maxcor;
+          topfeat <- topfeat[order(-maxcor[topfeat])];
           intopfeat <- character();
           toBeDecorrelated <- length(topfeat)
           if (verbose)  cat(lp,", Top:",toBeDecorrelated,"<",thr,">");
