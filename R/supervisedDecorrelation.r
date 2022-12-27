@@ -180,10 +180,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
        cormat[cormat < thr] <- 0;
        if (corRank)
        {       
-          gthrcor <- cormat
-          gthrcor[gthrcor >= thr] <- 1
-          ordcor <- maxcor + apply(gthrcor,2,sum);
-          gthrcor <- NULL
+          ordcor <- 2.0*maxcor + apply(cormat,2,sum);
        }
       AbaseFeatures <- AbaseFeatures[order(-ordcor[AbaseFeatures])];
       AbaseFeatures <- as.character(correlated_Remove(cormat,AbaseFeatures,thr = 0.95*thr,isDataCorMatrix=TRUE))
@@ -221,15 +218,15 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
 
       thr2 <- thr
       thr <- thr2*1.001;
-      wthr <- 0.75 - 0.75*skipRelaxed;
+      wthr <- 0.95 - 0.95*skipRelaxed;
       while (((addedlist > 0) || (thr > (thr2*1.0001))) && (lp < maxLoops)) 
       {
         lp = lp + 1;
         addedlist <- 0;
 
-        maxcor <- apply(cormat,2,max)
-        cormat[cormat < thr2] <- 0;
         
+        cormat[cormat < thr2] <- 0;
+        maxcor <- apply(cormat,2,max)
         thr <- max(c(thr2,thr2 + wthr*(max(maxcor) - thr2)))
 
         topfeat <- varincluded;
@@ -237,10 +234,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
         ordcor <- maxcor;
         if (corRank)
         {     
-          gthrcor <- cormat
-          gthrcor[gthrcor >= thr] <- 1
-          ordcor <- maxcor + apply(gthrcor,2,sum);
-          gthrcor <- NULL
+          ordcor <- 2.0*maxcor + (0.01*apply(cormat,2,sum) + 0.99*apply((cormat >= thr),2,sum));
         }
 
         if (length(bfeat) > 0)
