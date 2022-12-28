@@ -121,10 +121,6 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
   isContinous <- unlist(lapply(lapply(refdata[,varincluded],unique),length)) > minUniqueValues; 
 
   varincluded <- varincluded[!isFactor & isContinous];
-#  print(sum(!isFactor));
-#  print(sum(isContinous));
-#  print(sum(!isFactor & isContinous));
-#  print(length(varincluded));
   
   
   fscore <- numeric(length(varincluded));
@@ -148,7 +144,6 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
   totcorr <- sum(cormat >= max(thr,0.5)); 
   varincluded <- names(maxcor)[maxcor >= 0.95*thr];
   DeCorrmatrix <- NULL;
-#  asociatedtoOutcome <- character();
   lastintopfeat <- character();
   lastdecorrelated <- character();
   totused <- character();
@@ -157,25 +152,23 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
   {
       if (!is.null(Outcome))
       { 
-          if ((class(data[,Outcome]) == "factor") | (length(unique(data[,Outcome])) == 2))
-          {
-            outcomep <- univariate_correlation(data[,c(Outcome,varincluded)],Outcome,limit=0,pvalue=unipvalue,thr = 0.95*thr) # the top associated features to the outcome
-          }
-          else
-          {
-            outcomep <- univariate_correlation(data[,c(Outcome,varincluded)],Outcome,method=method,limit=0,pvalue=unipvalue,thr = 0.95*thr) # the top associated features to the outcome
-          }
-#          asociatedtoOutcome <- attr(outcomep,"Unadjusted")
-#          asociatedtoOutcome <- p.adjust(asociatedtoOutcome,"BH"); # adjusting for false discovery the unadjusted pvalues
-#          asociatedtoOutcome <- names(asociatedtoOutcome[asociatedtoOutcome < unipvalue])
           if (length(baseFeatures)==0) 
           {
+            if ((class(data[,Outcome]) == "factor") | (length(unique(data[,Outcome])) == 2))
+            {
+              outcomep <- univariate_correlation(data,Outcome,limit=0,pvalue=unipvalue,thr = 0.95*thr) # the top associated features to the outcome
+            }
+            else
+            {
+              outcomep <- univariate_correlation(data,Outcome,method=method,limit=0,pvalue=unipvalue,thr = 0.95*thr) # the top associated features to the outcome
+            }
             baseFeatures <- names(outcomep);
-#            baseFeatures <- baseFeatures[baseFeatures %in% asociatedtoOutcome];
-            baseFeatures <- as.character(correlated_Remove(cormat,baseFeatures,thr = 0.95*thr,isDataCorMatrix=TRUE))
+            if (length(baseFeatures) > 1)
+            {
+              baseFeatures <- as.character(correlated_Remove(cormat,baseFeatures,thr = 0.95*thr,isDataCorMatrix=TRUE))
+            }
           }
           outcomep <- NULL;
-    #      print(asociatedtoOutcome)
       }
        maxcor <- apply(cormat,2,max)
        AbaseFeatures <- varincluded;
@@ -190,26 +183,15 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
       AbaseFeatures <- as.character(correlated_Remove(cormat,AbaseFeatures,thr = 0.95*thr,isDataCorMatrix=TRUE))
       AbaseFeatures <- AbaseFeatures[order(-maxcor[AbaseFeatures])];
       unipvalue <- min(unipvalue,unipvalue*sqrt(totcorr)/totFeatures); ## Adjusting for false association
-      bvarincluded <- character();
       baseIncluded <- character();
       if (length(baseFeatures) > 0)
       {    
         baseIncluded <- varincluded[varincluded %in% baseFeatures];
-        names(baseIncluded) <- baseIncluded;
-        if (length(baseIncluded) > 0)
+        if (length(baseIncluded)>1)
         {
-          bcormat <-  cormat[baseIncluded,];
-          bmaxcor <- bcormat;
-          if (length(baseIncluded) > 1)
-          {
-            bmaxcor <- apply(bcormat,2,max)
-          }
-          bvarincluded <- names(bmaxcor)[bmaxcor > thr];
-          bcormat <- NULL;
-        } 
+          names(baseIncluded) <- baseIncluded;
+        }
       }
-#      if (verbose) cat ("\n Included:",length(varincluded),", Uni p:",unipvalue,"To Outcome:",length(asociatedtoOutcome),", Base:",length(baseFeatures),", In Included:",length(baseIncluded),", Base Cor:",length(bvarincluded),"\n")
-       if (verbose) cat ("\n Included:",length(varincluded),", Uni p:",unipvalue,", Base:",length(baseFeatures),", In Included:",length(baseIncluded),", Base Cor:",length(bvarincluded),"\n")
       
       DeCorrmatrix <- diag(length(varincluded));
       colnames(DeCorrmatrix) <- varincluded;
@@ -219,6 +201,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
       baseFeatures <- baseIncluded;
       bfeat <- unique(c(baseIncluded,AbaseFeatures))
       bfeat <- as.character(correlated_Remove(cormat,bfeat,thr = 0.95*thr,isDataCorMatrix=TRUE));
+      if (verbose) cat ("\n Included:",length(varincluded),", Uni p:",unipvalue,", Uncorrelated Base:",length(AbaseFeatures),", Outcome-Driven Size:",length(baseIncluded),", Base Size:",length(bfeat),"\n")
 
       thr2 <- thr
       thr <- thr2*1.001;
@@ -226,19 +209,30 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
       while (((addedlist > 0) || (thr > (thr2*1.0001))) && (lp < maxLoops)) 
       {
         lp = lp + 1;
+
         addedlist <- 0;
 
         
         cormat[cormat < thr2] <- 0;
         maxcor <- apply(cormat,2,max)
-        thr <- max(c(thr2,thr2 + wthr*(max(maxcor) - thr2)))
+
+        if (verbose)  cat("\n\r",lp,"Added:",addedlist,sprintf("<R=%5.3f,w=%5.3f,thr=%5.3f>",max(maxcor),wthr,thr))
+
+        if (max(maxcor) >= thr2)
+        {
+          thr <- max(c(thr2,thr2 + wthr*(max(maxcor) - thr2)));
+        }
+        else
+        {
+          thr <- thr2;
+        }
 
         topfeat <- varincluded;
         names(topfeat) <- topfeat;
         ordcor <- maxcor;
         if (corRank)
-        {     
-          ordcor <- maxcor + (thr2*0.1*apply(cormat-thr2,2,sum)/(1.0-thr2) + (1.0-thr2)*0.9*apply((cormat >= thr),2,sum));
+        {
+          ordcor <- maxcor + thr2*apply(cormat-thr2,2,sum)/(1.0-thr2);
         }
 
         if (length(bfeat) > 0)
@@ -255,11 +249,10 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
           rownames(betamatrix) <- varincluded;
           topfeat <- topfeat[order(-ordcor[topfeat])];
           topfeat <- correlated_Remove(cormat,topfeat,thr = thr,isDataCorMatrix=TRUE)
-#          ordcor <- maxcor;
           topfeat <- topfeat[order(-maxcor[topfeat])];
           intopfeat <- character();
           toBeDecorrelated <- length(topfeat)
-          if (verbose)  cat(lp,", Top:",toBeDecorrelated,"<",thr,">");
+          if (verbose)  cat(", Top:",toBeDecorrelated,"<",sprintf("%5.3f",thr),">");
           maxcortp <- thr;
           maxnotf <- thr;
           tobereviewed <- topfeat;
@@ -274,7 +267,6 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
             topfeat <- topfeat[!(topfeat %in% featMarked)]
             for (feat in topfeat)
             {
-#                if (verbose && (feat==topfeat[1]))  cat("<");
                 falive <- varincluded[!(varincluded %in% decorrelatedFetureList)]
                 tobereviewed <- topfeat[!(topfeat %in% c(featMarked,feat))]
                 if ((length(tobereviewed) > 1) && (length(falive) > 1))
@@ -287,7 +279,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
                   maxcortp <- thr;
                 }
                 corlist <- cormat[,feat];
-                corlist <- corlist[corlist > maxcortp];
+                corlist <- corlist[corlist >= maxcortp];
 
                 varlist <- names(corlist)
                 varlist <- varlist[!(varlist %in% unique(c(decorrelatedFetureList,bfeat)))]
@@ -295,22 +287,6 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
 
                 if (length(varlist) > 0)
                 {
-                    # if (length(asociatedtoOutcome) > 0)
-                    # {
-                      # if (feat %in% asociatedtoOutcome)
-                      # {
-                        # varlist <- varlist[(varlist %in% asociatedtoOutcome)]
-                      # }
-                      # else
-                      # {
-                        # varlist <- varlist[!(varlist %in% asociatedtoOutcome)]
-                      # }
-                      # if (length(varlist) == 0)
-                      # {
-                        # if (verbose && (feat==topfeat[1]))  cat("[",feat %in% asociatedtoOutcome,"]");
-                        # varlist <- ovarlist;
-                      # }
-                    # }
                    if (verbose && (feat==topfeat[1]))  cat("(",length(varlist),")");
                    if (useFastCor)
                    {
@@ -328,8 +304,6 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
                    }
                    else
                    {
-#                     dvarlist <- cbind(c(varlist),c(varlist))
-#                     adataframe <- featureAdjustment(dvarlist,
                      adataframe <- featureAdjustment(varlist,
                                                     baseFormula=feat,
                                                     data=dataTransformed[,c(feat,varlist)],
@@ -405,7 +379,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
             }
           }
           addedlist <- length(decorrelatedFetureList);
-          if (verbose) cat("[",lpct,":",length(featMarked),":",maxnotf,"](",length(intopfeat),",",addedlist,",",length(totalpha),"),<")
+          if (verbose) cat("[",lpct,":",length(featMarked),":",sprintf("%5.3f",maxnotf),"](",length(intopfeat),",",addedlist,",",length(totalpha),"),<")
           if (addedlist > 0)
           {
              mbetas <- c(intopfeat,decorrelatedFetureList);
@@ -483,7 +457,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
           diag(cormat) <- 0;
           if (verbose) 
           {
-            cat ("Tot Used:",length(totused),", Added:",addedlist,", Zero Std:",sum(colsd==0),", Max Cor:",max(cormat),"\n");
+            cat ("Tot Used:",length(totused),", Added:",addedlist,", Zero Std:",sum(colsd==0),", Max Cor:",sprintf("%5.3f",max(cormat)));
           }
           if ( (length(intopfeat) == length(lastintopfeat)) && (length(decorrelatedFetureList) == length(lastdecorrelated)) )
           {
@@ -499,7 +473,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
 
         if ((wthr > 0) && ((addedlist <= max(c(1.0,0.25*length(topfeat)))) || (length(intopfeat) <= 1)))
         {
-          wthr <- wthr - 0.25;
+          wthr <- wthr - 0.20;
         }
       }
       betamatrix <- NULL;
@@ -548,7 +522,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
               cormat <- abs(cor(dataTransformed[,varincluded],method=method))
              }
               diag(cormat) <- 0;
-              cat ("[",lp,"],",max(cormat),". Cor to Base:",length(correlatedToBase),", ABase:",length(AbaseFeatures),"\n")
+              cat ("\n\r [",lp,"],",max(cormat),". Cor to Base:",length(correlatedToBase),", ABase:",length(AbaseFeatures),"\n\r")
           }
 #          banames <- colnames(DeCorrmatrix)[apply(DeCorrmatrix!=0,2,sum)==1]
           newnames <- colnames(dataTransformed)
