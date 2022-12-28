@@ -80,6 +80,10 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
   {
     thr <- 0.01 
   }
+  if (thr >= 1.0) #largest correlation
+  {
+    thr <- 0.999
+  }
 
   dataids <- rownames(data)
 
@@ -180,7 +184,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
        cormat[cormat < thr] <- 0;
        if (corRank)
        {       
-          ordcor <- 2.0*maxcor + apply(cormat,2,sum);
+          ordcor <- maxcor + thr*apply(cormat-thr,2,sum)/(1.0-thr);
        }
       AbaseFeatures <- AbaseFeatures[order(-ordcor[AbaseFeatures])];
       AbaseFeatures <- as.character(correlated_Remove(cormat,AbaseFeatures,thr = 0.95*thr,isDataCorMatrix=TRUE))
@@ -234,7 +238,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
         ordcor <- maxcor;
         if (corRank)
         {     
-          ordcor <- 2.0*maxcor + (0.01*apply(cormat,2,sum) + 0.99*apply((cormat >= thr),2,sum));
+          ordcor <- maxcor + (thr2*0.1*apply(cormat-thr2,2,sum)/(1.0-thr2) + (1.0-thr2)*0.9*apply((cormat >= thr),2,sum));
         }
 
         if (length(bfeat) > 0)
