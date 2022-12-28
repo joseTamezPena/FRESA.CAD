@@ -216,7 +216,6 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
         cormat[cormat < thr2] <- 0;
         maxcor <- apply(cormat,2,max)
 
-        if (verbose)  cat("\n\r",lp,"Added:",addedlist,sprintf("<R=%5.3f,w=%5.3f,thr=%5.3f>",max(maxcor),wthr,thr))
 
         if (max(maxcor) >= thr2)
         {
@@ -226,6 +225,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
         {
           thr <- thr2;
         }
+        if (verbose)  cat("\n\r",lp,sprintf("<R=%5.3f,w=%5.3f,thr=%5.3f>",max(maxcor),wthr,thr))
 
         topfeat <- varincluded;
         names(topfeat) <- topfeat;

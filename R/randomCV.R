@@ -527,7 +527,7 @@ randomCV <-  function(theData = NULL,
         }
         if ( inherits(currentModel, "try-error"))
         {
-          cat("Fit Error. Number of features:",length(selnames),"\n");
+          cat("Fit Error. Number of features:",length(selnames),"\n\r");
         }
       }
       if ( !inherits(currentModel, "try-error"))
@@ -678,7 +678,7 @@ randomCV <-  function(theData = NULL,
         MADERROR[rept] = mean(abs(medianTest[,1]-medianTest[,2]));
         if ((rept %% 10) == 0)
         {
-          cat(rept," Tested:",nrow(medianTest),"Avg. Selected:",avgsel/rept,"Min Tests:",min(tb),"Max Tests:",max(tb),"Mean Tests:",mean(tb),". MAD:",MADERROR[rept],"\n");
+          cat(rept," Tested:",nrow(medianTest),"Avg. Selected:",avgsel/rept,"Min Tests:",min(tb),"Max Tests:",max(tb),"Mean Tests:",mean(tb),". MAD:",MADERROR[rept],"\n\r");
         }
       }
     }
