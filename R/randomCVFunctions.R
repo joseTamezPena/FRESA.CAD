@@ -164,6 +164,18 @@ univariate_Logit <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="
 
 univariate_residual <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="BH",uniTest=c("Ftest","Binomial","Wilcox","tStudent"),type=c("LM","LOGIT"),limit=0,...,n = 0)
 {
+
+	if (inherits(Outcome,"formula")) ## We assume that it is Survival Object
+	{
+		dependent <- all.vars(Outcome)
+		Outcome = dependent[1];
+		if (length(dependent) == 3)
+		{
+			Outcome = dependent[2];
+		}
+	}
+
+
 	varlist <- colnames(data);
 #    if (inherits(data[,Outcome],"factor")) data[,Outcome] <- as.numeric(as.character(data[,Outcome]));
 	varlist <- varlist[Outcome != varlist];
@@ -217,6 +229,16 @@ if (!requireNamespace("twosamples", quietly = TRUE)) {
 	 install.packages("twosamples", dependencies = TRUE)
 } 
 
+	if (inherits(Outcome,"formula")) ## We assume that it is Survival Object
+	{
+		dependent <- all.vars(Outcome)
+		Outcome = dependent[1];
+		if (length(dependent) == 3)
+		{
+			Outcome = dependent[2];
+		}
+	}
+
 	varlist <-colnames(data);
     if (inherits(data[,Outcome], "factor")) data[,Outcome] <- as.numeric(as.character(data[,Outcome]));
 	case <- subset(data,get(Outcome) == 1);
@@ -267,6 +289,18 @@ if (!requireNamespace("twosamples", quietly = TRUE)) {
 
 univariate_filter <- function(data=NULL, Outcome=NULL, pvalue=0.2,pvalueMethod=wilcox.test, adjustMethod="BH",limit=0,...,n = 0)
 {
+
+	if (inherits(Outcome,"formula")) ## We assume that it is Survival Object
+	{
+		dependent <- all.vars(Outcome)
+		Outcome = dependent[1];
+		if (length(dependent) == 3)
+		{
+			Outcome = dependent[2];
+		}
+	}
+
+
 	varlist <-colnames(data);
 	varlist <- varlist[Outcome != varlist];
 	unitPvalues <- rep(1.0,length(varlist));
@@ -368,6 +402,15 @@ univariate_tstudent <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMetho
 univariate_correlation <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="BH", method = "kendall",limit=0,...,n = 0)
 {
 
+	if (inherits(Outcome,"formula")) ## We assume that it is Survival Object
+	{
+		dependent <- all.vars(Outcome)
+		Outcome = dependent[1];
+		if (length(dependent) == 3)
+		{
+			Outcome = dependent[2];
+		}
+	}
 	varlist <- colnames(data);
 	varlist <- varlist[Outcome != varlist];
 	unitPvalues <- rep(1.0,length(varlist));
@@ -427,6 +470,17 @@ mRMR.classic_FRESA <- function(data=NULL, Outcome=NULL,feature_count=0,...)
 	if (!requireNamespace("mRMRe", quietly = TRUE)) {
 	   install.packages("mRMRe", dependencies = TRUE)
 	} 
+
+	if (inherits(Outcome,"formula")) ## We assume that it is Survival Object
+	{
+		dependent <- all.vars(Outcome)
+		Outcome = dependent[1];
+		if (length(dependent) == 3)
+		{
+			Outcome = dependent[2];
+		}
+	}
+
 
     if (inherits(data[,Outcome], "factor")) data[,Outcome] <- as.numeric(as.character(data[,Outcome]));
 	if (feature_count == 0)
