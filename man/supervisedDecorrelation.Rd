@@ -13,7 +13,7 @@
 	                     verbose=FALSE,
 	                     method=c("fast","pearson","spearman","kendall"),
 						 skipRelaxed=FALSE,
-						 corRank=TRUE,
+						 corRank=FALSE,
 	                     ...)
 
 	
