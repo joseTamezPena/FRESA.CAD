@@ -193,6 +193,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
           names(bfeat) <- bfeat;
           bfeat <- as.character(correlated_Remove(cormat,bfeat,thr = 0.95*thr,isDataCorMatrix=TRUE));
           baseFeatures <- baseFeatures[baseFeatures %in% bfeat];
+          AbaseFeatures <- AbaseFeatures[AbaseFeatures %in% bfeat];
         }
       }
       
