@@ -531,6 +531,17 @@ univariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod=
   names(rankVar) <- colnames(data);
 
 #  if (inherits(data[,Outcome], "factor")) data[,Outcome] <- as.numeric(as.character(data[,Outcome]));
+
+	if (inherits(Outcome,"formula")) ## We assume that it is Survival Object
+	{
+		dependent <- all.vars(Outcome)
+		Outcome = dependent[1];
+		if (length(dependent) == 3)
+		{
+			Outcome = dependent[2];
+		}
+	}
+
   
   data <- data[,c(Outcome,correlated_Remove(data,colnames(data)[!(colnames(data) %in% Outcome)]))]
 
