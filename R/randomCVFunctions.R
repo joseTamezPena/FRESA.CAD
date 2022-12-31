@@ -128,6 +128,7 @@ univariate_Logit <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="
 		outcomes <- data[,Outcome];
 		outlist <- unique(outcomes)
 		pvalue <- pvalue/sqrt(length(outlist) - 1.0)
+		unitPvalues <- rep(1.0,nvar);
 		for (oft in outlist[-1])
 		{
 			datat <- rbind(subset(data,outcomes == oft),subset(data,outcomes != oft))
