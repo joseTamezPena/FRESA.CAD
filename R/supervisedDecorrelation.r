@@ -8,7 +8,7 @@ GDSTMDecorrelation <- function(data=NULL,
                                   maxLoops=100,
                                   verbose=FALSE,
                                   method=c("fast","pearson","spearman","kendall"),
-                                  skipRelaxed=FALSE,
+                                  relaxed=TRUE,
                                   corRank=FALSE,
 #                                  pcl=NULL,
                                   ...)
@@ -201,7 +201,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
 
       thr2 <- thr
       thr <- thr2*1.001;
-      wthr <- 0.95 - 0.95*skipRelaxed;
+      wthr <- 0.95 - 0.95*(!relaxed);
       while (((addedlist > 0) || (thr > (thr2*1.0001))) && (lp < maxLoops)) 
       {
         lp = lp + 1;
@@ -242,7 +242,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
           atopbase <- bfeat[bfeat %in% topfeat];
           topfeat <- unique(c(atopbase,topfeat));
           topfeat <- correlated_Remove(cormat,topfeat,thr = thr,isDataCorMatrix=TRUE)
-          topfeat <- topfeat[order(-maxcor[topfeat])];
+          if (!relaxed) topfeat <- topfeat[order(-maxcor[topfeat])];
           intopfeat <- character();
           toBeDecorrelated <- length(topfeat)
           if (verbose)  cat(", Top:",toBeDecorrelated,"<",sprintf("%5.3f",thr),">");
@@ -251,7 +251,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
           tobereviewed <- topfeat;
           featAdded <- character(1);
           featMarked <- character();
-          wcor <- 0.95 - 0.95*skipRelaxed;
+          wcor <- 0.95 - 0.95*(!relaxed);
           lpct <- 0;
           while (length(featAdded) > 0)
           {
@@ -358,7 +358,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
                 }
             }
 #            if (verbose) cat("|",maxnotf,"|<",length(featAdded),">{",length(featMarked),"}");
-            if (skipRelaxed || ((toBeDecorrelated == (length(unique(c(featMarked,featAdded))))) && (maxnotf <= thr)))
+            if (!relaxed || ((toBeDecorrelated == (length(unique(c(featMarked,featAdded))))) && (maxnotf <= thr)))
             {
               featAdded <- character();
             }
