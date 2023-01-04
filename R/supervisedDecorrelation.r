@@ -170,11 +170,12 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
       maxcor <- apply(cormat,2,max)
       AbaseFeatures <- varincluded;
       names(AbaseFeatures) <- AbaseFeatures;
-      ordcor <- maxcor;
       cormat[cormat < thr] <- 0;
+      ordcor <- maxcor;
       if (corRank)
       {       
-        ordcor <- maxcor + thr*apply(cormat-thr,2,sum)/(1.0-thr);
+        ordcor <- ordcor + thr*apply(cormat-thr,2,sum)/(1.0-thr);
+        ordcor <- ordcor + sqrt(thr)*apply(cormat-sqrt(thr),2,sum)/(1.0-sqrt(thr));
       }
       AbaseFeatures <- AbaseFeatures[order(-ordcor[AbaseFeatures])];
       AbaseFeatures <- as.character(correlated_Remove(cormat,AbaseFeatures,thr = 0.95*thr,isDataCorMatrix=TRUE))
@@ -188,6 +189,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
         baseFeatures <- baseFeatures[baseFeatures %in% varincluded];
         if (length(baseFeatures)>1)
         {
+          baseFeatures <- baseFeatures[order(-ordcor[baseFeatures])];
           names(baseFeatures) <- baseFeatures;
           bfeat <- unique(c(baseFeatures,AbaseFeatures))
           names(bfeat) <- bfeat;
@@ -236,13 +238,13 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
           ordcor <- maxcor;
           if (corRank)
           {
-            ordcor <- maxcor + thr2*apply(cormat-thr2,2,sum)/(1.0-thr2);
+            ordcor <- apply(cormat-thr2,2,sum);
           }
           topfeat <- topfeat[order(-ordcor[topfeat])];
           atopbase <- bfeat[bfeat %in% topfeat];
           topfeat <- unique(c(atopbase,topfeat));
           topfeat <- correlated_Remove(cormat,topfeat,thr = thr,isDataCorMatrix=TRUE)
-          if (!relaxed) topfeat <- topfeat[order(-maxcor[topfeat])];
+          topfeat <- topfeat[order(-maxcor[topfeat])];
           intopfeat <- character();
           toBeDecorrelated <- length(topfeat)
           if (verbose)  cat(", Top:",toBeDecorrelated,"<",sprintf("%5.3f",thr),">");
@@ -464,7 +466,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
           lastintopfeat <- intopfeat;
         }
 
-        if ((wthr > 0) && ((addedlist <= max(c(1.0,0.25*length(topfeat)))) || (length(intopfeat) <= 1)))
+        if ((wthr > 0) && ((addedlist <= max(c(1.0,0.1*length(topfeat)))) || (length(intopfeat) <= 1)))
         {
           wthr <- wthr - 0.20;
         }
