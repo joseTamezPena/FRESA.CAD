@@ -244,6 +244,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
           featMarked <- character();
           lpct <- 0;
           throff <- 0.025;
+          shortCor <- NULL;
           while (length(featAdded) > 0)
           {
             lpct <- lpct + 1;
@@ -251,7 +252,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
             topfeat <- topfeat[!(topfeat %in% featMarked)]
             if (length(topfeat) > 0)
             {
-              shortCor <- cormat[topfeat,];
+              if (length(topfeat) > 1) shortCor <- cormat[topfeat,];
               testedMedian <- FALSE;
               maxthr <- thr;
               for (feat in topfeat)
@@ -261,9 +262,10 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
                   varlist <- names(corlist)
                   varlist <- varlist[!(varlist %in% unique(c(decorrelatedFetureList,bfeat)))]
                   olength <- length(varlist)
-                  if ((olength > 1) && (toBeDecorrelated > 1))
+                  notinfeat <- topfeat[topfeat != feat];
+                  if ((olength > 1) && (length(notinfeat) > 1))
                   {
-                      medianthr <- median(apply(shortCor[,varlist],2,max));
+                      medianthr <- median(apply(shortCor[notinfeat,varlist],2,max));
                       if (medianthr > (thr + throff))
                       {
                         if (verbose && (feat==topfeat[1]))  cat("[",length(varlist),"]");
