@@ -35,7 +35,6 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
 {
   allBetaCoef <- numeric(length(varlist));
   featVector <<- refdata[,feat]
-#  print(featVector[1:10])
 
 
   getBetaCoefficient <- function(x)
@@ -52,18 +51,9 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
     }
     return (betaCoef)
   }
-#  cat(feat,"(",length(varlist),")","\n")
   if (length(varlist) > 1)
   {
-#    if ((length(varlist) > 31) && !is.null(pcl))
-#    {
-#      clusterExport(cl=pcl, 'featVector')
-#      allBetaCoef <- parApply(pcl,refdata[,varlist],2,getBetaCoefficient)
-#    }
-#    else
-#    {
       allBetaCoef <- apply(refdata[,varlist],2,getBetaCoefficient)
-#    }
   }
   else
   {
@@ -252,12 +242,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
           if (verbose)  cat(", Top:",toBeDecorrelated,"<",sprintf("%5.3f",thr),">");
           featAdded <- character(1);
           featMarked <- character();
-#          tobereviewed <- topfeat;
-#          maxcortp <- thr;
-#          maxnotf <- thr;
-#          wcor <- relaxalpha - relaxalpha*(!relaxed);
           lpct <- 0;
-          maxthr <- thr;
           throff <- 0.025;
           while (length(featAdded) > 0)
           {
@@ -266,121 +251,107 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
             topfeat <- topfeat[!(topfeat %in% featMarked)]
             shortCor <- cormat[topfeat,];
             testedMedian <- FALSE;
+            maxthr <- thr;
             for (feat in topfeat)
             {
                 corlist <- cormat[,feat];
                 corlist <- corlist[corlist >= thr];
-                  varlist <- names(corlist)
-                  varlist <- varlist[!(varlist %in% unique(c(decorrelatedFetureList,bfeat)))]
-                  olength <- length(varlist)
-                  if ((olength > 1) && (toBeDecorrelated > 1))
-                  {
-                      medianthr <- median(apply(shortCor[,varlist],2,max));
-                      if (medianthr > (thr + throff))
+                varlist <- names(corlist)
+                varlist <- varlist[!(varlist %in% unique(c(decorrelatedFetureList,bfeat)))]
+                olength <- length(varlist)
+                if ((olength > 1) && (toBeDecorrelated > 1))
+                {
+                    medianthr <- median(apply(shortCor[,varlist],2,max));
+                    if (medianthr > (thr + throff))
+                    {
+                      if (verbose && (feat==topfeat[1]))  cat("[",length(varlist),"]");
+                      if (maxthr < medianthr) maxthr <- medianthr;
+                      corlist <- corlist[corlist >= medianthr];
+                      varlist <- names(corlist)
+                      testedMedian <- testedMedian | (length(varlist) < olength);
+                    }
+                }
+
+                ovarlist <- varlist;
+
+                if (length(varlist) > 0)
+                {
+                   if (verbose && (feat==topfeat[1]))  cat("(",length(varlist),")");
+                   if (useFastCor)
+                   {
+                      prebetas <- getAllBetaCoefficients(feat,varlist);
+                      varlist <- varlist[prebetas != 0];
+                      if (length(varlist) > 0)
                       {
-                        if (verbose && (feat==topfeat[1]))  cat("[",length(varlist),"]");
-                        if (maxthr < medianthr) maxthr <- medianthr;
-                        corlist <- corlist[corlist >= medianthr];
-                        varlist <- names(corlist)
-                        testedMedian <- testedMedian | (length(varlist) < olength);
+                        betamatrix[feat,varlist] <- -1.0*prebetas[prebetas != 0];
+                        featAdded <- c(featAdded,feat);
+                        intopfeat <- unique(c(intopfeat,feat));
+                        if (verbose && (length(intopfeat) %% 100 == 99) && (lpct==1)) cat(".")
+                        countf[varlist] <- countf[varlist] + 1;
+                        decorrelatedFetureList <- c(decorrelatedFetureList,varlist);
                       }
-                  }
-  #                falive <- varincluded[!(varincluded %in% decorrelatedFetureList)]
-  #                tobereviewed <- topfeat[!(topfeat %in% c(featMarked,feat))]
-  #                if ((length(tobereviewed) > 1) && (length(falive) > 1))
-  #                {
-  #                  maxnotf <- max(apply(cormat[falive,tobereviewed],2,max))
-  #                  maxcortp <- max(c(wcor*maxnotf,thr))
-  #                }
-  #                else
-  #                {
-  #                  maxcortp <- thr;
-  #                }
-
-                  ovarlist <- varlist;
-
-                  if (length(varlist) > 0)
-                  {
-                     if (verbose && (feat==topfeat[1]))  cat("(",length(varlist),")");
-                     if (useFastCor)
-                     {
-                        prebetas <- getAllBetaCoefficients(feat,varlist);
-                        varlist <- varlist[prebetas != 0];
-                        if (length(varlist) > 0)
-                        {
-                          betamatrix[feat,varlist] <- -1.0*prebetas[prebetas != 0];
-                          featAdded <- c(featAdded,feat);
-                          intopfeat <- unique(c(intopfeat,feat));
-                          if (verbose && (length(intopfeat) %% 100 == 99) && (lpct==1)) cat(".")
-                          countf[varlist] <- countf[varlist] + 1;
-                          decorrelatedFetureList <- c(decorrelatedFetureList,varlist);
-                        }
-                     }
-                     else
-                     {
-                       adataframe <- featureAdjustment(varlist,
-                                                      baseFormula=feat,
-                                                      data=dataTransformed[,c(feat,varlist)],
-                                                      referenceframe=refdata[,c(feat,varlist)],
-                                                      pvalue = unipvalue,
-                                                      ...
-                                                      );
-                        models <- attr(adataframe,"models")
-                        attr(adataframe,"models") <- NULL
-                        if (length(models) > 0)
-                        {
-                            adjusted <- numeric(length(varlist)) == 1;
-                            names(adjusted) <- varlist;
-                            for (vl in 1:length(models))
+                   }
+                   else
+                   {
+                     adataframe <- featureAdjustment(varlist,
+                                                    baseFormula=feat,
+                                                    data=dataTransformed[,c(feat,varlist)],
+                                                    referenceframe=refdata[,c(feat,varlist)],
+                                                    pvalue = unipvalue,
+                                                    ...
+                                                    );
+                      models <- attr(adataframe,"models")
+                      attr(adataframe,"models") <- NULL
+                      if (length(models) > 0)
+                      {
+                          adjusted <- numeric(length(varlist)) == 1;
+                          names(adjusted) <- varlist;
+                          for (vl in 1:length(models))
+                          {
+                            adjusted[models[[vl]]$feature] <- (models[[vl]]$pval < unipvalue);
+                            if (adjusted[models[[vl]]$feature])
                             {
-                              adjusted[models[[vl]]$feature] <- (models[[vl]]$pval < unipvalue);
-                              if (adjusted[models[[vl]]$feature])
+                              if (is.null(models[[vl]]$model$coef))
                               {
-                                if (is.null(models[[vl]]$model$coef))
+                                betamatrix[feat,models[[vl]]$feature] <- 1.0;
+                                useDeCorr <- FALSE;
+                              }
+                              else
+                              {
+                                if (!is.na(models[[vl]]$model$coef[2]))
                                 {
-                                  betamatrix[feat,models[[vl]]$feature] <- 1.0;
-                                  useDeCorr <- FALSE;
+                                    betamatrix[feat,models[[vl]]$feature] <- -1.0*models[[vl]]$model$coef[2];
                                 }
                                 else
                                 {
-                                  if (!is.na(models[[vl]]$model$coef[2]))
-                                  {
-                                      betamatrix[feat,models[[vl]]$feature] <- -1.0*models[[vl]]$model$coef[2];
-                                  }
-                                  else
-                                  {
-                                      adjusted[models[[vl]]$feature] <- FALSE;
-                                  }
+                                    adjusted[models[[vl]]$feature] <- FALSE;
                                 }
                               }
                             }
-                            varlist <- varlist[adjusted];
-                            if (length(varlist) > 0)
-                            {
-                                featAdded <- c(featAdded,feat);
-                                dataTransformed[,c(feat,varlist)] <- adataframe[,c(feat,varlist)];
-                                refdata[,c(feat,varlist)] <- adataframe[refdataids,c(feat,varlist)];
-                                intopfeat <- unique(c(intopfeat,feat));      
-                                if (verbose && (length(intopfeat) %% 100 == 99)) cat(".")
-                                countf[varlist] <- countf[varlist] + 1;
-                                decorrelatedFetureList <- c(decorrelatedFetureList,varlist);
-                            }
-                        }
-                    }
-                    fscore[feat] <- fscore[feat] + sum(cormat[varlist,feat]^2)
-                    fscore[varlist] <- fscore[varlist] - cormat[varlist,feat]^2
-                    cormat[ovarlist,feat] <- 0;
+                          }
+                          varlist <- varlist[adjusted];
+                          if (length(varlist) > 0)
+                          {
+                              featAdded <- c(featAdded,feat);
+                              dataTransformed[,c(feat,varlist)] <- adataframe[,c(feat,varlist)];
+                              refdata[,c(feat,varlist)] <- adataframe[refdataids,c(feat,varlist)];
+                              intopfeat <- unique(c(intopfeat,feat));      
+                              if (verbose && (length(intopfeat) %% 100 == 99)) cat(".")
+                              countf[varlist] <- countf[varlist] + 1;
+                              decorrelatedFetureList <- c(decorrelatedFetureList,varlist);
+                          }
+                      }
+                  }
+                  fscore[feat] <- fscore[feat] + sum(cormat[varlist,feat]^2)
+                  fscore[varlist] <- fscore[varlist] - cormat[varlist,feat]^2
+                  cormat[ovarlist,feat] <- 0;
 
-                  }
-  #                if (verbose && (feat==topfeat[1]))  cat(">");
-  #                if ((length(varlist) == 0) && (maxnotf <= thr2))
-                  if ((length(varlist) == 0) && !testedMedian)
-                   {
-                      featMarked <- unique(c(featMarked,feat));
-                  }
+                }
+                if ((length(varlist) == 0) && !testedMedian)
+                {
+                    featMarked <- unique(c(featMarked,feat));
+                }
             }
-#            if (verbose) cat("|",maxnotf,"|<",length(featAdded),">{",length(featMarked),"}");
-#            if (!relaxed || ((toBeDecorrelated == (length(unique(c(featMarked,featAdded))))) && (maxnotf <= thr)))
             if (!testedMedian)
             {
               featAdded <- character();
@@ -389,16 +360,8 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
             {
               featAdded <- character(1);
               if (verbose) cat("=")
-              throff <- throff + 0.05;
+              throff <- throff + 0.025;
             }
-#            else
-#            {
-#              if ((length(featAdded) == 0) && (maxnotf > thr))
-#              {
-#                 wcor <- wcor - relaxbeta;
-#                 featAdded <- character(1);
-#              }
-#            }
           }
           addedlist <- length(decorrelatedFetureList);
           if (verbose) cat("[",lpct,":",length(featMarked),":",sprintf("%5.3f",maxthr),"](",length(intopfeat),",",addedlist,",",length(totalpha),"),<")
