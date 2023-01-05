@@ -190,8 +190,8 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
       
       if (verbose) cat ("\n Included:",length(varincluded),", Uni p:",unipvalue,", Uncorrelated Base:",length(AbaseFeatures),", Outcome-Driven Size:",length(baseFeatures),", Base Size:",length(bfeat),"\n")
 
-      relaxalpha <- 0.90;
-      relaxbeta <- 0.25;
+      relaxalpha <- 0.80;
+      relaxbeta <- 0.20;
       thr2 <- thr
       thr <- thr2*1.001;
       wthr <- relaxalpha - relaxalpha*(!relaxed);
@@ -244,6 +244,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
           lpct <- 0;
           throff <- 0.025;
           shortCor <- NULL;
+          themaxthr <- thr;
           while (length(featAdded) > 0)
           {
             lpct <- lpct + 1;
@@ -262,6 +263,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
                   varlist <- varlist[!(varlist %in% unique(c(decorrelatedFetureList,bfeat)))]
                   olength <- length(varlist)
                   notinfeat <- topfeat[topfeat != feat];
+                  allvartested <- TRUE;
                   if ((olength > 1) && (length(notinfeat) > 1))
                   {
                       medianthr <- median(apply(shortCor[notinfeat,varlist],2,max));
@@ -269,9 +271,11 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
                       {
                         if (verbose && (feat==topfeat[1]))  cat("[",length(varlist),"]");
                         if (maxthr < medianthr) maxthr <- medianthr;
+                        themaxthr <- max(c(themaxthr,maxthr));
                         corlist <- corlist[corlist >= medianthr];
                         varlist <- names(corlist)
-                        testedMedian <- testedMedian | (length(varlist) < olength);
+                        allvartested <- (length(varlist) == olength);
+                        testedMedian <- testedMedian | !allvartested;
                       }
                   }
 
@@ -350,7 +354,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
                     cormat[ovarlist,feat] <- 0;
 
                   }
-                  if ((length(varlist) == 0) && !testedMedian)
+                  if (allvartested)
                   {
                       featMarked <- unique(c(featMarked,feat));
                   }
@@ -368,7 +372,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
             }
           }
           addedlist <- length(decorrelatedFetureList);
-          if (verbose) cat("[",lpct,":",length(featMarked),":",sprintf("%5.3f",maxthr),"](",length(intopfeat),",",addedlist,",",length(totalpha),"),<")
+          if (verbose) cat("[",lpct,":",length(featMarked),":",sprintf("%5.3f",themaxthr),"](",length(intopfeat),",",addedlist,",",length(totalpha),"),<")
           if (addedlist > 0)
           {
              mbetas <- c(intopfeat,decorrelatedFetureList);
