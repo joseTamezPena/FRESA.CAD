@@ -194,7 +194,10 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
       relaxbeta <- 0.20;
       thr2 <- thr
       thr <- thr2*1.001;
-      wthr <- relaxalpha - relaxalpha*(!relaxed);
+#      wthr <- relaxalpha - relaxalpha*(!relaxed);
+      thrvalues <- c(0.95,0.90,0.80,0.70,0.50,0.25,0.10);
+      nextthr <- 1 + (!relaxed)*length(thrvalues);
+      nextthra <- 0;
       while (((addedlist > 0) || (thr > (thr2*1.0001))) && (lp < maxLoops)) 
       {
         lp = lp + 1;
@@ -204,21 +207,29 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
         
         cormat[cormat < thr2] <- 0;
         maxcor <- apply(cormat,2,max)
+        mxScor <- max(maxcor);
 
 
-        if (max(maxcor) >= thr2)
+        if ((mxScor >= thr2) && (nextthr <= length(thrvalues)))
         {
-          thr <- max(c(thr2,thr2 + wthr*(max(maxcor) - thr2)));
+#          thr <- max(c(thr2,thr2 + wthr*(max(maxcor) - thr2)));
+           thr <- max(c(thr2,0.5*thrvalues[nextthr] + 0.5*mxScor));
         }
         else
         {
           thr <- thr2;
         }
-        if (verbose)  cat("\n\r",lp,sprintf("<R=%5.3f,w=%5.3f,thr=%5.3f>",max(maxcor),wthr,thr))
+#        if (verbose)  cat("\n\r",lp,sprintf("<R=%5.3f,w=%5.3f,thr=%5.3f>",max(maxcor),wthr,thr))
 
         topfeat <- varincluded;
         names(topfeat) <- topfeat;
+        if (nextthra != nextthr)
+        {
+          orglentopfeat <- sum(maxcor[topfeat] >= thr);
+          nextthra <- nextthr;
+        }
         topfeat <- topfeat[maxcor[topfeat] >= thr];
+        if (verbose)  cat("\n\r",lp,sprintf("<R=%5.3f,w=%3d,N=%5d>",mxScor,nextthr,orglentopfeat))
 
         if (length(topfeat)>0)
         {
@@ -238,11 +249,11 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
           topfeat <- topfeat[order(-maxcor[topfeat])];
           intopfeat <- character();
           toBeDecorrelated <- length(topfeat)
-          if (verbose)  cat(", Top:",toBeDecorrelated,"<",sprintf("%5.3f",thr),">");
+          if (verbose)  cat(", Top:",toBeDecorrelated);
           featAdded <- character(1);
           featMarked <- character();
           lpct <- 0;
-          throff <- 0.025;
+          throff <- 0.01;
           shortCor <- NULL;
           themaxthr <- thr;
           while (length(featAdded) > 0)
@@ -267,7 +278,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
                   if ((olength > 1) && (length(notinfeat) > 1))
                   {
                       medianthr <- median(apply(shortCor[notinfeat,varlist],2,max));
-                      if (medianthr > (thr + throff))
+                      if (medianthr >= (thr + throff))
                       {
                         if (verbose && (feat==topfeat[1]))  cat("[",length(varlist),"]");
                         if (maxthr < medianthr) maxthr <- medianthr;
@@ -464,9 +475,14 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
           lastintopfeat <- intopfeat;
         }
 
-        if ((wthr > 0) && ((addedlist <= max(c(1.0,relaxbeta*length(topfeat)))) || (length(intopfeat) <= 1)))
+        if ((nextthr <= length(thrvalues)) && ((addedlist <= max(c(2.0,0.1*orglentopfeat))) || (length(intopfeat) <= 1)))
         {
-          wthr <- wthr - relaxbeta;
+#          wthr <- wthr - relaxbeta;
+#          if (verbose) 
+#          {
+#            cat ("orglentopfeat:",orglentopfeat,", addedlist:",addedlist,", intopfeat:",length(intopfeat));
+#          }
+          nextthr <- nextthr + 1; 
         }
       }
       betamatrix <- NULL;
