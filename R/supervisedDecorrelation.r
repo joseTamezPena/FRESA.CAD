@@ -114,6 +114,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
   
   fscore <- numeric(length(varincluded));
   names(fscore) <- varincluded;
+  fcount <- fscore;
   
   totFeatures <- length(varincluded);
   
@@ -130,7 +131,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
   }
   diag(cormat) <- 0;
   maxcor <- apply(cormat,2,max)
-  totcorr <- sum(cormat >= max(thr,0.5)); 
+  totcorr <- sum(cormat >= 0.5); ## For False Discovery estimation
   varincluded <- names(maxcor)[maxcor >= 0.35*thr];
   DeCorrmatrix <- NULL;
   lastintopfeat <- character();
@@ -360,8 +361,12 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
                             }
                         }
                     }
-                    fscore[feat] <- fscore[feat] + sum(cormat[varlist,feat]^2)
-                    fscore[varlist] <- fscore[varlist] - cormat[varlist,feat]^2
+                    fscore[feat] <- fscore[feat] + length(varlist);
+                    fscore[varlist] <- fscore[varlist] - 1;
+#                    fscore[feat] <- fscore[feat] + sum(1.0-cormat[varlist,feat]^2)
+#                    fscore[varlist] <- fscore[varlist] - cormat[varlist,feat]^2
+                    fcount[feat] <- fcount[feat] + length(varlist);
+                    fcount[varlist] <- fcount[varlist] + 1;
                     cormat[ovarlist,feat] <- 0;
 
                   }
@@ -494,6 +499,9 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
       if (useDeCorr)
       {
         DeCorrmatrix <- DeCorrmatrix[varincluded,varincluded]
+        abfeat <- varincluded[apply(DeCorrmatrix!=0,2,sum)==1]
+        if (verbose) cat("-{",abfeat[!(abfeat %in% bfeat)],"}-")
+        bfeat <- unique(c(bfeat,abfeat));
         dataTransformed <- data
         if (length(varincluded) > 1)
         {
@@ -539,15 +547,19 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
 #          banames <- colnames(DeCorrmatrix)[apply(DeCorrmatrix!=0,2,sum)==1]
           newnames <- colnames(dataTransformed)
           newnames[newnames %in% bfeat] <- paste("Ba_",newnames[newnames %in% bfeat],sep="") 
-          newnames[newnames %in% varincluded] <- paste("De_",newnames[newnames %in% varincluded],sep="")
+          newnames[newnames %in% varincluded] <- paste("La_",newnames[newnames %in% varincluded],sep="")
           colnames(dataTransformed) <- newnames
           newnames <- colnames(DeCorrmatrix)
           newnames[newnames %in% bfeat] <- paste("Ba_",newnames[newnames %in% bfeat],sep="") 
-          newnames[newnames %in% varincluded] <- paste("De_",newnames[newnames %in% varincluded],sep="")
+          newnames[newnames %in% varincluded] <- paste("La_",newnames[newnames %in% varincluded],sep="")
           colnames(DeCorrmatrix) <- newnames
+          fscore <- fscore[varincluded];
+          fcount <- fcount[varincluded];
+#          fscore <- fscore/fcount;
+
           newnames <- names(fscore)
           newnames[newnames %in% bfeat] <- paste("Ba_",newnames[newnames %in% bfeat],sep="") 
-          newnames[newnames %in% varincluded] <- paste("De_",newnames[newnames %in% varincluded],sep="")
+          newnames[newnames %in% varincluded] <- paste("La_",newnames[newnames %in% varincluded],sep="")
           names(fscore) <- newnames
         }
       }
@@ -583,7 +595,7 @@ predictDecorrelate <- function(decorrelatedobject,testData)
     newnames <- colnames(testData)
     bfeat <- attr(decorrelatedobject,"uniqueBase")
     newnames[newnames %in% bfeat] <- paste("Ba_",newnames[newnames %in% bfeat],sep="") 
-    newnames[newnames %in% varincluded] <- paste("De_",newnames[newnames %in% varincluded],sep="")
+    newnames[newnames %in% varincluded] <- paste("La_",newnames[newnames %in% varincluded],sep="")
     colnames(testData) <- newnames
   }
   else
