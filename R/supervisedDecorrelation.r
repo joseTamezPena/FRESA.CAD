@@ -605,7 +605,7 @@ predictDecorrelate <- function(decorrelatedobject,testData)
   return (testData)
 }
 
-getDerivedCoefficients <- function(decorrelatedobject)
+getLatentCoefficients <- function(decorrelatedobject)
 {
   CoeffList <- list();
   nonZeronames <- character();

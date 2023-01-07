@@ -98,7 +98,7 @@ export(filteredFit)
 export(predict.FRESA_FILTERFIT)
 export(GDSTMDecorrelation)
 export(predictDecorrelate)
-export(getDerivedCoefficients)
+export(getLatentCoefficients)
 
 useDynLib(FRESA.CAD,.registration = TRUE, .fixes = "C_")
 
