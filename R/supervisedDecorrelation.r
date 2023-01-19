@@ -5,11 +5,11 @@ GDSTMDecorrelation <- function(data=NULL,
                                   refdata=NULL,
                                   drivingFeatures=NULL,
                                   useDeCorr=TRUE,
-                                  verbose=FALSE,
                                   relaxed=TRUE,
                                   corRank=FALSE,
                                   maxLoops=100,
                                   unipvalue=0.05,
+                                  verbose=FALSE,
                                   ...)
 {
 
@@ -45,7 +45,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
       f <- summary(modellm)$coefficients
       if (nrow(f)>1)
       {
-        betaCoef <- modellm$coef[2]*(f[2,4] < unipvalue);
+        betaCoef <- modellm$coef[2]*(f[2,4] < adjunipvalue);
       }
     }
     return (betaCoef)
@@ -171,7 +171,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
       }
       AdrivingFeatures <- AdrivingFeatures[order(-ordcor[AdrivingFeatures])];
       AdrivingFeatures <- as.character(correlated_Remove(cormat,AdrivingFeatures,thr = 0.95*thr,isDataCorMatrix=TRUE))
-      unipvalue <- min(unipvalue,unipvalue*sqrt(totcorr)/totFeatures); ## Adjusting for false association
+      adjunipvalue <- min(unipvalue,unipvalue*sqrt(totcorr)/totFeatures); ## Adjusting for false association
       DeCorrmatrix <- diag(length(varincluded));
       colnames(DeCorrmatrix) <- varincluded;
       rownames(DeCorrmatrix) <- varincluded;
@@ -192,7 +192,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
         }
       }
       
-      if (verbose) cat ("\n Included:",length(varincluded),", Uni p:",unipvalue,", Uncorrelated Base:",length(AdrivingFeatures),", Outcome-Driven Size:",length(drivingFeatures),", Base Size:",length(bfeat),"\n")
+      if (verbose) cat ("\n Included:",length(varincluded),", Uni p:",adjunipvalue,", Uncorrelated Base:",length(AdrivingFeatures),", Outcome-Driven Size:",length(drivingFeatures),", Base Size:",length(bfeat),"\n")
 
       relaxalpha <- 0.80;
       relaxbeta <- 0.20;
@@ -319,7 +319,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
                                                       baseFormula=feat,
                                                       data=dataTransformed[,c(feat,varlist)],
                                                       referenceframe=refdata[,c(feat,varlist)],
-                                                      pvalue = unipvalue,
+                                                      pvalue = adjunipvalue,
                                                       ...
                                                       );
                         models <- attr(adataframe,"models")
@@ -330,7 +330,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
                             names(adjusted) <- varlist;
                             for (vl in 1:length(models))
                             {
-                              adjusted[models[[vl]]$feature] <- (models[[vl]]$pval < unipvalue);
+                              adjusted[models[[vl]]$feature] <- (models[[vl]]$pval < adjunipvalue);
                               if (adjusted[models[[vl]]$feature])
                               {
                                 if (is.null(models[[vl]]$model$coef))
@@ -585,7 +585,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
   attr(dataTransformed,"unaltered") <- bfeat;
   attr(dataTransformed,"LatentVariables") <- lavariables;
   attr(dataTransformed,"useDeCorr") <- useDeCorr;
-  attr(dataTransformed,"unipvalue") <- unipvalue
+  attr(dataTransformed,"unipvalue") <- adjunipvalue
   return(dataTransformed)
 }
 

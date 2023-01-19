@@ -13,11 +13,11 @@
 	                     refdata=NULL,
 	                     drivingFeatures=NULL,
 	                     useDeCorr=TRUE,
-	                     verbose=FALSE,
 	                     relaxed=TRUE,
 	                     corRank=FALSE,
 	                     maxLoops=100,
 	                     unipvalue=0.05,
+	                     verbose=FALSE,
 	                     ...)
 
 	
