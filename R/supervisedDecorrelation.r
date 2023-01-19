@@ -1,15 +1,15 @@
 GDSTMDecorrelation <- function(data=NULL,
                                   thr=0.80,
-                                  refdata=NULL,
-                                  Outcome=NULL,
-                                  baseFeatures=NULL,
-                                  unipvalue=0.05,
-                                  useDeCorr=TRUE,
-                                  maxLoops=100,
-                                  verbose=FALSE,
                                   method=c("fast","pearson","spearman","kendall"),
+                                  Outcome=NULL,
+                                  refdata=NULL,
+                                  drivingFeatures=NULL,
+                                  useDeCorr=TRUE,
+                                  verbose=FALSE,
                                   relaxed=TRUE,
                                   corRank=FALSE,
+                                  maxLoops=100,
+                                  unipvalue=0.05,
                                   ...)
 {
 
@@ -84,12 +84,13 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
   dataTransformed <- as.data.frame(rbind(data,refdata[!(refdataids %in% dataids),]));
   topFeatures <- character()
   correlatedToBase <- character();
-  if (is.null(baseFeatures))
+  lavariables <- character();
+  if (is.null(drivingFeatures))
   {
-    baseFeatures <- character()
+    drivingFeatures <- character()
   }
-  AbaseFeatures <- character()
-  bfeat <- unique(c(baseFeatures,AbaseFeatures))
+  AdrivingFeatures <- character()
+  bfeat <- unique(c(drivingFeatures,AdrivingFeatures))
   
   addedlist <- 1;
   lp = 0;
@@ -114,7 +115,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
   
   fscore <- numeric(length(varincluded));
   names(fscore) <- varincluded;
-  fcount <- fscore;
+#  fcount <- fscore;
   
   totFeatures <- length(varincluded);
   
@@ -142,7 +143,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
   {
       if (!is.null(Outcome))
       { 
-          if (length(baseFeatures)==0) 
+          if (length(drivingFeatures)==0) 
           {
             if ((class(data[,Outcome]) == "factor") | (length(unique(data[,Outcome])) == 2))
             {
@@ -152,44 +153,44 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
             {
               outcomep <- univariate_correlation(data,Outcome,method=method,limit=0,pvalue=unipvalue,thr = sqrt(thr)) # the top associated features to the outcome
             }
-            baseFeatures <- names(outcomep);
+            drivingFeatures <- names(outcomep);
             outcomep <- NULL;
           }
       }
       cormat <- cormat[varincluded,varincluded];
       cormat[cormat < thr] <- 0;
       maxcor <- apply(cormat,2,max)
-      AbaseFeatures <- varincluded;
-      names(AbaseFeatures) <- AbaseFeatures;
+      AdrivingFeatures <- varincluded;
+      names(AdrivingFeatures) <- AdrivingFeatures;
       ordcor <- maxcor;
       if (corRank)
       {       
-        ordcor <- apply(cormat,2,sum);
+        ordcor <- apply(cormat^2,2,sum);
       }
-      AbaseFeatures <- AbaseFeatures[order(-ordcor[AbaseFeatures])];
-      AbaseFeatures <- as.character(correlated_Remove(cormat,AbaseFeatures,thr = 0.95*thr,isDataCorMatrix=TRUE))
+      AdrivingFeatures <- AdrivingFeatures[order(-ordcor[AdrivingFeatures])];
+      AdrivingFeatures <- as.character(correlated_Remove(cormat,AdrivingFeatures,thr = 0.95*thr,isDataCorMatrix=TRUE))
       unipvalue <- min(unipvalue,unipvalue*sqrt(totcorr)/totFeatures); ## Adjusting for false association
       DeCorrmatrix <- diag(length(varincluded));
       colnames(DeCorrmatrix) <- varincluded;
       rownames(DeCorrmatrix) <- varincluded;
-      bfeat <- AbaseFeatures
-      if (length(baseFeatures) > 0)
+      bfeat <- AdrivingFeatures
+      if (length(drivingFeatures) > 0)
       {    
-        baseFeatures <- baseFeatures[baseFeatures %in% varincluded];
-        if (length(baseFeatures)>1)
+        drivingFeatures <- drivingFeatures[drivingFeatures %in% varincluded];
+        if (length(drivingFeatures)>1)
         {
-          baseFeatures <- baseFeatures[order(-ordcor[baseFeatures])];
-          names(baseFeatures) <- baseFeatures;
-          bfeat <- unique(c(baseFeatures,AbaseFeatures))
+          drivingFeatures <- drivingFeatures[order(-ordcor[drivingFeatures])];
+          names(drivingFeatures) <- drivingFeatures;
+          bfeat <- unique(c(drivingFeatures,AdrivingFeatures))
           names(bfeat) <- bfeat;
           bfeat <- as.character(correlated_Remove(cormat,bfeat,thr = 0.95*thr,isDataCorMatrix=TRUE));
           bfeat <- bfeat[order(-ordcor[bfeat])];
-          baseFeatures <- baseFeatures[baseFeatures %in% bfeat];
-          AbaseFeatures <- AbaseFeatures[AbaseFeatures %in% bfeat];
+          drivingFeatures <- drivingFeatures[drivingFeatures %in% bfeat];
+          AdrivingFeatures <- AdrivingFeatures[AdrivingFeatures %in% bfeat];
         }
       }
       
-      if (verbose) cat ("\n Included:",length(varincluded),", Uni p:",unipvalue,", Uncorrelated Base:",length(AbaseFeatures),", Outcome-Driven Size:",length(baseFeatures),", Base Size:",length(bfeat),"\n")
+      if (verbose) cat ("\n Included:",length(varincluded),", Uni p:",unipvalue,", Uncorrelated Base:",length(AdrivingFeatures),", Outcome-Driven Size:",length(drivingFeatures),", Base Size:",length(bfeat),"\n")
 
       relaxalpha <- 0.80;
       relaxbeta <- 0.20;
@@ -241,7 +242,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
           ordcor <- maxcor;
           if (corRank)
           {
-            ordcor <- apply(cormat,2,sum);
+            ordcor <- apply(cormat^2,2,sum);
           }
           topfeat <- topfeat[order(-ordcor[topfeat])];
           atopbase <- bfeat[bfeat %in% topfeat];
@@ -365,8 +366,8 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
                     fscore[varlist] <- fscore[varlist] - 1;
 #                    fscore[feat] <- fscore[feat] + sum(1.0-cormat[varlist,feat]^2)
 #                    fscore[varlist] <- fscore[varlist] - cormat[varlist,feat]^2
-                    fcount[feat] <- fcount[feat] + length(varlist);
-                    fcount[varlist] <- fcount[varlist] + 1;
+#                    fcount[feat] <- fcount[feat] + length(varlist);
+#                    fcount[varlist] <- fcount[varlist] + 1;
                     cormat[ovarlist,feat] <- 0;
 
                   }
@@ -493,8 +494,8 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
       betamatrix <- NULL;
       tmparincluded <- varincluded;
       varincluded <- tmparincluded[tmparincluded %in% totused];
-      baseFeatures <- baseFeatures[baseFeatures %in% varincluded];
-      AbaseFeatures <- AbaseFeatures[AbaseFeatures %in% varincluded];
+      drivingFeatures <- drivingFeatures[drivingFeatures %in% varincluded];
+      AdrivingFeatures <- AdrivingFeatures[AdrivingFeatures %in% varincluded];
       bfeat <- bfeat[bfeat %in% varincluded];
       if (useDeCorr)
       {
@@ -542,24 +543,29 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
               cormat <- abs(cor(dataTransformed[,varincluded],method=method))
              }
               diag(cormat) <- 0;
-              cat ("\n\r [",lp,"],",max(cormat),"Decor Dimension:",length(varincluded),". Cor to Base:",length(correlatedToBase),", ABase:",length(AbaseFeatures),", Outcome Base:",length(baseFeatures),"\n\r")
+              cat ("\n\r [",lp,"],",max(cormat),"Decor Dimension:",length(varincluded),". Cor to Base:",length(correlatedToBase),", ABase:",length(AdrivingFeatures),", Outcome Base:",length(drivingFeatures),"\n\r")
           }
 #          banames <- colnames(DeCorrmatrix)[apply(DeCorrmatrix!=0,2,sum)==1]
+          changed <- (apply(DeCorrmatrix!=0,2,sum) > 1);
+          lavariables <- colnames(DeCorrmatrix)[changed]
           newnames <- colnames(dataTransformed)
-          newnames[newnames %in% bfeat] <- paste("Ba_",newnames[newnames %in% bfeat],sep="") 
-          newnames[newnames %in% varincluded] <- paste("La_",newnames[newnames %in% varincluded],sep="")
+#          newnames[newnames %in% bfeat] <- paste("Ba_",newnames[newnames %in% bfeat],sep="") 
+#          newnames[newnames %in% varincluded] <- paste("La_",newnames[newnames %in% varincluded],sep="")
+          newnames[newnames %in% lavariables] <- paste("La_",newnames[newnames %in% lavariables],sep="")
           colnames(dataTransformed) <- newnames
           newnames <- colnames(DeCorrmatrix)
-          newnames[newnames %in% bfeat] <- paste("Ba_",newnames[newnames %in% bfeat],sep="") 
-          newnames[newnames %in% varincluded] <- paste("La_",newnames[newnames %in% varincluded],sep="")
+#          newnames[newnames %in% bfeat] <- paste("Ba_",newnames[newnames %in% bfeat],sep="") 
+#          newnames[newnames %in% varincluded] <- paste("La_",newnames[newnames %in% varincluded],sep="")
+          newnames[newnames %in% lavariables] <- paste("La_",newnames[newnames %in% lavariables],sep="")
           colnames(DeCorrmatrix) <- newnames
           fscore <- fscore[varincluded];
-          fcount <- fcount[varincluded];
+#          fcount <- fcount[varincluded];
 #          fscore <- fscore/fcount;
 
           newnames <- names(fscore)
-          newnames[newnames %in% bfeat] <- paste("Ba_",newnames[newnames %in% bfeat],sep="") 
-          newnames[newnames %in% varincluded] <- paste("La_",newnames[newnames %in% varincluded],sep="")
+#          newnames[newnames %in% bfeat] <- paste("Ba_",newnames[newnames %in% bfeat],sep="") 
+#          newnames[newnames %in% varincluded] <- paste("La_",newnames[newnames %in% varincluded],sep="")
+          newnames[newnames %in% lavariables] <- paste("La_",newnames[newnames %in% lavariables],sep="")
           names(fscore) <- newnames
         }
       }
@@ -570,16 +576,13 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
   }
   
   
-  attr(dataTransformed,"topFeatures") <- unique(topFeatures);
-  attr(dataTransformed,"TotalAdjustments") <- countf;
   attr(dataTransformed,"GDSTM") <- DeCorrmatrix;
-  attr(dataTransformed,"varincluded") <- varincluded;
-  attr(dataTransformed,"baseFeatures") <- baseFeatures;
-  attr(dataTransformed,"uniqueBase") <- bfeat;
-  attr(dataTransformed,"useDeCorr") <- useDeCorr;
-  attr(dataTransformed,"correlatedToBase") <- correlatedToBase;
-  attr(dataTransformed,"AbaseFeatures") <- AbaseFeatures;
   attr(dataTransformed,"fscore") <- fscore;
+  attr(dataTransformed,"TotalAdjustments") <- countf;
+  attr(dataTransformed,"drivingFeatures") <- drivingFeatures;
+  attr(dataTransformed,"unaltered") <- bfeat;
+  attr(dataTransformed,"LatentVariables") <- lavariables;
+  attr(dataTransformed,"useDeCorr") <- useDeCorr;
   attr(dataTransformed,"unipvalue") <- unipvalue
   return(dataTransformed)
 }
@@ -589,13 +592,15 @@ predictDecorrelate <- function(decorrelatedobject,testData)
   if (attr(decorrelatedobject,"useDeCorr") && !is.null(attr(decorrelatedobject,"GDSTM")))
   {
     decorMat <- attr(decorrelatedobject,"GDSTM")
-#    testData[,colnames(decorMat)] <- as.matrix(testData[,rownames(decorMat)]) %*% decorMat
+#    testData[,rownames(decorMat)] <- as.matrix(testData[,rownames(decorMat)]) %*% decorMat
     testData[,rownames(decorMat)] <- Rfast::mat.mult(as.matrix(testData[,rownames(decorMat)]),decorMat);
-    varincluded <- attr(decorrelatedobject,"varincluded")
+#    varincluded <- attr(decorrelatedobject,"varincluded")
     newnames <- colnames(testData)
-    bfeat <- attr(decorrelatedobject,"uniqueBase")
-    newnames[newnames %in% bfeat] <- paste("Ba_",newnames[newnames %in% bfeat],sep="") 
-    newnames[newnames %in% varincluded] <- paste("La_",newnames[newnames %in% varincluded],sep="")
+    lavariables <- attr(decorrelatedobject,"LatentVariables");
+#    bfeat <- attr(decorrelatedobject,"unaltered")
+#    newnames[newnames %in% bfeat] <- paste("Ba_",newnames[newnames %in% bfeat],sep="") 
+#    newnames[newnames %in% varincluded] <- paste("La_",newnames[newnames %in% varincluded],sep="")
+    newnames[newnames %in% lavariables] <- paste("La_",newnames[newnames %in% lavariables],sep="")
     colnames(testData) <- newnames
   }
   else

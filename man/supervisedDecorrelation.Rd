@@ -5,15 +5,19 @@
 \description{
 	All continous features that with significant correlation will be decorrelated
 }
+
 \usage{
 	GDSTMDecorrelation(data=NULL,thr=0.80,
-	                     refdata=NULL,Outcome=NULL,
-	                     baseFeatures=NULL,unipvalue=0.05,
-	                     useDeCorr=TRUE,maxLoops=100,
-	                     verbose=FALSE,
 	                     method=c("fast","pearson","spearman","kendall"),
-						 relaxed=TRUE,
-						 corRank=FALSE,
+	                     Outcome=NULL,
+	                     refdata=NULL,
+	                     drivingFeatures=NULL,
+	                     useDeCorr=TRUE,
+	                     verbose=FALSE,
+	                     relaxed=TRUE,
+	                     corRank=FALSE,
+	                     maxLoops=100,
+	                     unipvalue=0.05,
 	                     ...)
 
 	
