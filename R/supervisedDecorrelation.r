@@ -153,6 +153,8 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
             {
               outcomep <- univariate_correlation(data,Outcome,method=method,limit=0,pvalue=unipvalue,thr = sqrt(thr)) # the top associated features to the outcome
             }
+            outcomefeatures <- attr(outcomep,"Unadjusted");
+            outcomefeatures <- names(outcomefeatures[outcomefeatures < unipvalue])
             drivingFeatures <- names(outcomep);
             outcomep <- NULL;
           }

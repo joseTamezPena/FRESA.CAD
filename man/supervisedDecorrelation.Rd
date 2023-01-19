@@ -83,32 +83,29 @@
 	\item{decorrelatedDataframe}{
 	The decorrelated data frame with the follwing attributes 
 	}
-	\item{attr:topFeatures)}{
-		Attribute of adjustedFrame: The list of features that were decorrelated
-	}
-	\item{attr:TotalAdjustments}{
-		Attribute of adjustedFrame: The count of how many iteration were required
-	}
 	\item{attr:GDSTM}{
-		Attribute of adjustedFrame: The Decorrelation matrix with the beta coefficients
-	}
-	\item{attr:varincluded}{
-		Attribute of adjustedFrame: The list of input variables used in GDSTM
-	}
-	\item{attr:baseFeatures}{
-		Attribute of adjustedFrame: The list of features used as base features for supervised basis
-	}
-	\item{attr:useDeCorr}{
-		Attribute of adjustedFrame: If TRUE the estimated GDSTM is used for decorrelation
-	}
-	\item{attr:correlatedToBase}{
-		Attribute of adjustedFrame: List of correlated features to the base features 
-	}
-	\item{attr:AbaseFeatures}{
-		Attribute of adjustedFrame: List of unsupervised basis features
+		Attribute of decorrelatedDataframe: The Decorrelation matrix with the beta coefficients
 	}
 	\item{attr:fscore}{
-		Attribute of adjustedFrame: The score of each feature.
+		Attribute of decorrelatedDataframe: The score of each feature.
+	}
+	\item{attr:TotalAdjustments}{
+		Attribute of decorrelatedDataframe: The count of how many iteration were required
+	}
+	\item{attr:drivingFeatures}{
+		Attribute of decorrelatedDataframe: The list of features used as base features for supervised basis
+	}
+	\item{attr:unaltered}{
+		Attribute of decorrelatedDataframe: List of correlated features that were left unaltered
+	}
+	\item{attr:LatentVariables}{
+		Attribute of decorrelatedDataframe: List the names of parent latent features 
+	}
+	\item{attr:useDeCorr}{
+		Attribute of decorrelatedDataframe: If TRUE the estimated GDSTM is used for decorrelation
+	}
+	\item{attr:unipvalue}{
+		The p-value used to check for fit significance
 	}
 }
 
