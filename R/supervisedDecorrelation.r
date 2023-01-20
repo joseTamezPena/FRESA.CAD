@@ -90,7 +90,6 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
     drivingFeatures <- character()
   }
   AdrivingFeatures <- character()
-  bfeat <- unique(c(drivingFeatures,AdrivingFeatures))
   
   addedlist <- 1;
   lp = 0;
@@ -139,6 +138,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
   lastdecorrelated <- character();
   totused <- character();
   totalpha <- character();
+  outcomefeatures <- drivingFeatures;
   if (length(varincluded) > 1)
   {
       if (!is.null(Outcome))
@@ -175,7 +175,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
       DeCorrmatrix <- diag(length(varincluded));
       colnames(DeCorrmatrix) <- varincluded;
       rownames(DeCorrmatrix) <- varincluded;
-      bfeat <- AdrivingFeatures
+      bfeat <- AdrivingFeatures;
       if (length(drivingFeatures) > 0)
       {    
         drivingFeatures <- drivingFeatures[drivingFeatures %in% varincluded];
@@ -276,6 +276,22 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
                   corlist <- corlist[corlist >= thr];
                   varlist <- names(corlist)
                   varlist <- varlist[!(varlist %in% unique(c(decorrelatedFetureList,bfeat)))]
+                  if (length(outcomefeatures) > 1)
+                  {
+                     ovarlist <- varlist;
+                     if (feat %in% outcomefeatures) 
+                     {
+                        varlist <- varlist[varlist %in% outcomefeatures];
+                     }
+                     else
+                     {
+                        varlist <- varlist[!(varlist %in% outcomefeatures)];
+                     }
+                     if (length(varlist) == 0)
+                     {
+                        varlist <- ovarlist;
+                     }
+                  }
                   olength <- length(varlist)
                   notinfeat <- topfeat[topfeat != feat];
                   allvartested <- TRUE;
