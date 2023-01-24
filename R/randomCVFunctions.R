@@ -106,17 +106,30 @@ univariate_Logit <- function(data=NULL, Outcome=NULL, pvalue=0.2, adjustMethod="
 		  baseformula <- paste(baseformula[2],"~",baseformula[3]);
 		  Outcome <- formula(baseformula);
 		  olist <- attr(terms(Outcome),"variables")
-
 		  dependent <- as.character(olist[[2]])
-		  timeOutcome = dependent[2];
-		  status = dependent[3];
-#		  print(c(status,timeOutcome));
+		  
+		  if (length(dependent)==3)
+		  {
 
-		  varlist <- varlist[!varlist %in% c(timeOutcome,status)];
-		  varlist <- cbind(varlist,varlist);
-		  univ <- ForwardSelection.Model.Bin(nrow(varlist),1.0,0.0,1,"1",status,varlist,data,1,type="COX",selectionType=uniTest,timeOutcome=timeOutcome);
-		  unitPvalues <- 2.0*(1.0 - pnorm(univ$base.Zvalues));
-		  unitPvalues[unitPvalues > 1.0] <- 1.0;
+			  timeOutcome = dependent[2];
+			  status = dependent[3];
+	#		  print(c(status,timeOutcome));
+
+			  varlist <- varlist[!varlist %in% c(timeOutcome,status)];
+			  varlist <- cbind(varlist,varlist);
+			  univ <- ForwardSelection.Model.Bin(nrow(varlist),1.0,0.0,1,"1",status,varlist,data,1,type="COX",selectionType=uniTest,timeOutcome=timeOutcome);
+			  unitPvalues <- 2.0*(1.0 - pnorm(univ$base.Zvalues));
+			  unitPvalues[unitPvalues > 1.0] <- 1.0;
+		  }
+		  else
+		  {
+			status = dependent[1];
+ 		    varlist <- varlist[status != varlist]
+		    varlist <- cbind(varlist,varlist);
+			univ <- ForwardSelection.Model.Bin(nrow(varlist),1.0,0.0,1,"1",status,varlist,data,1,type="LOGIT",selectionType=uniTest);
+			unitPvalues <- 2.0*(1.0 - pnorm(univ$base.Zvalues));
+			unitPvalues[unitPvalues > 1.0] <- 1.0;
+		  }
 	}
 	else
 	{ ## It is a standard binary outcome
