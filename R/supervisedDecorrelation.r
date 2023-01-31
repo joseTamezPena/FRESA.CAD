@@ -519,7 +519,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
       {
         DeCorrmatrix <- DeCorrmatrix[varincluded,varincluded]
         abfeat <- varincluded[apply(DeCorrmatrix!=0,2,sum)==1]
-        if (verbose) cat("-{",abfeat[!(abfeat %in% bfeat)],"}-")
+#        if (verbose) cat("-{",abfeat[!(abfeat %in% bfeat)],"}-")
         bfeat <- unique(c(bfeat,abfeat));
         dataTransformed <- data
         if (length(varincluded) > 1)

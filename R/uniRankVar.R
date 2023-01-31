@@ -24,6 +24,10 @@ timeOutcome=NULL)
 	categorizationType <- match.arg(categorizationType);
 #	cat(categorizationType,"\n")
 	rankingTest <- match.arg(rankingTest);
+	if (class(variableList) == "character")
+	{
+		variableList <- cbind(variableList,variableList)
+	}
 	colnamesList <- as.vector(variableList[,1]);
 	varinserted <- length(colnamesList);
 
