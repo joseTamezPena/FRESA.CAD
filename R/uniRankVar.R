@@ -6,7 +6,9 @@ categorizationType=c("Raw","Categorical","ZCategorical","RawZCategorical","RawTa
 type=c("LOGIT","LM","COX"),
 rankingTest=c("zIDI","zNRI","IDI","NRI","NeRI","Ztest","AUC","CStat","Kendall"),
 cateGroups=c(0.1,0.9),
-raw.dataFrame=NULL,description=".",
+raw.dataFrame=NULL,
+testData=NULL,
+description=".",
 uniType=c("Binary","Regression"),
 FullAnalysis=TRUE,
 acovariates=NULL,
@@ -24,7 +26,7 @@ timeOutcome=NULL)
 	categorizationType <- match.arg(categorizationType);
 #	cat(categorizationType,"\n")
 	rankingTest <- match.arg(rankingTest);
-	if (class(variableList) == "character")
+	if (class(variableList)[1] == "character")
 	{
 		variableList <- cbind(variableList,variableList)
 	}
@@ -34,6 +36,10 @@ timeOutcome=NULL)
 	Name <- colnamesList;
 	parent <- colnamesList;
 	descripList <- colnamesList;
+	if (is.null(testData))
+	{
+		testData <- data;
+	}
 
 	if (FullAnalysis || (categorizationType != "Raw"))
 	{
@@ -179,15 +185,15 @@ timeOutcome=NULL)
 			else
 			{
 				bmodel <- modelFitting(ftmp,data,type,fitFRESA=FALSE)
-				baseResiduals <- residualForFRESA(bmodel,data,Outcome)+rnorm(nrow(data),0,1e-10);
-				basepredict <- predict.fitFRESA(bmodel,data, 'prob');
+				baseResiduals <- residualForFRESA(bmodel,testData,Outcome)+rnorm(nrow(testData),0,1e-10);
+				basepredict <- predict.fitFRESA(bmodel,testData, 'prob');
 			}
 		}
 		else
 		{
 			bmodel <- modelFitting(ftmp,data,type,fitFRESA=FALSE)
-			baseResiduals <- residualForFRESA(bmodel,data,Outcome)+rnorm(nrow(data),0,1e-10);
-			basepredict <- predict.fitFRESA(bmodel,data, 'prob');
+			baseResiduals <- residualForFRESA(bmodel,testData,Outcome)+rnorm(nrow(testData),0,1e-10);
+			basepredict <- predict.fitFRESA(bmodel,testData, 'prob');
 		}
 #		cat("Start Ranking\n");
 
@@ -229,6 +235,12 @@ timeOutcome=NULL)
 			medf <- NA;
 			datacolumn <- data[,colnamesList[j]];
 			dataoutcome <- data[,Outcome];
+			dataTestoutcome <- dataoutcome;
+			if (!is.null(testData))
+			{
+				dataTestoutcome <- testData[,Outcome];
+			}
+			
 
 			if ((uniType=="Binary")&& FullAnalysis)
 			{
@@ -656,6 +668,10 @@ timeOutcome=NULL)
 				{
 					mdata <- data;
 				}
+#				if (is.null(testData))
+#				{
+#					testData <- mdata;
+#				}
 
 				for (n in 1:categories)
 				{
@@ -840,17 +856,17 @@ timeOutcome=NULL)
 						{
 							if (uniType=="Binary")
 							{
-								Sensitivity[varinserted] <- sen;
-								Specificity[varinserted] <- spe;
-								spredict <- predict.fitFRESA(lmodel,data, 'prob');
-								iprob <- .Call("improveProbCpp",basepredict,spredict,dataoutcome);
+								spredict <- predict.fitFRESA(lmodel,testData, 'prob');
+								iprob <- .Call("improveProbCpp",basepredict,spredict,dataTestoutcome);
+								Sensitivity[varinserted] <- sum((spredict >= 0.5) & (dataTestoutcome==1))/sum(dataTestoutcome==1);
+								Specificity[varinserted] <- sum((spredict < 0.5) & (dataTestoutcome==0))/sum(dataTestoutcome==0);
 								IDI[varinserted] <- iprob$idi;
 								NRI[varinserted] <- iprob$nri;
 								zIDI[varinserted] <- iprob$z.idi;
 								zNRI[varinserted] <- iprob$z.nri;
-								if (length(dataoutcome)==length(spredict))
+								if (length(dataTestoutcome)==length(spredict))
 								{
-									ROCAUC[varinserted] <- pROC::roc( dataoutcome, spredict,plot=FALSE,auc=TRUE,quiet = TRUE)$auc[1];
+									ROCAUC[varinserted] <- pROC::roc( dataTestoutcome, spredict,direction="<",plot=FALSE,auc=TRUE,quiet = TRUE)$auc[1];
 								}
 								else
 								{
@@ -862,7 +878,7 @@ timeOutcome=NULL)
 								controlN_Z_Hi_Tail[varinserted] <- controlCount2;
 							}
 
-							varResiduals <- residualForFRESA(lmodel,data,Outcome);
+							varResiduals <- residualForFRESA(lmodel,testData,Outcome);
 							rprob <- .Call("improvedResidualsCpp",baseResiduals,varResiduals," ",0);
 							NeRI[varinserted] <- rprob$NeRI;
 							BinRes.p[varinserted] <- rprob$BinP.value;
@@ -874,8 +890,8 @@ timeOutcome=NULL)
 						{
 							if (uniType=="Binary")
 							{
-								spredict <- predict.fitFRESA(lmodel,mdata, 'prob');
-								iprob <- .Call("improveProbCpp",basepredict,spredict,dataoutcome);
+								spredict <- predict.fitFRESA(lmodel,testData, 'prob');
+								iprob <- .Call("improveProbCpp",basepredict,spredict,dataTestoutcome);
 								zIDI[varinserted] <- iprob$z.idi;
 							}
 						}

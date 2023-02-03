@@ -33,6 +33,7 @@
 	                           "Kendall"),
 	            cateGroups = c(0.1, 0.9),
 	            raw.dataFrame = NULL,
+	            trainData = NULL,
 	            description = ".",
 	            uniType = c("Binary", "Regression"),
 	            FullAnalysis=TRUE,
@@ -66,6 +67,9 @@
 	}
 	\item{raw.dataFrame}{
 		A data frame similar to \code{data}, but with unadjusted data, used to get the means and variances of the unadjusted data
+	}
+	\item{testData}{
+		A data frame for model training
 	}
 	\item{description}{
 		The name of the column in \code{variableList} that stores the variable description

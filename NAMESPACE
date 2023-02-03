@@ -96,7 +96,7 @@ export(GLMNET_RIDGE_1SE)
 export(univariate_cox)
 export(filteredFit)
 export(predict.FRESA_FILTERFIT)
-export(GDSTMDecorrelation)
+export(IDeA)
 export(predictDecorrelate)
 export(getLatentCoefficients)
 

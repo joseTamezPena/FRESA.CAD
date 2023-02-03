@@ -1164,7 +1164,7 @@ filteredFit <- function(formula = formula, data=NULL,
 	usedFeatures <-  c(Outcome,fm);
 
 	scaleparm <- NULL;
-	GDSTM <- NULL;
+	UPSTM <- NULL;
 	pcaobj <- NULL;
 	ccaobj <- NULL;
 	transColnames <- NULL;
@@ -1173,14 +1173,14 @@ filteredFit <- function(formula = formula, data=NULL,
 	{
 		if (is.null(DECOR.control))
 		{
-			data <- GDSTMDecorrelation(data);
+			data <- IDeA(data);
 		}
 		else
 		{
-			data <- do.call(GDSTMDecorrelation,c(list(data),DECOR.control));
+			data <- do.call(IDeA,c(list(data),DECOR.control));
 		}
-		GDSTM <- attr(data,"GDSTM")
-		attr(data,"GDSTM") <- NULL
+		UPSTM <- attr(data,"UPSTM")
+		attr(data,"UPSTM") <- NULL
 		transColnames <- colnames(data);
 		fm <- colnames(data)
 		fm <- fm[!(fm %in% dependent)]
@@ -1315,7 +1315,7 @@ filteredFit <- function(formula = formula, data=NULL,
 					Outcome = Outcome,
 					pcaobj = pcaobj,
 					ccaobj = ccaobj,
-					GDSTM = GDSTM,
+					UPSTM = UPSTM,
 					transColnames = transColnames
 					);
 	class(result) <- c("FRESA_FILTERFIT");
@@ -1331,9 +1331,9 @@ predict.FRESA_FILTERFIT <- function(object,...)
 {
 	parameters <- list(...);
 	testData <- parameters[[1]];
-	if (!is.null(object$GDSTM))
+	if (!is.null(object$UPSTM))
 	{
-	    testData[,rownames(object$GDSTM)] <- Rfast::mat.mult(as.matrix(testData[,rownames(object$GDSTM)]),object$GDSTM);
+	    testData[,rownames(object$UPSTM)] <- Rfast::mat.mult(as.matrix(testData[,rownames(object$UPSTM)]),object$UPSTM);
 		colnames(testData) <- object$transColnames;
 	}
 	if (!is.null(object$Scale))

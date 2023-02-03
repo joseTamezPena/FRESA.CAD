@@ -1,4 +1,4 @@
-GDSTMDecorrelation <- function(data=NULL,
+IDeA <- function(data=NULL,
                                   thr=0.80,
                                   method=c("fast","pearson","spearman","kendall"),
                                   Outcome=NULL,
@@ -594,7 +594,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
   }
   
   
-  attr(dataTransformed,"GDSTM") <- DeCorrmatrix;
+  attr(dataTransformed,"UPSTM") <- DeCorrmatrix;
   attr(dataTransformed,"fscore") <- fscore;
   attr(dataTransformed,"TotalAdjustments") <- countf;
   attr(dataTransformed,"drivingFeatures") <- drivingFeatures;
@@ -607,9 +607,9 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
 
 predictDecorrelate <- function(decorrelatedobject,testData)
 {
-  if (attr(decorrelatedobject,"useDeCorr") && !is.null(attr(decorrelatedobject,"GDSTM")))
+  if (attr(decorrelatedobject,"useDeCorr") && !is.null(attr(decorrelatedobject,"UPSTM")))
   {
-    decorMat <- attr(decorrelatedobject,"GDSTM")
+    decorMat <- attr(decorrelatedobject,"UPSTM")
 #    testData[,rownames(decorMat)] <- as.matrix(testData[,rownames(decorMat)]) %*% decorMat
     testData[,rownames(decorMat)] <- Rfast::mat.mult(as.matrix(testData[,rownames(decorMat)]),decorMat);
 #    varincluded <- attr(decorrelatedobject,"varincluded")
@@ -632,18 +632,18 @@ getLatentCoefficients <- function(decorrelatedobject)
 {
   CoeffList <- list();
   nonZeronames <- character();
-  GDSTM <- attr(decorrelatedobject,"GDSTM")
-  namecol <- colnames(GDSTM);
+  UPSTM <- attr(decorrelatedobject,"UPSTM")
+  namecol <- colnames(UPSTM);
   if (length(namecol) > 0)
   {
     n=1;
-    for (i in 1:ncol(GDSTM))
+    for (i in 1:ncol(UPSTM))
     {
-      associ <- abs(GDSTM[,i])>0;
+      associ <- abs(UPSTM[,i])>0;
       if (sum(associ) > 1)
       {
         nonZeronames <- append(nonZeronames,namecol[i]);
-        CoeffList[[n]] <- GDSTM[associ,i];
+        CoeffList[[n]] <- UPSTM[associ,i];
         n=n+1;
       }
     }

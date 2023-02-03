@@ -44,7 +44,7 @@
 	Whittening process: "PCA" or "CCA"
 	}
 	\item{DECOR}{
-	Decorrelate the input data estimating the GDSTM
+	Decorrelate the input data estimating the UPSTM
 	}
 	\item{DECOR.control}{
 	Parameters to the decorrelation function
