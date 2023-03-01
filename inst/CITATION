@@ -1,6 +1,6 @@
 citHeader("To cite FRESA.CAD in publications use:")
 
-citEntry(entry="article",
+bibentry(entry="article",
   title  ="FeatuRE Selection Algorithms for Computer-Aided Diagnosis: an R package",
   author = "A Martinez-Torteya, I Alanis and J Tamez-Pena",
   journal = "Submitted",
