@@ -148,11 +148,11 @@
 	plot(as.data.frame(irisPCA$x),col=classcolor,main="PCA IRIS")
 
 	featuresDecor <- colnames(irisDecor[,sapply(irisDecor,is,"numeric")])
-	plot(irisDecor[,featuresDecor],col=classcolor,main="Unsupervised FCA IRIS")
+	plot(irisDecor[,featuresDecor],col=classcolor,main="Outcome-Blind IDeA IRIS")
 
 
 	featuresDecor <- colnames(irisDecorOutcome[,sapply(irisDecorOutcome,is,"numeric")])
-	plot(irisDecorOutcome[,featuresDecor],col=classcolor,main="Supervised FCA IRIS")
+	plot(irisDecorOutcome[,featuresDecor],col=classcolor,main="Outcome-Driven IDeA IRIS")
 }
 
 \seealso{\code{featureAdjustment}}
