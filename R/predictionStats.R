@@ -68,7 +68,7 @@ concordance95ci <- function(datatest,nss=1000)
       }
       else
       {
-        ses[i] <- rcorr.cens(bootsample$preds, Surv(bootsample$times,bootsample$status))[1]
+        ses[i] <- rcorr.cens(bootsample$preds, survival::Surv(bootsample$times,bootsample$status))[1]
       }
     }
     sesci <- quantile(ses, probs = c(0.5,0.025,0.975),na.rm = TRUE);

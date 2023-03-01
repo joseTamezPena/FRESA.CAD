@@ -269,7 +269,7 @@ timeOutcome=NULL)
 						}
 						else
 						{
-							cstat <- rcorr.cens(datacolumn,Surv(data[,timeOutcome],dataoutcome))
+							cstat <- rcorr.cens(datacolumn,survival::Surv(data[,timeOutcome],dataoutcome))
 						}
 					}
 					else
@@ -280,7 +280,7 @@ timeOutcome=NULL)
 						}
 						else
 						{
-							cstat <- rcorr.cens(datacolumn,Surv(data[,timeOutcome],dataoutcome))
+							cstat <- rcorr.cens(datacolumn,survival::Surv(data[,timeOutcome],dataoutcome))
 						}
 					}
 				}

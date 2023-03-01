@@ -12,6 +12,7 @@ Changes from FRESA.CAD 3.4.1 to FRESA.CAD version 3.4.4
 	   IDeA bug with unaltered basis fixed.
 	 Other:
 	 	Code cleaning. Removing commented code.
+		Renaming data GDSTMdecorrelation() to IDeA()
 	 	
 Changes from FRESA.CAD 3.3.1 to FRESA.CAD version 3.4.2
 	Enhancements:

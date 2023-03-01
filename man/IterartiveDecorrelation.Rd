@@ -36,7 +36,7 @@
 	\item{Outcome}{
 	The target outcome for supervised basis
 	}
-	\item{baseFeatures}{
+	\item{drivingFeatures}{
 	A vector of features to be used as basis vectors. 
 	}
 	\item{unipvalue}{
@@ -54,8 +54,8 @@
 	\item{method}{
 	if not set to "fast" the method will be pased to the \code{cor()} function.
 	}
-	\item{skipRelaxed}{
-	is set to FALSE it will use relaxed convergence
+	\item{relaxed}{
+	is set to TRUE it will use relaxed convergence
 	}
 	\item{corRank}{
 	is set to TRUE it will correlation matrix to break ties.

@@ -64,7 +64,7 @@ MultUnivariateCox <- function(varlist = NULL,data = NULL,Outcome = NULL,...)
   featuresOnSurvivalObject <- strsplit(featuresOnSurvival, ",")
   time <- as.numeric(unlist(data[featuresOnSurvivalObject[[1]][1]]))
   status <- as.numeric(unlist(data[featuresOnSurvivalObject[[1]][2]]))
-  srv <- Surv(time,status)
+  srv <- survival::Surv(time,status)
   
 #  univ_formulas <- sapply(varlist, function(x) as.formula(paste('Surv(time,status) ~ ', x)))
   
@@ -83,7 +83,7 @@ MultUnivariateCox <- function(varlist = NULL,data = NULL,Outcome = NULL,...)
 
   coxpvalue <- function(x)
   {
-    s <- summary(coxph(srv ~  x))
+    s <- summary(survival::coxph(srv ~  x))
     return(s$wald["pvalue"])
   }
   pvalues <- apply(data[,varlist],2,coxpvalue);

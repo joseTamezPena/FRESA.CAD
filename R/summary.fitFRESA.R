@@ -91,7 +91,7 @@ summary.fitFRESA <- function(object,type=c("Improvement","Residual"),ci=c(0.025,
 					cis[i,] = as.vector(quantile(bv$s.coef[,i+coffset], probs = c(ci[1],0.5,ci[2]), na.rm = TRUE,names = FALSE, type = 7));
 				}
 				cinames <- c("lower","median","upper");
-				vres$dR2 <- (es$redtrainMSE - vres$FullTrainMSE)/var(object$response[,2]);
+				vres$dR2 <- (vres$redtrainMSE - vres$FullTrainMSE)/var(object$response[,2]);
 				vres$RelativeFrequency <- rep(1,ncoef);
 			}
 			coefficients=as.data.frame(cbind(coefficients,cis,vres$unitrainMSE,vres$redtrainMSE,vres$FullTrainMSE,vres$NeRIs,vres$FP.value,vres$tP.value,vres$BinP.value,vres$WilcoxP.value,vres$dR2,vres$RelativeFrequency));

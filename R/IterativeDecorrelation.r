@@ -28,12 +28,12 @@ IDeA <- function(data=NULL,
   minUniqueValues <- 5 # more than 5 values and is not factor
   
 
-featVector <<- data[,1];
+featVector <- data[,1];
 
 getAllBetaCoefficients <- function(feat,varlist=NULL)
 {
   allBetaCoef <- numeric(length(varlist));
-  featVector <<- refdata[,feat]
+  featVector <- refdata[,feat]
 
 
   getBetaCoefficient <- function(x)
@@ -145,7 +145,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
       { 
           if (length(drivingFeatures)==0) 
           {
-            if ((class(data[,Outcome]) == "factor") | (length(unique(data[,Outcome])) == 2))
+            if (inherits(data[,Outcome],"factor") | (length(unique(data[,Outcome])) == 2))
             {
               outcomep <- univariate_correlation(data,Outcome,limit=0,pvalue=unipvalue,thr = sqrt(thr)) # the top associated features to the outcome
             }
