@@ -1,15 +1,8 @@
-citHeader("To cite FRESA.CAD in publications use:")
-
-bibentry(entry="article",
+bibentry(bibtype ="Manual",
   title  ="FeatuRE Selection Algorithms for Computer-Aided Diagnosis: an R package",
   author = "A Martinez-Torteya, I Alanis and J Tamez-Pena",
-  journal = "Submitted",
-  year = "2018",
-  volume = "",
-  pages = ".",
-  textVersion = paste("A Martinez-Torteya, I Alanis, and J Tamez-Pena",
-    "FeatuRE Selection Algorithms for Computer-Aided Diagnosis: an R package",
-    "Submitted (2018)."))
+  organization = "Tecnologico de Monterrey",
+  address = "Monterrey, Mexico",
+  year = "2023",
+  )
 
-citFooter("We have invested our time and effort in creating FRESA.CAD,",
-          "we would be grateful if you could cite it when using it in your analysis.")
