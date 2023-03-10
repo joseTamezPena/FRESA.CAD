@@ -1,3 +1,5 @@
+Changes from FRESA.CAD 3.4.4 to FRESA.CAD version 3.4.5
+	Bug: randomCV error with SVM fit corrected
 Changes from FRESA.CAD 3.4.1 to FRESA.CAD version 3.4.4
 	Enhancements:
 		UnivariateFilters:

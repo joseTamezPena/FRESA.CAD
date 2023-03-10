@@ -591,9 +591,12 @@ randomCV <-  function(theData = NULL,
         {
           if (!is.null(currentModel$fit))
           {
-            if (!is.null(currentModel$fit$formula.list))
+            if (!(inherits(currentModel$fit,"numeric") | inherits(currentModel$fit,"factor")))
             {
-              formula.list <- c(formula.list,currentModel$fit$formula.list)
+              if (!is.null(currentModel$fit$formula.list))
+              {
+                formula.list <- c(formula.list,currentModel$fit$formula.list)
+              }
             }
           }
         }
