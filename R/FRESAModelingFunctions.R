@@ -1269,35 +1269,39 @@ filteredFit <- function(formula = formula, data=NULL,
 	}
 	
 	fit <- try(fitmethod(formula,data,...));
-	selectedfeatures <- fm;
-	if (!is.null(fit$selectedfeatures))
+	selectedfeatures <- character();
+	if ( !inherits(fit, "try-error"))
 	{
-		selectedfeatures <- fit$selectedfeatures;
-	}
-	else
-	{
-		 vs <- NULL;
-          if (!is.null(fit$importance))
-          {
-            vs <- fit$importance[,1];
-          }
-          if (!is.null(fit$variable.importance))
-          {
-            vs <- fit$variable.importance;
-          }
-          if (!is.null(vs))
-          {
-            #						print(vs)
-            if (length(vs)>1)
-            {
-              if (length(vs) > 2) vs <- vs[order(-vs)];
-              if (sum(vs > 0.0) > 1)
-              {
-                vs <- vs[vs > 0.0];							
-              }
-              selectedfeatures <- names(vs);
-            }
-          }
+		selectedfeatures <- fm;
+		if (!is.null(fit$selectedfeatures))
+		{
+			selectedfeatures <- fit$selectedfeatures;
+		}
+		else
+		{
+			 vs <- NULL;
+			  if (!is.null(fit$importance))
+			  {
+				vs <- fit$importance[,1];
+			  }
+			  if (!is.null(fit$variable.importance))
+			  {
+				vs <- fit$variable.importance;
+			  }
+			  if (!is.null(vs))
+			  {
+				#						print(vs)
+				if (length(vs)>1)
+				{
+				  if (length(vs) > 2) vs <- vs[order(-vs)];
+				  if (sum(vs > 0.0) > 1)
+				  {
+					vs <- vs[vs > 0.0];							
+				  }
+				  selectedfeatures <- names(vs);
+				}
+			  }
+		}
 	}
 
 	
