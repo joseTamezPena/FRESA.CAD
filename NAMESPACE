@@ -99,6 +99,7 @@ export(predict.FRESA_FILTERFIT)
 export(IDeA)
 export(predictDecorrelate)
 export(getLatentCoefficients)
+export(RRPlot)
 
 useDynLib(FRESA.CAD,.registration = TRUE, .fixes = "C_")
 
