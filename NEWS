@@ -1,4 +1,6 @@
 Changes from FRESA.CAD 3.4.4 to FRESA.CAD version 3.4.5
+	Enhancements:
+	 	-RRPlot added to the library
 	Bugs: 
 		-randomCV error with SVM fit corrected
 		-try-chatch added to filteredFit.

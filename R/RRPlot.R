@@ -1,5 +1,9 @@
 RRPlot <-function(riskData=NULL,atProb=0.90,title="Relative Risk",timetoEvent=NULL,titleS="Kaplan-Meier")
 {
+if (!requireNamespace("corrplot", quietly = TRUE)) {
+		install.packages("corrplot", dependencies = TRUE)
+		}
+        
   numberofEvents <- sum(riskData[,1])
   numberofNoEvents <- sum(riskData[,1]==0)
   
