@@ -1,4 +1,4 @@
-RRPlot <-function(riskData=NULL,atProb=0.90,title="Relative Risk",timetoEvent=NULL,titleS="Kaplan-Meier")
+RRPlot <-function(riskData=NULL,atProb=c(0.90,0.5),title="Relative Risk",timetoEvent=NULL,titleS="Kaplan-Meier",ysurvlim=c(0,1.0))
 {
 if (!requireNamespace("corrplot", quietly = TRUE)) {
 		install.packages("corrplot", dependencies = TRUE)
@@ -9,12 +9,14 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
   
   minRiskAtEvent <- min(riskData[riskData[,1]==1,2])
   risksGreaterThanM <- riskData[riskData[,2] >= minRiskAtEvent,2]
+  names(risksGreaterThanM) <- rownames(riskData[riskData[,2] >= minRiskAtEvent,])
   risksGreaterThanM <- risksGreaterThanM[order(risksGreaterThanM)]
   nobs <- length(risksGreaterThanM)
   RR <- numeric(nobs)
   PPV <- numeric(nobs)
   NPV <- numeric(nobs)
   isEvent <- riskData[names(risksGreaterThanM),1]
+#  print(head(isEvent))
   Sensitivity <- numeric(nobs)
   idx <- 1;
   for (thr in risksGreaterThanM)
@@ -33,36 +35,58 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
     RR[idx] <- HighFraction/LowFraction
     idx <- idx + 1;
   }
-  ymax <- max(RR)
+  ymax <- quantile(RR,probs=c(0.99))
   colors <- heat.colors(10)
-  pshape <- 1 + 15*isEvent
-  plot(PPV,RR,cex=(0.3 + Sensitivity),
+  pshape <- 2 + 14*isEvent
+  
+  plot(PPV,RR,cex=(0.35 + Sensitivity),
        pch=pshape,
        col=colors[1+floor(10*(1.0-NPV))],
        xlim=c(0,1.15),
        ylim=c(1.0,ymax+0.5),
+#       log="y",
        main=title)
-  lfit <-loess(RR~PPV);
+  lfit <-loess(RR~PPV,span=0.5);
   plx <- predict(lfit,se=TRUE)
   lines(PPV,plx$fit,lty=1)
   lines(PPV,plx$fit - qt(0.975,plx$df)*plx$se, lty=2)
   lines(PPV,plx$fit + qt(0.975,plx$df)*plx$se, lty=2)
 
   legtxt <- sprintf("%3.1f",c(5:0)/5)
-  colorlegend(heat.colors(10), legtxt,xlim=c(1.05,1.175),ylim=c(ymax/2,1),cex=0.75)
-  text(1.075,ymax/2+0.25,"NPV")
-  sizp <- c(5:1)/5.0 + 0.3
+  colorlegend(heat.colors(10), legtxt,xlim=c(1.05,1.175),ylim=c((ymax-0.75)*0.45+1.0,ymax/10+1.0),cex=0.75)
+  text(1.075,1,"NPV")
+  sizp <- c(5:1)/5.0 + 0.35
   legend("topright",legend=legtxt[1:5],pch=16,cex=sizp)
-  text(0.95,ymax,"Sen->")
+  legend("bottomleft",legend=c("No","Yes"),pch=c(2,16),cex=0.5)
+  text(0.95,ymax+0.5,"Sen->")
 
 
-  thr_atP <- quantile(riskData[riskData[,1]==0,2],probs=c(atProb))
+  thr_atP <- quantile(riskData[riskData[,1]==0,2],probs=c(atProb[1]))
+  if (length(atProb)>1)
+  {
+    if (atProb[2]>0)
+    {
+      thr_atP <- quantile(riskData[riskData[,1]==1,2],probs=c(atProb[2]))
+      atProb <- atProb[2]
+    }
+    atProb <- atProb[1]
+  }
   lowRisk <- riskData[,2] < thr_atP
   LowEventsFrac <- sum(riskData[lowRisk,1])/sum(lowRisk)
   HighEventsFrac <- sum(riskData[!lowRisk,1])/sum(!lowRisk)
   precision=sum(riskData[!lowRisk,1])/numberofEvents
   abline(v=precision,col="blue")
-  text(x=precision,y=ymax,sprintf("Index(%3.2f)=%4.3f",atProb,thr_atP),pos=4,cex=0.7)
+  text(x=precision,y=ymax,sprintf("Index(%3.2f)=%4.3f",atProb,thr_atP),pos=4 - 2*(precision>0.5) ,cex=0.7)
+  text(x=precision,y=0.9*(ymax-1.0)+1.0,
+       sprintf("RR(%3.2f)=%4.3f",
+               precision,
+               predict(lfit,precision)),
+       pos=4 - 2*(precision>0.5),cex=0.7)
+  minthr <- min(risksGreaterThanM)
+  maxthr <- max(risksGreaterThanM)
+  rangethr <- minthr + (10:0)/10*(maxthr-minthr);
+#  axis(3, at=c(0:10)/10,labels=round(rangethr,digits=2),line=0,outer=FALSE,col.axis="gray", las=1, cex.axis=0.7, tck=-.01)
+#  mtext("Index", side=3, line=0, cex.lab=0.5,las=1, col="gray")
   surfit <- NULL
   LogRankE <- NULL
 
@@ -87,6 +111,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
                                      conf.int = TRUE, 
                                      legend.labs=labelsplot,
                                      palette = paletteplot,
+                                     ylim = ysurvlim,
                                      ggtheme = ggplot2::theme_bw() + 
                                        ggplot2::theme(plot.title = ggplot2::element_text(
                                          hjust = 0.5, face = "bold", size = 20)),
