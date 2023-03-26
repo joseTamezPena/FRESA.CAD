@@ -1,4 +1,4 @@
-RRPlot <-function(riskData=NULL,atProb=c(0.90,0.5),title="Relative Risk",timetoEvent=NULL,titleS="Kaplan-Meier",ysurvlim=c(0,1.0))
+RRPlot <-function(riskData=NULL,atProb=c(0.90,0.0),title="Relative Risk",timetoEvent=NULL,titleS="Kaplan-Meier",ysurvlim=c(0,1.0))
 {
 if (!requireNamespace("corrplot", quietly = TRUE)) {
 		install.packages("corrplot", dependencies = TRUE)
@@ -32,7 +32,21 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
     Sensitivity[idx] <- HighEvents/sum(atHighRisk)
     LowFraction <- LowEvents/sum(atLowRisk);
     HighFraction <- HighEvents/sum(atHighRisk);
-    RR[idx] <- HighFraction/LowFraction
+    if ((sum(atLowRisk)/numberofNoEvents) > 0.01)
+    {
+      RR[idx] <- HighFraction/LowFraction
+    }
+    else
+    {
+      if (idx>1)
+      {
+        RR[idx] <- RR[idx-1]
+      }
+      else
+      {
+        RR[idx] <- 1.0;
+      }
+    }
     idx <- idx + 1;
   }
   ymax <- quantile(RR,probs=c(0.99))
@@ -61,7 +75,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
   text(0.95,ymax+0.5,"Sen->")
 
 
-  thr_atP <- quantile(riskData[riskData[,1]==0,2],probs=c(atProb[1]))
+  thr_atP <- quantile(riskData[riskData[,1]==0,2],probs=c(atProb))
   if (length(atProb)>1)
   {
     if (atProb[2]>0)
@@ -105,6 +119,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
                   plots=FALSE,main=titleS)
       
       surfit <- survival::survfit(Surv(time,event)~class,data = timetoEventData)
+      surdif <- survival::survdiff(Surv(time,event)~class,data = timetoEventData)
       
       graph <- survminer::ggsurvplot(surfit,
                                      data=timetoEventData, 
@@ -137,6 +152,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
                  HighEventsFrac_atP=HighEventsFrac,
                  RR_atP=predict(lfit,precision),
                  surfit=surfit,
+                 sufdif=surdif,
                  LogRankE=LogRankE
                  )
   return (result)
