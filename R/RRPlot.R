@@ -110,7 +110,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
                            class=1*(riskData[,2]>=thr_atP),
                            time=timetoEvent))
     
-      labelsplot <- c("Low",sprintf("At Risk > %5.2f",thr_atP));
+      labelsplot <- c("Low",sprintf("At Risk > %5.3f",thr_atP));
       paletteplot <- c("#00bbff", "#ff0000")
       
       LogRankE <- EmpiricalSurvDiff(times=timetoEventData$time,
