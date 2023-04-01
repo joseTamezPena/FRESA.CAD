@@ -13,6 +13,7 @@
     theCVfolds=1,
     predictor="Prediction",
 	cex=1.0,
+	thr=NULL,
     ...)
 }
 \arguments{
@@ -33,6 +34,9 @@
 	}
 	\item{cex}{
 		Controlling the font size of the text inside the plots
+	}
+	\item{thr}{
+		The threshold for confusion matrix
 	}
 	\item{...}{
 		Additional parameters for the \code{roc} function (\code{pROC} package)

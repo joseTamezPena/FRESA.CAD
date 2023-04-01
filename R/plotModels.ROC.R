@@ -1,5 +1,5 @@
 plotModels.ROC <-
-function(modelPredictions,number.of.models=0,specificities=c(0.975,0.95,0.90,0.80,0.70,0.60,0.50,0.40,0.30,0.20,0.10,0.05),theCVfolds=1,predictor="Prediction",cex=1.0,...) 
+function(modelPredictions,number.of.models=0,specificities=c(0.975,0.95,0.90,0.80,0.70,0.60,0.50,0.40,0.30,0.20,0.10,0.05),theCVfolds=1,predictor="Prediction",cex=1.0,thr=NULL,...) 
 {
 
 #	op <- par(no.readonly=TRUE);
@@ -57,11 +57,18 @@ function(modelPredictions,number.of.models=0,specificities=c(0.975,0.95,0.90,0.8
 		ensemblePrediction <- cbind(outcomesta$stats[3,],psta$stats[3,]);
 		rownames(ensemblePrediction) <- psta$names
 		colnames(ensemblePrediction) <- c("Outcome",predictor);
-		thres = 0.5
-		if (min(psta$stats[3,])<0) 
+		if (is.null(thr))
 		{
-			thres = 0;
-		}				
+			thres <- 0.5
+			if (min(psta$stats[3,])<0) 
+			{
+				thres <- 0;
+			}				
+		}
+		else
+		{
+			thres <- thr
+		}
 		dtable <- table(psta$stats[3,]<thres,1-outcomesta$stats[3,])
 		ley.names <- c(paste("Coherence (",sprintf("%.3f",auc1),")"));
 		ley.colors <- c("darkblue");
@@ -116,11 +123,18 @@ function(modelPredictions,number.of.models=0,specificities=c(0.975,0.95,0.90,0.8
 			ensemblePrediction <- cbind(outcomesta,psta);
 			rownames(ensemblePrediction) <- rownames(modelPredictions);
 			colnames(ensemblePrediction) <- c("Outcome",predictor);
-			thres = 0.5
-			if (min(psta)<0) 
+			if (is.null(thr))
 			{
-				thres = 0;
-			}				
+				thres <- 0.5
+				if (min(psta$stats[3,])<0) 
+				{
+					thres <- 0;
+				}				
+			}
+			else
+			{
+				thres <- thr
+			}
 			dtable <- table(psta<thres,1-outcomesta);
 			ley.names <- c(paste("Coherence (",sprintf("%.3f",auc1),")"));
 			ley.colors <- c("darkblue");
@@ -133,7 +147,7 @@ function(modelPredictions,number.of.models=0,specificities=c(0.975,0.95,0.90,0.8
 		{
 			rout <- pROC::roc(as.vector(modelPredictions[,1]),modelPredictions[,2],direction="<",quiet = TRUE);
 			specificities=seq(0, 1, .05);	
-			if (nrow(modelPredictions) < 2000)
+			if (nrow(modelPredictions) < 5000)
 			{
 				ci.sp.obj <- pROC::ci.sp(rout , sensitivities=seq(0, 1, .05), boot.n=100,progress= 'none',quiet = TRUE)
 				blindSen <- pROC::ci.se(rout , specificities=seq(0, 1, .05), boot.n=100,progress= 'none',quiet = TRUE)
@@ -146,11 +160,18 @@ function(modelPredictions,number.of.models=0,specificities=c(0.975,0.95,0.90,0.8
 				pROC::plot.roc(rout,grid=c(0.1, 0.1),grid.col=c("gray", "gray"),print.auc=FALSE,quiet = TRUE,...) 
 			}
 			auclist <- rout$auc;
-			thres = 0.5
-			if (min(modelPredictions[,2])<0) 
+			if (is.null(thr))
 			{
-				thres = 0;
-			}				
+				thres <- 0.5
+				if (min(modelPredictions[,2])<0) 
+				{
+					thres = 0;
+				}				
+			}
+			else
+			{
+				thres <- thr
+			}
 			dtable <- table(modelPredictions[,2]<thres,1-modelPredictions[,1]);
 			ley.names <- c(paste("AUC: ",sprintf("%.3f",rout$auc)));
 			ley.colors <- c("black");
