@@ -13,11 +13,11 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
   risksGreaterThanM <- risksGreaterThanM[order(risksGreaterThanM)]
   nobs <- length(risksGreaterThanM)
   RR <- numeric(nobs)
-  PPV <- numeric(nobs)
-  NPV <- numeric(nobs)
+  SEN <- numeric(nobs)
+  SPE <- numeric(nobs)
   isEvent <- riskData[names(risksGreaterThanM),1]
 #  print(head(isEvent))
-  Sensitivity <- numeric(nobs)
+  PPV <- numeric(nobs)
   idx <- 1;
   for (thr in risksGreaterThanM)
   {
@@ -27,9 +27,9 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
     LowEvents <- sum(riskData[atLowRisk,1])
     if (LowEvents==0) LowEvents <- 0.5;
     HighEvents <- sum(riskData[atHighRisk,1]);
-    PPV[idx] <-  HighEvents/numberofEvents;
-    NPV[idx] <- sum(riskData[atLowRisk,1]==0)/numberofNoEvents;
-    Sensitivity[idx] <- HighEvents/sum(atHighRisk)
+    SEN[idx] <-  HighEvents/numberofEvents;
+    SPE[idx] <- sum(riskData[atLowRisk,1]==0)/numberofNoEvents;
+    PPV[idx] <- HighEvents/sum(atHighRisk)
     LowFraction <- LowEvents/sum(atLowRisk);
     HighFraction <- HighEvents/sum(atHighRisk);
     if ((sum(atLowRisk)/numberofNoEvents) > 0.01)
@@ -53,26 +53,26 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
   colors <- heat.colors(10)
   pshape <- 2 + 14*isEvent
   
-  plot(PPV,RR,cex=(0.35 + Sensitivity),
+  plot(SEN,RR,cex=(0.35 + PPV),
        pch=pshape,
-       col=colors[1+floor(10*(1.0-NPV))],
+       col=colors[1+floor(10*(1.0-SPE))],
        xlim=c(0,1.15),
        ylim=c(1.0,ymax+0.5),
 #       log="y",
        main=title)
-  lfit <-loess(RR~PPV,span=0.5);
+  lfit <-loess(RR~SEN,span=0.5);
   plx <- predict(lfit,se=TRUE)
-  lines(PPV,plx$fit,lty=1)
-  lines(PPV,plx$fit - qt(0.975,plx$df)*plx$se, lty=2)
-  lines(PPV,plx$fit + qt(0.975,plx$df)*plx$se, lty=2)
+  lines(SEN,plx$fit,lty=1)
+  lines(SEN,plx$fit - qt(0.975,plx$df)*plx$se, lty=2)
+  lines(SEN,plx$fit + qt(0.975,plx$df)*plx$se, lty=2)
 
   legtxt <- sprintf("%3.1f",c(5:0)/5)
   colorlegend(heat.colors(10), legtxt,xlim=c(1.05,1.175),ylim=c((ymax-0.75)*0.45+1.0,ymax/10+1.0),cex=0.75)
-  text(1.075,1,"NPV")
+  text(1.075,1,"SPE")
   sizp <- c(5:1)/5.0 + 0.35
   legend("topright",legend=legtxt[1:5],pch=16,cex=sizp)
   legend("bottomleft",legend=c("No","Yes"),pch=c(2,16),cex=0.5)
-  text(0.95,ymax+0.5,"Sen->")
+  text(0.95,ymax+0.5,"PPV->")
 
 
   if (is.null(atThr))
@@ -83,34 +83,28 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
       if (atProb[2]>atProb[1])
       {
         thr_atP <- quantile(riskData[riskData[,1]==1,2],probs=c(1.0-atProb))
-#        print(thr_atP)
-  #      atProb <- atProb[2]
       }
-  #    atProb <- atProb[1]
     }
   }
   else
   {
     thr_atP <- atThr
   }
-#  print(thr_atP)
   
   lowRisk <- riskData[,2] < thr_atP[1]
   LowEventsFrac <- sum(riskData[lowRisk,1])/sum(lowRisk)
   HighEventsFrac <- sum(riskData[!lowRisk,1])/sum(!lowRisk)
-  precision=sum(riskData[!lowRisk,1])/numberofEvents
-  abline(v=precision,col="blue")
-  text(x=precision,y=ymax,sprintf("Index(%3.2f)=%4.3f",atProb[1],thr_atP[1]),pos=4 - 2*(precision>0.5) ,cex=0.7)
-  text(x=precision,y=0.9*(ymax-1.0)+1.0,
+  sensitivity=sum(riskData[!lowRisk,1])/numberofEvents
+  abline(v=sensitivity,col="blue")
+  text(x=sensitivity,y=ymax,sprintf("Index(%3.2f)=%4.3f",atProb[1],thr_atP[1]),pos=4 - 2*(sensitivity>0.5) ,cex=0.7)
+  text(x=sensitivity,y=0.9*(ymax-1.0)+1.0,
        sprintf("RR(%3.2f)=%4.3f",
-               precision,
-               predict(lfit,precision)),
-       pos=4 - 2*(precision>0.5),cex=0.7)
+               sensitivity,
+               predict(lfit,sensitivity)),
+       pos=4 - 2*(sensitivity>0.5),cex=0.7)
   minthr <- min(risksGreaterThanM)
   maxthr <- max(risksGreaterThanM)
   rangethr <- minthr + (10:0)/10*(maxthr-minthr);
-#  axis(3, at=c(0:10)/10,labels=round(rangethr,digits=2),line=0,outer=FALSE,col.axis="gray", las=1, cex.axis=0.7, tck=-.01)
-#  mtext("Index", side=3, line=0, cex.lab=0.5,las=1, col="gray")
   surfit <- NULL
   LogRankE <- NULL
 
@@ -162,15 +156,15 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
   result <- list(EventsThr=risksGreaterThanM,
                  isEvent=isEvent,
                  RR=RR,
+                 SEN=SEN,
+                 SPE=SPE,
                  PPV=PPV,
-                 NPV=NPV,
-                 Sensitivity=Sensitivity,
                  fit=lfit,
                  thr_atP=thr_atP,
-                 PPV_atP=precision,
+                 SEN_atP=sensitivity,
                  LowEventsFrac_atP=LowEventsFrac,
                  HighEventsFrac_atP=HighEventsFrac,
-                 RR_atP=predict(lfit,precision),
+                 RR_atP=predict(lfit,sensitivity),
                  surfit=surfit,
                  sufdif=surdif,
                  LogRankE=LogRankE
