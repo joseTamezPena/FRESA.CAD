@@ -83,7 +83,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
       if (atProb[2]>atProb[1])
       {
         thr_atP <- quantile(riskData[riskData[,1]==1,2],probs=c(1.0-atProb))
-        print(thr_atP)
+#        print(thr_atP)
   #      atProb <- atProb[2]
       }
   #    atProb <- atProb[1]
@@ -93,7 +93,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
   {
     thr_atP <- atThr
   }
-  print(thr_atP)
+#  print(thr_atP)
   
   lowRisk <- riskData[,2] < thr_atP[1]
   LowEventsFrac <- sum(riskData[lowRisk,1])/sum(lowRisk)
