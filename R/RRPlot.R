@@ -95,8 +95,9 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
   LowEventsFrac <- sum(riskData[lowRisk,1])/sum(lowRisk)
   HighEventsFrac <- sum(riskData[!lowRisk,1])/sum(!lowRisk)
   sensitivity=sum(riskData[!lowRisk,1])/numberofEvents
+  specificity=sum(riskData[lowRisk,1]==0)/numberofNoEvents
   abline(v=sensitivity,col="blue")
-  text(x=sensitivity,y=ymax,sprintf("Index(%3.2f)=%4.3f",atProb[1],thr_atP[1]),pos=4 - 2*(sensitivity>0.5) ,cex=0.7)
+  text(x=sensitivity,y=ymax,sprintf("Index(%3.2f)=%4.3f",specificity,thr_atP[1]),pos=4 - 2*(sensitivity>0.5) ,cex=0.7)
   text(x=sensitivity,y=0.9*(ymax-1.0)+1.0,
        sprintf("RR(%3.2f)=%4.3f",
                sensitivity,
