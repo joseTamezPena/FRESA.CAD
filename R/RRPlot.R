@@ -1,4 +1,4 @@
-RRPlot <-function(riskData=NULL,atProb=c(0.90,0.0),title="Relative Risk",timetoEvent=NULL,titleS="Kaplan-Meier",ysurvlim=c(0,1.0))
+RRPlot <-function(riskData=NULL,atProb=c(0.90,0.80),atThr=NULL,title="Relative Risk",timetoEvent=NULL,titleS="Kaplan-Meier",ysurvlim=c(0,1.0))
 {
 if (!requireNamespace("corrplot", quietly = TRUE)) {
 		install.packages("corrplot", dependencies = TRUE)
@@ -75,22 +75,32 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
   text(0.95,ymax+0.5,"Sen->")
 
 
-  thr_atP <- quantile(riskData[riskData[,1]==0,2],probs=c(atProb))
-  if (length(atProb)>1)
+  if (is.null(atThr))
   {
-    if (atProb[2]>0)
+    thr_atP <- quantile(riskData[riskData[,1]==0,2],probs=c(atProb))
+    if (length(atProb)>1)
     {
-      thr_atP <- quantile(riskData[riskData[,1]==1,2],probs=c(atProb[2]))
-      atProb <- atProb[2]
+      if (atProb[2]>atProb[1])
+      {
+        thr_atP <- quantile(riskData[riskData[,1]==1,2],probs=c(1.0-atProb))
+        print(thr_atP)
+  #      atProb <- atProb[2]
+      }
+  #    atProb <- atProb[1]
     }
-    atProb <- atProb[1]
   }
-  lowRisk <- riskData[,2] < thr_atP
+  else
+  {
+    thr_atP <- atThr
+  }
+  print(thr_atP)
+  
+  lowRisk <- riskData[,2] < thr_atP[1]
   LowEventsFrac <- sum(riskData[lowRisk,1])/sum(lowRisk)
   HighEventsFrac <- sum(riskData[!lowRisk,1])/sum(!lowRisk)
   precision=sum(riskData[!lowRisk,1])/numberofEvents
   abline(v=precision,col="blue")
-  text(x=precision,y=ymax,sprintf("Index(%3.2f)=%4.3f",atProb,thr_atP),pos=4 - 2*(precision>0.5) ,cex=0.7)
+  text(x=precision,y=ymax,sprintf("Index(%3.2f)=%4.3f",atProb[1],thr_atP[1]),pos=4 - 2*(precision>0.5) ,cex=0.7)
   text(x=precision,y=0.9*(ymax-1.0)+1.0,
        sprintf("RR(%3.2f)=%4.3f",
                precision,
@@ -107,11 +117,21 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
   if (!is.null(timetoEvent))
   {
       timetoEventData <- as.data.frame(cbind(event=riskData[,1],
-                           class=1*(riskData[,2]>=thr_atP),
+                           class=1*(riskData[,2]>=thr_atP[1]),
                            time=timetoEvent))
+      if (length(thr_atP)>1)
+      {
+        timetoEventData$class <- 1*(riskData[,2]>=thr_atP[1]) + 1*(riskData[,2]>=thr_atP[2])
+      }
     
-      labelsplot <- c("Low",sprintf("At Risk > %5.3f",thr_atP));
-      paletteplot <- c("#00bbff", "#ff0000")
+      labelsplot <- c("Low",sprintf("At Risk > %5.3f",thr_atP[1]));
+      paletteplot <- c("green", "red")
+      if (length(thr_atP)>1)
+      {
+        labelsplot <- c("Low",sprintf("%5.3f <= Risk < %5.3f",thr_atP[2],thr_atP[1]),
+                        sprintf("Risk >= %5.3f",thr_atP[1]));
+        paletteplot <- c("green", "cyan","red")
+      }
       
       LogRankE <- EmpiricalSurvDiff(times=timetoEventData$time,
                   status=timetoEventData$event,
