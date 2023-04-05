@@ -2,24 +2,28 @@
 \alias{RRPlot}
 \title{Plot and Analysis of Indices of Risk}
 \description{
-	Given a list of the probabilities of risks per subject, the function will plot the risk ratios as a function of Positive predictive values (PPV)
+	Given a list of the probabilities of risks per subject, the function will plot the risk ratios as a function of sensitivity
 }
-
-RRPlot(riskData=NULL,atProb=0.90,title="Relative Risk",timetoEvent=NULL,titleS="Kaplan-Meier")
 
 \usage{
 	RRPlot(riskData=NULL,
-	atProb=0.90,
+	atProb=c(0.90,0.80),
+	atThr=NULL,
 	title="Relative Risk",
 	timetoEvent=NULL,
-	titleS="Kaplan-Meier")	
+	titleS="Kaplan-Meier",
+	ysurvlim=c(0,1.0)
+	)	
 }
 \arguments{
 	\item{riskData}{
 	The data frame with two columns: Subjects with event, Probability of Future Event
 	}
 	\item{atProb}{
-	The desired negative predictive value of the computed risk at threshold
+	The desired specificity or sensitivity of the computed risk at threshold
+	}
+	\item{atThr}{
+	The risk threshold
 	}
 	\item{title}{
 	The title of the plot
@@ -29,6 +33,9 @@ RRPlot(riskData=NULL,atProb=0.90,title="Relative Risk",timetoEvent=NULL,titleS="
 	}
 	\item{titleS}{
 	The title of the Kaplan-Meier plot
+	}
+	\item{ysurvlim}{
+	The y limits of the survival plot
 	}
 }
 
@@ -46,14 +53,14 @@ RRPlot(riskData=NULL,atProb=0.90,title="Relative Risk",timetoEvent=NULL,titleS="
 	\item{RR}{
 		The RR for every possible threshold
 	}
+	\item{SEN}{
+		The sensitvity values for every threshold
+	}
+	\item{SPE}{
+		The specificity value for every threshold
+	}
 	\item{PPV}{
-		The positive predictive values for every threshold
-	}
-	\item{NPV}{
-		The negative predictive value for every threshold
-	}
-	\item{Sensitivity}{
-		The sensitivity for every threshold
+		The Positive Predictive value for every threshold
 	}
 	\item{fit}{
 		The loess fit 
@@ -62,7 +69,7 @@ RRPlot(riskData=NULL,atProb=0.90,title="Relative Risk",timetoEvent=NULL,titleS="
 		The p-value that contains atProb of the negative subjects
 	}
 	\item{PPV_atP}{
-		The precession at the threshold
+		The sensitivity at the threshold
 	}
 	\item{LowEventsFrac_atP}{
 		The fraction of subjects at low risk
@@ -76,8 +83,11 @@ RRPlot(riskData=NULL,atProb=0.90,title="Relative Risk",timetoEvent=NULL,titleS="
 	\item{surfit}{
 		The survival fit object
 	}
+	\item{sufdif}{
+		The logrank test analysis
+	}
 	\item{LogRankE}{
-		The p-value of the logrank test
+		The bootstreped p-value of the logrank test
 	}
 }
 
