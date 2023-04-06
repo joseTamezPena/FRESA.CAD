@@ -58,15 +58,59 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
     netBenefit[idx] <- (HighEvents - sum(riskData[atHighRisk,1]==0)*pthr[idx]/(1.0001-pthr[idx]))/totobs;
     idx <- idx + 1;
   }
-  ymax <- quantile(RR,probs=c(0.99))
   colors <- heat.colors(10)
-  pshape <- 2 + 14*isEvent
   
   if ((mithr>=0) && (mxthr<=1.0))
   {
-    plot(thrs,netBenefit,main="DCA",ylab="Net Benefit",xlab="Threshold",pch=pshape,col=(pshape-1))
-    legend("topright",legend=c("No Event","Event"),pch=c(2,16),col=c(1,15))
+    ## Calibration plot
+    tmop <- par(no.readonly = TRUE)
+    par(pty='s')
+    xdata <- riskData[order(-riskData[,2]),]
+    observed <- numeric(nrow(xdata))
+    expected <- numeric(nrow(xdata))
+    observed[1] <- xdata[1,1]
+    expected[1] <- xdata[1,2]
+    for (idx in c(2:nrow(xdata)))
+    {
+      expected[idx] <- expected[idx-1]+xdata[idx,2]
+      observed[idx] <- observed[idx-1]+xdata[idx,1]
+    }
+    maxobs <- max(c(observed,expected))
+    plot(expected,observed,
+         xlim=c(0,maxobs),
+         ylim=c(0,maxobs),
+         main="Calibration Plot")
+    lines(x=c(0,maxobs),y=c(0,maxobs),lty=2)
+    par(tmop)
+    
+    ## Decision curve analysis
+    pshape <- 4 + 12*isEvent
+    pre=numberofEvents/totobs
+    xmax <- quantile(thrs,probs=c(0.99))
+    plot(thrs,netBenefit,main="Decision Curve Analysis",ylab="Net Benefit",xlab="Threshold",
+         ylim=c(min(netBenefit),pre),
+         xlim=c(0,xmax),
+         pch=pshape,col=colors[1+floor(10*(1.0-SPE))],cex=(0.35 + isEvent))
+    lfit <-loess(netBenefit~thrs,span=0.25);
+    plx <- predict(lfit,se=TRUE)
+    lines(thrs,plx$fit,lty=1)
+    lines(thrs,plx$fit - qt(0.975,plx$df)*plx$se, lty=2)
+    lines(thrs,plx$fit + qt(0.975,plx$df)*plx$se, lty=2)
+    abline(h=0,col="blue")
+    lines(x=c(0,pre),y=c(pre,0),col="red")
+    legtxt <- sprintf("%3.1f",c(5:0)/5)
+    colorlegend(heat.colors(10), legtxt,xlim=c(0.92*xmax,0.98*xmax),ylim=c(pre*0.45,pre*0.1),cex=0.75)
+    text(0.92*xmax,pre*0.5,"SEN")
+    
+    legend("topright",legend=c("No Event","Event"),
+           pch=c(4,16),
+           col=c(1,1))
+    legend("bottomleft",legend=c("Treat All","Do Nothing"),
+           lty=c(1,1),
+           col=c("red","blue"),cex=0.5)
   }
+  ymax <- quantile(RR,probs=c(0.99))
+  pshape <- 2 + 14*isEvent
   plot(SEN,RR,cex=(0.35 + PPV),
        pch=pshape,
        col=colors[1+floor(10*(1.0-SPE))],
@@ -127,12 +171,16 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
   {
       timetoEventData <- as.data.frame(cbind(event=riskData[,1],
                            class=1*(riskData[,2]>=thr_atP[1]),
-                           time=timetoEvent))
+                           time=timetoEvent,
+                           risk=riskData[,2])
+                           )
       if (length(thr_atP)>1)
       {
         timetoEventData$class <- 1*(riskData[,2]>=thr_atP[1]) + 1*(riskData[,2]>=thr_atP[2])
       }
     
+ 
+      ## Survival plot
       labelsplot <- c("Low",sprintf("At Risk > %5.3f",thr_atP[1]));
       paletteplot <- c("green", "red")
       if (length(thr_atP)>1)
@@ -141,7 +189,6 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
                         sprintf("Risk >= %5.3f",thr_atP[1]));
         paletteplot <- c("green", "cyan","red")
       }
-      
       LogRankE <- EmpiricalSurvDiff(times=timetoEventData$time,
                   status=timetoEventData$event,
                   groups=timetoEventData$class,
