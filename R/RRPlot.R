@@ -1,5 +1,6 @@
 RRPlot <-function(riskData=NULL,atProb=c(0.90,0.80),atThr=NULL,title="Relative Risk",timetoEvent=NULL,titleS="Kaplan-Meier",ysurvlim=c(0,1.0))
 {
+  totobs <- nrow(riskData)
 if (!requireNamespace("corrplot", quietly = TRUE)) {
 		install.packages("corrplot", dependencies = TRUE)
 		}
@@ -19,6 +20,11 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
 #  print(head(isEvent))
   PPV <- numeric(nobs)
   idx <- 1;
+  netBenefit <- numeric(nobs)
+  pthr <- numeric(nobs)
+  thrs <- numeric(nobs)
+  mxthr <- max(riskData[,2])
+  mithr <- min(riskData[,2])
   for (thr in risksGreaterThanM)
   {
     
@@ -47,12 +53,20 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
         RR[idx] <- 1.0;
       }
     }
+    pthr[idx] <- thr
+    thrs[idx] <- thr
+    netBenefit[idx] <- (HighEvents - sum(riskData[atHighRisk,1]==0)*pthr[idx]/(1.0001-pthr[idx]))/totobs;
     idx <- idx + 1;
   }
   ymax <- quantile(RR,probs=c(0.99))
   colors <- heat.colors(10)
   pshape <- 2 + 14*isEvent
   
+  if ((mithr>=0) && (mxthr<=1.0))
+  {
+    plot(thrs,netBenefit,main="DCA",ylab="Net Benefit",xlab="Threshold",pch=pshape,col=(pshape-1))
+    legend("topright",legend=c("No Event","Event"),pch=c(2,16),col=c(1,15))
+  }
   plot(SEN,RR,cex=(0.35 + PPV),
        pch=pshape,
        col=colors[1+floor(10*(1.0-SPE))],
