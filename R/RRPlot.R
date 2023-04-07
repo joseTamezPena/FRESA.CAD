@@ -1,4 +1,4 @@
-RRPlot <-function(riskData=NULL,atProb=c(0.90,0.80),atThr=NULL,title="Relative Risk",timetoEvent=NULL,titleS="Kaplan-Meier",ysurvlim=c(0,1.0))
+RRPlot <-function(riskData=NULL,atProb=c(0.90,0.80),atThr=NULL,title="",timetoEvent=NULL,ysurvlim=c(0,1.0))
 {
   totobs <- nrow(riskData)
 if (!requireNamespace("corrplot", quietly = TRUE)) {
@@ -62,7 +62,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
   
   if ((mithr>=0) && (mxthr<=1.0))
   {
-    ## Calibration plot
+    ## Observed vs Expected plot
     tmop <- par(no.readonly = TRUE)
     par(pty='s')
     xdata <- riskData[order(-riskData[,2]),]
@@ -77,9 +77,14 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
     }
     maxobs <- max(c(observed,expected))
     plot(expected,observed,
+         ylab="Observed",
+         xlab="Expected",
          xlim=c(0,maxobs),
          ylim=c(0,maxobs),
-         main="Calibration Plot")
+         main=paste("Expected vs. Observed:",title),
+         pch=c(5+14*xdata[,1]),
+         col=c(1+xdata[,1]),
+         cex=c(0.2+xdata[,1]))
     lines(x=c(0,maxobs),y=c(0,maxobs),lty=2)
     par(tmop)
     
@@ -87,10 +92,10 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
     pshape <- 4 + 12*isEvent
     pre=numberofEvents/totobs
     xmax <- quantile(thrs,probs=c(0.99))
-    plot(thrs,netBenefit,main="Decision Curve Analysis",ylab="Net Benefit",xlab="Threshold",
+    plot(thrs,netBenefit,main=paste("Decision Curve Analysis:",title),ylab="Net Benefit",xlab="Threshold",
          ylim=c(min(netBenefit),pre),
          xlim=c(0,xmax),
-         pch=pshape,col=colors[1+floor(10*(1.0-SPE))],cex=(0.35 + isEvent))
+         pch=pshape,col=colors[1+floor(10*(1.0-SEN))],cex=(0.35 + isEvent))
     lfit <-loess(netBenefit~thrs,span=0.25);
     plx <- predict(lfit,se=TRUE)
     lines(thrs,plx$fit,lty=1)
@@ -105,10 +110,12 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
     legend("topright",legend=c("No Event","Event"),
            pch=c(4,16),
            col=c(1,1))
-    legend("bottomleft",legend=c("Treat All","Do Nothing"),
+    legend("bottomleft",legend=c("Treat All","Treat None"),
            lty=c(1,1),
            col=c("red","blue"),cex=0.5)
   }
+  ## Relative Risk plot
+  
   ymax <- quantile(RR,probs=c(0.99))
   pshape <- 2 + 14*isEvent
   plot(SEN,RR,cex=(0.35 + PPV),
@@ -117,7 +124,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
        xlim=c(0,1.15),
        ylim=c(1.0,ymax+0.5),
 #       log="y",
-       main=title)
+       main=paste("Relative Risk:",title))
   lfit <-loess(RR~SEN,span=0.5);
   plx <- predict(lfit,se=TRUE)
   lines(SEN,plx$fit,lty=1)
@@ -169,6 +176,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
 
   if (!is.null(timetoEvent))
   {
+    ## Survival Plot
       timetoEventData <- as.data.frame(cbind(event=riskData[,1],
                            class=1*(riskData[,2]>=thr_atP[1]),
                            time=timetoEvent,
@@ -192,7 +200,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
       LogRankE <- EmpiricalSurvDiff(times=timetoEventData$time,
                   status=timetoEventData$event,
                   groups=timetoEventData$class,
-                  plots=FALSE,main=titleS)
+                  plots=FALSE,main=paste("Kaplan-Meier:",title))
       
       surfit <- survival::survfit(Surv(time,event)~class,data = timetoEventData)
       surdif <- survival::survdiff(Surv(time,event)~class,data = timetoEventData)
@@ -206,7 +214,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
                                      ggtheme = ggplot2::theme_bw() + 
                                        ggplot2::theme(plot.title = ggplot2::element_text(
                                          hjust = 0.5, face = "bold", size = 20)),
-                      title = titleS,
+                      title = paste("Kaplan-Meier:",title),
                       risk.table = TRUE,
                       tables.height = 0.2,
                       tables.theme = survminer::theme_cleantable())
