@@ -1,4 +1,4 @@
-RRPlot <-function(riskData=NULL,atProb=c(0.90,0.80),atThr=NULL,title="",timetoEvent=NULL,ysurvlim=c(0,1.0))
+RRPlot <-function(riskData=NULL,atProb=c(0.90,0.80),atThr=NULL,title="",timetoEvent=NULL,ysurvlim=c(0,1.0),riskRefTime=NULL)
 {
   totobs <- nrow(riskData)
 if (!requireNamespace("corrplot", quietly = TRUE)) {
@@ -187,7 +187,32 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
         timetoEventData$class <- 1*(riskData[,2]>=thr_atP[1]) + 1*(riskData[,2]>=thr_atP[2])
       }
     
- 
+      ## Time Plot
+      atEventData <- subset(timetoEventData,event==1)
+      atEventData <- atEventData[order(atEventData$time),]
+      maxtime <- max(atEventData$time)
+      if (!is.null(riskRefTime))
+      {
+        maxtime <- riskRefTime
+      }
+      Observed <- numeric(nrow(atEventData))
+      Expected <- numeric(nrow(atEventData))
+      timed <- numeric(nrow(atEventData))
+      for (idx in c(1:nrow(atEventData)))
+      {
+        timed[idx] <- atEventData[idx,"time"]
+        Observed[idx] <- idx
+        Expected[idx] <- sum(timetoEventData$risk*timed[idx])/maxtime;
+      }
+      maxevents <- max(c(Observed,Expected))
+      plot(timed,Expected,pch=4,type="b",
+           main=paste("Time vs. Events:",title),
+           ylab="Events",
+           xlab="Time",
+           ylim=c(0,maxevents),
+           xlim=c(0,maxtime))
+      points(timed,Observed,pch=1)
+      legend("topleft",legend=c("Expected","Observed"),pch=c(4,1),lty=c(1,0))
       ## Survival plot
       labelsplot <- c("Low",sprintf("At Risk > %5.3f",thr_atP[1]));
       paletteplot <- c("green", "red")
