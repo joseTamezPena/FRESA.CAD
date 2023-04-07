@@ -59,6 +59,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
     idx <- idx + 1;
   }
   colors <- heat.colors(10)
+  rgbcolors <- rainbow(10)
   
   if ((mithr>=0) && (mxthr<=1.0))
   {
@@ -95,7 +96,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
     plot(thrs,netBenefit,main=paste("Decision Curve Analysis:",title),ylab="Net Benefit",xlab="Threshold",
          ylim=c(min(netBenefit),pre),
          xlim=c(0,xmax),
-         pch=pshape,col=colors[1+floor(10*(1.0-SEN))],cex=(0.35 + isEvent))
+         pch=pshape,col=rgbcolors[1+floor(10*(1.0-SEN))],cex=(0.35 + isEvent))
     lfit <-loess(netBenefit~thrs,span=0.25);
     plx <- predict(lfit,se=TRUE)
     lines(thrs,plx$fit,lty=1)
@@ -104,12 +105,13 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
     abline(h=0,col="blue")
     lines(x=c(0,pre),y=c(pre,0),col="red")
     legtxt <- sprintf("%3.1f",c(5:0)/5)
-    colorlegend(heat.colors(10), legtxt,xlim=c(0.92*xmax,0.98*xmax),ylim=c(pre*0.45,pre*0.1),cex=0.75)
+    colorlegend(rgbcolors, legtxt,xlim=c(0.92*xmax,0.98*xmax),ylim=c(pre*0.45,pre*0.1),cex=0.75)
     text(0.92*xmax,pre*0.5,"SEN")
     
     legend("topright",legend=c("No Event","Event"),
            pch=c(4,16),
-           col=c(1,1))
+           col=c(1,1)
+           )
     legend("bottomleft",legend=c("Treat All","Treat None"),
            lty=c(1,1),
            col=c("red","blue"),cex=0.5)
@@ -199,15 +201,19 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
       Observed <- numeric(nrow(atEventData))
       Expected <- numeric(nrow(atEventData))
       timed <- numeric(nrow(atEventData))
+      passAcum <- 0;
       for (idx in c(1:nrow(atEventData)))
       {
         timed[idx] <- atEventData[idx,"time"]
         Observed[idx] <- idx
-        Expected[idx] <- sum(aliveEvents$risk*timed[idx])/maxtime;
-        aliveEvents <- aliveEvents[rownames(aliveEvents) != rownames(atEventData)[idx],]
+        Expected[idx] <- passAcum+sum(aliveEvents$risk*timed[idx])/maxtime;
+        pssEvents <- subset(aliveEvents,time<=timed[idx])
+        aliveEvents <- subset(aliveEvents,time>timed[idx])
+        passAcum <- passAcum+sum(pssEvents$risk*timed[idx])/maxtime;
+#        print(c(nrow(pssEvents),passAcum))
       }
       maxevents <- max(c(Observed,Expected))
-      plot(timed,Expected,pch=4,type="b",
+      plot(timed,Expected,pch=4,type="b",cex=0.5,
            main=paste("Time vs. Events:",title),
            ylab="Events",
            xlab="Time",
