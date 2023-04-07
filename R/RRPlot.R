@@ -62,7 +62,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
   
   if ((mithr>=0) && (mxthr<=1.0))
   {
-    ## Observed vs Expected plot
+    ## Observed vs Cumulative plot
     tmop <- par(no.readonly = TRUE)
     par(pty='s')
     xdata <- riskData[order(-riskData[,2]),]
@@ -78,10 +78,10 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
     maxobs <- max(c(observed,expected))
     plot(expected,observed,
          ylab="Observed",
-         xlab="Expected",
+         xlab="Cumulative Risk",
          xlim=c(0,maxobs),
          ylim=c(0,maxobs),
-         main=paste("Expected vs. Observed:",title),
+         main=paste("Cumulative vs. Observed:",title),
          pch=c(5+14*xdata[,1]),
          col=c(1+xdata[,1]),
          cex=c(0.2+xdata[,1]))
