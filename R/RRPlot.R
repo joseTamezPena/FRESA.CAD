@@ -188,6 +188,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
       }
     
       ## Time Plot
+      aliveEvents <- timetoEventData
       atEventData <- subset(timetoEventData,event==1)
       atEventData <- atEventData[order(atEventData$time),]
       maxtime <- max(atEventData$time)
@@ -202,7 +203,8 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
       {
         timed[idx] <- atEventData[idx,"time"]
         Observed[idx] <- idx
-        Expected[idx] <- sum(timetoEventData$risk*timed[idx])/maxtime;
+        Expected[idx] <- sum(aliveEvents$risk*timed[idx])/maxtime;
+        aliveEvents <- aliveEvents[rownames(aliveEvents) != rownames(atEventData)[idx],]
       }
       maxevents <- max(c(Observed,Expected))
       plot(timed,Expected,pch=4,type="b",
