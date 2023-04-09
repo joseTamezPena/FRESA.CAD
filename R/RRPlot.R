@@ -258,6 +258,8 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
   
   result <- list(EventsThr=risksGreaterThanM,
                  isEvent=isEvent,
+                 thrs=thrs,
+                 netBenefit=netBenefit,
                  RR=RR,
                  SEN=SEN,
                  SPE=SPE,
