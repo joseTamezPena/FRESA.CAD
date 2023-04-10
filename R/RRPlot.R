@@ -1,4 +1,4 @@
-RRPlot <-function(riskData=NULL,atProb=c(0.90,0.80),atThr=NULL,title="",timetoEvent=NULL,ysurvlim=c(0,1.0),riskRefTime=NULL)
+RRPlot <-function(riskData=NULL,atProb=c(0.90,0.80),atThr=NULL,title="",timetoEvent=NULL,ysurvlim=c(0,1.0),riskTimeInterval=NULL)
 {
   totobs <- nrow(riskData)
 if (!requireNamespace("corrplot", quietly = TRUE)) {
@@ -60,6 +60,10 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
   }
   colors <- heat.colors(10)
   rgbcolors <- rainbow(10)
+  CumulativeOvs <- NULL
+  DCA <- NULL
+  OEData <- NULL
+  pre=numberofEvents/totobs
   
   if ((mithr>=0) && (mxthr<=1.0))
   {
@@ -76,6 +80,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
       expected[idx] <- expected[idx-1]+xdata[idx,2]
       observed[idx] <- observed[idx-1]+xdata[idx,1]
     }
+    CumulativeOvs <- cbind(Observed=observed,Cumulative=expected)
     maxobs <- max(c(observed,expected))
     plot(expected,observed,
          ylab="Observed",
@@ -91,8 +96,8 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
     
     ## Decision curve analysis
     pshape <- 4 + 12*isEvent
-    pre=numberofEvents/totobs
     xmax <- quantile(thrs,probs=c(0.99))
+    DCA <- cbind(Thrs=thrs,NetBenefit=netBenefit)
     plot(thrs,netBenefit,main=paste("Decision Curve Analysis:",title),ylab="Net Benefit",xlab="Threshold",
          ylim=c(min(netBenefit),pre),
          xlim=c(0,xmax),
@@ -120,6 +125,8 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
   
   ymax <- quantile(RR,probs=c(0.99))
   pshape <- 2 + 14*isEvent
+  RRData <- cbind(risksGreaterThanM,Sensitivity=SEN,Specificity=SPE,PPV=PPV,RR=RR,isEvent=isEvent)
+  rownames(RRData) <- names(risksGreaterThanM)
   plot(SEN,RR,cex=(0.35 + PPV),
        pch=pshape,
        col=colors[1+floor(10*(1.0-SPE))],
@@ -170,15 +177,18 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
                sensitivity,
                predict(lfit,sensitivity)),
        pos=4 - 2*(sensitivity>0.5),cex=0.7)
-  minthr <- min(risksGreaterThanM)
-  maxthr <- max(risksGreaterThanM)
-  rangethr <- minthr + (10:0)/10*(maxthr-minthr);
+
+  ## ROC At threshold
+  ROCAnalysis <- predictionStats_binary(riskData,
+                                        plotname=paste("ROC:",title),
+                                        thr=thr_atP[1])
+  par(tmop)
   surfit <- NULL
   LogRankE <- NULL
+  
 
   if (!is.null(timetoEvent))
   {
-    ## Survival Plot
       timetoEventData <- as.data.frame(cbind(event=riskData[,1],
                            class=1*(riskData[,2]>=thr_atP[1]),
                            time=timetoEvent,
@@ -194,9 +204,10 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
       atEventData <- subset(timetoEventData,event==1)
       atEventData <- atEventData[order(atEventData$time),]
       maxtime <- max(atEventData$time)
-      if (!is.null(riskRefTime))
+      timeInterval <- maxtime
+      if (!is.null(riskTimeInterval))
       {
-        maxtime <- riskRefTime
+        timeInterval <- riskTimeInterval
       }
       Observed <- numeric(nrow(atEventData))
       Expected <- numeric(nrow(atEventData))
@@ -206,19 +217,29 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
       {
         timed[idx] <- atEventData[idx,"time"]
         Observed[idx] <- idx
-        Expected[idx] <- passAcum+sum(aliveEvents$risk*timed[idx])/maxtime;
+        roevent <- aliveEvents$risk*timed[idx]/timeInterval
+        roevent[roevent>1] <- 1
+#        Expected[idx] <- sum(roevent);
+        Expected[idx] <- passAcum+sum(roevent);
         pssEvents <- subset(aliveEvents,time<=timed[idx])
         aliveEvents <- subset(aliveEvents,time>timed[idx])
-        passAcum <- passAcum+sum(pssEvents$risk*timed[idx])/maxtime;
+        passAcum <- passAcum+sum(pssEvents$risk*timed[idx])/timeInterval;
 #        print(c(nrow(pssEvents),passAcum))
       }
+      totObserved <- max(Observed)
       maxevents <- max(c(Observed,Expected))
+      OEData <- cbind(Observed,Expected)
+
+      observedCI <- poisson.test(totObserved, conf.level = 0.95 )
+      OERatio <- c(totObserved,observedCI$conf.int)/max(Expected)
+      names(OERatio) <- c("OE","Low95CI","Hi95CI")
+
       plot(timed,Expected,pch=4,type="b",cex=0.5,
            main=paste("Time vs. Events:",title),
            ylab="Events",
            xlab="Time",
-           ylim=c(0,maxevents),
-           xlim=c(0,maxtime))
+           ylim=c(0,1.05*maxevents),
+           xlim=c(0,1.05*maxtime))
       points(timed,Observed,pch=1)
       legend("topleft",legend=c("Expected","Observed"),pch=c(4,1),lty=c(1,0))
       ## Survival plot
@@ -256,15 +277,14 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
 
   }
   
-  result <- list(EventsThr=risksGreaterThanM,
-                 isEvent=isEvent,
-                 thrs=thrs,
-                 netBenefit=netBenefit,
-                 RR=RR,
-                 SEN=SEN,
-                 SPE=SPE,
-                 PPV=PPV,
+  result <- list(CumulativeOvs=CumulativeOvs,
+                 OEData=OEData,
+                 DCA=DCA,
+                 RRData=RRData,
+                 OERatio=OERatio,
                  fit=lfit,
+                 ROCAnalysis=ROCAnalysis,
+                 prevalence=pre,
                  thr_atP=thr_atP,
                  SEN_atP=sensitivity,
                  LowEventsFrac_atP=LowEventsFrac,

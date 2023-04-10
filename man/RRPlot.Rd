@@ -5,14 +5,16 @@
 	Given a list of the probabilities of risks per subject, the function will plot the risk ratios as a function of sensitivity
 }
 
+riskData=NULL,atProb=c(0.90,0.80),atThr=NULL,title="",timetoEvent=NULL,ysurvlim=c(0,1.0),riskTimeInterval=NULL
+
 \usage{
 	RRPlot(riskData=NULL,
 	atProb=c(0.90,0.80),
 	atThr=NULL,
 	title="Relative Risk",
 	timetoEvent=NULL,
-	titleS="Kaplan-Meier",
-	ysurvlim=c(0,1.0)
+	ysurvlim=c(0,1.0),
+	riskTimeInterval=NULL
 	)	
 }
 \arguments{
@@ -31,11 +33,11 @@
 	\item{timetoEvent}{
 	The time to event vector
 	}
-	\item{titleS}{
-	The title of the Kaplan-Meier plot
-	}
 	\item{ysurvlim}{
 	The y limits of the survival plot
+	}
+	\item{riskTimeInterval}{
+	The time interval of the risk estimations
 	}
 }
 
@@ -44,32 +46,29 @@
  }
 
 \value{
-	\item{EventsThr}{
-	The explored thresholds
+	\item{CumulativeOvs}{
+		Matrix with the Cumulative and Observed Events
 	}
-	\item{isEvent}{
-		The list of events per threshold values
+	\item{OEData}{
+		Matrix with the Estimated and Observed Events
 	}
-	\item{RR}{
-		The RR for every possible threshold
+	\item{DCA}{
+		Decision Curve Analysis data matrix
 	}
-	\item{SEN}{
-		The sensitvity values for every threshold
-	}
-	\item{SPE}{
-		The specificity value for every threshold
-	}
-	\item{PPV}{
-		The Positive Predictive value for every threshold
+	\item{RRData}{
+		The risk ratios data matrix for the ploted observations
 	}
 	\item{fit}{
-		The loess fit 
+		The loess fit of the Risk Ratios
+	}
+	\item{prevalence}{
+		The prevalence of events
 	}
 	\item{thr_atP}{
 		The p-value that contains atProb of the negative subjects
 	}
-	\item{PPV_atP}{
-		The sensitivity at the threshold
+	\item{SEN_atP}{
+		The observed sensitivity at threshold
 	}
 	\item{LowEventsFrac_atP}{
 		The fraction of subjects at low risk
@@ -78,7 +77,7 @@
 		The fraction of subjects at high risk
 	}
 	\item{RR_atP}{
-		The estimated RR based on the loess fit
+		The fraction of subjects at high risk
 	}
 	\item{surfit}{
 		The survival fit object
