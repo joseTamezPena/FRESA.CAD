@@ -58,6 +58,9 @@ riskData=NULL,atProb=c(0.90,0.80),atThr=NULL,title="",timetoEvent=NULL,ysurvlim=
 	\item{RRData}{
 		The risk ratios data matrix for the ploted observations
 	}
+	\item{OERatio}{
+		The Observed/Expected ratio with 95CI
+	}
 	\item{fit}{
 		The loess fit of the Risk Ratios
 	}
