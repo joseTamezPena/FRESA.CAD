@@ -1,4 +1,4 @@
-RRPlot <-function(riskData=NULL,atProb=c(0.90,0.80),atThr=NULL,title="",timetoEvent=NULL,ysurvlim=c(0,1.0),riskTimeInterval=NULL)
+RRPlot <-function(riskData=NULL,atProb=c(0.90,0.80),atThr=NULL,title="",timetoEvent=NULL,ysurvlim=c(0,1.0),riskTimeInterval=NULL,ExpectedPrevalence=NULL)
 {
   totobs <- nrow(riskData)
 if (!requireNamespace("corrplot", quietly = TRUE)) {
@@ -7,6 +7,20 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
         
   numberofEvents <- sum(riskData[,1])
   numberofNoEvents <- sum(riskData[,1]==0)
+  
+  samplePrevalence <- numberofEvents/totobs;
+  ExpectedNoEventsGain <- 1.0
+  pre <- samplePrevalence
+  
+  if (!is.null(ExpectedPrevalence))
+  {
+    ExpectedNoEvents <- (1.0-ExpectedPrevalence)*totobs*samplePrevalence/ExpectedPrevalence
+    ExpectedNoEventsGain <- ExpectedNoEvents/numberofNoEvents
+  }
+  else
+  {
+    ExpectedPrevalence <- samplePrevalence
+  }
   
   minRiskAtEvent <- min(riskData[riskData[,1]==1,2])
   risksGreaterThanM <- riskData[riskData[,2] >= minRiskAtEvent,2]
@@ -55,7 +69,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
     }
     pthr[idx] <- thr
     thrs[idx] <- thr
-    netBenefit[idx] <- (HighEvents - sum(riskData[atHighRisk,1]==0)*pthr[idx]/(1.0001-pthr[idx]))/totobs;
+    netBenefit[idx] <- (HighEvents - ExpectedNoEventsGain*sum(riskData[atHighRisk,1]==0)*pthr[idx]/(1.0001-pthr[idx]))/totobs;
     idx <- idx + 1;
   }
   colors <- heat.colors(10)
@@ -63,7 +77,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
   CumulativeOvs <- NULL
   DCA <- NULL
   OEData <- NULL
-  pre=numberofEvents/totobs
+
   
   if ((mithr>=0) && (mxthr<=1.0))
   {
@@ -77,8 +91,15 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
     expected[1] <- xdata[1,2]
     for (idx in c(2:nrow(xdata)))
     {
-      expected[idx] <- expected[idx-1]+xdata[idx,2]
-      observed[idx] <- observed[idx-1]+xdata[idx,1]
+      if (xdata[idx,1]==1)
+      {
+        expected[idx] <- expected[idx-1]+xdata[idx,2];
+      }
+      else
+      {
+        expected[idx] <- expected[idx-1]+xdata[idx,2]*ExpectedNoEventsGain;
+      }
+      observed[idx] <- observed[idx-1]+xdata[idx,1];
     }
     CumulativeOvs <- cbind(Observed=observed,Cumulative=expected)
     maxobs <- max(c(observed,expected))
@@ -108,7 +129,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
     lines(thrs,plx$fit - qt(0.975,plx$df)*plx$se, lty=2)
     lines(thrs,plx$fit + qt(0.975,plx$df)*plx$se, lty=2)
     abline(h=0,col="blue")
-    lines(x=c(0,pre),y=c(pre,0),col="red")
+    lines(x=c(0,ExpectedPrevalence),y=c(pre,0),col="red")
     legtxt <- sprintf("%3.1f",c(5:0)/5)
     colorlegend(rgbcolors, legtxt,xlim=c(0.92*xmax,0.98*xmax),ylim=c(pre*0.45,pre*0.1),cex=0.75)
     text(0.92*xmax,pre*0.5,"SEN")
@@ -219,9 +240,11 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
         Observed[idx] <- idx
         roevent <- aliveEvents$risk*timed[idx]/timeInterval
         roevent[roevent>1] <- 1
-#        Expected[idx] <- sum(roevent);
+        roevent[aliveEvents$event==0] <- roevent[aliveEvents$event==0]*ExpectedNoEventsGain;
+        #        Expected[idx] <- sum(roevent);
         Expected[idx] <- passAcum+sum(roevent);
         pssEvents <- subset(aliveEvents,time<=timed[idx])
+        pssEvents[pssEvents$event==0,"risk"] <- pssEvents[pssEvents$event==0,"risk"]*ExpectedNoEventsGain
         aliveEvents <- subset(aliveEvents,time>timed[idx])
         passAcum <- passAcum+sum(pssEvents$risk*timed[idx])/timeInterval;
 #        print(c(nrow(pssEvents),passAcum))
