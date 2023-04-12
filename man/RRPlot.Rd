@@ -14,7 +14,8 @@ riskData=NULL,atProb=c(0.90,0.80),atThr=NULL,title="",timetoEvent=NULL,ysurvlim=
 	title="Relative Risk",
 	timetoEvent=NULL,
 	ysurvlim=c(0,1.0),
-	riskTimeInterval=NULL
+	riskTimeInterval=NULL,
+	ExpectedPrevalence=NULL
 	)	
 }
 \arguments{
@@ -39,10 +40,14 @@ riskData=NULL,atProb=c(0.90,0.80),atThr=NULL,title="",timetoEvent=NULL,ysurvlim=
 	\item{riskTimeInterval}{
 	The time interval of the risk estimations
 	}
+	\item{ExpectedPrevalence}{
+	For Case-Control Studies: The expected prevalence of events.
+	}
+	
 }
 
 \details{
- The RRPlot function will plot the Relative Risk (RR) values for every possible probability threshold of the positive cases. Furthermore, it will compute and analyze the RR of the computed threshold that contains the prescribed percentage of negative cases. If the user provides the time to event data, the function will also plot the Kaplan-Meier curve and the logrank probability of differences. between subjects at risk.
+ The RRPlot function will analyze and plot the Relative Risk (RR) vs all the sensitiviy values. Furthermore, it will compute and analyze the RR of the computed threshold that contains the prescribed percentage of negative cases. If the user provides the time to event data, the function will also plot the Kaplan-Meier curve and the logrank probability of differences. between subjects at risk.
  }
 
 \value{
