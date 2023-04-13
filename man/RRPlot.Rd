@@ -87,6 +87,9 @@ riskData=NULL,atProb=c(0.90,0.80),atThr=NULL,title="",timetoEvent=NULL,ysurvlim=
 	\item{RR_atP}{
 		The fraction of subjects at high risk
 	}
+	\item{c.index}{
+		The c-index
+	}
 	\item{surfit}{
 		The survival fit object
 	}

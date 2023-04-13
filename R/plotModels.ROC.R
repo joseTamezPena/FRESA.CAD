@@ -219,7 +219,7 @@ function(modelPredictions,number.of.models=0,specificities=c(0.975,0.95,0.90,0.8
 
 		lines(c(1,Spe,0),c(0,Sen,1),col="green",lwd=1.0,lty=1);
 	
-		ley.names <- append(ley.names,paste("Class AUC (",sprintf("%.3f",enauc),")"));
+		ley.names <- append(ley.names,paste("BACC (",sprintf("%.3f",enauc),")"));
 		ley.colors <- append(ley.colors,"green");
 		ley.lty <- append(ley.lty,1);
 
@@ -228,7 +228,7 @@ function(modelPredictions,number.of.models=0,specificities=c(0.975,0.95,0.90,0.8
 		F1=(2*dtable[1,1])/(2*dtable[1,1]+dtable[1,2]+dtable[2,1])
 		x=1.025
 		y=1.025
-		text(x,y,paste("(TPR=",sprintf("%.3f",Sen),",TNR=",sprintf("%.3f",Spe),",ACC=",sprintf("%.3f",Acc),",F1=",sprintf("%.3f",F1),",AUC=",sprintf("%.3f",enauc),")"),adj = c(0,1),cex=0.7*cex,col="dark green")
+		text(x,y,paste("(TPR=",sprintf("%.3f",Sen),",TNR=",sprintf("%.3f",Spe),",ACC=",sprintf("%.3f",Acc),",F1=",sprintf("%.3f",F1),",BER=",sprintf("%.3f",1.0-enauc),")"),adj = c(0,1),cex=0.7*cex,col="dark green")
 		par(new=TRUE,plt=c(0.6,0.8,0.37,0.57),pty='s',cex=0.8*cex)
 		plot(t(dtable),main="Confusion Matrix",ylab="Test",xlab="Outcome",cex=0.8*cex)
 	}

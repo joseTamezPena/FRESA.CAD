@@ -166,7 +166,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
   text(1.075,1,"SPE")
   sizp <- c(5:1)/5.0 + 0.35
   legend("topright",legend=legtxt[1:5],pch=16,cex=sizp)
-  legend("bottomleft",legend=c("No","Yes"),pch=c(2,16),cex=0.5)
+  legend("bottomleft",legend=c("No","Yes","Loess Fit"),pch=c(2,16,-1),lty=c(0,0,1),cex=0.75)
   text(0.95,ymax+0.5,"PPV->")
 
 
@@ -205,8 +205,9 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
                                         thr=thr_atP[1])
   par(tmop)
   surfit <- NULL
+  surdif <- NULL
   LogRankE <- NULL
-  
+  cstat <- NULL
 
   if (!is.null(timetoEvent))
   {
@@ -281,6 +282,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
       
       surfit <- survival::survfit(Surv(time,event)~class,data = timetoEventData)
       surdif <- survival::survdiff(Surv(time,event)~class,data = timetoEventData)
+      cstat <- rcorr.cens(-timetoEventData$risk,Surv(timetoEventData$time,timetoEventData$event))
       
       graph <- survminer::ggsurvplot(surfit,
                                      data=timetoEventData, 
@@ -313,6 +315,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
                  LowEventsFrac_atP=LowEventsFrac,
                  HighEventsFrac_atP=HighEventsFrac,
                  RR_atP=predict(lfit,sensitivity),
+                 c.index=cstat,
                  surfit=surfit,
                  sufdif=surdif,
                  LogRankE=LogRankE
