@@ -31,14 +31,26 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
   SEN <- numeric(nobs)
   SPE <- numeric(nobs)
   isEvent <- riskData[names(risksGreaterThanM),1]
-#  print(head(isEvent))
   PPV <- numeric(nobs)
-  idx <- 1;
   netBenefit <- numeric(nobs)
   pthr <- numeric(nobs)
   thrs <- numeric(nobs)
+  URCI <- numeric(nobs)
+  LRCI <- numeric(nobs)
+  names(RR) <- names(risksGreaterThanM)
+  names(pthr) <- names(risksGreaterThanM)
+  names(SEN) <- names(risksGreaterThanM)
+  names(SPE) <- names(risksGreaterThanM)
+  names(isEvent) <- names(risksGreaterThanM)
+  names(PPV) <- names(risksGreaterThanM)
+  names(thrs) <- names(risksGreaterThanM)
+  names(URCI) <- names(risksGreaterThanM)
+  names(LRCI) <- names(risksGreaterThanM)
+  names(netBenefit) <- names(risksGreaterThanM)
+  
   mxthr <- max(riskData[,2])
   mithr <- min(riskData[,2])
+  idx <- 1;
   for (thr in risksGreaterThanM)
   {
     
@@ -49,12 +61,19 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
     HighEvents <- sum(riskData[atHighRisk,1]);
     SEN[idx] <-  HighEvents/numberofEvents;
     SPE[idx] <- sum(riskData[atLowRisk,1]==0)/numberofNoEvents;
-    PPV[idx] <- HighEvents/sum(atHighRisk)
-    LowFraction <- LowEvents/sum(atLowRisk);
-    HighFraction <- HighEvents/sum(atHighRisk);
-    if ((sum(atLowRisk)/numberofNoEvents) > 0.01)
+    n1 <- sum(atHighRisk)
+    n2 <- sum(atLowRisk)
+    PPV[idx] <- HighEvents/n1
+    LowFraction <- LowEvents/n2;
+    HighFraction <- HighEvents/n1;
+    x1 <- HighEvents
+    x2 <- LowEvents
+    if ((n2/numberofNoEvents) > 0.01)
     {
       RR[idx] <- HighFraction/LowFraction
+      cidelta <- 1.96*sqrt((n1-x1)/(x1*n1)+(n2-x2)/(x2*n2))
+      URCI[idx] <- exp(log(RR[idx])+cidelta)
+      LRCI[idx] <- exp(log(RR[idx])-cidelta)
     }
     else
     {
@@ -146,7 +165,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
   
   ymax <- quantile(RR,probs=c(0.99))
   pshape <- 2 + 14*isEvent
-  RRData <- cbind(risksGreaterThanM,Sensitivity=SEN,Specificity=SPE,PPV=PPV,RR=RR,isEvent=isEvent)
+  RRData <- cbind(risksGreaterThanM,Sensitivity=SEN,Specificity=SPE,PPV=PPV,RR=RR,LRR=LRCI,URR=URCI,isEvent=isEvent)
   rownames(RRData) <- names(risksGreaterThanM)
   plot(SEN,RR,cex=(0.35 + PPV),
        pch=pshape,
@@ -155,6 +174,8 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
        ylim=c(1.0,ymax+0.5),
 #       log="y",
        main=paste("Relative Risk:",title))
+  atevent <- isEvent==1
+  errbar(SEN[atevent],RR[atevent],URCI[atevent],LRCI[atevent],add=TRUE,pch=-1,errbar.col="gray")
   lfit <-loess(RR~SEN,span=0.5);
   plx <- predict(lfit,se=TRUE)
   lines(SEN,plx$fit,lty=1)
@@ -190,13 +211,17 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
   LowEventsFrac <- sum(riskData[lowRisk,1])/sum(lowRisk)
   HighEventsFrac <- sum(riskData[!lowRisk,1])/sum(!lowRisk)
   sensitivity=sum(riskData[!lowRisk,1])/numberofEvents
+  who <- names(SEN)[SEN==sensitivity]
+#  cat(sensitivity,who,mean(RR[who]),mean(LRCI[who]),mean(URCI[who]),"\n")
+  RRAtSen <- c(est=mean(RR[who]),lower=mean(LRCI[who]),upper=mean(URCI[who]))
+  
   specificity=sum(riskData[lowRisk,1]==0)/numberofNoEvents
   abline(v=sensitivity,col="blue")
   text(x=sensitivity,y=ymax,sprintf("Index(%3.2f)=%4.3f",specificity,thr_atP[1]),pos=4 - 2*(sensitivity>0.5) ,cex=0.7)
   text(x=sensitivity,y=0.9*(ymax-1.0)+1.0,
        sprintf("RR(%3.2f)=%4.3f",
                sensitivity,
-               predict(lfit,sensitivity)),
+               RRAtSen[1]),
        pos=4 - 2*(sensitivity>0.5),cex=0.7)
 
   ## ROC At threshold
@@ -256,7 +281,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
 
       observedCI <- poisson.test(totObserved, conf.level = 0.95 )
       OERatio <- c(totObserved,observedCI$conf.int)/max(Expected)
-      names(OERatio) <- c("OE","Low95CI","Hi95CI")
+      names(OERatio) <- c("est","lower","upper")
 
       plot(timed,Expected,pch=4,type="b",cex=0.5,
            main=paste("Time vs. Events:",title),
@@ -314,7 +339,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
                  SEN_atP=sensitivity,
                  LowEventsFrac_atP=LowEventsFrac,
                  HighEventsFrac_atP=HighEventsFrac,
-                 RR_atP=predict(lfit,sensitivity),
+                 RR_atP=RRAtSen,
                  c.index=cstat,
                  surfit=surfit,
                  sufdif=surdif,
