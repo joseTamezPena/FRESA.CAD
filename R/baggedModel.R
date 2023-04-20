@@ -87,7 +87,7 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 				
 				minTrainSamples <- min(c(nrowcases,nrowcontrols));
 				maxTrainSamples <- max(c(nrowcases,nrowcontrols));
-				noequalSets <- (minTrainSamples < (0.75*maxTrainSamples));
+#				noequalSets <- (minTrainSamples < (0.75*maxTrainSamples));
 				nrep <- 1;
 				if (noequalSets) nrep <- 1 + (as.integer(3*maxTrainSamples/minTrainSamples + 0.5));
 #				cat(nrowcases,":",nrowcontrols,":",noequalSets,"Boot :",nrep,"\n")

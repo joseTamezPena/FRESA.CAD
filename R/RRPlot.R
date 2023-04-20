@@ -97,11 +97,11 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
   DCA <- NULL
   OEData <- NULL
 
+  tmop <- par(no.readonly = TRUE)
   
   if ((mithr>=0) && (mxthr<=1.0))
   {
     ## Observed vs Cumulative plot
-    tmop <- par(no.readonly = TRUE)
     par(pty='s')
     xdata <- riskData[order(-riskData[,2]),]
     observed <- numeric(nrow(xdata))
@@ -132,25 +132,37 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
          col=c(1+xdata[,1]),
          cex=c(0.2+xdata[,1]))
     lines(x=c(0,maxobs),y=c(0,maxobs),lty=2)
+    legend("bottomright",legend=c("Event","Expected"),
+           lty=c(-1,2),
+           pch=c(19,-1),
+           col=c(2,1),cex=0.5)
+    
     par(tmop)
     
     ## Decision curve analysis
     pshape <- 4 + 12*isEvent
-    xmax <- quantile(thrs,probs=c(0.99))
+    xmax <- min(quantile(thrs,probs=c(0.95),0.95))
+    ymin <- min(quantile(netBenefit,probs=c(0.05)),0)
     DCA <- cbind(Thrs=thrs,NetBenefit=netBenefit)
     plot(thrs,netBenefit,main=paste("Decision Curve Analysis:",title),ylab="Net Benefit",xlab="Threshold",
-         ylim=c(min(netBenefit),pre),
+         ylim=c(ymin,pre),
          xlim=c(0,xmax),
          pch=pshape,col=rgbcolors[1+floor(10*(1.0-SEN))],cex=(0.35 + isEvent))
-    lfit <-loess(netBenefit~thrs,span=0.25);
-    plx <- predict(lfit,se=TRUE)
-    lines(thrs,plx$fit,lty=1)
-    lines(thrs,plx$fit - qt(0.975,plx$df)*plx$se, lty=2)
-    lines(thrs,plx$fit + qt(0.975,plx$df)*plx$se, lty=2)
+    lfit <-try(loess(netBenefit~thrs,span=0.5));
+    if (!inherits(lfit,"try-error"))
+    {
+      plx <- try(predict(lfit,se=TRUE))
+      if (!inherits(plx,"try-error"))
+      {
+        lines(thrs,plx$fit,lty=1)
+        lines(thrs,plx$fit - qt(0.975,plx$df)*plx$se, lty=2)
+        lines(thrs,plx$fit + qt(0.975,plx$df)*plx$se, lty=2)
+      }
+    }
     abline(h=0,col="blue")
     lines(x=c(0,ExpectedPrevalence),y=c(pre,0),col="red")
     legtxt <- sprintf("%3.1f",c(5:0)/5)
-    colorlegend(rgbcolors, legtxt,xlim=c(0.92*xmax,0.98*xmax),ylim=c(pre*0.45,pre*0.1),cex=0.75)
+    corrplot::colorlegend(rgbcolors, legtxt,xlim=c(0.92*xmax,0.98*xmax),ylim=c(pre*0.45,pre*0.1),cex=0.75)
     text(0.92*xmax,pre*0.5,"SEN")
     
     legend("topright",legend=c("No Event","Event"),
@@ -176,14 +188,24 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
        main=paste("Relative Risk:",title))
   atevent <- isEvent==1
   errbar(SEN[atevent],RR[atevent],URCI[atevent],LRCI[atevent],add=TRUE,pch=-1,errbar.col="gray")
-  lfit <-loess(RR~SEN,span=0.5);
-  plx <- predict(lfit,se=TRUE)
-  lines(SEN,plx$fit,lty=1)
-  lines(SEN,plx$fit - qt(0.975,plx$df)*plx$se, lty=2)
-  lines(SEN,plx$fit + qt(0.975,plx$df)*plx$se, lty=2)
+  points(SEN,RR,cex=(0.35 + PPV),
+       pch=pshape,
+       col=colors[1+floor(10*(1.0-SPE))],
+  )  
+  lfit <- try(loess(RR~SEN,span=0.5));
+  if (!inherits(lfit,"try-error"))
+  {
+    plx <- try(predict(lfit,se=TRUE))
+    if (!inherits(plx,"try-error"))
+    {
+      lines(SEN,plx$fit,lty=1)
+      lines(SEN,plx$fit - qt(0.975,plx$df)*plx$se, lty=2)
+      lines(SEN,plx$fit + qt(0.975,plx$df)*plx$se, lty=2)
+    }
+  }
 
   legtxt <- sprintf("%3.1f",c(5:0)/5)
-  colorlegend(heat.colors(10), legtxt,xlim=c(1.05,1.175),ylim=c((ymax-0.75)*0.45+1.0,ymax/10+1.0),cex=0.75)
+  corrplot::colorlegend(heat.colors(10), legtxt,xlim=c(1.05,1.175),ylim=c((ymax-0.75)*0.45+1.0,ymax/10+1.0),cex=0.75)
   text(1.075,1,"SPE")
   sizp <- c(5:1)/5.0 + 0.35
   legend("topright",legend=legtxt[1:5],pch=16,cex=sizp)
@@ -245,7 +267,8 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
       {
         timetoEventData$class <- 1*(riskData[,2]>=thr_atP[1]) + 1*(riskData[,2]>=thr_atP[2])
       }
-    
+      timetoEventData$lammda <- -log(1.000001-riskData[,2]) # From probability to risk
+
       ## Time Plot
       aliveEvents <- timetoEventData
       atEventData <- subset(timetoEventData,event==1)
@@ -255,6 +278,10 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
       if (!is.null(riskTimeInterval))
       {
         timeInterval <- riskTimeInterval
+#        if (riskTimeInterval==1)
+#        {
+#          ExpectedNoEventsGain <- 1.0
+#        }
       }
       Observed <- numeric(nrow(atEventData))
       Expected <- numeric(nrow(atEventData))
@@ -264,16 +291,16 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
       {
         timed[idx] <- atEventData[idx,"time"]
         Observed[idx] <- idx
-        roevent <- aliveEvents$risk*timed[idx]/timeInterval
-        roevent[roevent>1] <- 1
-        roevent[aliveEvents$event==0] <- roevent[aliveEvents$event==0]*ExpectedNoEventsGain;
-        #        Expected[idx] <- sum(roevent);
-        Expected[idx] <- passAcum+sum(roevent);
+        roevent <- aliveEvents$lammda*timed[idx]/timeInterval
+        roevent[roevent > 1] <- 1
+        roevent[aliveEvents$event == 0] <- roevent[aliveEvents$event == 0]*ExpectedNoEventsGain;
+        Expected[idx] <- passAcum + sum(roevent);
         pssEvents <- subset(aliveEvents,time<=timed[idx])
-        pssEvents[pssEvents$event==0,"risk"] <- pssEvents[pssEvents$event==0,"risk"]*ExpectedNoEventsGain
         aliveEvents <- subset(aliveEvents,time>timed[idx])
-        passAcum <- passAcum+sum(pssEvents$risk*timed[idx])/timeInterval;
-#        print(c(nrow(pssEvents),passAcum))
+        pnext <- pssEvents$lammda*pssEvents$time/timeInterval
+        pnext[pnext > 1.0] <- 1.0
+        pnext[pssEvents$event == 0] <- pnext[pssEvents$event == 0]*ExpectedNoEventsGain
+        passAcum <- passAcum+sum(pnext);
       }
       totObserved <- max(Observed)
       maxevents <- max(c(Observed,Expected))
@@ -289,8 +316,8 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
            xlab="Time",
            ylim=c(0,1.05*maxevents),
            xlim=c(0,1.05*maxtime))
-      points(timed,Observed,pch=1)
-      legend("topleft",legend=c("Expected","Observed"),pch=c(4,1),lty=c(1,0))
+      points(timed,Observed,pch=1,col="red")
+      legend("topleft",legend=c("Expected","Observed"),pch=c(4,1),lty=c(1,0),col=c(1,"red"))
       ## Survival plot
       labelsplot <- c("Low",sprintf("At Risk > %5.3f",thr_atP[1]));
       paletteplot <- c("green", "red")
@@ -326,6 +353,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
     
 
   }
+  par(tmop)
   
   result <- list(CumulativeOvs=CumulativeOvs,
                  OEData=OEData,
