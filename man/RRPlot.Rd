@@ -5,8 +5,6 @@
 	Given a list of the probabilities of risks per subject, the function will plot the risk ratios as a function of sensitivity
 }
 
-riskData=NULL,atProb=c(0.90,0.80),atThr=NULL,title="",timetoEvent=NULL,ysurvlim=c(0,1.0),riskTimeInterval=NULL
-
 \usage{
 	RRPlot(riskData=NULL,
 	atProb=c(0.90,0.80),

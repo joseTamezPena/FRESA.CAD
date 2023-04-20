@@ -1,5 +1,10 @@
 RRPlot <-function(riskData=NULL,atProb=c(0.90,0.80),atThr=NULL,title="",timetoEvent=NULL,ysurvlim=c(0,1.0),riskTimeInterval=NULL,ExpectedPrevalence=NULL)
 {
+  riskData <- as.data.frame(riskData)
+  if (is.null(rownames(riskData)))
+  {
+    rownames(riskData) <- as.character(c(1:nrow(riskData)))
+  }
   totobs <- nrow(riskData)
 if (!requireNamespace("corrplot", quietly = TRUE)) {
 		install.packages("corrplot", dependencies = TRUE)
@@ -148,15 +153,17 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
          ylim=c(ymin,pre),
          xlim=c(0,xmax),
          pch=pshape,col=rgbcolors[1+floor(10*(1.0-SEN))],cex=(0.35 + isEvent))
-    lfit <-try(loess(netBenefit~thrs,span=0.5));
+    fiveper <- as.integer(0.05*length(netBenefit)+0.5)
+    range <- c(fiveper:length(netBenefit)-fiveper)
+    lfit <-try(loess(netBenefit[range]~thrs[range],span=0.5));
     if (!inherits(lfit,"try-error"))
     {
       plx <- try(predict(lfit,se=TRUE))
       if (!inherits(plx,"try-error"))
       {
-        lines(thrs,plx$fit,lty=1)
-        lines(thrs,plx$fit - qt(0.975,plx$df)*plx$se, lty=2)
-        lines(thrs,plx$fit + qt(0.975,plx$df)*plx$se, lty=2)
+        lines(thrs[range],plx$fit,lty=1)
+        lines(thrs[range],plx$fit - qt(0.975,plx$df)*plx$se, lty=2)
+        lines(thrs[range],plx$fit + qt(0.975,plx$df)*plx$se, lty=2)
       }
     }
     abline(h=0,col="blue")
@@ -267,7 +274,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
       {
         timetoEventData$class <- 1*(riskData[,2]>=thr_atP[1]) + 1*(riskData[,2]>=thr_atP[2])
       }
-      timetoEventData$lammda <- -log(1.000001-riskData[,2]) # From probability to risk
+      timetoEventData$lammda <- -log(1.00000001-riskData[,2]) # From probability to risk
 
       ## Time Plot
       aliveEvents <- timetoEventData
@@ -297,7 +304,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
         Expected[idx] <- passAcum + sum(roevent);
         pssEvents <- subset(aliveEvents,time<=timed[idx])
         aliveEvents <- subset(aliveEvents,time>timed[idx])
-        pnext <- pssEvents$lammda*pssEvents$time/timeInterval
+        pnext <- pssEvents$lammda*timed[idx]/timeInterval
         pnext[pnext > 1.0] <- 1.0
         pnext[pssEvents$event == 0] <- pnext[pssEvents$event == 0]*ExpectedNoEventsGain
         passAcum <- passAcum+sum(pnext);
