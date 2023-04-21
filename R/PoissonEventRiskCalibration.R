@@ -1,3 +1,17 @@
+adjustProb <- function(probGZero,gain)
+{
+  hazard <- -log(1.0-probGZero)*gain
+  probGZero <- 1.0-exp(-hazard)
+  return (probGZero)
+}
+
+ppoisGzero <- function(index,h0)
+{
+  hazard <- h0*exp(index)
+  probGZero <- (1.0-dpois(0,hazard))
+  return (probGZero)
+}
+
 CalibrationProbPoissonRisk <- function(Riskdata)
 ### Riskdata is a matrix of a Poisson event with Event, Probability of Event>0, and Time to Event]
 {
@@ -7,11 +21,12 @@ CalibrationProbPoissonRisk <- function(Riskdata)
   observed <- sum(Riskdata$Event)
   meaninterval <- mean(Riskdata[Riskdata$Event==1,"Time"]);
   h0 <- 1.0/meaninterval
-  index <- log(-log(1.0-Riskdata$pGZ)/h0)
-  hazard <- h0*exp(index)
-  probGZero <- 1.0-exp(-hazard)
+  probGZero <- Riskdata$pGZ
+  index <- log(-log(1.0-probGZero)/h0)
+  hazard <- -log(1.0-probGZero)
   expected <- sum(probGZero)
   delta <- abs(observed-expected)/observed
+  totgain <- 1.0;
   while (delta>0.005)
   {
     gain <- expected/observed
@@ -20,6 +35,8 @@ CalibrationProbPoissonRisk <- function(Riskdata)
     probGZero <- 1.0-exp(-hazard)
     expected <- sum(probGZero)
     delta <- abs(observed-expected)/observed
+    totgain <- totgain/gain
+#    print(totgain)
   }
   timeInterval <- 2.0*meaninterval
   timeSorted <- Riskdata
@@ -45,6 +62,7 @@ CalibrationProbPoissonRisk <- function(Riskdata)
                  probGZero=probGZero,
                  hazard=hazard,
                  h0=h0,
+                 hazardGain=totgain,
                  timeInterval = timeInterval,
                  meaninterval = meaninterval,
                  Ahazard=Ahazard,

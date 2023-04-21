@@ -2,14 +2,14 @@
 \alias{RRPlot}
 \title{Plot and Analysis of Indices of Risk}
 \description{
-	Given a list of the probabilities of risks per subject, the function will plot the risk ratios as a function of sensitivity
+	Plots of calibration and performance of risk probabilites 
 }
 
 \usage{
 	RRPlot(riskData=NULL,
 	atProb=c(0.90,0.80),
 	atThr=NULL,
-	title="Relative Risk",
+	title="",
 	timetoEvent=NULL,
 	ysurvlim=c(0,1.0),
 	riskTimeInterval=NULL,
@@ -27,7 +27,7 @@
 	The risk threshold
 	}
 	\item{title}{
-	The title of the plot
+	The title to be appended on generated each plot
 	}
 	\item{timetoEvent}{
 	The time to event vector
@@ -45,7 +45,7 @@
 }
 
 \details{
- The RRPlot function will analyze and plot the Relative Risk (RR) vs all the sensitiviy values. Furthermore, it will compute and analyze the RR of the computed threshold that contains the prescribed percentage of negative cases. If the user provides the time to event data, the function will also plot the Kaplan-Meier curve and the logrank probability of differences. between subjects at risk.
+The RRPlot function will analyze the provided probabilities of risk and its associated events to generate calibration plots and plots of Relative Risk (RR) vs all the sensitivity values. Furthermore, it will compute and analyze the RR of the computed threshold that contains the prescribed percentage of negative cases. If the user provides the time to event data, the function will also plot the Kaplan-Meier curve and return the logrank probability of differences between risk categories
  }
 
 \value{

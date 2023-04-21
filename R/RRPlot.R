@@ -129,7 +129,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
     maxobs <- max(c(observed,expected))
     plot(expected,observed,
          ylab="Observed",
-         xlab="Cumulative Risk",
+         xlab="Cumulative Probability",
          xlim=c(0,maxobs),
          ylim=c(0,maxobs),
          main=paste("Cumulative vs. Observed:",title),
@@ -140,7 +140,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
     legend("bottomright",legend=c("Event","Expected"),
            lty=c(-1,2),
            pch=c(19,-1),
-           col=c(2,1),cex=0.5)
+           col=c(2,1),cex=0.75)
     
     par(tmop)
     
@@ -281,14 +281,10 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
       atEventData <- subset(timetoEventData,event==1)
       atEventData <- atEventData[order(atEventData$time),]
       maxtime <- max(atEventData$time)
-      timeInterval <- maxtime
+      timeInterval <- 2*mean(atEventData$time)
       if (!is.null(riskTimeInterval))
       {
         timeInterval <- riskTimeInterval
-#        if (riskTimeInterval==1)
-#        {
-#          ExpectedNoEventsGain <- 1.0
-#        }
       }
       Observed <- numeric(nrow(atEventData))
       Expected <- numeric(nrow(atEventData))

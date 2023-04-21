@@ -100,6 +100,10 @@ export(IDeA)
 export(predictDecorrelate)
 export(getLatentCoefficients)
 export(RRPlot)
+export(adjustProb)
+export(ppoisGzero)
+export(CalibrationProbPoissonRisk)
+export(CoxRiskCalibration)
 
 useDynLib(FRESA.CAD,.registration = TRUE, .fixes = "C_")
 
