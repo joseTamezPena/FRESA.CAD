@@ -8,7 +8,7 @@ adjustProb <- function(probGZero,gain)
 ppoisGzero <- function(index,h0)
 {
   hazard <- h0*exp(index)
-  probGZero <- (1.0-dpois(0,hazard))
+  probGZero <- 1.0-exp(-hazard)
   return (probGZero)
 }
 

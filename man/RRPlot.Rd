@@ -18,7 +18,7 @@
 }
 \arguments{
 	\item{riskData}{
-	The data frame with two columns: Subjects with event, Probability of Future Event
+	The data frame with two columns: First: Event label (event=1, censored=0). Second: Probability of any future event within the riskTimeInterval
 	}
 	\item{atProb}{
 	The desired specificity or sensitivity of the computed risk at threshold
@@ -36,7 +36,7 @@
 	The y limits of the survival plot
 	}
 	\item{riskTimeInterval}{
-	The time interval of the risk estimations
+	The time interval of the probability estimations
 	}
 	\item{ExpectedPrevalence}{
 	For Case-Control Studies: The expected prevalence of events.
@@ -45,7 +45,7 @@
 }
 
 \details{
-The RRPlot function will analyze the provided probabilities of risk and its associated events to generate calibration plots and plots of Relative Risk (RR) vs all the sensitivity values. Furthermore, it will compute and analyze the RR of the computed threshold that contains the prescribed percentage of negative cases. If the user provides the time to event data, the function will also plot the Kaplan-Meier curve and return the logrank probability of differences between risk categories
+The RRPlot function will analyze the provided probabilities of risk and its associated events to generate calibration plots and plots of Relative Risk (RR) vs all the sensitivity values. Furthermore, it will compute and analyze the RR of the computed threshold that contains the prescribed percentage of negative cases. If the user provides the time to event data, the function will also plot the Kaplan-Meier curve and return the logrank probability of differences between risk categories. For the calibration plot it will use the user provided riskTimeInterval to get the expected number of events. If the user does not provide the riskTimeInterval the function will use the maximum time of observations with events.
  }
 
 \value{

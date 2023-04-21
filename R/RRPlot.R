@@ -172,9 +172,10 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
     corrplot::colorlegend(rgbcolors, legtxt,xlim=c(0.92*xmax,0.98*xmax),ylim=c(pre*0.45,pre*0.1),cex=0.75)
     text(0.92*xmax,pre*0.5,"SEN")
     
-    legend("topright",legend=c("No Event","Event"),
-           pch=c(4,16),
-           col=c(1,1)
+    legend("topright",legend=c("No Event","Event","loess fit"),
+           pch=c(4,16,-1),
+           col=c(1,1,1),
+           lty=c(-1,-1,1)
            )
     legend("bottomleft",legend=c("Treat All","Treat None"),
            lty=c(1,1),
@@ -265,9 +266,9 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
 
   if (!is.null(timetoEvent))
   {
-      timetoEventData <- as.data.frame(cbind(event=riskData[,1],
+      timetoEventData <- as.data.frame(cbind(eStatus=riskData[,1],
                            class=1*(riskData[,2]>=thr_atP[1]),
-                           time=timetoEvent,
+                           eTime=timetoEvent,
                            risk=riskData[,2])
                            )
       if (length(thr_atP)>1)
@@ -278,10 +279,10 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
 
       ## Time Plot
       aliveEvents <- timetoEventData
-      atEventData <- subset(timetoEventData,event==1)
-      atEventData <- atEventData[order(atEventData$time),]
-      maxtime <- max(atEventData$time)
-      timeInterval <- 2*mean(atEventData$time)
+      atEventData <- subset(timetoEventData,timetoEventData$eStatus==1)
+      atEventData <- atEventData[order(atEventData$eTime),]
+      maxtime <- max(atEventData$eTime)
+      timeInterval <- maxtime
       if (!is.null(riskTimeInterval))
       {
         timeInterval <- riskTimeInterval
@@ -292,24 +293,24 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
       passAcum <- 0;
       for (idx in c(1:nrow(atEventData)))
       {
-        timed[idx] <- atEventData[idx,"time"]
+        timed[idx] <- atEventData[idx,"eTime"]
         Observed[idx] <- idx
         roevent <- aliveEvents$lammda*timed[idx]/timeInterval
         roevent[roevent > 1] <- 1
-        roevent[aliveEvents$event == 0] <- roevent[aliveEvents$event == 0]*ExpectedNoEventsGain;
+        roevent[aliveEvents$eStatus == 0] <- roevent[aliveEvents$eStatus == 0]*ExpectedNoEventsGain;
         Expected[idx] <- passAcum + sum(roevent);
-        pssEvents <- subset(aliveEvents,time<=timed[idx])
-        aliveEvents <- subset(aliveEvents,time>timed[idx])
+        pssEvents <- subset(aliveEvents,aliveEvents$eTime <= timed[idx])
+        aliveEvents <- subset(aliveEvents,aliveEvents$eTime > timed[idx])
         pnext <- pssEvents$lammda*timed[idx]/timeInterval
         pnext[pnext > 1.0] <- 1.0
-        pnext[pssEvents$event == 0] <- pnext[pssEvents$event == 0]*ExpectedNoEventsGain
+        pnext[pssEvents$eStatus == 0] <- pnext[pssEvents$eStatus == 0]*ExpectedNoEventsGain
         passAcum <- passAcum+sum(pnext);
       }
       totObserved <- max(Observed)
       maxevents <- max(c(Observed,Expected))
       OEData <- cbind(Observed,Expected)
 
-      observedCI <- poisson.test(totObserved, conf.level = 0.95 )
+      observedCI <- stats::poisson.test(totObserved, conf.level = 0.95 )
       OERatio <- c(totObserved,observedCI$conf.int)/max(Expected)
       names(OERatio) <- c("est","lower","upper")
 
@@ -330,14 +331,14 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
                         sprintf("Risk >= %5.3f",thr_atP[1]));
         paletteplot <- c("green", "cyan","red")
       }
-      LogRankE <- EmpiricalSurvDiff(times=timetoEventData$time,
-                  status=timetoEventData$event,
+      LogRankE <- EmpiricalSurvDiff(times=timetoEventData$eTime,
+                  status=timetoEventData$eStatus,
                   groups=timetoEventData$class,
                   plots=FALSE,main=paste("Kaplan-Meier:",title))
       
-      surfit <- survival::survfit(Surv(time,event)~class,data = timetoEventData)
-      surdif <- survival::survdiff(Surv(time,event)~class,data = timetoEventData)
-      cstat <- rcorr.cens(-timetoEventData$risk,Surv(timetoEventData$time,timetoEventData$event))
+      surfit <- survival::survfit(survival::Surv(eTime,eStatus)~class,data = timetoEventData)
+      surdif <- survival::survdiff(survival::Surv(eTime,eStatus)~class,data = timetoEventData)
+      cstat <- rcorr.cens(-timetoEventData$risk,survival::Surv(timetoEventData$eTime,timetoEventData$eStatus))
       
       graph <- survminer::ggsurvplot(surfit,
                                      data=timetoEventData, 
