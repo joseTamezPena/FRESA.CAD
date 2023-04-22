@@ -223,7 +223,7 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 							}
 						}
 					}
-		#			cat("\nNum. Models:",loops," To Test:",length(vnames)," TopFreq:",fistfreq," Thrf:",thrsfreq," Removed:",removed,"\n")
+#					cat("\nNum. Models:",loops," To Test:",length(vnames)," TopFreq:",fistfreq," Thrf:",thrsfreq," Removed:",removed,"\n")
 					model <- modelFitting(frma,data,type=type,fitFRESA=TRUE);
 					nnmodel <- model;
 					if (bmodelsize>1)

@@ -7,13 +7,16 @@
 }
 
 \usage{
-	CalibrationProbPoissonRisk(Riskdata)
+	CalibrationProbPoissonRisk(Riskdata,trim=0.975)
 	CoxRiskCalibration(ml,data,outcome,time)
 
 }
 \arguments{
 	\item{Riskdata}{
 	The data frame with thre columns:  Event, Probability of event, time to event
+	}	
+	\item{trim}{
+	The percentge of data to be used to estimate the time interval
 	}	
 	\item{ml}{
 	A Cox model of the events

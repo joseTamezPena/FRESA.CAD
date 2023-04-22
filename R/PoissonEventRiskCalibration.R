@@ -12,7 +12,7 @@ ppoisGzero <- function(index,h0)
   return (probGZero)
 }
 
-CalibrationProbPoissonRisk <- function(Riskdata)
+CalibrationProbPoissonRisk <- function(Riskdata,trim=0.5)
 ### Riskdata is a matrix of a Poisson event with Event, Probability of Event>0, and Time to Event]
 {
 
@@ -40,24 +40,58 @@ CalibrationProbPoissonRisk <- function(Riskdata)
   }
   timeInterval <- 2.0*meaninterval
   timeSorted <- Riskdata
-  timeSorted$hazard <- hazard
-  timeSorted <- timeSorted[order(Riskdata$Time),]
-  Ahazard <- 0
-  for (idx in c(1:nrow(timeSorted)))
+  timeSorted$pGZ <- probGZero
+  timeSorted$hazard <- -log(1.0-probGZero)
+  timeSorted <- timeSorted[order(-timeSorted$hazard),]
+  timeSorted <- timeSorted[order(timeSorted$Time),]
+#  print(head(timeSorted))
+  touse <- c(1:nrow(timeSorted))
+  trimObserved <- trim*observed
+  for (lp in 1:2)
   {
-    nevent <- timeSorted[idx,"hazard"]*timeSorted[idx,"Time"]/timeInterval
-    if (nevent > 1.0) nevent <- 1.0
-    Ahazard <- Ahazard + nevent
+    Ahazard <- 0
+    cobserved <- 0
+    deltaObs <- 0;
+    deltaAdded <- 0;
+    alive <- timeSorted;
+    pastEvents <- 0;
+    idx <- 0
+#    cat("Rows",nrow(alive),"Time:",idx,">")
+    for (idx in touse)
+    {
+      oevent <- alive$hazard*(timeSorted[idx,"Time"]/timeInterval)
+      oevent[oevent > 1.0] <- 1.0
+      Ahazard <- pastEvents + sum(oevent)
+      cobserved <- cobserved + timeSorted[idx,"Event"]
+      if (cobserved > trimObserved)
+      {
+        deltaObs <- deltaObs + Ahazard/cobserved;
+        deltaAdded <- deltaAdded + 1.0;
+#        cat("Rows",nrow(alive),"Time:",idx,">")
+      }
+      donealive <- alive[alive$Time <= timeSorted[idx,"Time"],]
+      pevent <- donealive$hazard*timeSorted[idx,"Time"]/timeInterval
+      pevent[pevent > 1.0] <- 1.0
+      pastEvents <- pastEvents + sum(pevent)
+#      cat(":",timeSorted[idx,"Time"],",",sum(alive$Time > timeSorted[idx,"Time"]),"\n")
+      alive <- alive[alive$Time > timeSorted[idx,"Time"],]
+    }
+    if (deltaAdded > 0)
+    {
+      gainTime <- deltaObs/deltaAdded
+    }
+    else
+    {
+      gainTime <- Ahazard/observed
+    }
+#    print(c(Ahazard/observed,gainTime))
+    timeInterval <- timeInterval*gainTime
+#    cat(deltaObs,":",Ahazard,":",cobserved,":",timeInterval,"\n")
   }
-  timeInterval <- timeInterval*Ahazard/observed
-  Ahazard <- 0
-  for (idx in c(1:nrow(timeSorted)))
-  {
-    nevent <- timeSorted[idx,"hazard"]*timeSorted[idx,"Time"]/timeInterval
-    if (nevent > 1.0) nevent <- 1.0
-    Ahazard <- Ahazard + nevent
-  }
-  
+  nevent <- timeSorted$"hazard"*timeSorted$Time/timeInterval
+  nevent[nevent > 1.0]  <- 1.0
+  Ahazard <- sum(nevent)
+
   result <- list(index=index,
                  probGZero=probGZero,
                  hazard=hazard,

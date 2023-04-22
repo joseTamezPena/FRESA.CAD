@@ -31,10 +31,10 @@ function (object,...)
 					predictType <- "prob";
 				}
 			}			
-			if (!is.null(object$coefficients.List))
-			{
-				predictType <- "bagg";
-			}
+#			if (!is.null(object$coefficients.List))
+#			{
+#				predictType <- "bagg";
+#			}
 		}
 		else
 		{

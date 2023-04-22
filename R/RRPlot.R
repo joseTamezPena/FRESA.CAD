@@ -348,7 +348,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
                                      ylim = ysurvlim,
                                      ggtheme = ggplot2::theme_bw() + 
                                        ggplot2::theme(plot.title = ggplot2::element_text(
-                                         hjust = 0.5, face = "bold", size = 20)),
+                                         hjust = 0.5, face = "bold", size = 16)),
                       title = paste("Kaplan-Meier:",title),
                       risk.table = TRUE,
                       tables.height = 0.2,
