@@ -12,7 +12,7 @@ ppoisGzero <- function(index,h0)
   return (probGZero)
 }
 
-CalibrationProbPoissonRisk <- function(Riskdata,trim=0.5)
+CalibrationProbPoissonRisk <- function(Riskdata,trim=0.10)
 ### Riskdata is a matrix of a Poisson event with Event, Probability of Event>0, and Time to Event]
 {
 
@@ -46,7 +46,8 @@ CalibrationProbPoissonRisk <- function(Riskdata,trim=0.5)
   timeSorted <- timeSorted[order(timeSorted$Time),]
 #  print(head(timeSorted))
   touse <- c(1:nrow(timeSorted))
-  trimObserved <- trim*observed
+  firstrimObserved <- trim*observed
+  lasttrimObserved <- (1.0-trim)*observed
   for (lp in 1:2)
   {
     Ahazard <- 0
@@ -63,7 +64,7 @@ CalibrationProbPoissonRisk <- function(Riskdata,trim=0.5)
       oevent[oevent > 1.0] <- 1.0
       Ahazard <- pastEvents + sum(oevent)
       cobserved <- cobserved + timeSorted[idx,"Event"]
-      if (cobserved > trimObserved)
+      if ((cobserved >= firstrimObserved) && (cobserved <= lasttrimObserved))
       {
         deltaObs <- deltaObs + Ahazard/cobserved;
         deltaAdded <- deltaAdded + 1.0;
