@@ -7,7 +7,7 @@
 }
 
 \usage{
-	CalibrationProbPoissonRisk(Riskdata,trim=0.0.10)
+	CalibrationProbPoissonRisk(Riskdata,trim=0.10)
 	CoxRiskCalibration(ml,data,outcome,time)
 
 }
