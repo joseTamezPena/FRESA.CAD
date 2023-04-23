@@ -64,7 +64,7 @@ CalibrationProbPoissonRisk <- function(Riskdata,trim=0.10)
       oevent[oevent > 1.0] <- 1.0
       Ahazard <- pastEvents + sum(oevent)
       cobserved <- cobserved + timeSorted[idx,"Event"]
-      if ((cobserved >= firstrimObserved) && (cobserved <= lasttrimObserved))
+      if ((cobserved > firstrimObserved) && (cobserved < lasttrimObserved))
       {
         deltaObs <- deltaObs + Ahazard/cobserved;
         deltaAdded <- deltaAdded + 1.0;
