@@ -7,8 +7,8 @@
 }
 
 \usage{
-	CalibrationProbPoissonRisk(Riskdata,trim=0.10)
-	CoxRiskCalibration(ml,data,outcome,time)
+	CalibrationProbPoissonRisk(Riskdata,trim=0.15)
+	CoxRiskCalibration(ml,data,outcome,time,trim=0.15)
 
 }
 \arguments{
@@ -16,7 +16,7 @@
 	The data frame with thre columns:  Event, Probability of event, time to event
 	}	
 	\item{trim}{
-	The percentge of data to be used to estimate the time interval
+	The percentge of tail of data not to be used to estimate the time interval
 	}	
 	\item{ml}{
 	A Cox model of the events

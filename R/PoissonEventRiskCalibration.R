@@ -12,7 +12,7 @@ ppoisGzero <- function(index,h0)
   return (probGZero)
 }
 
-CalibrationProbPoissonRisk <- function(Riskdata,trim=0.10)
+CalibrationProbPoissonRisk <- function(Riskdata,trim=0.15)
 ### Riskdata is a matrix of a Poisson event with Event, Probability of Event>0, and Time to Event]
 {
 
@@ -105,7 +105,7 @@ CalibrationProbPoissonRisk <- function(Riskdata,trim=0.10)
   return (result)
 }
 
-CoxRiskCalibration <- function(ml,data,outcome,time)
+CoxRiskCalibration <- function(ml,data,outcome,time,trim=0.15)
 {
   index <- predict(ml,data)
   meaninterval <- mean(data[data[,outcome]==1,time]);
@@ -114,7 +114,7 @@ CoxRiskCalibration <- function(ml,data,outcome,time)
   probGZero <- 1.0-exp(-hazard)
 
   Riskdata <- cbind(data[,outcome],probGZero,data[,time])
-  result <- CalibrationProbPoissonRisk(Riskdata)
+  result <- CalibrationProbPoissonRisk(Riskdata,trim)
   
 
   return (result)
