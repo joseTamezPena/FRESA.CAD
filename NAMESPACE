@@ -104,6 +104,11 @@ export(adjustProb)
 export(ppoisGzero)
 export(CalibrationProbPoissonRisk)
 export(CoxRiskCalibration)
+export(concordance95ci)
+export(metric95ci)
+export(sperman95ci)
+export(MAE95ci)
+export(ClassMetric95ci)
 
 useDynLib(FRESA.CAD,.registration = TRUE, .fixes = "C_")
 

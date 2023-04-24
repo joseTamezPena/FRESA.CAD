@@ -1,6 +1,8 @@
 RRPlot <-function(riskData=NULL,atProb=c(0.90,0.80),atThr=NULL,title="",timetoEvent=NULL,ysurvlim=c(0,1.0),riskTimeInterval=NULL,ExpectedPrevalence=NULL)
 {
   riskData <- as.data.frame(riskData)
+  OE95ci <- NULL
+  OAcum95ci <- NULL
   if (is.null(rownames(riskData)))
   {
     rownames(riskData) <- as.character(c(1:nrow(riskData)))
@@ -125,7 +127,9 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
       }
       observed[idx] <- observed[idx-1]+xdata[idx,1];
     }
-    CumulativeOvs <- cbind(Observed=observed,Cumulative=expected)
+    CumulativeOvs <- as.data.frame(cbind(Observed=observed,Cumulative=expected))
+    OAcum95ci <- metric95ci(observed/expected)
+    rownames(CumulativeOvs) <- rownames(xdata)
     maxobs <- max(c(observed,expected))
     plot(expected,observed,
          ylab="Observed",
@@ -148,7 +152,8 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
     pshape <- 4 + 12*isEvent
     xmax <- min(quantile(thrs,probs=c(0.95),0.95))
     ymin <- min(quantile(netBenefit,probs=c(0.05)),0)
-    DCA <- cbind(Thrs=thrs,NetBenefit=netBenefit)
+    DCA <- as.data.frame(cbind(Thrs=thrs,NetBenefit=netBenefit))
+    rownames(DCA) <- names(risksGreaterThanM)
     plot(thrs,netBenefit,main=paste("Decision Curve Analysis:",title),ylab="Net Benefit",xlab="Threshold",
          ylim=c(ymin,pre),
          xlim=c(0,xmax),
@@ -185,7 +190,14 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
   
   ymax <- quantile(RR,probs=c(0.99))
   pshape <- 2 + 14*isEvent
-  RRData <- cbind(risksGreaterThanM,Sensitivity=SEN,Specificity=SPE,PPV=PPV,RR=RR,LRR=LRCI,URR=URCI,isEvent=isEvent)
+  RRData <- as.data.frame(cbind(risksGreaterThanM,
+                                Sensitivity=SEN,
+                                Specificity=SPE,
+                                PPV=PPV,
+                                RR=RR,
+                                LRR=LRCI,
+                                URR=URCI,
+                                isEvent=isEvent))
   rownames(RRData) <- names(risksGreaterThanM)
   plot(SEN,RR,cex=(0.35 + PPV),
        pch=pshape,
@@ -308,7 +320,9 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
       }
       totObserved <- max(Observed)
       maxevents <- max(c(Observed,Expected))
-      OEData <- cbind(Observed,Expected)
+      OEData <- as.data.frame(cbind(time=timed,Observed=Observed,Expected=Expected))
+      OE95ci <- metric95ci(Observed/Expected)
+      rownames(OEData) <- rownames(atEventData)
 
       observedCI <- stats::poisson.test(totObserved, conf.level = 0.95 )
       OERatio <- c(totObserved,observedCI$conf.int)/max(Expected)
@@ -339,6 +353,10 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
       surfit <- survival::survfit(survival::Surv(eTime,eStatus)~class,data = timetoEventData)
       surdif <- survival::survdiff(survival::Surv(eTime,eStatus)~class,data = timetoEventData)
       cstat <- rcorr.cens(-timetoEventData$risk,survival::Surv(timetoEventData$eTime,timetoEventData$eStatus))
+      cstatCI <- concordance95ci(as.data.frame(cbind(times=timetoEventData$eTime,
+                                       status=timetoEventData$eStatus,
+                                       preds=-timetoEventData$risk)))
+      cstat$cstatCI <- cstatCI
       
       graph <- survminer::ggsurvplot(surfit,
                                      data=timetoEventData, 
@@ -364,6 +382,8 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
                  DCA=DCA,
                  RRData=RRData,
                  OERatio=OERatio,
+                 OE95ci=OE95ci,
+                 OAcum95ci=OAcum95ci,
                  fit=lfit,
                  ROCAnalysis=ROCAnalysis,
                  prevalence=pre,

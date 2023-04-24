@@ -46,8 +46,8 @@ CalibrationProbPoissonRisk <- function(Riskdata,trim=0.15)
   timeSorted <- timeSorted[order(timeSorted$Time),]
 #  print(head(timeSorted))
   touse <- c(1:nrow(timeSorted))
-  firstrimObserved <- trim*observed
-  lasttrimObserved <- (1.0-trim)*observed
+  firstrimObserved <- trim*observed + 1
+  lasttrimObserved <- (1.0-trim)*observed + 1
   for (lp in 1:2)
   {
     Ahazard <- 0

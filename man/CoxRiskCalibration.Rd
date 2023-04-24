@@ -16,7 +16,7 @@
 	The data frame with thre columns:  Event, Probability of event, time to event
 	}	
 	\item{trim}{
-	The percentge of tail of data not to be used to estimate the time interval
+	The percentge of tails of data not to be used to estimate the time interval
 	}	
 	\item{ml}{
 	A Cox model of the events
