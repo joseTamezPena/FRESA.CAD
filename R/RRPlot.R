@@ -127,8 +127,13 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
       }
       observed[idx] <- observed[idx-1]+xdata[idx,1];
     }
+    totObserved <- sum(xdata[,1])
     CumulativeOvs <- as.data.frame(cbind(Observed=observed,Cumulative=expected))
-    OAcum95ci <- c(mean=mean(observed/expected),metric95ci(observed/expected))
+    tokeep <- (expected > 0.05*totObserved)
+    tokeep <- tokeep & (observed > 0.05*totObserved)
+    OEration <- observed[tokeep]/expected[tokeep]
+    
+    OAcum95ci <- c(mean=mean(OEration),metric95ci(OEration))
     rownames(CumulativeOvs) <- rownames(xdata)
     maxobs <- max(c(observed,expected))
     plot(expected,observed,
@@ -321,7 +326,10 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
       totObserved <- max(Observed)
       maxevents <- max(c(Observed,Expected))
       OEData <- as.data.frame(cbind(time=timed,Observed=Observed,Expected=Expected))
-      OE95ci <- c(mean=mean(Observed/Expected),metric95ci(Observed/Expected))
+      tokeep <- (Expected > 0.05*totObserved)
+      tokeep <- tokeep & (Observed > 0.05*totObserved)
+      OEration <- Observed[tokeep]/Expected[tokeep]
+      OE95ci <- c(mean=mean(OEration),metric95ci(OEration))
       rownames(OEData) <- rownames(atEventData)
 
       observedCI <- stats::poisson.test(totObserved, conf.level = 0.95 )
