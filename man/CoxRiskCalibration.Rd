@@ -7,8 +7,8 @@
 }
 
 \usage{
-	CalibrationProbPoissonRisk(Riskdata,trim=0.15)
-	CoxRiskCalibration(ml,data,outcome,time,trim=0.15)
+	CalibrationProbPoissonRisk(Riskdata,trim=0.10)
+	CoxRiskCalibration(ml,data,outcome,time,trim=0.10)
 
 }
 \arguments{

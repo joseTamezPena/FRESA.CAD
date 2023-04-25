@@ -128,7 +128,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
       observed[idx] <- observed[idx-1]+xdata[idx,1];
     }
     CumulativeOvs <- as.data.frame(cbind(Observed=observed,Cumulative=expected))
-    OAcum95ci <- metric95ci(observed/expected)
+    OAcum95ci <- c(mean=mean(observed/expected),metric95ci(observed/expected))
     rownames(CumulativeOvs) <- rownames(xdata)
     maxobs <- max(c(observed,expected))
     plot(expected,observed,
@@ -321,7 +321,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
       totObserved <- max(Observed)
       maxevents <- max(c(Observed,Expected))
       OEData <- as.data.frame(cbind(time=timed,Observed=Observed,Expected=Expected))
-      OE95ci <- metric95ci(Observed/Expected)
+      OE95ci <- c(mean=mean(Observed/Expected),metric95ci(Observed/Expected))
       rownames(OEData) <- rownames(atEventData)
 
       observedCI <- stats::poisson.test(totObserved, conf.level = 0.95 )
@@ -353,9 +353,9 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
       surfit <- survival::survfit(survival::Surv(eTime,eStatus)~class,data = timetoEventData)
       surdif <- survival::survdiff(survival::Surv(eTime,eStatus)~class,data = timetoEventData)
       cstat <- rcorr.cens(-timetoEventData$risk,survival::Surv(timetoEventData$eTime,timetoEventData$eStatus))
-      cstatCI <- concordance95ci(as.data.frame(cbind(times=timetoEventData$eTime,
+      cstatCI <- c(mean=cstat[1],concordance95ci(as.data.frame(cbind(times=timetoEventData$eTime,
                                        status=timetoEventData$eStatus,
-                                       preds=-timetoEventData$risk)))
+                                       preds=-timetoEventData$risk))))
       cstat$cstatCI <- cstatCI
       
       graph <- survminer::ggsurvplot(surfit,
