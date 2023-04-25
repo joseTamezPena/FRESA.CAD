@@ -292,14 +292,17 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
       {
         timetoEventData$class <- 1*(riskData[,2]>=thr_atP[1]) + 1*(riskData[,2]>=thr_atP[2])
       }
-      timetoEventData$lammda <- -log(1.00000001-riskData[,2]) # From probability to risk
+      prisk <- riskData[,2]
+      prisk[prisk > 0.999999] <- 0.999999
+      timetoEventData$lammda <- -log(1.0-prisk) # From probability to risk
 
       ## Time Plot
       aliveEvents <- timetoEventData
       atEventData <- subset(timetoEventData,timetoEventData$eStatus==1)
+      atEventData <- atEventData[order(-atEventData$risk),]
       atEventData <- atEventData[order(atEventData$eTime),]
       maxtime <- max(atEventData$eTime)
-      timeInterval <- maxtime
+      timeInterval <- 2.0*mean(atEventData$eTime)
       if (!is.null(riskTimeInterval))
       {
         timeInterval <- riskTimeInterval

@@ -1,5 +1,6 @@
 adjustProb <- function(probGZero,gain)
 {
+  probGZero[probGZero > 0.999999] <- 0.999999
   hazard <- -log(1.0-probGZero)*gain
   probGZero <- 1.0-exp(-hazard)
   return (probGZero)
@@ -29,25 +30,28 @@ CalibrationProbPoissonRisk <- function(Riskdata,trim=0.10)
 #  print(c(h0,timeinterval))
   
   probGZero <- Riskdata$pGZ
-  index <- log(-log(1.0-probGZero)/h0)
-  hazard <- -log(1.0-probGZero)
+  probGZero[probGZero > 0.999999] <- 0.999999
+  index <- log(-log(1.00-probGZero)/h0)
+  hazard <- -log(1.00-probGZero)
   expected <- sum(probGZero)
   delta <- abs(observed-expected)/observed
   totgain <- 1.0;
+  eindex <- exp(index)
   while (delta>0.005)
   {
     gain <- expected/observed
+#    print(c(gain,totgain))
     h0 <- h0/gain
-    hazard <- h0*exp(index)
+    hazard <- h0*eindex
     probGZero <- 1.0-exp(-hazard)
     expected <- sum(probGZero)
     delta <- abs(observed-expected)/observed
     totgain <- totgain/gain
-#    print(c(gain,totgain))
   }
   timeInterval <- 2.0*meaninterval
   timeSorted <- Riskdata
   timeSorted$pGZ <- probGZero
+  probGZero[probGZero > 0.999999] <- 0.999999
   timeSorted$hazard <- -log(1.0-probGZero)
   timeSorted <- timeSorted[order(-timeSorted$hazard),]
   timeSorted <- timeSorted[order(timeSorted$Time),]
