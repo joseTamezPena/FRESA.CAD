@@ -156,7 +156,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
     ## Decision curve analysis
     pshape <- 4 + 12*isEvent
     xmax <- min(quantile(thrs,probs=c(0.95),0.95))
-    ymin <- min(quantile(netBenefit,probs=c(0.05)),0)
+    ymin <- min(quantile(netBenefit,probs=c(0.10)),0)
     DCA <- as.data.frame(cbind(Thrs=thrs,NetBenefit=netBenefit))
     rownames(DCA) <- names(risksGreaterThanM)
     plot(thrs,netBenefit,main=paste("Decision Curve Analysis:",title),ylab="Net Benefit",xlab="Threshold",
