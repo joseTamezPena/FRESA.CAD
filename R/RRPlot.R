@@ -1,4 +1,11 @@
-RRPlot <-function(riskData=NULL,atProb=c(0.90,0.80),atThr=NULL,title="",timetoEvent=NULL,ysurvlim=c(0,1.0),riskTimeInterval=NULL,ExpectedPrevalence=NULL)
+RRPlot <-function(riskData=NULL,
+                  timetoEvent=NULL,
+                  riskTimeInterval=NULL,
+                  ExpectedPrevalence=NULL,
+                  atProb=c(0.90,0.80),
+                  atThr=NULL,
+                  title="",
+                  ysurvlim=c(0,1.0))
 {
   riskData <- as.data.frame(riskData)
   OE95ci <- NULL
@@ -105,6 +112,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
   OEData <- NULL
 
   tmop <- par(no.readonly = TRUE)
+  par(mfrow=c(1,1))
   
   if ((mithr>=0) && (mxthr<=1.0))
   {
@@ -136,6 +144,8 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
     OAcum95ci <- c(mean=mean(OEration),metric95ci(OEration))
     rownames(CumulativeOvs) <- rownames(xdata)
     maxobs <- max(c(observed,expected))
+    par(mfrow=c(1,1))
+    
     plot(expected,observed,
          ylab="Observed",
          xlab="Cumulative Probability",
@@ -159,6 +169,8 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
     ymin <- min(quantile(netBenefit,probs=c(0.10)),0)
     DCA <- as.data.frame(cbind(Thrs=thrs,NetBenefit=netBenefit))
     rownames(DCA) <- names(risksGreaterThanM)
+    par(mfrow=c(1,1))
+    
     plot(thrs,netBenefit,main=paste("Decision Curve Analysis:",title),ylab="Net Benefit",xlab="Threshold",
          ylim=c(ymin,pre),
          xlim=c(0,xmax),
@@ -204,6 +216,8 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
                                 URR=URCI,
                                 isEvent=isEvent))
   rownames(RRData) <- names(risksGreaterThanM)
+  par(mfrow=c(1,1))
+  
   plot(SEN,RR,cex=(0.35 + PPV),
        pch=pshape,
        col=colors[1+floor(10*(1.0-SPE))],
@@ -338,7 +352,8 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
       observedCI <- stats::poisson.test(totObserved, conf.level = 0.95 )
       OERatio <- c(totObserved,observedCI$conf.int)/max(Expected)
       names(OERatio) <- c("est","lower","upper")
-
+      par(mfrow=c(1,1))
+      
       plot(timed,Expected,pch=4,type="b",cex=0.5,
            main=paste("Time vs. Events:",title),
            ylab="Events",
@@ -368,6 +383,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
                                        status=timetoEventData$eStatus,
                                        preds=-timetoEventData$risk))))
       cstat$cstatCI <- cstatCI
+      par(mfrow=c(1,1))
       
       graph <- survminer::ggsurvplot(surfit,
                                      data=timetoEventData, 

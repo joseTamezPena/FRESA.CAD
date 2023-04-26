@@ -7,18 +7,27 @@
 
 \usage{
 	RRPlot(riskData=NULL,
+	timetoEvent=NULL,
+	riskTimeInterval=NULL,
+	ExpectedPrevalence=NULL
 	atProb=c(0.90,0.80),
 	atThr=NULL,
 	title="",
-	timetoEvent=NULL,
 	ysurvlim=c(0,1.0),
-	riskTimeInterval=NULL,
-	ExpectedPrevalence=NULL
 	)	
 }
 \arguments{
 	\item{riskData}{
 	The data frame with two columns: First: Event label (event=1, censored=0). Second: Probability of any future event within the riskTimeInterval
+	}
+	\item{timetoEvent}{
+	The time to event vector
+	}
+	\item{riskTimeInterval}{
+	The time interval of the probability estimations
+	}
+	\item{ExpectedPrevalence}{
+	For Case-Control Studies: The expected prevalence of events.
 	}
 	\item{atProb}{
 	The desired specificity or sensitivity of the computed risk at threshold
@@ -29,17 +38,8 @@
 	\item{title}{
 	The title to be appended on generated each plot
 	}
-	\item{timetoEvent}{
-	The time to event vector
-	}
 	\item{ysurvlim}{
 	The y limits of the survival plot
-	}
-	\item{riskTimeInterval}{
-	The time interval of the probability estimations
-	}
-	\item{ExpectedPrevalence}{
-	For Case-Control Studies: The expected prevalence of events.
 	}
 	
 }
