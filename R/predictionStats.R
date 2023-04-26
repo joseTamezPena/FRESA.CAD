@@ -155,7 +155,7 @@ corcen95ci <- function(dataTable,nss=1000)
 
 predictionStats_binary <-  function(predictions, plotname="", center=FALSE,...)
 {
-    cat(plotname,"\n")
+#    cat(plotname,"\n")
 	cstat <- NULL;
 	cstatCI <- c(0.5,0.5,0.5);
 	medianTest <- NULL;

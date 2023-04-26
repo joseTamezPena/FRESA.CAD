@@ -112,11 +112,11 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
   OEData <- NULL
 
   tmop <- par(no.readonly = TRUE)
-  par(mfrow=c(1,1))
   
   if ((mithr>=0) && (mxthr<=1.0))
   {
     ## Observed vs Cumulative plot
+#    par(pty='s',mfrow=c(1,2),cex=0.5)
     par(pty='s')
     xdata <- riskData[order(-riskData[,2]),]
     observed <- numeric(nrow(xdata))
@@ -144,8 +144,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
     OAcum95ci <- c(mean=mean(OEration),metric95ci(OEration))
     rownames(CumulativeOvs) <- rownames(xdata)
     maxobs <- max(c(observed,expected))
-    par(mfrow=c(1,1))
-    
+
     plot(expected,observed,
          ylab="Observed",
          xlab="Cumulative Probability",
@@ -161,15 +160,13 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
            pch=c(19,-1),
            col=c(2,1),cex=0.75)
     
-    par(tmop)
-    
     ## Decision curve analysis
     pshape <- 4 + 12*isEvent
     xmax <- min(quantile(thrs,probs=c(0.95),0.95))
     ymin <- min(quantile(netBenefit,probs=c(0.10)),0)
     DCA <- as.data.frame(cbind(Thrs=thrs,NetBenefit=netBenefit))
     rownames(DCA) <- names(risksGreaterThanM)
-    par(mfrow=c(1,1))
+    par(tmop)
     
     plot(thrs,netBenefit,main=paste("Decision Curve Analysis:",title),ylab="Net Benefit",xlab="Threshold",
          ylim=c(ymin,pre),
@@ -202,6 +199,8 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
     legend("bottomleft",legend=c("Treat All","Treat None"),
            lty=c(1,1),
            col=c("red","blue"),cex=0.5)
+    par(tmop)
+    
   }
   ## Relative Risk plot
   
@@ -286,9 +285,11 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
        pos=4 - 2*(sensitivity>0.5),cex=0.7)
 
   ## ROC At threshold
+  par(tmop)
+  
   ROCAnalysis <- predictionStats_binary(riskData,
                                         plotname=paste("ROC:",title),
-                                        thr=thr_atP[1])
+                                        thr=thr_atP[1],cex=0.75)
   par(tmop)
   surfit <- NULL
   surdif <- NULL
