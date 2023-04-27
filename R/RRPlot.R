@@ -241,7 +241,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
 #       log="y",
        main=paste("Relative Risk:",title))
   atevent <- isEvent==1
-  errbar(SEN[atevent],RR[atevent],URCI[atevent],LRCI[atevent],add=TRUE,pch=-1,errbar.col="gray")
+  errbar(SEN[atevent],RR[atevent],URCI[atevent],LRCI[atevent],add=TRUE,pch=0,errbar.col="gray",cex=0.25)
   points(SEN,RR,cex=(0.35 + PPV),
        pch=pshape,
        col=colors[1+floor(10*(1.0-SPE))],
