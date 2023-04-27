@@ -91,7 +91,7 @@ The RRPlot function will analyze the provided probabilities of risk and its asso
 	\item{surfit}{
 		The survival fit object
 	}
-	\item{sufdif}{
+	\item{surdif}{
 		The logrank test analysis
 	}
 	\item{LogRankE}{

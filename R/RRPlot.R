@@ -422,7 +422,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
                  RR_atP=RRAtSen,
                  c.index=cstat,
                  surfit=surfit,
-                 sufdif=surdif,
+                 surdif=surdif,
                  LogRankE=LogRankE
                  )
   return (result)
