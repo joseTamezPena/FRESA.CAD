@@ -7,9 +7,26 @@ RRPlot <-function(riskData=NULL,
                   title="",
                   ysurvlim=c(0,1.0))
 {
-  riskData <- as.data.frame(riskData)
+  OERatio <- NULL
   OE95ci <- NULL
   OAcum95ci <- NULL
+  CumulativeOvs <- NULL
+  DCA <- NULL
+  OEData <- NULL
+  
+  if (length(unique(riskData[,2])) < 10)
+  {
+    warning(paste("Not a continous variable;",title))
+    return (0)
+  }
+  
+  if (mean(riskData[riskData[,1]==1,2]) < mean(riskData[riskData[,1]==0,2]))
+  {
+    riskData[,2] <- -riskData[,2]
+    warning("Reversed Sign")
+  }
+  
+  riskData <- as.data.frame(riskData)
   if (is.null(rownames(riskData)))
   {
     rownames(riskData) <- as.character(c(1:nrow(riskData)))
@@ -64,6 +81,8 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
   
   mxthr <- max(riskData[,2])
   mithr <- min(riskData[,2])
+  isProbability <- (mithr>=0) && (mxthr<=1.0)
+  
   idx <- 1;
   for (thr in risksGreaterThanM)
   {
@@ -107,13 +126,10 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
   }
   colors <- heat.colors(10)
   rgbcolors <- rainbow(10)
-  CumulativeOvs <- NULL
-  DCA <- NULL
-  OEData <- NULL
 
   tmop <- par(no.readonly = TRUE)
   
-  if ((mithr>=0) && (mxthr<=1.0))
+  if (isProbability)
   {
     ## Observed vs Cumulative plot
 #    par(pty='s',mfrow=c(1,2),cex=0.5)
@@ -307,63 +323,67 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
       {
         timetoEventData$class <- 1*(riskData[,2]>=thr_atP[1]) + 1*(riskData[,2]>=thr_atP[2])
       }
-      prisk <- riskData[,2]
-      prisk[prisk > 0.999999] <- 0.999999
-      timetoEventData$lammda <- -log(1.0-prisk) # From probability to risk
-
-      ## Time Plot
-      aliveEvents <- timetoEventData
-      atEventData <- subset(timetoEventData,timetoEventData$eStatus==1)
-      atEventData <- atEventData[order(-atEventData$risk),]
-      atEventData <- atEventData[order(atEventData$eTime),]
-      maxtime <- max(atEventData$eTime)
-      timeInterval <- 2.0*mean(atEventData$eTime)
-      if (!is.null(riskTimeInterval))
+      if (isProbability)
       {
-        timeInterval <- riskTimeInterval
+        ## Time Plot
+        prisk <- riskData[,2]
+        prisk[prisk > 0.999999] <- 0.999999
+        timetoEventData$lammda <- -log(1.0-prisk) # From probability to risk
+        
+        aliveEvents <- timetoEventData
+        atEventData <- subset(timetoEventData,timetoEventData$eStatus==1)
+        atEventData <- atEventData[order(-atEventData$risk),]
+        atEventData <- atEventData[order(atEventData$eTime),]
+        timeInterval <- 2.0*mean(atEventData$eTime)
+        maxtime <- max(atEventData$eTime)
+        
+        if (!is.null(riskTimeInterval))
+        {
+          timeInterval <- riskTimeInterval
+        }
+        Observed <- numeric(nrow(atEventData))
+        Expected <- numeric(nrow(atEventData))
+        timed <- numeric(nrow(atEventData))
+        passAcum <- 0;
+        for (idx in c(1:nrow(atEventData)))
+        {
+          timed[idx] <- atEventData[idx,"eTime"]
+          Observed[idx] <- idx
+          roevent <- aliveEvents$lammda*timed[idx]/timeInterval
+          roevent[roevent > 1] <- 1
+          roevent[aliveEvents$eStatus == 0] <- roevent[aliveEvents$eStatus == 0]*ExpectedNoEventsGain;
+          Expected[idx] <- passAcum + sum(roevent);
+          pssEvents <- subset(aliveEvents,aliveEvents$eTime <= timed[idx])
+          aliveEvents <- subset(aliveEvents,aliveEvents$eTime > timed[idx])
+          pnext <- pssEvents$lammda*timed[idx]/timeInterval
+          pnext[pnext > 1.0] <- 1.0
+          pnext[pssEvents$eStatus == 0] <- pnext[pssEvents$eStatus == 0]*ExpectedNoEventsGain
+          passAcum <- passAcum+sum(pnext);
+        }
+        totObserved <- max(Observed)
+        maxevents <- max(c(Observed,Expected))
+        OEData <- as.data.frame(cbind(time=timed,Observed=Observed,Expected=Expected))
+        tokeep <- (Expected > 0.05*totObserved)
+        tokeep <- tokeep & (Observed > 0.05*totObserved)
+        OEration <- Observed[tokeep]/Expected[tokeep]
+        OE95ci <- c(mean=mean(OEration),metric95ci(OEration))
+        rownames(OEData) <- rownames(atEventData)
+  
+        observedCI <- stats::poisson.test(totObserved, conf.level = 0.95 )
+        OERatio <- c(totObserved,observedCI$conf.int)/max(Expected)
+        names(OERatio) <- c("est","lower","upper")
+        par(mfrow=c(1,1))
+        
+        plot(timed,Expected,pch=4,type="b",cex=0.5,
+             main=paste("Time vs. Events:",title),
+             ylab="Events",
+             xlab="Time",
+             ylim=c(0,1.05*maxevents),
+             xlim=c(0,1.05*maxtime))
+        points(timed,Observed,pch=1,col="red")
+        legend("topleft",legend=c("Expected","Observed"),pch=c(4,1),lty=c(1,0),col=c(1,"red"))
       }
-      Observed <- numeric(nrow(atEventData))
-      Expected <- numeric(nrow(atEventData))
-      timed <- numeric(nrow(atEventData))
-      passAcum <- 0;
-      for (idx in c(1:nrow(atEventData)))
-      {
-        timed[idx] <- atEventData[idx,"eTime"]
-        Observed[idx] <- idx
-        roevent <- aliveEvents$lammda*timed[idx]/timeInterval
-        roevent[roevent > 1] <- 1
-        roevent[aliveEvents$eStatus == 0] <- roevent[aliveEvents$eStatus == 0]*ExpectedNoEventsGain;
-        Expected[idx] <- passAcum + sum(roevent);
-        pssEvents <- subset(aliveEvents,aliveEvents$eTime <= timed[idx])
-        aliveEvents <- subset(aliveEvents,aliveEvents$eTime > timed[idx])
-        pnext <- pssEvents$lammda*timed[idx]/timeInterval
-        pnext[pnext > 1.0] <- 1.0
-        pnext[pssEvents$eStatus == 0] <- pnext[pssEvents$eStatus == 0]*ExpectedNoEventsGain
-        passAcum <- passAcum+sum(pnext);
-      }
-      totObserved <- max(Observed)
-      maxevents <- max(c(Observed,Expected))
-      OEData <- as.data.frame(cbind(time=timed,Observed=Observed,Expected=Expected))
-      tokeep <- (Expected > 0.05*totObserved)
-      tokeep <- tokeep & (Observed > 0.05*totObserved)
-      OEration <- Observed[tokeep]/Expected[tokeep]
-      OE95ci <- c(mean=mean(OEration),metric95ci(OEration))
-      rownames(OEData) <- rownames(atEventData)
-
-      observedCI <- stats::poisson.test(totObserved, conf.level = 0.95 )
-      OERatio <- c(totObserved,observedCI$conf.int)/max(Expected)
-      names(OERatio) <- c("est","lower","upper")
-      par(mfrow=c(1,1))
-      
-      plot(timed,Expected,pch=4,type="b",cex=0.5,
-           main=paste("Time vs. Events:",title),
-           ylab="Events",
-           xlab="Time",
-           ylim=c(0,1.05*maxevents),
-           xlim=c(0,1.05*maxtime))
-      points(timed,Observed,pch=1,col="red")
-      legend("topleft",legend=c("Expected","Observed"),pch=c(4,1),lty=c(1,0),col=c(1,"red"))
-      ## Survival plot
+        ## Survival plot
       labelsplot <- c("Low",sprintf("At Risk > %5.3f",thr_atP[1]));
       paletteplot <- c("green", "red")
       if (length(thr_atP)>1)
