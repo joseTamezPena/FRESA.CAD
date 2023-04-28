@@ -407,9 +407,9 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
       par(mfrow=c(1,1))
       
       graph <- survminer::ggsurvplot(surfit,
-                                     data=timetoEventData, 
+                                     data = timetoEventData, 
                                      conf.int = TRUE, 
-                                     legend.labs=labelsplot,
+                                     legend.labs = labelsplot,
                                      palette = paletteplot,
                                      ylim = ysurvlim,
                                      ggtheme = ggplot2::theme_bw() + 
