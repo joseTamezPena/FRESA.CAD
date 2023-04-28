@@ -3,6 +3,7 @@ RRPlot <-function(riskData=NULL,
                   riskTimeInterval=NULL,
                   ExpectedPrevalence=NULL,
                   atProb=c(0.90,0.80),
+                  plotRR=TRUE,
                   atThr=NULL,
                   title="",
                   ysurvlim=c(0,1.0))
@@ -14,10 +15,26 @@ RRPlot <-function(riskData=NULL,
   DCA <- NULL
   OEData <- NULL
   
-  if (length(unique(riskData[,2])) < 10)
+  uvalues <- length(unique(riskData[,2]))
+  
+  if (uvalues < 10)
   {
     warning(paste("Not a continous variable;",title))
     return (0)
+  }
+  ## Removing ties 
+  if (uvalues < nrow(riskData))
+  {
+    deltaR <- IQR(riskData[,2])/nrow(riskData)
+    if (deltaR == 0) 
+    {
+      deltaR <- sd(riskData[,2])/nrow(riskData)
+    }
+    dupvalues <- table(riskData[,2])
+    dupvalues <- as.numeric(names(dupvalues)[dupvalues>1])
+    addNoise <- riskData[,2] %in% dupvalues
+    riskData[addNoise,2] <- riskData[addNoise,2] + (runif(sum(addNoise))-0.5)*deltaR*1.0e-6
+#    print(sum(addNoise))
   }
   
   if (mean(riskData[riskData[,1]==1,2]) < mean(riskData[riskData[,1]==0,2]))
@@ -160,21 +177,27 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
     OAcum95ci <- c(mean=mean(OEration),metric95ci(OEration))
     rownames(CumulativeOvs) <- rownames(xdata)
     maxobs <- max(c(observed,expected))
+    
+    if (plotRR)
+    {
+      plot(expected,observed,
+           ylab="Observed",
+           xlab="Cumulative Probability",
+           xlim=c(0,maxobs),
+           ylim=c(0,maxobs),
+           main=paste("Cumulative vs. Observed:",title),
+           pch=c(5+14*xdata[,1]),
+           col=c(1+xdata[,1]),
+           cex=c(0.2+xdata[,1]))
+      lines(x=c(0,maxobs),y=c(0,maxobs),lty=2)
+      legend("bottomright",legend=c("Event","Expected"),
+             lty=c(-1,2),
+             pch=c(19,-1),
+             col=c(2,1),cex=0.75)
+      par(tmop)
+    }
 
-    plot(expected,observed,
-         ylab="Observed",
-         xlab="Cumulative Probability",
-         xlim=c(0,maxobs),
-         ylim=c(0,maxobs),
-         main=paste("Cumulative vs. Observed:",title),
-         pch=c(5+14*xdata[,1]),
-         col=c(1+xdata[,1]),
-         cex=c(0.2+xdata[,1]))
-    lines(x=c(0,maxobs),y=c(0,maxobs),lty=2)
-    legend("bottomright",legend=c("Event","Expected"),
-           lty=c(-1,2),
-           pch=c(19,-1),
-           col=c(2,1),cex=0.75)
+    
     
     ## Decision curve analysis
     pshape <- 4 + 12*isEvent
@@ -182,40 +205,42 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
     ymin <- min(quantile(netBenefit,probs=c(0.10)),0)
     DCA <- as.data.frame(cbind(Thrs=thrs,NetBenefit=netBenefit))
     rownames(DCA) <- names(risksGreaterThanM)
-    par(tmop)
     
-    plot(thrs,netBenefit,main=paste("Decision Curve Analysis:",title),ylab="Net Benefit",xlab="Threshold",
+    if (plotRR)
+    {
+      plot(thrs,netBenefit,main=paste("Decision Curve Analysis:",title),ylab="Net Benefit",xlab="Threshold",
          ylim=c(ymin,pre),
          xlim=c(0,xmax),
          pch=pshape,col=rgbcolors[1+floor(10*(1.0-SEN))],cex=(0.35 + isEvent))
-    fiveper <- as.integer(0.05*length(netBenefit)+0.5)
-    range <- c(fiveper:length(netBenefit)-fiveper)
-    lfit <-try(loess(netBenefit[range]~thrs[range],span=0.5));
-    if (!inherits(lfit,"try-error"))
-    {
-      plx <- try(predict(lfit,se=TRUE))
-      if (!inherits(plx,"try-error"))
+      fiveper <- as.integer(0.05*length(netBenefit)+0.5)
+      range <- c(fiveper:length(netBenefit)-fiveper)
+      lfit <-try(loess(netBenefit[range]~thrs[range],span=0.5));
+      if (!inherits(lfit,"try-error"))
       {
-        lines(thrs[range],plx$fit,lty=1)
-        lines(thrs[range],plx$fit - qt(0.975,plx$df)*plx$se, lty=2)
-        lines(thrs[range],plx$fit + qt(0.975,plx$df)*plx$se, lty=2)
+        plx <- try(predict(lfit,se=TRUE))
+        if (!inherits(plx,"try-error"))
+        {
+          lines(thrs[range],plx$fit,lty=1)
+          lines(thrs[range],plx$fit - qt(0.975,plx$df)*plx$se, lty=2)
+          lines(thrs[range],plx$fit + qt(0.975,plx$df)*plx$se, lty=2)
+        }
       }
+      abline(h=0,col="blue")
+      lines(x=c(0,ExpectedPrevalence),y=c(pre,0),col="red")
+      legtxt <- sprintf("%3.1f",c(5:0)/5)
+      corrplot::colorlegend(rgbcolors, legtxt,xlim=c(0.92*xmax,0.98*xmax),ylim=c(pre*0.45,pre*0.1),cex=0.75)
+      text(0.92*xmax,pre*0.5,"SEN")
+      
+      legend("topright",legend=c("No Event","Event","loess fit"),
+             pch=c(4,16,-1),
+             col=c(1,1,1),
+             lty=c(-1,-1,1)
+             )
+      legend("bottomleft",legend=c("Treat All","Treat None"),
+             lty=c(1,1),
+             col=c("red","blue"),cex=0.5)
+      par(tmop)
     }
-    abline(h=0,col="blue")
-    lines(x=c(0,ExpectedPrevalence),y=c(pre,0),col="red")
-    legtxt <- sprintf("%3.1f",c(5:0)/5)
-    corrplot::colorlegend(rgbcolors, legtxt,xlim=c(0.92*xmax,0.98*xmax),ylim=c(pre*0.45,pre*0.1),cex=0.75)
-    text(0.92*xmax,pre*0.5,"SEN")
-    
-    legend("topright",legend=c("No Event","Event","loess fit"),
-           pch=c(4,16,-1),
-           col=c(1,1,1),
-           lty=c(-1,-1,1)
-           )
-    legend("bottomleft",legend=c("Treat All","Treat None"),
-           lty=c(1,1),
-           col=c("red","blue"),cex=0.5)
-    par(tmop)
     
   }
   ## Relative Risk plot
@@ -231,42 +256,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
                                 URR=URCI,
                                 isEvent=isEvent))
   rownames(RRData) <- names(risksGreaterThanM)
-  par(mfrow=c(1,1))
-  
-  plot(SEN,RR,cex=(0.35 + PPV),
-       pch=pshape,
-       col=colors[1+floor(10*(1.0-SPE))],
-       xlim=c(0,1.15),
-       ylim=c(1.0,ymax+0.5),
-#       log="y",
-       main=paste("Relative Risk:",title))
-  atevent <- isEvent==1
-  errbar(SEN[atevent],RR[atevent],URCI[atevent],LRCI[atevent],add=TRUE,pch=0,errbar.col="gray",cex=0.25)
-  points(SEN,RR,cex=(0.35 + PPV),
-       pch=pshape,
-       col=colors[1+floor(10*(1.0-SPE))],
-  )  
   lfit <- try(loess(RR~SEN,span=0.5));
-  if (!inherits(lfit,"try-error"))
-  {
-    plx <- try(predict(lfit,se=TRUE))
-    if (!inherits(plx,"try-error"))
-    {
-      lines(SEN,plx$fit,lty=1)
-      lines(SEN,plx$fit - qt(0.975,plx$df)*plx$se, lty=2)
-      lines(SEN,plx$fit + qt(0.975,plx$df)*plx$se, lty=2)
-    }
-  }
-
-  legtxt <- sprintf("%3.1f",c(5:0)/5)
-  corrplot::colorlegend(heat.colors(10), legtxt,xlim=c(1.05,1.175),ylim=c((ymax-0.75)*0.45+1.0,ymax/10+1.0),cex=0.75)
-  text(1.075,1,"SPE")
-  sizp <- c(5:1)/5.0 + 0.35
-  legend("topright",legend=legtxt[1:5],pch=16,cex=sizp)
-  legend("bottomleft",legend=c("No","Yes","Loess Fit"),pch=c(2,16,-1),lty=c(0,0,1),cex=0.75)
-  text(0.95,ymax+0.5,"PPV->")
-
-
   if (is.null(atThr))
   {
     thr_atP <- quantile(riskData[riskData[,1]==0,2],probs=c(atProb))
@@ -288,25 +278,72 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
   HighEventsFrac <- sum(riskData[!lowRisk,1])/sum(!lowRisk)
   sensitivity=sum(riskData[!lowRisk,1])/numberofEvents
   who <- names(SEN)[SEN==sensitivity]
-#  cat(sensitivity,who,mean(RR[who]),mean(LRCI[who]),mean(URCI[who]),"\n")
   RRAtSen <- c(est=mean(RR[who]),lower=mean(LRCI[who]),upper=mean(URCI[who]))
   
   specificity=sum(riskData[lowRisk,1]==0)/numberofNoEvents
-  abline(v=sensitivity,col="blue")
-  text(x=sensitivity,y=ymax,sprintf("Index(%3.2f)=%4.3f",specificity,thr_atP[1]),pos=4 - 2*(sensitivity>0.5) ,cex=0.7)
-  text(x=sensitivity,y=0.9*(ymax-1.0)+1.0,
-       sprintf("RR(%3.2f)=%4.3f",
-               sensitivity,
-               RRAtSen[1]),
-       pos=4 - 2*(sensitivity>0.5),cex=0.7)
-
-  ## ROC At threshold
-  par(tmop)
   
-  ROCAnalysis <- predictionStats_binary(riskData,
+  if (plotRR)
+  {
+    par(mfrow=c(1,1))
+  
+    plot(SEN,RR,cex=(0.35 + PPV),
+       pch=pshape,
+       col=colors[1+floor(10*(1.0-SPE))],
+       xlim=c(0,1.15),
+       ylim=c(1.0,ymax+0.5),
+#       log="y",
+       main=paste("Relative Risk:",title))
+    atevent <- isEvent==1
+    errbar(SEN[atevent],RR[atevent],URCI[atevent],LRCI[atevent],add=TRUE,pch=0,errbar.col="gray",cex=0.25)
+    points(SEN,RR,cex=(0.35 + PPV),
+         pch=pshape,
+         col=colors[1+floor(10*(1.0-SPE))],
+    )  
+#    lfit <- try(loess(RR~SEN,span=0.5));
+    if (!inherits(lfit,"try-error"))
+    {
+      plx <- try(predict(lfit,se=TRUE))
+      if (!inherits(plx,"try-error"))
+      {
+        lines(SEN,plx$fit,lty=1)
+        lines(SEN,plx$fit - qt(0.975,plx$df)*plx$se, lty=2)
+        lines(SEN,plx$fit + qt(0.975,plx$df)*plx$se, lty=2)
+      }
+    }
+  
+    legtxt <- sprintf("%3.1f",c(5:0)/5)
+    corrplot::colorlegend(heat.colors(10), legtxt,xlim=c(1.05,1.175),ylim=c((ymax-0.75)*0.45+1.0,ymax/10+1.0),cex=0.75)
+    text(1.075,1,"SPE")
+    sizp <- c(5:1)/5.0 + 0.35
+    legend("topright",legend=legtxt[1:5],pch=16,cex=sizp)
+    legend("bottomleft",legend=c("No","Yes","Loess Fit"),pch=c(2,16,-1),lty=c(0,0,1),cex=0.75)
+    text(0.95,ymax+0.5,"PPV->")
+
+
+    abline(v=sensitivity,col="blue")
+    text(x=sensitivity,y=ymax,sprintf("Index(%3.2f)=%4.3f",specificity,thr_atP[1]),pos=4 - 2*(sensitivity>0.5) ,cex=0.7)
+    text(x=sensitivity,y=0.9*(ymax-1.0)+1.0,
+         sprintf("RR(%3.2f)=%4.3f",
+                 sensitivity,
+                 RRAtSen[1]),
+         pos=4 - 2*(sensitivity>0.5),cex=0.7)
+    par(tmop)
+  }
+  
+  ## ROC At threshold
+  
+  if (plotRR)
+  {
+    ROCAnalysis <- predictionStats_binary(riskData,
                                         plotname=paste("ROC:",title),
-                                        thr=thr_atP[1],cex=0.75)
-  par(tmop)
+                                        thr=thr_atP[1],cex=0.85)
+    par(tmop)
+  }
+  else
+  {
+    ROCAnalysis <- predictionStats_binary(riskData,
+                                          thr=thr_atP[1])
+  }
   surfit <- NULL
   surdif <- NULL
   LogRankE <- NULL
@@ -372,16 +409,19 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
         observedCI <- stats::poisson.test(totObserved, conf.level = 0.95 )
         OERatio <- c(totObserved,observedCI$conf.int)/max(Expected)
         names(OERatio) <- c("est","lower","upper")
-        par(mfrow=c(1,1))
         
-        plot(timed,Expected,pch=4,type="b",cex=0.5,
+        if (plotRR)
+        {
+          par(mfrow=c(1,1))
+          plot(timed,Expected,pch=4,type="b",cex=0.5,
              main=paste("Time vs. Events:",title),
              ylab="Events",
              xlab="Time",
              ylim=c(0,1.05*maxevents),
              xlim=c(0,1.05*maxtime))
-        points(timed,Observed,pch=1,col="red")
-        legend("topleft",legend=c("Expected","Observed"),pch=c(4,1),lty=c(1,0),col=c(1,"red"))
+          points(timed,Observed,pch=1,col="red")
+          legend("topleft",legend=c("Expected","Observed"),pch=c(4,1),lty=c(1,0),col=c(1,"red"))
+        }
       }
         ## Survival plot
       labelsplot <- c("Low",sprintf("At Risk > %5.3f",thr_atP[1]));
@@ -403,27 +443,32 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
       cstatCI <- c(mean=cstat[1],concordance95ci(as.data.frame(cbind(times=timetoEventData$eTime,
                                        status=timetoEventData$eStatus,
                                        preds=-timetoEventData$risk))))
+      cstat <- as.list(cstat)
       cstat$cstatCI <- cstatCI
-      par(mfrow=c(1,1))
       
-      graph <- survminer::ggsurvplot(surfit,
-                                     data = timetoEventData, 
-                                     conf.int = TRUE, 
-                                     legend.labs = labelsplot,
-                                     palette = paletteplot,
-                                     ylim = ysurvlim,
-                                     ggtheme = ggplot2::theme_bw() + 
-                                       ggplot2::theme(plot.title = ggplot2::element_text(
-                                         hjust = 0.5, face = "bold", size = 16)),
-                      title = paste("Kaplan-Meier:",title),
-                      risk.table = TRUE,
-                      tables.height = 0.2,
-                      tables.theme = survminer::theme_cleantable())
-      print(graph)
+      if (plotRR)
+      {
+        par(mfrow=c(1,1))
+        graph <- survminer::ggsurvplot(surfit,
+                                       data = timetoEventData, 
+                                       conf.int = TRUE, 
+                                       legend.labs = labelsplot,
+                                       palette = paletteplot,
+                                       ylim = ysurvlim,
+                                       ggtheme = ggplot2::theme_bw() + 
+                                         ggplot2::theme(plot.title = ggplot2::element_text(
+                                           hjust = 0.5, face = "bold", size = 16)),
+                        title = paste("Kaplan-Meier:",title),
+                        risk.table = TRUE,
+                        tables.height = 0.2,
+                        tables.theme = survminer::theme_cleantable())
+        print(graph)
+        par(tmop)
+        
+      }
     
 
   }
-  par(tmop)
   
   result <- list(CumulativeOvs=CumulativeOvs,
                  OEData=OEData,

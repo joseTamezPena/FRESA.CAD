@@ -159,6 +159,22 @@ predictionStats_binary <-  function(predictions, plotname="", center=FALSE,...)
 	cstat <- NULL;
 	cstatCI <- c(0.5,0.5,0.5);
 	medianTest <- NULL;
+	parameters <- list(...);
+	thrval <- 0.5;
+
+	if (!is.null(parameters$thr))
+	{
+		thrval <- parameters$thr;
+	}
+	else
+	{
+		if ((min(predictions[,2]) < -0.01) | (max(predictions[,2]) > 1.01))
+		{
+			thrval <- 0.0;
+		}
+	}
+
+	
 	if (ncol(predictions)>2)
 	{
 		numberOfModels <- table(predictions[,2]);
@@ -209,11 +225,6 @@ predictionStats_binary <-  function(predictions, plotname="", center=FALSE,...)
 	
     pm <- NULL;
 	citest <- NULL;
-	thrval <- 0.5;
-	if ((min(predictions[,2]) < -0.01) | (max(predictions[,2]) > 1.01))
-	{
-		thrval <- 0.0;
-	}
     if (nchar(plotname) > 1)
     {
       pm <- plotModels.ROC(predictions,main = plotname,...);
