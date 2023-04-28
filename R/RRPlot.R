@@ -388,8 +388,8 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
       paletteplot <- c("green", "red")
       if (length(thr_atP)>1)
       {
-        labelsplot <- c("Low",sprintf("%5.3f <= Risk < %5.3f",thr_atP[2],thr_atP[1]),
-                        sprintf("Risk >= %5.3f",thr_atP[1]));
+        labelsplot <- c(sprintf("Low Risk < %5.3f",thr_atP[2]),sprintf("%5.3f <= Risk < %5.3f",thr_atP[2],thr_atP[1]),
+                        sprintf("High Risk >= %5.3f",thr_atP[1]));
         paletteplot <- c("green", "cyan","red")
       }
       LogRankE <- EmpiricalSurvDiff(times=timetoEventData$eTime,
