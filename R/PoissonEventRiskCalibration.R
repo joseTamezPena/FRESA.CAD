@@ -21,7 +21,7 @@ CalibrationProbPoissonRisk <- function(Riskdata,trim=0.10)
   colnames(Riskdata) <- c("Event","pGZ","Time")
   observed <- sum(Riskdata$Event)
   
-  meaninterval <- mean(subset(Riskdata,Event==1)$Time);
+  meaninterval <- mean(subset(Riskdata,Riskdata$Event==1)$Time);
   timeinterval <- 2*meaninterval;
   
   h0 <- sum(Riskdata$Event & Riskdata$Time <= timeinterval)

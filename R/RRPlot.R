@@ -3,8 +3,8 @@ RRPlot <-function(riskData=NULL,
                   riskTimeInterval=NULL,
                   ExpectedPrevalence=NULL,
                   atProb=c(0.90,0.80),
-                  plotRR=TRUE,
                   atThr=NULL,
+                  plotRR=TRUE,
                   title="",
                   ysurvlim=c(0,1.0))
 {
