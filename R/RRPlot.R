@@ -85,6 +85,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
   thrs <- numeric(nobs)
   URCI <- numeric(nobs)
   LRCI <- numeric(nobs)
+  BACC <- numeric(nobs)
   names(RR) <- names(risksGreaterThanM)
   names(pthr) <- names(risksGreaterThanM)
   names(SEN) <- names(risksGreaterThanM)
@@ -94,6 +95,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
   names(thrs) <- names(risksGreaterThanM)
   names(URCI) <- names(risksGreaterThanM)
   names(LRCI) <- names(risksGreaterThanM)
+  names(BACC) <- names(risksGreaterThanM)
   names(netBenefit) <- names(risksGreaterThanM)
   
   mxthr <- max(riskData[,2])
@@ -111,6 +113,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
     HighEvents <- sum(riskData[atHighRisk,1]);
     SEN[idx] <-  HighEvents/numberofEvents;
     SPE[idx] <- sum(riskData[atLowRisk,1]==0)/numberofNoEvents;
+    BACC[idx] <- (SEN[idx] + SPE[idx])/2
     n1 <- sum(atHighRisk)
     n2 <- sum(atLowRisk)
     PPV[idx] <- HighEvents/n1
@@ -250,6 +253,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
   RRData <- as.data.frame(cbind(risksGreaterThanM,
                                 Sensitivity=SEN,
                                 Specificity=SPE,
+                                BACC  = BACC,
                                 PPV=PPV,
                                 RR=RR,
                                 LRR=LRCI,
@@ -272,7 +276,19 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
   {
     thr_atP <- atThr
   }
-  
+  maxBACC <- max(BACC)
+  RRval <- RR[thrs <= thr_atP[1] & SPE > 0.25]
+  thrsval <- thrs[thrs <= thr_atP[1] & SPE > 0.25]
+  maxRR <- max(RRval)
+  thr_values <- c(thr_atP,at_max_BACC=min(thrs[BACC==maxBACC]),at_max_RR=min(thrsval[RRval==maxRR]))
+  thrLoc <- rep(1,length(thr_values))
+  for (tthr in c(1:length(thr_values)))
+  {
+    thrLoc[tthr] <- which.min(abs(thrs-thr_values[tthr]))
+  }
+  thrPoints <- as.data.frame(cbind(thrs[thrLoc],RR[thrLoc],SEN[thrLoc],SPE[thrLoc],BACC[thrLoc]))
+  colnames(thrPoints) <- c("Thr","RR","SEN","SPE","BACC")
+
   lowRisk <- riskData[,2] < thr_atP[1]
   LowEventsFrac <- sum(riskData[lowRisk,1])/sum(lowRisk)
   HighEventsFrac <- sum(riskData[!lowRisk,1])/sum(!lowRisk)
@@ -474,13 +490,14 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
                  OEData=OEData,
                  DCA=DCA,
                  RRData=RRData,
+                 keyPoints=thrPoints,
                  OERatio=OERatio,
                  OE95ci=OE95ci,
                  OAcum95ci=OAcum95ci,
                  fit=lfit,
                  ROCAnalysis=ROCAnalysis,
                  prevalence=pre,
-                 thr_atP=thr_atP,
+                 thr_atP=thr_values,
                  SEN_atP=sensitivity,
                  LowEventsFrac_atP=LowEventsFrac,
                  HighEventsFrac_atP=HighEventsFrac,
