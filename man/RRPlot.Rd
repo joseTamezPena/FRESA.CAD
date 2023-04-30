@@ -65,6 +65,9 @@ The RRPlot function will analyze the provided probabilities of risk and its asso
 	\item{RRData}{
 		The risk ratios data matrix for the ploted observations
 	}
+	\item{keyPoints}{
+		The threshold values at key points: Specified, Max BACC, Max RR
+	}
 	\item{OERatio}{
 		The Observed/Expected ratio with 95CI
 	}

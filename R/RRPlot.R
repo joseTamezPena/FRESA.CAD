@@ -71,39 +71,35 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
   }
   
   minRiskAtEvent <- min(riskData[riskData[,1]==1,2])
-  risksGreaterThanM <- riskData[riskData[,2] >= minRiskAtEvent,2]
-  names(risksGreaterThanM) <- rownames(riskData[riskData[,2] >= minRiskAtEvent,])
-  risksGreaterThanM <- risksGreaterThanM[order(risksGreaterThanM)]
-  nobs <- length(risksGreaterThanM)
+  thrsWhitinEvents <- riskData[riskData[,2] >= minRiskAtEvent,2]
+  names(thrsWhitinEvents) <- rownames(riskData[riskData[,2] >= minRiskAtEvent,])
+  thrsWhitinEvents <- thrsWhitinEvents[order(thrsWhitinEvents)]
+  nobs <- length(thrsWhitinEvents)
   RR <- numeric(nobs)
   SEN <- numeric(nobs)
   SPE <- numeric(nobs)
-  isEvent <- riskData[names(risksGreaterThanM),1]
+  isEvent <- riskData[names(thrsWhitinEvents),1]
   PPV <- numeric(nobs)
   netBenefit <- numeric(nobs)
-  pthr <- numeric(nobs)
-  thrs <- numeric(nobs)
   URCI <- numeric(nobs)
   LRCI <- numeric(nobs)
   BACC <- numeric(nobs)
-  names(RR) <- names(risksGreaterThanM)
-  names(pthr) <- names(risksGreaterThanM)
-  names(SEN) <- names(risksGreaterThanM)
-  names(SPE) <- names(risksGreaterThanM)
-  names(isEvent) <- names(risksGreaterThanM)
-  names(PPV) <- names(risksGreaterThanM)
-  names(thrs) <- names(risksGreaterThanM)
-  names(URCI) <- names(risksGreaterThanM)
-  names(LRCI) <- names(risksGreaterThanM)
-  names(BACC) <- names(risksGreaterThanM)
-  names(netBenefit) <- names(risksGreaterThanM)
+  names(RR) <- names(thrsWhitinEvents)
+  names(SEN) <- names(thrsWhitinEvents)
+  names(SPE) <- names(thrsWhitinEvents)
+  names(isEvent) <- names(thrsWhitinEvents)
+  names(PPV) <- names(thrsWhitinEvents)
+  names(URCI) <- names(thrsWhitinEvents)
+  names(LRCI) <- names(thrsWhitinEvents)
+  names(BACC) <- names(thrsWhitinEvents)
+  names(netBenefit) <- names(thrsWhitinEvents)
   
   mxthr <- max(riskData[,2])
   mithr <- min(riskData[,2])
   isProbability <- (mithr>=0) && (mxthr<=1.0)
   
   idx <- 1;
-  for (thr in risksGreaterThanM)
+  for (thr in thrsWhitinEvents)
   {
     
     atLowRisk <- riskData[,2] < thr
@@ -139,9 +135,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
         RR[idx] <- 1.0;
       }
     }
-    pthr[idx] <- thr
-    thrs[idx] <- thr
-    netBenefit[idx] <- (HighEvents - ExpectedNoEventsGain*sum(riskData[atHighRisk,1]==0)*pthr[idx]/(1.0001-pthr[idx]))/totobs;
+    netBenefit[idx] <- (HighEvents - ExpectedNoEventsGain*sum(riskData[atHighRisk,1]==0)*thrsWhitinEvents[idx]/(1.0001-thrsWhitinEvents[idx]))/totobs;
     idx <- idx + 1;
   }
   colors <- heat.colors(10)
@@ -204,28 +198,28 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
     
     ## Decision curve analysis
     pshape <- 4 + 12*isEvent
-    xmax <- min(quantile(thrs,probs=c(0.95),0.95))
+    xmax <- min(quantile(thrsWhitinEvents,probs=c(0.95),0.95))
     ymin <- min(quantile(netBenefit,probs=c(0.10)),0)
-    DCA <- as.data.frame(cbind(Thrs=thrs,NetBenefit=netBenefit))
-    rownames(DCA) <- names(risksGreaterThanM)
+    DCA <- as.data.frame(cbind(Thrs=thrsWhitinEvents,NetBenefit=netBenefit))
+    rownames(DCA) <- names(thrsWhitinEvents)
     
     if (plotRR)
     {
-      plot(thrs,netBenefit,main=paste("Decision Curve Analysis:",title),ylab="Net Benefit",xlab="Threshold",
+      plot(thrsWhitinEvents,netBenefit,main=paste("Decision Curve Analysis:",title),ylab="Net Benefit",xlab="Threshold",
          ylim=c(ymin,pre),
          xlim=c(0,xmax),
          pch=pshape,col=rgbcolors[1+floor(10*(1.0-SEN))],cex=(0.35 + isEvent))
       fiveper <- as.integer(0.05*length(netBenefit)+0.5)
       range <- c(fiveper:length(netBenefit)-fiveper)
-      lfit <-try(loess(netBenefit[range]~thrs[range],span=0.5));
+      lfit <-try(loess(netBenefit[range]~thrsWhitinEvents[range],span=0.5));
       if (!inherits(lfit,"try-error"))
       {
         plx <- try(predict(lfit,se=TRUE))
         if (!inherits(plx,"try-error"))
         {
-          lines(thrs[range],plx$fit,lty=1)
-          lines(thrs[range],plx$fit - qt(0.975,plx$df)*plx$se, lty=2)
-          lines(thrs[range],plx$fit + qt(0.975,plx$df)*plx$se, lty=2)
+          lines(thrsWhitinEvents[range],plx$fit,lty=1)
+          lines(thrsWhitinEvents[range],plx$fit - qt(0.975,plx$df)*plx$se, lty=2)
+          lines(thrsWhitinEvents[range],plx$fit + qt(0.975,plx$df)*plx$se, lty=2)
         }
       }
       abline(h=0,col="blue")
@@ -250,7 +244,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
   
   ymax <- quantile(RR,probs=c(0.99))
   pshape <- 2 + 14*isEvent
-  RRData <- as.data.frame(cbind(risksGreaterThanM,
+  RRData <- as.data.frame(cbind(thr=thrsWhitinEvents,
                                 Sensitivity=SEN,
                                 Specificity=SPE,
                                 BACC  = BACC,
@@ -259,7 +253,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
                                 LRR=LRCI,
                                 URR=URCI,
                                 isEvent=isEvent))
-  rownames(RRData) <- names(risksGreaterThanM)
+  rownames(RRData) <- names(thrsWhitinEvents)
   lfit <- try(loess(RR~SEN,span=0.5));
   if (is.null(atThr))
   {
@@ -275,20 +269,27 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
   else
   {
     thr_atP <- atThr
+    atProb <- atThr
   }
+  ## Get the location of the thresholds
   maxBACC <- max(BACC)
-  RRval <- RR[thrs <= thr_atP[1] & SPE > 0.25]
-  thrsval <- thrs[thrs <= thr_atP[1] & SPE > 0.25]
+  RRval <- RR[thrsWhitinEvents <= thr_atP[1] & SPE > 0.25]
+  thrsval <- thrsWhitinEvents[thrsWhitinEvents <= thr_atP[1] & SPE > 0.25]
   maxRR <- max(RRval)
-  thr_values <- c(thr_atP,at_max_BACC=min(thrs[BACC==maxBACC]),at_max_RR=min(thrsval[RRval==maxRR]))
+  thr_values <- c(thr_atP,at_max_BACC=min(thrsWhitinEvents[BACC==maxBACC]),at_max_RR=min(thrsval[RRval==maxRR]))
   thrLoc <- rep(1,length(thr_values))
+#  print(thr_values)
   for (tthr in c(1:length(thr_values)))
   {
-    thrLoc[tthr] <- which.min(abs(thrs-thr_values[tthr]))
+    thrLoc[tthr] <- which.min(abs(thrsWhitinEvents-thr_values[tthr]))
   }
-  thrPoints <- as.data.frame(cbind(thrs[thrLoc],RR[thrLoc],SEN[thrLoc],SPE[thrLoc],BACC[thrLoc]))
+#  print(thrLoc)
+  thrPoints <- as.data.frame(cbind(thrsWhitinEvents[thrLoc],RR[thrLoc],SEN[thrLoc],SPE[thrLoc],BACC[thrLoc]))
   colnames(thrPoints) <- c("Thr","RR","SEN","SPE","BACC")
-
+  rownames(thrPoints) <- c(paste("@",atProb,sep=":"),"@BACC","@RR")
+#  print(thrPoints)
+  
+  ## Sensitivity, Specificity and RR at top threshold
   lowRisk <- riskData[,2] < thr_atP[1]
   LowEventsFrac <- sum(riskData[lowRisk,1])/sum(lowRisk)
   HighEventsFrac <- sum(riskData[!lowRisk,1])/sum(!lowRisk)
