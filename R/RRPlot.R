@@ -99,13 +99,18 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
   isProbability <- (mithr>=0) && (mxthr<=1.0)
   
   idx <- 1;
+  noMoreLowEventsIdx <- minRiskAtEvent
   for (thr in thrsWhitinEvents)
   {
     
     atLowRisk <- riskData[,2] < thr
     atHighRisk <- !atLowRisk
     LowEvents <- sum(riskData[atLowRisk,1])
-    if (LowEvents==0) LowEvents <- 0.5;
+    if (LowEvents==0) 
+    {
+      LowEvents <- 0.1;
+      noMoreLowEventsIdx <- thr
+    }
     HighEvents <- sum(riskData[atHighRisk,1]);
     SEN[idx] <-  HighEvents/numberofEvents;
     SPE[idx] <- sum(riskData[atLowRisk,1]==0)/numberofNoEvents;
@@ -273,10 +278,13 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
   }
   ## Get the location of the thresholds
   maxBACC <- max(BACC)
-  RRval <- RR[thrsWhitinEvents <= thr_atP[1] & SPE > 0.25]
-  thrsval <- thrsWhitinEvents[thrsWhitinEvents <= thr_atP[1] & SPE > 0.25]
+  RRval <- RR[thrsWhitinEvents <= thr_atP[1] & SPE > 0.10]
+  thrsval <- thrsWhitinEvents[thrsWhitinEvents <= thr_atP[1] & SPE > 0.10]
   maxRR <- max(RRval)
-  thr_values <- c(thr_atP,at_max_BACC=min(thrsWhitinEvents[BACC==maxBACC]),at_max_RR=min(thrsval[RRval==maxRR]))
+  thr_values <- c(thr_atP,
+                  at_max_BACC=min(thrsWhitinEvents[BACC==maxBACC]),
+                  at_max_RR=min(thrsval[RRval==maxRR]),
+                  atSPE100=noMoreLowEventsIdx)
   thrLoc <- rep(1,length(thr_values))
 #  print(thr_values)
   for (tthr in c(1:length(thr_values)))
@@ -286,7 +294,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
 #  print(thrLoc)
   thrPoints <- as.data.frame(cbind(thrsWhitinEvents[thrLoc],RR[thrLoc],SEN[thrLoc],SPE[thrLoc],BACC[thrLoc]))
   colnames(thrPoints) <- c("Thr","RR","SEN","SPE","BACC")
-  rownames(thrPoints) <- c(paste("@",atProb,sep=":"),"@BACC","@RR")
+  rownames(thrPoints) <- c(paste("@",atProb,sep=":"),"@MAX_BACC","@MAX_RR","@SPE100")
 #  print(thrPoints)
   
   ## Sensitivity, Specificity and RR at top threshold
@@ -351,9 +359,11 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
   
   if (plotRR)
   {
+    par(tmop)
     ROCAnalysis <- predictionStats_binary(riskData,
                                         plotname=paste("ROC:",title),
                                         thr=thr_atP[1],cex=0.85)
+
     par(tmop)
   }
   else
