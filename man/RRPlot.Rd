@@ -69,10 +69,22 @@ The RRPlot function will analyze the provided probabilities of risk and its asso
 		The threshold values at: Specified, Max BACC, Max RR, and 100% Spe
 	}
 	\item{OERatio}{
-		The Observed/Expected ratio with 95CI
+		The Observed/Expected poisson test
+	}
+	\item{OE95ci}{
+		The mean OE Ratio over the top 90% of the data
+	}
+	\item{OARatio}{
+		The Observed/Accumlated poisson test
+	}
+	\item{OAcum95ci}{
+		The mean O/A Ratio over the top 90% of the data
 	}
 	\item{fit}{
 		The loess fit of the Risk Ratios
+	}
+	\item{ROCAnalysis}{
+		The Reciver Operating Curve and Binary performance analysis
 	}
 	\item{prevalence}{
 		The prevalence of events
@@ -93,7 +105,7 @@ The RRPlot function will analyze the provided probabilities of risk and its asso
 		The fraction of subjects at high risk
 	}
 	\item{c.index}{
-		The c-index
+		The c-index with 90%CI intervals
 	}
 	\item{surfit}{
 		The survival fit object
@@ -209,7 +221,7 @@ The RRPlot function will analyze the provided probabilities of risk and its asso
 
 		rrAnalysisTrain <- RRPlot(rdata,atProb=c(0.90),
 								  timetoEvent=lungD$time,
-								  title="Raw Train: lungD Cancer",
+								  title="Raw Train: lung Cancer",
 								  ysurvlim=c(0.00,1.0),
 								  riskTimeInterval=timeinterval)
 
@@ -217,9 +229,11 @@ The RRPlot function will analyze the provided probabilities of risk and its asso
 		### Reporting Performance 
 
 
-		print(t(rrAnalysisTrain$OERatio),caption="O/E Ratio")
-		print(t(rrAnalysisTrain$OE95ci),caption="O/E Ratio")
-		print(t(rrAnalysisTrain$OAcum95ci),caption="O/Acum Ratio")
+		print(rrAnalysisTrain$keyPoints,caption="Key Values")
+		print(rrAnalysisTrain$OERatio,caption="O/E Test")
+		print(t(rrAnalysisTrain$OE95ci),caption="O/E Mean")
+		print(rrAnalysisTrain$OARatio,caption="O/Acum Test")
+		print(t(rrAnalysisTrain$OAcum95ci),caption="O/Acum Mean")
 		print(rrAnalysisTrain$c.index$cstatCI,caption="C. Index")
 		print(t(rrAnalysisTrain$ROCAnalysis$aucs),caption="ROC AUC")
 		print((rrAnalysisTrain$ROCAnalysis$sensitivity),caption="Sensitivity")

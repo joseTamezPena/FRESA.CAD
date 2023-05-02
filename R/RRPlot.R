@@ -14,6 +14,7 @@ RRPlot <-function(riskData=NULL,
   CumulativeOvs <- NULL
   DCA <- NULL
   OEData <- NULL
+  OARatio <- NULL
   
   uvalues <- length(unique(riskData[,2]))
   
