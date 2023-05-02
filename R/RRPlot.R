@@ -171,12 +171,19 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
       observed[idx] <- observed[idx-1]+xdata[idx,1];
     }
     totObserved <- sum(xdata[,1])
-    CumulativeOvs <- as.data.frame(cbind(Observed=observed,Cumulative=expected))
-    tokeep <- (expected > 0.05*totObserved)
-    tokeep <- tokeep & (observed > 0.05*totObserved)
-    OEration <- observed[tokeep]/expected[tokeep]
+    tokeep <- (expected > 0.10*totObserved)
+    tokeep <- tokeep & (observed > 0.10*totObserved)
+    CumulativeOvs <- as.data.frame(cbind(Observed=observed,Cumulative=expected,Included=tokeep))
     
-    OAcum95ci <- c(mean=mean(OEration),metric95ci(OEration))
+    OEratio <- observed[tokeep]/expected[tokeep]
+    OAcum95ci <- c(mean=mean(OEratio),metric95ci(OEratio))
+    
+    observedCI <- stats::poisson.test(max(observed[tokeep]),max(expected[tokeep]), conf.level = 0.95 )
+    OARatio <- observedCI
+    OARatio$estimate <- c(OARatio$estimate,OARatio$conf.int,OARatio$p.value)
+    names(OARatio$estimate) <- c("O/A","Low","Upper","p.value")
+    
+    
     rownames(CumulativeOvs) <- rownames(xdata)
     maxobs <- max(c(observed,expected))
     
@@ -438,16 +445,17 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
         }
         totObserved <- max(Observed)
         maxevents <- max(c(Observed,Expected))
-        OEData <- as.data.frame(cbind(time=timed,Observed=Observed,Expected=Expected))
-        tokeep <- (Expected > 0.05*totObserved)
-        tokeep <- tokeep & (Observed > 0.05*totObserved)
-        OEration <- Observed[tokeep]/Expected[tokeep]
-        OE95ci <- c(mean=mean(OEration),metric95ci(OEration))
+        tokeep <- (Expected > 0.10*totObserved)
+        tokeep <- tokeep & (Observed > 0.10*totObserved)
+        OEData <- as.data.frame(cbind(time=timed,Observed=Observed,Expected=Expected,Included=tokeep))
+        OEratio <- Observed[tokeep]/Expected[tokeep]
+        OE95ci <- c(mean=mean(OEratio),metric95ci(OEratio))
         rownames(OEData) <- rownames(atEventData)
-  
-        observedCI <- stats::poisson.test(totObserved, conf.level = 0.95 )
-        OERatio <- c(totObserved,observedCI$conf.int)/max(Expected)
-        names(OERatio) <- c("est","lower","upper")
+
+        observedCI <- stats::poisson.test(max(Observed[tokeep]),max(Expected[tokeep]), conf.level = 0.95 )
+        OERatio <- observedCI
+        OERatio$estimate <- c(OERatio$estimate,OERatio$conf.int,OERatio$p.value)
+        names(OERatio$estimate) <- c("O/E","Low","Upper","p.value")
         
         if (plotRR)
         {
@@ -516,6 +524,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
                  keyPoints=thrPoints,
                  OERatio=OERatio,
                  OE95ci=OE95ci,
+                 OARatio=OARatio,
                  OAcum95ci=OAcum95ci,
                  fit=lfit,
                  ROCAnalysis=ROCAnalysis,
