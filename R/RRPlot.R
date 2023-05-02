@@ -285,6 +285,11 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
                   at_max_BACC=min(thrsWhitinEvents[BACC==maxBACC]),
                   at_max_RR=min(thrsval[RRval==maxRR]),
                   atSPE100=noMoreLowEventsIdx)
+  if (isProbability)
+  {
+    thr_values <- c(thr_values,at_0.5=0.5)
+  }
+  
   thrLoc <- rep(1,length(thr_values))
 #  print(thr_values)
   for (tthr in c(1:length(thr_values)))
@@ -294,7 +299,14 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
 #  print(thrLoc)
   thrPoints <- as.data.frame(cbind(thrsWhitinEvents[thrLoc],RR[thrLoc],SEN[thrLoc],SPE[thrLoc],BACC[thrLoc]))
   colnames(thrPoints) <- c("Thr","RR","SEN","SPE","BACC")
-  rownames(thrPoints) <- c(paste("@",atProb,sep=":"),"@MAX_BACC","@MAX_RR","@SPE100")
+  if (isProbability)
+  {
+    rownames(thrPoints) <- c(paste("@",atProb,sep=":"),"@MAX_BACC","@MAX_RR","@SPE100","p(0.5)")
+  }
+  else
+  {
+    rownames(thrPoints) <- c(paste("@",atProb,sep=":"),"@MAX_BACC","@MAX_RR","@SPE100")
+  }
 #  print(thrPoints)
   
   ## Sensitivity, Specificity and RR at top threshold
