@@ -17,6 +17,8 @@ RRPlot <-function(riskData=NULL,
   OARatio <- NULL
   
   uvalues <- length(unique(riskData[,2]))
+  isProbability <- (min(riskData[,2])>=0) && (max(riskData[,2])<=1.0)
+  
   
   if (uvalues < 10)
   {
@@ -34,14 +36,21 @@ RRPlot <-function(riskData=NULL,
     dupvalues <- table(riskData[,2])
     dupvalues <- as.numeric(names(dupvalues)[dupvalues>1])
     addNoise <- riskData[,2] %in% dupvalues
+    if (isProbability)
+    {
+        addNoise <- addNoise & (riskData[,2] < 0.999) & (riskData[,2] > 0.001)
+    }
     riskData[addNoise,2] <- riskData[addNoise,2] + (runif(sum(addNoise))-0.5)*deltaR*1.0e-6
 #    print(sum(addNoise))
   }
   
-  if (mean(riskData[riskData[,1]==1,2]) < mean(riskData[riskData[,1]==0,2]))
+  if (!isProbability)
   {
-    riskData[,2] <- -riskData[,2]
-    warning("Reversed Sign")
+    if (mean(riskData[riskData[,1]==1,2]) < mean(riskData[riskData[,1]==0,2]))
+    {
+      riskData[,2] <- -riskData[,2]
+      warning("Reversed Sign")
+    }
   }
   
   riskData <- as.data.frame(riskData)
@@ -97,7 +106,6 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
   
   mxthr <- max(riskData[,2])
   mithr <- min(riskData[,2])
-  isProbability <- (mithr>=0) && (mxthr<=1.0)
   
   idx <- 1;
   noMoreLowEventsIdx <- minRiskAtEvent
