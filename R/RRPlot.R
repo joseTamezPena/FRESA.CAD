@@ -17,7 +17,7 @@ RRPlot <-function(riskData=NULL,
   OARatio <- NULL
   
   uvalues <- length(unique(riskData[,2]))
-  isProbability <- (min(riskData[,2])>=0) && (max(riskData[,2])<=1.0)
+  isProbability <- (min(riskData[,2])>=0) && (max(riskData[,2])<=1.0) && (sd(riskData[,2])>0.05)
   
   
   if (uvalues < 10)
