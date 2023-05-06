@@ -109,6 +109,8 @@ export(metric95ci)
 export(sperman95ci)
 export(MAE95ci)
 export(ClassMetric95ci)
+export(getMedianSurvCalibratedPrediction)
+export(getMedianLogisticCalibratedPrediction)
 
 useDynLib(FRESA.CAD,.registration = TRUE, .fixes = "C_")
 
