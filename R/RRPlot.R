@@ -317,11 +317,11 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
   colnames(thrPoints) <- c("Thr","RR","SEN","SPE","BACC")
   if (isProbability)
   {
-    rownames(thrPoints) <- c(paste("@",atProb,sep=":"),"@MAX_BACC","@MAX_RR","@SPE100","p(0.5)")
+    rownames(thrPoints) <- c(paste("@",round(atProb,2),sep=":"),"@MAX_BACC","@MAX_RR","@SPE100","p(0.5)")
   }
   else
   {
-    rownames(thrPoints) <- c(paste("@",atProb,sep=":"),"@MAX_BACC","@MAX_RR","@SPE100")
+    rownames(thrPoints) <- c(paste("@",round(atProb,2),sep=":"),"@MAX_BACC","@MAX_RR","@SPE100")
   }
 #  print(thrPoints)
   
@@ -538,7 +538,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
                  fit=lfit,
                  ROCAnalysis=ROCAnalysis,
                  prevalence=pre,
-                 thr_atP=thr_values,
+                 thr_atP=thr_atP,
                  SEN_atP=sensitivity,
                  LowEventsFrac_atP=LowEventsFrac,
                  HighEventsFrac_atP=HighEventsFrac,
