@@ -3,6 +3,7 @@ Changes from FRESA.CAD 3.4.4 to FRESA.CAD version 3.4.5
 	 	-RRPlot added to the library
 		-adjustProb added to the library
 		-ppoisGzero added to the library
+		-meanTimeToEvent added to the library
 		-CalibrationProbPoissonRisk added to the library
 		-CoxRiskCalibration added to the library
 		-getMedianSurvCalibratedPrediction added to the library

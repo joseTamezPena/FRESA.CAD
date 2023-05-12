@@ -13,6 +13,13 @@ ppoisGzero <- function(index,h0)
   return (probGZero)
 }
 
+meanTimeToEvent <- function(probGZero,timeInterval)
+{
+  meanEvents <- -log(1.0-probGZero)
+  return (0.5*timeInterval/meanEvents)
+}
+
+
 CalibrationProbPoissonRisk <- function(Riskdata,trim=0.10)
 ### Riskdata is a matrix of a Poisson event with Event, Probability of Event>0, and Time to Event]
 {
