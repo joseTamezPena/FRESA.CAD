@@ -10,7 +10,7 @@
 	timetoEvent=NULL,
 	riskTimeInterval=NULL,
 	ExpectedPrevalence=NULL,
-	atProb=c(0.90,0.80),
+	atRate=c(0.90,0.80),
 	atThr=NULL,
     plotRR=TRUE,
 	title="",
@@ -30,8 +30,8 @@
 	\item{ExpectedPrevalence}{
 	For Case-Control Studies: The expected prevalence of events.
 	}
-	\item{atProb}{
-	The desired specificity or sensitivity of the computed risk at threshold
+	\item{atRate}{
+	The desired TNR (specificity) or FNR (1.0-sensitivity) of the computed risk at threshold
 	}
 	\item{atThr}{
 	The risk threshold
@@ -49,7 +49,7 @@
 }
 
 \details{
-The RRPlot function will analyze the provided probabilities of risk and its associated events to generate calibration plots and plots of Relative Risk (RR) vs all the sensitivity values. Furthermore, it will compute and analyze the RR of the computed threshold that contains the prescribed percentage of negative cases. If the user provides the time to event data, the function will also plot the Kaplan-Meier curve and return the logrank probability of differences between risk categories. For the calibration plot it will use the user provided riskTimeInterval to get the expected number of events. If the user does not provide the riskTimeInterval the function will use the maximum time of observations with events.
+The RRPlot function will analyze the provided probabilities of risk and its associated events to generate calibration plots and plots of Relative Risk (RR) vs all the sensitivity values. Furthermore, it will compute and analyze the RR of the computed threshold that contains the prescribed rate of true negative cases (TNR) or if the atRate value is lower than 0.5 it will assume that it is the FNR (1-Specificity). If the user provides the time to event data, the function will also plot the Kaplan-Meier curve and return the logrank probability of differences between risk categories. For the calibration plot it will use the user provided riskTimeInterval to get the expected number of events. If the user does not provide the riskTimeInterval the function will use the maximum time of observations with events.
  }
 
 \value{
@@ -66,7 +66,7 @@ The RRPlot function will analyze the provided probabilities of risk and its asso
 		The risk ratios data matrix for the ploted observations
 	}
 	\item{keyPoints}{
-		The threshold values at: Specified, Max BACC, Max RR, and 100% Spe
+		The threshold values and metrics at: Specified, Max BACC, Max RR, and 100% Spe
 	}
 	\item{OERatio}{
 		The Observed/Expected poisson test
@@ -91,18 +91,6 @@ The RRPlot function will analyze the provided probabilities of risk and its asso
 	}
 	\item{thr_atP}{
 		The p-value that contains atProb of the negative subjects
-	}
-	\item{SEN_atP}{
-		The observed sensitivity at threshold
-	}
-	\item{LowEventsFrac_atP}{
-		The fraction of subjects at low risk
-	}
-	\item{HighEventsFrac_atP}{
-		The fraction of subjects at high risk
-	}
-	\item{RR_atP}{
-		The fraction of subjects at high risk
 	}
 	\item{c.index}{
 		The c-index with 90%CI intervals

@@ -2,12 +2,17 @@ RRPlot <-function(riskData=NULL,
                   timetoEvent=NULL,
                   riskTimeInterval=NULL,
                   ExpectedPrevalence=NULL,
-                  atProb=c(0.90,0.80),
+                  atRate=c(0.90,0.80),
                   atThr=NULL,
                   plotRR=TRUE,
                   title="",
                   ysurvlim=c(0,1.0))
 {
+
+  if (!requireNamespace("corrplot", quietly = TRUE)) {
+    install.packages("corrplot", dependencies = TRUE)
+  }
+
   OERatio <- NULL
   OE95ci <- NULL
   OAcum95ci <- NULL
@@ -15,6 +20,7 @@ RRPlot <-function(riskData=NULL,
   DCA <- NULL
   OEData <- NULL
   OARatio <- NULL
+  netBenefitatP <- NULL
   
   uvalues <- length(unique(riskData[,2]))
   isProbability <- (min(riskData[,2]) >= 0) && (max(riskData[,2]) <= 1.0) && (sd(riskData[,2]) > 0.01)
@@ -25,7 +31,8 @@ RRPlot <-function(riskData=NULL,
     warning(paste("Not a continous variable;",title))
     return (0)
   }
-  ## Removing ties 
+  ## Removing ties
+  deltaR <- 0;
   if (uvalues < nrow(riskData))
   {
     deltaR <- IQR(riskData[,2])/nrow(riskData)
@@ -41,8 +48,11 @@ RRPlot <-function(riskData=NULL,
         addNoise <- addNoise & (riskData[,2] < 0.999) & (riskData[,2] > 0.001)
     }
     riskData[addNoise,2] <- riskData[addNoise,2] + (runif(sum(addNoise))-0.5)*deltaR*1.0e-6
+
 #    print(sum(addNoise))
   }
+  
+  isRevesed <- 1.0
   
   if (!isProbability)
   {
@@ -50,6 +60,8 @@ RRPlot <-function(riskData=NULL,
     {
       riskData[,2] <- -riskData[,2]
       warning("Reversed Sign")
+      isRevesed <- -1.0;
+      if (!is.null(atThr))  {atThr <- -atThr;}
     }
   }
   
@@ -59,9 +71,41 @@ RRPlot <-function(riskData=NULL,
     rownames(riskData) <- as.character(c(1:nrow(riskData)))
   }
   totobs <- nrow(riskData)
-if (!requireNamespace("corrplot", quietly = TRUE)) {
-		install.packages("corrplot", dependencies = TRUE)
-		}
+  
+  ## Getting the threshold values for the specified values
+  if (is.null(atThr))
+  {
+    thr_atP <- quantile(riskData[riskData[,1]==0,2],probs=c(atRate)) - deltaR
+    if (atRate[1]<0.5)
+    {
+      thr_atP <- quantile(riskData[riskData[,1]==1,2],probs=c(atRate)) + deltaR
+    }
+    if (length(atRate)>1)
+    {
+      if (atRate[2]>=atRate[1])
+      {
+        thr_atP <- quantile(riskData[riskData[,1]==1,2],probs=c(1.0-atRate)) + deltaR
+      }
+      if (atRate[1] < 0.5)
+      {
+        thr_atP <- quantile(riskData[riskData[,1]==1,2],probs=c(atRate)) + deltaR
+      }
+      if (thr_atP[1] == thr_atP[2])
+      {
+        atRate <- atRate[1]
+        thr_atP <- thr_atP[1]
+      }
+    }
+  }
+  else
+  {
+    thr_atP <- atThr
+    atRate <- atThr
+  }
+  
+  
+  
+  
         
   numberofEvents <- sum(riskData[,1])
   numberofNoEvents <- sum(riskData[,1]==0)
@@ -149,13 +193,18 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
         RR[idx] <- 1.0;
       }
     }
-    netBenefit[idx] <- (HighEvents - ExpectedNoEventsGain*sum(riskData[atHighRisk,1]==0)*thrsWhitinEvents[idx]/(1.0001-thrsWhitinEvents[idx]))/totobs;
+    if (isProbability)
+    {
+      netBenefit[idx] <- (HighEvents - ExpectedNoEventsGain*sum(riskData[atHighRisk,1]==0)*thrsWhitinEvents[idx]/(1.0001-thrsWhitinEvents[idx]))/totobs;
+    }
     idx <- idx + 1;
   }
   colors <- heat.colors(10)
   rgbcolors <- rainbow(10)
 
   tmop <- par(no.readonly = TRUE)
+  
+
   
   if (isProbability)
   {
@@ -224,6 +273,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
     DCA <- as.data.frame(cbind(Thrs=thrsWhitinEvents,NetBenefit=netBenefit))
     rownames(DCA) <- names(thrsWhitinEvents)
     
+
     if (plotRR)
     {
       plot(thrsWhitinEvents,netBenefit,main=paste("Decision Curve Analysis:",title),ylab="Net Benefit",xlab="Threshold",
@@ -249,10 +299,20 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
       corrplot::colorlegend(rgbcolors, legtxt,xlim=c(0.92*xmax,0.98*xmax),ylim=c(pre*0.45,pre*0.1),cex=0.75)
       text(0.92*xmax,pre*0.5,"SEN")
       
-      legend("topright",legend=c("No Event","Event","loess fit"),
-             pch=c(4,16,-1),
-             col=c(1,1,1),
-             lty=c(-1,-1,1)
+      thrlty <- c(1)
+      thrLey <- "H. Thr"
+      abline(v=thr_atP[1],col="gray",lty=thrlty)
+      if (length(thr_atP)>1) 
+      {
+        abline(v=thr_atP[2],col="gray",lty=2)
+        thrlty <- c(thrlty,2)
+        thrLey <- c(thrLey,"L. Thr")
+      }
+      
+      legend("topright",legend=c("No Event","Event","loess fit",thrLey),
+             pch=c(4,16,-1,-1,-1),
+             col=c(1,1,1,"gray","gray"),
+             lty=c(-1,-1,1,thrlty)
              )
       legend("bottomleft",legend=c("Treat All","Treat None"),
              lty=c(1,1),
@@ -276,22 +336,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
                                 isEvent=isEvent))
   rownames(RRData) <- names(thrsWhitinEvents)
   lfit <- try(loess(RR~SEN,span=0.5));
-  if (is.null(atThr))
-  {
-    thr_atP <- quantile(riskData[riskData[,1]==0,2],probs=c(atProb))
-    if (length(atProb)>1)
-    {
-      if (atProb[2]>atProb[1])
-      {
-        thr_atP <- quantile(riskData[riskData[,1]==1,2],probs=c(1.0-atProb))
-      }
-    }
-  }
-  else
-  {
-    thr_atP <- atThr
-    atProb <- atThr
-  }
+#  print(thr_atP)
   ## Get the location of the thresholds
   maxBACC <- max(BACC)
   RRval <- RR[thrsWhitinEvents <= thr_atP[1] & SPE > 0.10]
@@ -313,15 +358,16 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
     thrLoc[tthr] <- which.min(abs(thrsWhitinEvents-thr_values[tthr]))
   }
 #  print(thrLoc)
-  thrPoints <- as.data.frame(cbind(thrsWhitinEvents[thrLoc],RR[thrLoc],SEN[thrLoc],SPE[thrLoc],BACC[thrLoc]))
-  colnames(thrPoints) <- c("Thr","RR","SEN","SPE","BACC")
+  thrPoints <- as.data.frame(cbind(isRevesed*thrsWhitinEvents[thrLoc],RR[thrLoc],LRCI[thrLoc],URCI[thrLoc],SEN[thrLoc],SPE[thrLoc],BACC[thrLoc]))
+  colnames(thrPoints) <- c("Thr","RR","RR_LCI","RR_UCI","SEN","SPE","BACC")
   if (isProbability)
   {
-    rownames(thrPoints) <- c(paste("@",round(atProb,2),sep=":"),"@MAX_BACC","@MAX_RR","@SPE100","p(0.5)")
+    thrPoints$NetBenefit <- netBenefit[thrLoc]
+    rownames(thrPoints) <- c(paste("@",round(atRate,3),sep=":"),"@MAX_BACC","@MAX_RR","@SPE100","p(0.5)")
   }
   else
   {
-    rownames(thrPoints) <- c(paste("@",round(atProb,2),sep=":"),"@MAX_BACC","@MAX_RR","@SPE100")
+    rownames(thrPoints) <- c(paste("@",round(atRate,3),sep=":"),"@MAX_BACC","@MAX_RR","@SPE100")
   }
 #  print(thrPoints)
   
@@ -374,7 +420,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
 
 
     abline(v=sensitivity,col="blue")
-    text(x=sensitivity,y=ymax,sprintf("Index(%3.2f)=%4.3f",specificity,thr_atP[1]),pos=4 - 2*(sensitivity>0.5) ,cex=0.7)
+    text(x=sensitivity,y=ymax,sprintf("Index(%3.2f)=%4.3f",specificity,isRevesed*thr_atP[1]),pos=4 - 2*(sensitivity>0.5) ,cex=0.7)
     text(x=sensitivity,y=0.9*(ymax-1.0)+1.0,
          sprintf("RR(%3.2f)=%4.3f",
                  sensitivity,
@@ -480,17 +526,31 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
         }
       }
         ## Survival plot
-      labelsplot <- c("Low",sprintf("At Risk > %5.3f",thr_atP[1]));
       paletteplot <- c("green", "red")
-      if (length(thr_atP)>1)
+      if (isRevesed > 0)
       {
-        labelsplot <- c(sprintf("Low Risk < %5.3f",thr_atP[2]),sprintf("%5.3f <= Risk < %5.3f",thr_atP[2],thr_atP[1]),
-                        sprintf("High Risk >= %5.3f",thr_atP[1]));
-        paletteplot <- c("green", "cyan","red")
+        labelsplot <- c("Low",sprintf("At Risk > %5.3f",thr_atP[1]));
+        if (length(thr_atP)>1)
+        {
+          labelsplot <- c(sprintf("Low Risk < %5.3f",thr_atP[2]),sprintf("%5.3f <= Risk < %5.3f",thr_atP[2],thr_atP[1]),
+                          sprintf("High Risk >= %5.3f",thr_atP[1]));
+          paletteplot <- c("green", "cyan","red")
+        }
+      }
+      else
+      {
+        labelsplot <- c("Low",sprintf("At Risk < %5.3f",-thr_atP[1]));
+        if (length(thr_atP)>1)
+        {
+          labelsplot <- c(sprintf("Low Risk > %5.3f",-thr_atP[2]),sprintf("%5.3f >= Risk > %5.3f",-thr_atP[2],-thr_atP[1]),
+                          sprintf("High Risk <= %5.3f",-thr_atP[1]));
+          paletteplot <- c("green", "cyan","red")
+        }
+        
       }
       LogRankE <- EmpiricalSurvDiff(times=timetoEventData$eTime,
                   status=timetoEventData$eStatus,
-                  groups=timetoEventData$class,
+                  groups=1*(timetoEventData$class > 0),
                   plots=FALSE,main=paste("Kaplan-Meier:",title))
       
       surfit <- survival::survfit(survival::Surv(eTime,eStatus)~class,data = timetoEventData)
@@ -538,11 +598,7 @@ if (!requireNamespace("corrplot", quietly = TRUE)) {
                  fit=lfit,
                  ROCAnalysis=ROCAnalysis,
                  prevalence=pre,
-                 thr_atP=thr_atP,
-                 SEN_atP=sensitivity,
-                 LowEventsFrac_atP=LowEventsFrac,
-                 HighEventsFrac_atP=HighEventsFrac,
-                 RR_atP=RRAtSen,
+                 thr_atP= isRevesed*thr_atP,
                  c.index=cstat,
                  surfit=surfit,
                  surdif=surdif,
