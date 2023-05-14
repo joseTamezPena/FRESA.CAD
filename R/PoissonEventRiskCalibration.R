@@ -16,7 +16,7 @@ ppoisGzero <- function(index,h0)
 meanTimeToEvent <- function(probGZero,timeInterval)
 {
   meanEvents <- -log(1.0-probGZero)
-  return (0.5*timeInterval/meanEvents)
+  return (timeInterval/meanEvents)
 }
 
 
