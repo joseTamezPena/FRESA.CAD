@@ -20,7 +20,7 @@ meanTimeToEvent <- function(probGZero,timeInterval)
 }
 
 
-CalibrationProbPoissonRisk <- function(Riskdata,trim=0.10)
+CalibrationProbPoissonRisk <- function(Riskdata,trim=0.10,timeInterval=NULL)
 ### Riskdata is a matrix of a Poisson event with Event, Probability of Event>0, and Time to Event]
 {
 
@@ -29,12 +29,15 @@ CalibrationProbPoissonRisk <- function(Riskdata,trim=0.10)
   observed <- sum(Riskdata$Event)
   
   meaninterval <- mean(subset(Riskdata,Riskdata$Event==1)$Time);
-  timeinterval <- 2*meaninterval;
+  if (is.null(timeInterval))
+  {
+    timeInterval <- 2*meaninterval;
+  }
   
-  h0 <- sum(Riskdata$Event & Riskdata$Time <= timeinterval)
-  h0 <- h0/sum((Riskdata$Time > timeinterval) | (Riskdata$Event==1))
+  h0 <- sum(Riskdata$Event & Riskdata$Time <= timeInterval)
+  h0 <- h0/sum((Riskdata$Time > timeInterval) | (Riskdata$Event==1))
   
-#  print(c(h0,timeinterval))
+#  print(c(h0,timeInterval))
   
   probGZero <- Riskdata$pGZ
   probGZero[probGZero > 0.999999] <- 0.999999
@@ -55,7 +58,7 @@ CalibrationProbPoissonRisk <- function(Riskdata,trim=0.10)
     delta <- abs(observed-expected)/observed
     totgain <- totgain/gain
   }
-  timeInterval <- 2.0*meaninterval
+#  startTimeInterval <- timeInterval
   timeSorted <- Riskdata
   timeSorted$pGZ <- probGZero
   probGZero[probGZero > 0.999999] <- 0.999999
@@ -66,7 +69,7 @@ CalibrationProbPoissonRisk <- function(Riskdata,trim=0.10)
   touse <- c(1:nrow(timeSorted))
   firstrimObserved <- trim*observed + 1
   lasttrimObserved <- (1.0-trim)*observed + 1
-  for (lp in 1:2)
+  for (lp in 1:3)
   {
     Ahazard <- 0
     cobserved <- 0
@@ -123,22 +126,25 @@ CalibrationProbPoissonRisk <- function(Riskdata,trim=0.10)
   return (result)
 }
 
-CoxRiskCalibration <- function(ml,data,outcome,time,trim=0.10)
+CoxRiskCalibration <- function(ml,data,outcome,time,trim=0.10,timeInterval=NULL)
 {
   index <- predict(ml,data)
   
 
-  meaninterval <- mean(data[data[,outcome]==1,time]);
-  timeinterval <- 2*meaninterval;
-  h0 <- sum(data[,outcome]==1 & data[,time] <= timeinterval)
-  h0 <- h0/sum((data[,time] > timeinterval) | (data[,outcome]==1))
+  if (is.null(timeInterval))
+  {
+    meaninterval <- mean(data[data[,outcome]==1,time]);
+    timeInterval <- 2*meaninterval;
+  }
+  h0 <- sum(data[,outcome]==1 & data[,time] <= timeInterval)
+  h0 <- h0/sum((data[,time] > timeInterval) | (data[,outcome]==1))
   
   
   hazard <- h0*exp(index)
   probGZero <- 1.0-exp(-hazard)
 
   Riskdata <- cbind(data[,outcome],probGZero,data[,time])
-  result <- CalibrationProbPoissonRisk(Riskdata,trim)
+  result <- CalibrationProbPoissonRisk(Riskdata,trim,timeInterval)
   
 
   return (result)

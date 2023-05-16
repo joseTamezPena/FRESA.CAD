@@ -7,8 +7,8 @@
 }
 
 \usage{
-	CalibrationProbPoissonRisk(Riskdata,trim=0.10)
-	CoxRiskCalibration(ml,data,outcome,time,trim=0.10)
+	CalibrationProbPoissonRisk(Riskdata,trim=0.10,timeInterval=NULL)
+	CoxRiskCalibration(ml,data,outcome,time,trim=0.10,timeInterval=NULL)
 
 }
 \arguments{
@@ -18,6 +18,9 @@
 	\item{trim}{
 	The percentge of tails of data not to be used to estimate the time interval
 	}	
+	\item{timeInterval}{
+	The time interval for event rate estimation
+	}	
 	\item{ml}{
 	A Cox model of the events
 	}
@@ -25,7 +28,7 @@
 	the new dataframe to predict the model
 	}
 	\item{outcome}{
-	The name of the columnt that has the event: 1 uncensored, 2; Censored
+	The name of the columnt that has the event: 1 uncensored, 0; Censored
 	}
 	\item{time}{
 	The time to event, or time to last observation.
@@ -34,7 +37,7 @@
 }
 
 \details{
- The function will estimate the baseline hazard of Poisson events and its corresponding time interval from a list of predicted probability that the event will occur for censored (Outome=0) of the actual event happened (Outcome=1). The time to event will be used to get the best time interval that models the rate of events.
+ The function will estimate the baseline hazard of Poisson events and its corresponding time interval from a list of predicted probability that the event will occur for censored (Outome=0) of the actual event happened (Outcome=1). If the timeInterval is not provided, The funtion will estimete the time to event will be used to get the best time interval that models the rate of events.
  }
 
 \value{
@@ -54,7 +57,7 @@
 		The calibration gain
 	}
 	\item{timeInterval}{
-		The estimated time interval of the Poisson event
+		The time interval of the Poisson event
 	}
 	\item{meaninterval}{
 		The mean observed interval of events
