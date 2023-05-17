@@ -507,27 +507,30 @@ RRPlot <-function(riskData=NULL,
           # pnext[pssEvents$eStatus == 0] <- pnext[pssEvents$eStatus == 0]*ExpectedNoEventsGain
           # passAcum <- passAcum+sum(pnext);
         # }
-        timed <- aliveEvents[aliveEvents$eStatus==1,"eTime"]
+        timed <- unique(aliveEvents[aliveEvents$eStatus==1,"eTime"])
         maxtime <- max(timed)
         Observed <- c(1:length(timed))
         Expected <- Observed
         aliveEvents[aliveEvents$eStatus == 0,"lammda"] <- aliveEvents[aliveEvents$eStatus == 0,"lammda"]*ExpectedNoEventsGain
         passAcum <- 0;
+        lastObs <- 0;
         allTimes <- aliveEvents$eTime
         lasttime <- 0
 #        print(timed)
 
-        for (idx in Observed)
+        for (idx in c(1:length(timed)))
         {
-          whosum <- (allTimes > lasttime) 
+          whosum <- (allTimes <= timed[idx]) & (allTimes > lasttime)
           deltatime <- (timed[idx] - lasttime)
-#          cat(deltatime,",")
-          eevents <- 1.0 - exp(-sum(aliveEvents[whosum,"lammda"])*timeInterval)
+          Observed[idx] <- lastObs + sum(aliveEvents[whosum,"eStatus"])
+          lastObs <- Observed[idx]
+          eevents <- sum(aliveEvents[allTimes > lasttime,"lammda"])*deltatime/timeInterval
           Expected[idx] <- passAcum + eevents;
           passAcum <- Expected[idx]
           lasttime <- timed[idx]
         }
-#        print(Expected)
+ #       print(Expected)
+ #       print(Observed)
         
         totObserved <- max(Observed)
         maxevents <- max(c(Observed,Expected))
@@ -537,7 +540,7 @@ RRPlot <-function(riskData=NULL,
         OEratio <- Observed[tokeep]/Expected[tokeep]
         OE95ci <- c(mean=mean(OEratio),metric95ci(OEratio))
 #        rownames(OEData) <- rownames(atEventData)
-        rownames(OEData) <- rownames(aliveEvents[aliveEvents$eStatus==1,])
+#        rownames(OEData) <- rownames(aliveEvents[aliveEvents$eStatus==1,])
 
         observedCI <- stats::poisson.test(max(Observed[tokeep]),max(Expected[tokeep]), conf.level = 0.95 )
         OERatio <- observedCI
