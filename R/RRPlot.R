@@ -478,35 +478,11 @@ RRPlot <-function(riskData=NULL,
         aliveEvents <- timetoEventData
         aliveEvents <- aliveEvents[order(-aliveEvents$risk),]
         aliveEvents <- aliveEvents[order(aliveEvents$eTime),]
-#        atEventData <- subset(timetoEventData,timetoEventData$eStatus==1)
-#        atEventData <- atEventData[order(-atEventData$risk),]
-#       atEventData <- atEventData[order(atEventData$eTime),]
-#        timeInterval <- 2.0*mean(atEventData$eTime)
-#        maxtime <- max(atEventData$eTime)
         
         if (!is.null(riskTimeInterval))
         {
           timeInterval <- riskTimeInterval
         }
-#        Observed <- numeric(nrow(atEventData))
-#        Expected <- numeric(nrow(atEventData))
-#        timed <- numeric(nrow(atEventData))
-#        passAcum <- 0;
-        # for (idx in c(1:nrow(atEventData)))
-        # {
-          # timed[idx] <- atEventData[idx,"eTime"]
-          # Observed[idx] <- idx
-          # roevent <- aliveEvents$lammda*timed[idx]/timeInterval
-          # roevent[roevent > 1] <- 1
-          # roevent[aliveEvents$eStatus == 0] <- roevent[aliveEvents$eStatus == 0]*ExpectedNoEventsGain;
-          # Expected[idx] <- passAcum + sum(roevent);
-          # pssEvents <- subset(aliveEvents,aliveEvents$eTime <= timed[idx])
-          # aliveEvents <- subset(aliveEvents,aliveEvents$eTime > timed[idx])
-          # pnext <- pssEvents$lammda*timed[idx]/timeInterval
-          # pnext[pnext > 1.0] <- 1.0
-          # pnext[pssEvents$eStatus == 0] <- pnext[pssEvents$eStatus == 0]*ExpectedNoEventsGain
-          # passAcum <- passAcum+sum(pnext);
-        # }
         timed <- unique(aliveEvents[aliveEvents$eStatus==1,"eTime"])
         maxtime <- max(timed)
         Observed <- c(1:length(timed))
@@ -516,7 +492,6 @@ RRPlot <-function(riskData=NULL,
         lastObs <- 0;
         allTimes <- aliveEvents$eTime
         lasttime <- 0
-#        print(timed)
 
         for (idx in c(1:length(timed)))
         {
@@ -529,8 +504,6 @@ RRPlot <-function(riskData=NULL,
           passAcum <- Expected[idx]
           lasttime <- timed[idx]
         }
- #       print(Expected)
- #       print(Observed)
         
         totObserved <- max(Observed)
         maxevents <- max(c(Observed,Expected))
@@ -539,8 +512,6 @@ RRPlot <-function(riskData=NULL,
         OEData <- as.data.frame(cbind(time=timed,Observed=Observed,Expected=Expected,Included=tokeep))
         OEratio <- Observed[tokeep]/Expected[tokeep]
         OE95ci <- c(mean=mean(OEratio),metric95ci(OEratio))
-#        rownames(OEData) <- rownames(atEventData)
-#        rownames(OEData) <- rownames(aliveEvents[aliveEvents$eStatus==1,])
 
         observedCI <- stats::poisson.test(max(Observed[tokeep]),max(Expected[tokeep]), conf.level = 0.95 )
         OERatio <- observedCI
