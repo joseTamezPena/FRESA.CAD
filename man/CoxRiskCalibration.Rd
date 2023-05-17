@@ -37,7 +37,7 @@
 }
 
 \details{
- The function will estimate the baseline hazard of Poisson events and its corresponding time interval from a list of predicted probability that the event will occur for censored (Outome=0) of the actual event happened (Outcome=1). If the timeInterval is not provided, The funtion will estimete the time to event will be used to get the best time interval that models the rate of events.
+ The function will estimate the baseline hazard of Poisson events and its corresponding time interval from a list of predicted probability that the event will occur for censored (Outome=0) of the actual event happened (Outcome=1). If the timeInterval is not provided, the funtion will estimete the initial time interval  to be used to get the best time interval that models the rate of events.
  }
 
 \value{

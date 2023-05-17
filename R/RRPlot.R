@@ -121,7 +121,14 @@ RRPlot <-function(riskData=NULL,
   }
   else
   {
+#    print(ExpectedPrevalence)
+    if (!is.null(riskTimeInterval) && !is.null(timetoEvent))
+    {
+      samplePrevalence <- sum(timetoEvent < riskTimeInterval & riskData[,1]==1)/totobs
+      pre <- samplePrevalence
+    }
     ExpectedPrevalence <- samplePrevalence
+ #   print(ExpectedPrevalence)
   }
   
   minRiskAtEvent <- min(riskData[riskData[,1]==1,2])
@@ -466,38 +473,62 @@ RRPlot <-function(riskData=NULL,
         ## Time Plot
         prisk <- riskData[,2]
         prisk[prisk > 0.999999] <- 0.999999
-        timetoEventData$lammda <- -log(1.0-prisk) # From probability to risk
+        timetoEventData$lammda <- -log(1.0-prisk) # From probability to expected events per time interval
         
         aliveEvents <- timetoEventData
-        atEventData <- subset(timetoEventData,timetoEventData$eStatus==1)
-        atEventData <- atEventData[order(-atEventData$risk),]
-        atEventData <- atEventData[order(atEventData$eTime),]
-        timeInterval <- 2.0*mean(atEventData$eTime)
-        maxtime <- max(atEventData$eTime)
+        aliveEvents <- aliveEvents[order(-aliveEvents$risk),]
+        aliveEvents <- aliveEvents[order(aliveEvents$eTime),]
+#        atEventData <- subset(timetoEventData,timetoEventData$eStatus==1)
+#        atEventData <- atEventData[order(-atEventData$risk),]
+#       atEventData <- atEventData[order(atEventData$eTime),]
+#        timeInterval <- 2.0*mean(atEventData$eTime)
+#        maxtime <- max(atEventData$eTime)
         
         if (!is.null(riskTimeInterval))
         {
           timeInterval <- riskTimeInterval
         }
-        Observed <- numeric(nrow(atEventData))
-        Expected <- numeric(nrow(atEventData))
-        timed <- numeric(nrow(atEventData))
+#        Observed <- numeric(nrow(atEventData))
+#        Expected <- numeric(nrow(atEventData))
+#        timed <- numeric(nrow(atEventData))
+#        passAcum <- 0;
+        # for (idx in c(1:nrow(atEventData)))
+        # {
+          # timed[idx] <- atEventData[idx,"eTime"]
+          # Observed[idx] <- idx
+          # roevent <- aliveEvents$lammda*timed[idx]/timeInterval
+          # roevent[roevent > 1] <- 1
+          # roevent[aliveEvents$eStatus == 0] <- roevent[aliveEvents$eStatus == 0]*ExpectedNoEventsGain;
+          # Expected[idx] <- passAcum + sum(roevent);
+          # pssEvents <- subset(aliveEvents,aliveEvents$eTime <= timed[idx])
+          # aliveEvents <- subset(aliveEvents,aliveEvents$eTime > timed[idx])
+          # pnext <- pssEvents$lammda*timed[idx]/timeInterval
+          # pnext[pnext > 1.0] <- 1.0
+          # pnext[pssEvents$eStatus == 0] <- pnext[pssEvents$eStatus == 0]*ExpectedNoEventsGain
+          # passAcum <- passAcum+sum(pnext);
+        # }
+        timed <- aliveEvents[aliveEvents$eStatus==1,"eTime"]
+        maxtime <- max(timed)
+        Observed <- c(1:length(timed))
+        Expected <- Observed
+        aliveEvents[aliveEvents$eStatus == 0,"lammda"] <- aliveEvents[aliveEvents$eStatus == 0,"lammda"]*ExpectedNoEventsGain
         passAcum <- 0;
-        for (idx in c(1:nrow(atEventData)))
+        allTimes <- aliveEvents$eTime
+        lasttime <- 0
+#        print(timed)
+
+        for (idx in Observed)
         {
-          timed[idx] <- atEventData[idx,"eTime"]
-          Observed[idx] <- idx
-          roevent <- aliveEvents$lammda*timed[idx]/timeInterval
-          roevent[roevent > 1] <- 1
-          roevent[aliveEvents$eStatus == 0] <- roevent[aliveEvents$eStatus == 0]*ExpectedNoEventsGain;
-          Expected[idx] <- passAcum + sum(roevent);
-          pssEvents <- subset(aliveEvents,aliveEvents$eTime <= timed[idx])
-          aliveEvents <- subset(aliveEvents,aliveEvents$eTime > timed[idx])
-          pnext <- pssEvents$lammda*timed[idx]/timeInterval
-          pnext[pnext > 1.0] <- 1.0
-          pnext[pssEvents$eStatus == 0] <- pnext[pssEvents$eStatus == 0]*ExpectedNoEventsGain
-          passAcum <- passAcum+sum(pnext);
+          whosum <- (allTimes > lasttime) 
+          deltatime <- (timed[idx] - lasttime)
+#          cat(deltatime,",")
+          eevents <- 1.0 - exp(-sum(aliveEvents[whosum,"lammda"])*timeInterval)
+          Expected[idx] <- passAcum + eevents;
+          passAcum <- Expected[idx]
+          lasttime <- timed[idx]
         }
+#        print(Expected)
+        
         totObserved <- max(Observed)
         maxevents <- max(c(Observed,Expected))
         tokeep <- (Expected > 0.10*totObserved)
@@ -505,7 +536,8 @@ RRPlot <-function(riskData=NULL,
         OEData <- as.data.frame(cbind(time=timed,Observed=Observed,Expected=Expected,Included=tokeep))
         OEratio <- Observed[tokeep]/Expected[tokeep]
         OE95ci <- c(mean=mean(OEratio),metric95ci(OEratio))
-        rownames(OEData) <- rownames(atEventData)
+#        rownames(OEData) <- rownames(atEventData)
+        rownames(OEData) <- rownames(aliveEvents[aliveEvents$eStatus==1,])
 
         observedCI <- stats::poisson.test(max(Observed[tokeep]),max(Expected[tokeep]), conf.level = 0.95 )
         OERatio <- observedCI
