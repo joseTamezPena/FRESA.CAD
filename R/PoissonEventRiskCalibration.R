@@ -41,8 +41,18 @@ CalibrationProbPoissonRisk <- function(Riskdata,trim=0.10,timeInterval=NULL)
   
   probGZero <- Riskdata$pGZ
   probGZero[probGZero > 0.999999] <- 0.999999
+
+  hazard <- -log(1.00-probGZero)
+
+   ## Adjust probabilites of no-event that share similar time than events 
+  atRisktime <- 3.0*meaninterval
+  isnoevent <- (Riskdata$Time < atRisktime) & (Riskdata$Event==0) # Adjust only if short time to event on censored events
+  probGZero[isnoevent] <- 1.0 - exp(-hazard[isnoevent]*Riskdata[isnoevent,"Time"]/timeInterval)
+
   index <- log(-log(1.00-probGZero)/h0)
   hazard <- -log(1.00-probGZero)
+  
+  
   expected <- sum(probGZero)
   delta <- abs(observed-expected)/observed
   totgain <- 1.0;
@@ -58,7 +68,7 @@ CalibrationProbPoissonRisk <- function(Riskdata,trim=0.10,timeInterval=NULL)
     delta <- abs(observed-expected)/observed
     totgain <- totgain/gain
   }
-#  startTimeInterval <- timeInterval
+  probGZero <- adjustProb(Riskdata$pGZ,totgain)
   timeSorted <- Riskdata
   timeSorted$pGZ <- probGZero
   probGZero[probGZero > 0.999999] <- 0.999999
@@ -67,48 +77,47 @@ CalibrationProbPoissonRisk <- function(Riskdata,trim=0.10,timeInterval=NULL)
   timeSorted <- timeSorted[order(timeSorted$Time),]
 #  print(head(timeSorted))
   touse <- c(1:nrow(timeSorted))
-  firstrimObserved <- trim*observed + 1
-  lasttrimObserved <- (1.0-trim)*observed + 1
-  for (lp in 1:3)
+  firstrimObserved <- trim*observed
+  lasttrimObserved <- (1.0 - 0.5*trim)*observed 
+  timed <- unique(timeSorted[timeSorted$Event==1,"Time"])
+  allTimes <- timeSorted$Time
+#  for (lp in 1:3)
   {
-    Ahazard <- 0
-    cobserved <- 0
-    deltaObs <- 0;
-    deltaAdded <- 0;
-    alive <- timeSorted;
-    pastEvents <- 0;
-    idx <- 0
-#    cat("Rows",nrow(alive),"Time:",idx,">")
-    for (idx in touse)
+    lasttime <- 0;
+    lastObs <- 0;
+    totObs <- 0;
+    acuHazard <- 0;
+    passHazard <- 0;
+    gainAdded <- 0;
+    meanGain <- 0;
+    for (idx in c(1:length(timed)))
     {
-      oevent <- alive$hazard*(timeSorted[idx,"Time"]/timeInterval)
-      oevent[oevent > 1.0] <- 1.0
-      Ahazard <- pastEvents + sum(oevent)
-      cobserved <- cobserved + timeSorted[idx,"Event"]
-      if ((cobserved > firstrimObserved) && (cobserved < lasttrimObserved))
-      {
-        deltaObs <- deltaObs + Ahazard/cobserved;
-        deltaAdded <- deltaAdded + 1.0;
-#        cat("Rows",nrow(alive),"Time:",idx,">")
-      }
-      donealive <- alive[alive$Time <= timeSorted[idx,"Time"],]
-      pevent <- donealive$hazard*timeSorted[idx,"Time"]/timeInterval
-      pevent[pevent > 1.0] <- 1.0
-      pastEvents <- pastEvents + sum(pevent)
-#      cat(":",timeSorted[idx,"Time"],",",sum(alive$Time > timeSorted[idx,"Time"]),"\n")
-      alive <- alive[alive$Time > timeSorted[idx,"Time"],]
+          whosum <- (allTimes <= timed[idx]) & (allTimes > lasttime)
+          deltatime <- (timed[idx] - lasttime)
+          totObs <- lastObs + sum(timeSorted[whosum,"Event"])
+          lastObs <- totObs
+          eevents <- sum(timeSorted[allTimes > lasttime,"hazard"])*deltatime/timeInterval
+          acuHazard <- passHazard + eevents;
+          passHazard <- acuHazard;
+          lasttime <- timed[idx]
+          if ((totObs >= firstrimObserved) & (totObs <= lasttrimObserved))
+          {
+            wt <- sqrt(totObs)
+            gainAdded <- gainAdded + wt
+            meanGain <- meanGain + wt*(acuHazard/totObs)
+          }
+#          cat(totObs,",",eevents,",",acuHazard,"\n")
     }
-    if (deltaAdded > 0)
+    if (gainAdded > 0)
     {
-      gainTime <- deltaObs/deltaAdded
+      meanGain <- meanGain/gainAdded
     }
     else
     {
-      gainTime <- Ahazard/observed
+      meanGain <- acuHazard/totObs
     }
-#    print(c(Ahazard/observed,gainTime))
-    timeInterval <- timeInterval*gainTime
-#    cat(deltaObs,":",Ahazard,":",cobserved,":",timeInterval,"\n")
+    timeInterval <- timeInterval*meanGain
+#    cat("(",timeInterval,",",gainAdded,",",meanGain,",",totObs,",",acuHazard,")")
   }
   nevent <- timeSorted$"hazard"*timeSorted$Time/timeInterval
   nevent[nevent > 1.0]  <- 1.0

@@ -223,17 +223,29 @@ RRPlot <-function(riskData=NULL,
     expected <- numeric(nrow(xdata))
     observed[1] <- xdata[1,1]
     expected[1] <- xdata[1,2]
+    pgzero <- xdata[,2]
+    
+    if (!is.null(timetoEvent) && !is.null(riskTimeInterval))
+    {
+      atRisktime <- 3.0*mean(timetoEvent[riskData[,1]==1])
+      otime <- timetoEvent[order(-riskData[,2])]
+      isnoevent <- (otime < atRisktime) & (xdata[,1]==0) # Adjust only if short time to event on censored events
+      hazard <- -log(1.00-pgzero[isnoevent])
+      pgzero[isnoevent] <- 1.0 - exp(-hazard*otime[isnoevent]/riskTimeInterval)
+    }
+
+
     for (idx in c(2:nrow(xdata)))
     {
       if (xdata[idx,1]==1)
       {
-        expected[idx] <- expected[idx-1]+xdata[idx,2];
+        expected[idx] <- expected[idx-1] + pgzero[idx];
       }
       else
       {
-        expected[idx] <- expected[idx-1]+xdata[idx,2]*ExpectedNoEventsGain;
+        expected[idx] <- expected[idx-1] + pgzero[idx]*ExpectedNoEventsGain;
       }
-      observed[idx] <- observed[idx-1]+xdata[idx,1];
+      observed[idx] <- observed[idx-1] + xdata[idx,1];
     }
     totObserved <- sum(xdata[,1])
     tokeep <- (expected > 0.10*totObserved)
@@ -263,6 +275,13 @@ RRPlot <-function(riskData=NULL,
            pch=c(5+14*xdata[,1]),
            col=c(1+xdata[,1]),
            cex=c(0.2+xdata[,1]))
+           se <- 2*sqrt(observed)
+      errbar(expected,observed,observed-se,observed+se,add=TRUE,pch=0,errbar.col="gray",cex=0.25)
+      points(expected,observed,
+              pch=c(5+14*xdata[,1]),
+                 col=c(1+xdata[,1]),
+                 cex=c(0.2+xdata[,1]))
+
       lines(x=c(0,maxobs),y=c(0,maxobs),lty=2)
       legend("bottomright",legend=c("Event","Expected"),
              lty=c(-1,2),
@@ -483,6 +502,11 @@ RRPlot <-function(riskData=NULL,
         {
           timeInterval <- riskTimeInterval
         }
+        else
+        {
+          timeInterval <- 2*mean(subset(aliveEvents,
+                                aliveEvents$eStatus==1)$eTime);
+        }
         timed <- unique(aliveEvents[aliveEvents$eStatus==1,"eTime"])
         maxtime <- max(timed)
         Observed <- c(1:length(timed))
@@ -503,6 +527,8 @@ RRPlot <-function(riskData=NULL,
           Expected[idx] <- passAcum + eevents;
           passAcum <- Expected[idx]
           lasttime <- timed[idx]
+#          cat(Observed[idx],",",eevents,",",Expected[idx],"\n")
+
         }
         
         totObserved <- max(Observed)
@@ -527,6 +553,9 @@ RRPlot <-function(riskData=NULL,
              xlab="Time",
              ylim=c(0,1.05*maxevents),
              xlim=c(0,1.05*maxtime))
+          se <- 2*sqrt(Observed)
+          errbar(timed,Observed,Observed-se,Observed+se,add=TRUE,pch=0,errbar.col="gray",cex=0.25)
+          points(timed,Expected,pch=4,type="b",cex=0.5)
           points(timed,Observed,pch=1,col="red")
           legend("topleft",legend=c("Expected","Observed"),pch=c(4,1),lty=c(1,0),col=c(1,"red"))
         }
