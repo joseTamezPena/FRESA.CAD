@@ -20,7 +20,7 @@ meanTimeToEvent <- function(probGZero,timeInterval)
 }
 
 
-CalibrationProbPoissonRisk <- function(Riskdata,trim=0.10,timeInterval=NULL)
+CalibrationProbPoissonRisk <- function(Riskdata,trim=0.10)
 ### Riskdata is a matrix of a Poisson event with Event, Probability of Event>0, and Time to Event]
 {
 
@@ -29,10 +29,7 @@ CalibrationProbPoissonRisk <- function(Riskdata,trim=0.10,timeInterval=NULL)
   observed <- sum(Riskdata$Event)
   
   meaninterval <- mean(subset(Riskdata,Riskdata$Event==1)$Time);
-  if (is.null(timeInterval))
-  {
-    timeInterval <- 2*meaninterval;
-  }
+  timeInterval <- 2*meaninterval;
   
   h0 <- sum(Riskdata$Event & Riskdata$Time <= timeInterval)
   h0 <- h0/sum((Riskdata$Time > timeInterval) | (Riskdata$Event==1))
@@ -153,7 +150,7 @@ CoxRiskCalibration <- function(ml,data,outcome,time,trim=0.10,timeInterval=NULL)
   probGZero <- 1.0-exp(-hazard)
 
   Riskdata <- cbind(data[,outcome],probGZero,data[,time])
-  result <- CalibrationProbPoissonRisk(Riskdata,trim,timeInterval)
+  result <- CalibrationProbPoissonRisk(Riskdata,trim)
   
 
   return (result)
