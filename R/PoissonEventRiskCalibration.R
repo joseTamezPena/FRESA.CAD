@@ -90,10 +90,11 @@ CalibrationProbPoissonRisk <- function(Riskdata,trim=0.10)
     for (idx in c(1:length(timed)))
     {
           whosum <- (allTimes <= timed[idx]) & (allTimes > lasttime)
-          deltatime <- (timed[idx] - lasttime)
+          whohazard <- allTimes > lasttime
           totObs <- lastObs + sum(timeSorted[whosum,"Event"])
           lastObs <- totObs
-          eevents <- sum(timeSorted[allTimes > lasttime,"hazard"])*deltatime/timeInterval
+          deltatime <- pmin(allTimes[whohazard],rep(timed[idx],sum(whohazard))) - lasttime
+          eevents <- sum(timeSorted[whohazard,"hazard"]*deltatime)/timeInterval
           acuHazard <- passHazard + eevents;
           passHazard <- acuHazard;
           lasttime <- timed[idx]
@@ -103,7 +104,7 @@ CalibrationProbPoissonRisk <- function(Riskdata,trim=0.10)
             gainAdded <- gainAdded + wt
             meanGain <- meanGain + wt*(acuHazard/totObs)
           }
-#          cat(totObs,",",eevents,",",acuHazard,"\n")
+#          cat(totObs,",",eevents,",",acuHazard,",",min(deltatime),",",max(deltatime),"\n")
     }
     if (gainAdded > 0)
     {
@@ -114,10 +115,11 @@ CalibrationProbPoissonRisk <- function(Riskdata,trim=0.10)
       meanGain <- acuHazard/totObs
     }
     timeInterval <- timeInterval*meanGain
-#    cat("(",timeInterval,",",gainAdded,",",meanGain,",",totObs,",",acuHazard,")")
+    cat("(",timeInterval,",",gainAdded,",",meanGain,",",totObs,",",acuHazard,")")
   }
-  nevent <- timeSorted$"hazard"*timeSorted$Time/timeInterval
-  nevent[nevent > 1.0]  <- 1.0
+#    cat("(",timeInterval,",",gainAdded,",",meanGain,",",totObs,",",acuHazard,")")
+#  probGZero <- adjustProb(Riskdata$pGZ,totgain)
+  nevent <- timeSorted$hazard*timeSorted$Time/timeInterval
   Ahazard <- sum(nevent)
 
   result <- list(index=index,
