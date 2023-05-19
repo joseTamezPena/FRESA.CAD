@@ -491,8 +491,9 @@ RRPlot <-function(riskData=NULL,
       {
         ## Time Plot
         prisk <- riskData[,2]
-        prisk[prisk > 0.999999] <- 0.999999
-        timetoEventData$lammda <- -log(1.0-prisk) # From probability to expected events per time interval
+#        prisk[prisk > 0.999999] <- 0.999999
+#        timetoEventData$lammda <- -log(1.0-prisk) # From probability to expected events per time interval
+        timetoEventData$lammda <- expectedEventsPerInterval(prisk)
         
         aliveEvents <- timetoEventData
         aliveEvents <- aliveEvents[order(-aliveEvents$risk),]
@@ -542,8 +543,41 @@ RRPlot <-function(riskData=NULL,
         observedCI <- stats::poisson.test(max(Observed[tokeep]),max(Expected[tokeep]), conf.level = 0.95 )
         OERatio <- observedCI
         OERatio$estimate <- c(OERatio$estimate,OERatio$conf.int,OERatio$p.value)
+        ## Estimation of O/E for the threshold values
         names(OERatio$estimate) <- c("O/E","Low","Upper","p.value")
-        
+        procat <- numeric(nrow(riskData))
+        for (thr in thr_atP)
+        {
+          procat <- procat + 1*(riskData[,2] >= thr)
+        }
+        values <- unique(procat)
+        values <- values[order(values)]
+        names(values) <- c("low",names(thr_atP))
+        obs <- numeric()
+        expected <- numeric()
+        lci <- numeric()
+        uci <- numeric()
+        pval <- numeric()
+        hazards <- timetoEventData$lammda*timetoEventData$eTime/timeInterval
+        for (ct in values)
+        {
+          totobs <- sum(riskData[procat==ct,1])
+          obs <-c(obs,totobs)
+          expe <- sum(hazards[procat==ct]);
+          expected <- c(expected,expe)
+          pt <- stats::poisson.test(totobs,1)
+          lci <- c(lci,pt$conf.int[1])
+          uci <- c(uci,pt$conf.int[2])
+          pt2 <- stats::poisson.test(totobs,expe)
+          pval <- c(pval,pt2$p.value)
+        }
+        totobservedCI <- stats::poisson.test(max(Observed),1, conf.level = 0.95 )
+        totalEstimated <- c(max(Observed),totobservedCI$conf.int,max(Expected),OERatio$p.value)
+        OERatio$atThrEstimates <- as.data.frame(cbind(obs,lci,uci,expected,pval))
+        OERatio$atThrEstimates <- rbind(totalEstimated,OERatio$atThrEstimates)
+        colnames(OERatio$atThrEstimates) <- c("Observed","L.CI","H.CI","Expected","pvalue")
+        rownames(OERatio$atThrEstimates) <- c("Total",names(values))
+        ## Now lets plot
         if (plotRR)
         {
           par(mfrow=c(1,1))
