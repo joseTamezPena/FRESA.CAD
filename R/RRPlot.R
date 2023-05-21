@@ -512,6 +512,7 @@ RRPlot <-function(riskData=NULL,
         maxtime <- max(timed)
         Observed <- c(1:length(timed))
         Expected <- Observed
+        colorClass <- Observed
         aliveEvents[aliveEvents$eStatus == 0,"lammda"] <- aliveEvents[aliveEvents$eStatus == 0,"lammda"]*ExpectedNoEventsGain
         passAcum <- 0;
         lastObs <- 0;
@@ -523,6 +524,7 @@ RRPlot <-function(riskData=NULL,
           whosum <- (allTimes <= timed[idx]) & (allTimes > lasttime)
           deltatime <- (timed[idx] - lasttime)
           Observed[idx] <- lastObs + sum(aliveEvents[whosum,"eStatus"])
+          colorClass[idx] <- round(mean(aliveEvents[whosum,"class"]),0)
           lastObs <- Observed[idx]
           eevents <- sum(aliveEvents[allTimes > lasttime,"lammda"])*deltatime/timeInterval
           Expected[idx] <- passAcum + eevents;
@@ -545,11 +547,7 @@ RRPlot <-function(riskData=NULL,
         OERatio$estimate <- c(OERatio$estimate,OERatio$conf.int,OERatio$p.value)
         ## Estimation of O/E for the threshold values
         names(OERatio$estimate) <- c("O/E","Low","Upper","p.value")
-        procat <- numeric(nrow(riskData))
-        for (thr in thr_atP)
-        {
-          procat <- procat + 1*(riskData[,2] >= thr)
-        }
+        procat <- timetoEventData$class
         values <- unique(procat)
         values <- values[order(values)]
         names(values) <- c("low",names(thr_atP))
@@ -586,11 +584,12 @@ RRPlot <-function(riskData=NULL,
              ylab="Events",
              xlab="Time",
              ylim=c(0,1.05*maxevents),
-             xlim=c(0,1.05*maxtime))
+             xlim=c(0,1.05*maxtime),
+             )
           se <- 2*sqrt(Observed)
           errbar(timed,Observed,Observed-se,Observed+se,add=TRUE,pch=0,errbar.col="gray",cex=0.25)
           points(timed,Expected,pch=4,type="b",cex=0.5)
-          points(timed,Observed,pch=1,col="red")
+          points(timed,Observed,pch=1,col=heat.colors(length(values)+2)[length(values) - colorClass])
           legend("topleft",legend=c("Expected","Observed"),pch=c(4,1),lty=c(1,0),col=c(1,"red"))
         }
       }
