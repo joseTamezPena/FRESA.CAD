@@ -487,6 +487,28 @@ RRPlot <-function(riskData=NULL,
       {
         timetoEventData$class <- 1*(riskData[,2]>=thr_atP[1]) + 1*(riskData[,2]>=thr_atP[2])
       }
+      paletteplot <- c("green", "red")
+      if (isRevesed > 0)
+      {
+        labelsplot <- c("Low",sprintf("At Risk > %5.3f",thr_atP[1]));
+        if (length(thr_atP)>1)
+        {
+          labelsplot <- c(sprintf("Low Risk < %5.3f",thr_atP[2]),sprintf("%5.3f <= Risk < %5.3f",thr_atP[2],thr_atP[1]),
+                          sprintf("High Risk >= %5.3f",thr_atP[1]));
+          paletteplot <- c("green", "pink","red")
+        }
+      }
+      else
+      {
+        labelsplot <- c("Low",sprintf("At Risk < %5.3f",-thr_atP[1]));
+        if (length(thr_atP)>1)
+        {
+          labelsplot <- c(sprintf("Low Risk > %5.3f",-thr_atP[2]),sprintf("%5.3f >= Risk > %5.3f",-thr_atP[2],-thr_atP[1]),
+                          sprintf("High Risk <= %5.3f",-thr_atP[1]));
+          paletteplot <- c("green", "pink","red")
+        }
+        
+      }
       if (isProbability)
       {
         ## Time Plot
@@ -530,8 +552,6 @@ RRPlot <-function(riskData=NULL,
           Expected[idx] <- passAcum + eevents;
           passAcum <- Expected[idx]
           lasttime <- timed[idx]
-#          cat(Observed[idx],",",eevents,",",Expected[idx],"\n")
-
         }
         
         totObserved <- max(Observed)
@@ -589,33 +609,11 @@ RRPlot <-function(riskData=NULL,
           se <- 2*sqrt(Observed)
           errbar(timed,Observed,Observed-se,Observed+se,add=TRUE,pch=0,errbar.col="gray",cex=0.25)
           points(timed,Expected,pch=4,type="b",cex=0.5)
-          points(timed,Observed,pch=1,col=heat.colors(length(values)+2)[length(values) - colorClass])
-          legend("topleft",legend=c("Expected","Observed"),pch=c(4,1),lty=c(1,0),col=c(1,"red"))
+          points(timed,Observed,pch=1,col=paletteplot[1+colorClass])
+          legend("topleft",legend=c("Expected",labelsplot),pch=c(4,1,1,1),lty=c(1,0,0,0),col=c(1,paletteplot),cex=0.80)
         }
       }
         ## Survival plot
-      paletteplot <- c("green", "red")
-      if (isRevesed > 0)
-      {
-        labelsplot <- c("Low",sprintf("At Risk > %5.3f",thr_atP[1]));
-        if (length(thr_atP)>1)
-        {
-          labelsplot <- c(sprintf("Low Risk < %5.3f",thr_atP[2]),sprintf("%5.3f <= Risk < %5.3f",thr_atP[2],thr_atP[1]),
-                          sprintf("High Risk >= %5.3f",thr_atP[1]));
-          paletteplot <- c("green", "cyan","red")
-        }
-      }
-      else
-      {
-        labelsplot <- c("Low",sprintf("At Risk < %5.3f",-thr_atP[1]));
-        if (length(thr_atP)>1)
-        {
-          labelsplot <- c(sprintf("Low Risk > %5.3f",-thr_atP[2]),sprintf("%5.3f >= Risk > %5.3f",-thr_atP[2],-thr_atP[1]),
-                          sprintf("High Risk <= %5.3f",-thr_atP[1]));
-          paletteplot <- c("green", "cyan","red")
-        }
-        
-      }
       LogRankE <- EmpiricalSurvDiff(times=timetoEventData$eTime,
                   status=timetoEventData$eStatus,
                   groups=1*(timetoEventData$class > 0),
