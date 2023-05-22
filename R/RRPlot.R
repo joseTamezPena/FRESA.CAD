@@ -475,7 +475,7 @@ RRPlot <-function(riskData=NULL,
   surdif <- NULL
   LogRankE <- NULL
   cstat <- NULL
-
+  timetoEventData <- NULL
   if (!is.null(timetoEvent))
   {
       timetoEventData <- as.data.frame(cbind(eStatus=riskData[,1],
@@ -516,7 +516,6 @@ RRPlot <-function(riskData=NULL,
 #        prisk[prisk > 0.999999] <- 0.999999
 #        timetoEventData$lammda <- -log(1.0-prisk) # From probability to expected events per time interval
         timetoEventData$lammda <- expectedEventsPerInterval(prisk)
-        
         aliveEvents <- timetoEventData
         aliveEvents <- aliveEvents[order(-aliveEvents$risk),]
         aliveEvents <- aliveEvents[order(aliveEvents$eTime),]
@@ -530,11 +529,13 @@ RRPlot <-function(riskData=NULL,
           timeInterval <- 2*mean(subset(aliveEvents,
                                 aliveEvents$eStatus==1)$eTime);
         }
+        timetoEventData$expectedTime <- meanTimeToEvent(prisk,timeInterval)
+        attr(timetoEventData,"ClassNames") <- labelsplot
         timed <- unique(aliveEvents[aliveEvents$eStatus==1,"eTime"])
         maxtime <- max(timed)
         Observed <- c(1:length(timed))
         Expected <- Observed
-        colorClass <- Observed
+        cClass <- Observed
         aliveEvents[aliveEvents$eStatus == 0,"lammda"] <- aliveEvents[aliveEvents$eStatus == 0,"lammda"]*ExpectedNoEventsGain
         passAcum <- 0;
         lastObs <- 0;
@@ -546,7 +547,7 @@ RRPlot <-function(riskData=NULL,
           whosum <- (allTimes <= timed[idx]) & (allTimes > lasttime)
           deltatime <- (timed[idx] - lasttime)
           Observed[idx] <- lastObs + sum(aliveEvents[whosum,"eStatus"])
-          colorClass[idx] <- round(mean(aliveEvents[whosum,"class"]),0)
+          cClass[idx] <- round(mean(aliveEvents[whosum,"class"]),0)
           lastObs <- Observed[idx]
           eevents <- sum(aliveEvents[allTimes > lasttime,"lammda"])*deltatime/timeInterval
           Expected[idx] <- passAcum + eevents;
@@ -558,7 +559,7 @@ RRPlot <-function(riskData=NULL,
         maxevents <- max(c(Observed,Expected))
         tokeep <- (Expected > 0.10*totObserved)
         tokeep <- tokeep & (Observed > 0.10*totObserved)
-        OEData <- as.data.frame(cbind(time=timed,Observed=Observed,Expected=Expected,Included=tokeep))
+        OEData <- as.data.frame(cbind(time=timed,Observed=Observed,Expected=Expected,Included=tokeep,class=cClass))
         OEratio <- Observed[tokeep]/Expected[tokeep]
         OE95ci <- c(mean=mean(OEratio),metric95ci(OEratio))
 
@@ -609,7 +610,7 @@ RRPlot <-function(riskData=NULL,
           se <- 2*sqrt(Observed)
           errbar(timed,Observed,Observed-se,Observed+se,add=TRUE,pch=0,errbar.col="gray",cex=0.25)
           points(timed,Expected,pch=4,type="b",cex=0.5)
-          points(timed,Observed,pch=1,col=paletteplot[1+colorClass])
+          points(timed,Observed,pch=1,col=paletteplot[1+cClass])
           legend("topleft",legend=c("Expected",labelsplot),pch=c(4,1,1,1),lty=c(1,0,0,0),col=c(1,paletteplot),cex=0.80)
         }
       }
@@ -656,6 +657,7 @@ RRPlot <-function(riskData=NULL,
                  OEData=OEData,
                  DCA=DCA,
                  RRData=RRData,
+                 timetoEventData=timetoEventData,
                  keyPoints=thrPoints,
                  OERatio=OERatio,
                  OE95ci=OE95ci,

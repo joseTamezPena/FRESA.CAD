@@ -65,6 +65,9 @@ The RRPlot function will analyze the provided probabilities of risk and its asso
 	\item{RRData}{
 		The risk ratios data matrix for the ploted observations
 	}
+	\item{timetoEventData}{
+		The dataframe with hazards, class and expeted time to event 
+	}
 	\item{keyPoints}{
 		The threshold values and metrics at: Specified, Max BACC, Max RR, and 100% Spe
 	}
