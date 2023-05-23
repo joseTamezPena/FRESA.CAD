@@ -576,6 +576,8 @@ RRPlot <-function(riskData=NULL,
         expected <- numeric()
         lci <- numeric()
         uci <- numeric()
+        lciOE <- numeric()
+        uciOE <- numeric()
         pval <- numeric()
         hazards <- timetoEventData$lammda*timetoEventData$eTime/timeInterval
         for (ct in values)
@@ -588,13 +590,15 @@ RRPlot <-function(riskData=NULL,
           lci <- c(lci,pt$conf.int[1])
           uci <- c(uci,pt$conf.int[2])
           pt2 <- stats::poisson.test(totobs,expe)
+          lciOE <- c(lciOE,pt2$conf.int[1])
+          uciOE <- c(uciOE,pt2$conf.int[2])
           pval <- c(pval,pt2$p.value)
         }
         totobservedCI <- stats::poisson.test(max(Observed),1, conf.level = 0.95 )
-        totalEstimated <- c(max(Observed),totobservedCI$conf.int,max(Expected),OERatio$p.value)
-        OERatio$atThrEstimates <- as.data.frame(cbind(obs,lci,uci,expected,pval))
+        totalEstimated <- c(max(Observed),totobservedCI$conf.int,max(Expected),max(Observed)/max(Expected),OERatio$conf.int,OERatio$p.value)
+        OERatio$atThrEstimates <- as.data.frame(cbind(obs,lci,uci,expected,obs/expected,lciOE,uciOE,pval))
         OERatio$atThrEstimates <- rbind(totalEstimated,OERatio$atThrEstimates)
-        colnames(OERatio$atThrEstimates) <- c("Observed","L.CI","H.CI","Expected","pvalue")
+        colnames(OERatio$atThrEstimates) <- c("Observed","L.CI","H.CI","Expected","O/E","Low","Upper","pvalue")
         rownames(OERatio$atThrEstimates) <- c("Total",names(values))
         ## Now lets plot
         if (plotRR)
