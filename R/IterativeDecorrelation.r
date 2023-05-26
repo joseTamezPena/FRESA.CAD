@@ -117,6 +117,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
 #  fcount <- fscore;
   
   totFeatures <- length(varincluded);
+  largeSet <- (totFeatures > 1000) || ((nrow(refdata) > 1000) && (totFeatures > 100))
   
 
   
@@ -124,6 +125,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
   
   if (useFastCor)
   {
+#    cormat <- abs(Rfast::cora(as.matrix(refdata[,varincluded]),large=largeSet))
     cormat <- abs(Rfast::cora(as.matrix(refdata[,varincluded])))
   }else
   {
@@ -132,13 +134,24 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
   diag(cormat) <- 0;
   maxcor <- apply(cormat,2,max)
   totcorr <- sum(cormat >= 0.5); ## For False Discovery estimation
-  varincluded <- names(maxcor)[maxcor >= 0.35*thr];
+  totAtcorr <- sum(cormat >= thr); ## 
   DeCorrmatrix <- NULL;
   lastintopfeat <- character();
   lastdecorrelated <- character();
   totused <- character();
   totalpha <- character();
   outcomefeatures <- drivingFeatures;
+  bfeat <- NULL
+  adjunipvalue <- min(unipvalue,unipvalue*sqrt(totcorr)/totFeatures); ## Adjusting for false association
+  
+  ## Min Correlation based on the pearson distribution
+  ndf <- nrow(data)-2
+  tvalue <- qt(1.0 - adjunipvalue,ndf)
+  rcrit <- tvalue/sqrt(ndf + tvalue^2)
+  if (thr < rcrit) thr <- rcrit
+  ################################# end #######################
+  
+  varincluded <- names(maxcor)[maxcor >= 0.5*thr];
   if (length(varincluded) > 1)
   {
       if (!is.null(Outcome))
@@ -171,7 +184,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
       }
       AdrivingFeatures <- AdrivingFeatures[order(-ordcor[AdrivingFeatures])];
       AdrivingFeatures <- as.character(correlated_Remove(cormat,AdrivingFeatures,thr = 0.95*thr,isDataCorMatrix=TRUE))
-      adjunipvalue <- min(unipvalue,unipvalue*sqrt(totcorr)/totFeatures); ## Adjusting for false association
+      
       DeCorrmatrix <- diag(length(varincluded));
       colnames(DeCorrmatrix) <- varincluded;
       rownames(DeCorrmatrix) <- varincluded;
@@ -476,7 +489,8 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
           topFeatures <- unique(c(topFeatures,intopfeat));
           if (useFastCor)
           {
-            cormat <- abs(Rfast::cora(as.matrix(refdata[,varincluded])))
+#            cormat <- abs(Rfast::cora(as.matrix(refdata[,varincluded]),large=largeSet))
+             cormat <- abs(Rfast::cora(as.matrix(refdata[,varincluded])))
           }
           else
           {
@@ -554,6 +568,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
           {
              if (useFastCor)
              {
+#              cormat <- abs(Rfast::cora(as.matrix(dataTransformed[,varincluded]),large=largeSet))
               cormat <- abs(Rfast::cora(as.matrix(dataTransformed[,varincluded])))
              }
              else
@@ -602,6 +617,8 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
   attr(dataTransformed,"LatentVariables") <- lavariables;
   attr(dataTransformed,"useDeCorr") <- useDeCorr;
   attr(dataTransformed,"unipvalue") <- adjunipvalue
+  attr(dataTransformed,"totCorrelated") <- totAtcorr
+  attr(dataTransformed,"R.critical") <- rcrit
   return(dataTransformed)
 }
 
