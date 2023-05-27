@@ -150,8 +150,11 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
   rcrit <- tvalue/sqrt(ndf + tvalue^2)
   if (thr < rcrit) thr <- rcrit
   ################################# end #######################
+  althr <- 0.25;
+  if (length(varincluded)>2000) althr <- 0.5;
+  cortoInclude <- min(althr*thr,rcrit)
   
-  varincluded <- names(maxcor)[maxcor >= 0.5*thr];
+  varincluded <- names(maxcor)[maxcor >= cortoInclude];
   if (length(varincluded) > 1)
   {
       if (!is.null(Outcome))
