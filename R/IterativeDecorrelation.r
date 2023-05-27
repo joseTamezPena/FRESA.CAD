@@ -151,9 +151,11 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
   if (thr < rcrit) thr <- rcrit
   ################################# end #######################
   althr <- 0.25;
-  if (length(varincluded)>2000) althr <- 0.5;
   cortoInclude <- min(althr*thr,rcrit)
   
+  varincluded <- names(maxcor)[maxcor >= cortoInclude];
+  if (length(varincluded) > 2000) althr <- 0.5;
+  cortoInclude <- min(althr*thr,rcrit)  
   varincluded <- names(maxcor)[maxcor >= cortoInclude];
   if (length(varincluded) > 1)
   {
