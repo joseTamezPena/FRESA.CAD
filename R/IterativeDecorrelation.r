@@ -142,20 +142,24 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
   totalpha <- character();
   outcomefeatures <- drivingFeatures;
   bfeat <- NULL
-  adjunipvalue <- min(unipvalue,unipvalue*sqrt(totcorr)/totFeatures); ## Adjusting for false association
+#  print(totFeatures)
+  adjunipvalue <- min(c(unipvalue,unipvalue*(sqrt(1.0 + totcorr))/totFeatures)); ## Adjusting for false association
   
   ## Min Correlation based on the pearson distribution
   ndf <- nrow(data)-2
+#  print(c(ndf,adjunipvalue))
   tvalue <- qt(1.0 - adjunipvalue,ndf)
+#  print(tvalue)
   rcrit <- tvalue/sqrt(ndf + tvalue^2)
   if (thr < rcrit) thr <- rcrit
+  
   ################################# end #######################
   althr <- 0.25;
-  cortoInclude <- max(althr*thr,rcrit)
+  cortoInclude <- max(c(althr*thr,rcrit))
   
   varincluded <- names(maxcor)[maxcor >= cortoInclude];
   if (length(varincluded) > 2000) althr <- 0.5;
-  cortoInclude <- max(althr*thr,rcrit)  
+  cortoInclude <- max(c(althr*thr,rcrit))  
   varincluded <- names(maxcor)[maxcor >= cortoInclude];
   if (length(varincluded) > 1)
   {
