@@ -169,11 +169,11 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
           {
             if (inherits(data[,Outcome],"factor") | (length(unique(data[,Outcome])) == 2))
             {
-              outcomep <- univariate_correlation(data,Outcome,limit=0,pvalue=unipvalue,thr = 0.95*thr) # the top associated features to the outcome
+              outcomep <- univariate_correlation(data,Outcome,limit=0,pvalue= 0.1*unipvalue,thr = 0.95*thr) # the top associated features to the outcome
             }
             else
             {
-              outcomep <- univariate_correlation(data,Outcome,method=method,limit=0,pvalue=unipvalue,thr = 0.95*thr) # the top associated features to the outcome
+              outcomep <- univariate_correlation(data,Outcome,method=method,limit=0,pvalue= 0.1*unipvalue,thr = 0.95*thr) # the top associated features to the outcome
             }
             outcomefeatures <- attr(outcomep,"Unadjusted");
             outcomefeatures <- names(outcomefeatures[outcomefeatures < unipvalue])
