@@ -161,6 +161,8 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
   if (length(varincluded) > 2000) althr <- 0.5;
   cortoInclude <- max(c(althr*thr,rcrit))  
   varincluded <- names(maxcor)[maxcor >= cortoInclude];
+  allFeatAdded <- character()
+ 
   if (length(varincluded) > 1)
   {
       if (!is.null(Outcome))
@@ -268,6 +270,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
           {
             ordcor <- apply(cormat^2,2,sum);
           }
+          ordcor <- ordcor + nrow(cormat)*(names(ordcor) %in% allFeatAdded)
           topfeat <- topfeat[order(-ordcor[topfeat])];
           atopbase <- bfeat[bfeat %in% topfeat];
           topfeat <- unique(c(atopbase,topfeat));
@@ -416,6 +419,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
                       featMarked <- unique(c(featMarked,feat));
                   }
               }
+              allFeatAdded <- unique(c(allFeatAdded,featAdded))
               if (!testedMedian)
               {
                 featAdded <- character();
@@ -429,7 +433,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
             }
           }
           addedlist <- length(decorrelatedFetureList);
-          if (verbose) cat("[",lpct,":",length(featMarked),":",sprintf("%5.3f",themaxthr),"](",length(intopfeat),",",addedlist,",",length(totalpha),"),<")
+          if (verbose) cat("[",lpct,":",length(featMarked),"Fa=",length(allFeatAdded),":",sprintf("%5.3f",themaxthr),"](",length(intopfeat),",",addedlist,",",length(totalpha),"),<")
           if (addedlist > 0)
           {
              mbetas <- c(intopfeat,decorrelatedFetureList);
