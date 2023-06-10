@@ -265,12 +265,14 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
           betamatrix <- diag(length(varincluded));
           colnames(betamatrix) <- varincluded;
           rownames(betamatrix) <- varincluded;
-          ordcor <- maxcor + 1.0e-6*apply(1*(cormat > thr2),2,mean);
+          ordcor <- apply(1*(cormat >= thr2),2,mean)
+          topfeat <- topfeat[order(-ordcor[topfeat])];
+          ordcor <- maxcor;
           if (corRank)
           {
-            ordcor <- apply(cormat^2,2,sum);
+            ordcor <- apply(cormat^2,2,mean);
           }
-          ordcor <- ordcor + nrow(cormat)*(names(ordcor) %in% allFeatAdded)
+          ordcor <- ordcor + 1.0*(names(ordcor) %in% allFeatAdded)
           topfeat <- topfeat[order(-ordcor[topfeat])];
           atopbase <- bfeat[bfeat %in% topfeat];
           topfeat <- unique(c(atopbase,topfeat));
