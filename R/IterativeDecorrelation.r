@@ -265,6 +265,8 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
           betamatrix <- diag(length(varincluded));
           colnames(betamatrix) <- varincluded;
           rownames(betamatrix) <- varincluded;
+          ordcor <- apply(cormat,2,mean)
+          topfeat <- topfeat[order(-ordcor[topfeat])];
           ordcor <- apply(1*(cormat >= thr2),2,mean)
           topfeat <- topfeat[order(-ordcor[topfeat])];
           ordcor <- maxcor;
