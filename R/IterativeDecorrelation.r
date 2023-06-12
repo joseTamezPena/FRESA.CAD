@@ -190,8 +190,6 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
       AdrivingFeatures <- varincluded;
       names(AdrivingFeatures) <- AdrivingFeatures;
       AdrivingFeatures <- AdrivingFeatures[order(-ordcor[AdrivingFeatures])];
-      ordcor <- apply(cormat,2,mean)
-      AdrivingFeatures <- AdrivingFeatures[order(-ordcor[AdrivingFeatures])];
       ordcor <- apply(1*(cormat>=thr),2,mean)
       AdrivingFeatures <- AdrivingFeatures[order(-ordcor[AdrivingFeatures])];
       ordcor <- maxcor;
@@ -222,7 +220,6 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
           AdrivingFeatures <- AdrivingFeatures[AdrivingFeatures %in% bfeat];
         }
       }
-      cormat[cormat < thr] <- 0;
 
       if (verbose) cat ("\n Included:",length(varincluded),", Uni p:",adjunipvalue,", Uncorrelated Base:",length(AdrivingFeatures),", Outcome-Driven Size:",length(drivingFeatures),", Base Size:",length(bfeat),"\n")
 
@@ -239,9 +236,8 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
         lp = lp + 1;
 
         addedlist <- 0;
-        ordcor <- apply(cormat,2,mean)
         
-        cormat[cormat < thr2] <- 0;
+#        cormat[cormat < thr2] <- 0;
         maxcor <- apply(cormat,2,max)
         mxScor <- max(maxcor);
 
@@ -273,7 +269,6 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
           betamatrix <- diag(length(varincluded));
           colnames(betamatrix) <- varincluded;
           rownames(betamatrix) <- varincluded;
-          topfeat <- topfeat[order(-ordcor[topfeat])];
           ordcor <- apply(cormat,2,mean)
           topfeat <- topfeat[order(-ordcor[topfeat])];
           ordcor <- apply(1*(cormat >= thr2),2,mean)
@@ -420,10 +415,6 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
                     }
                     fscore[feat] <- fscore[feat] + length(varlist);
                     fscore[varlist] <- fscore[varlist] - 1;
-#                    fscore[feat] <- fscore[feat] + sum(1.0-cormat[varlist,feat]^2)
-#                    fscore[varlist] <- fscore[varlist] - cormat[varlist,feat]^2
-#                    fcount[feat] <- fcount[feat] + length(varlist);
-#                    fcount[varlist] <- fcount[varlist] + 1;
                     cormat[ovarlist,feat] <- 0;
 
                   }
