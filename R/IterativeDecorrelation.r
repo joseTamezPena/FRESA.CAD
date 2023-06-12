@@ -227,7 +227,6 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
       relaxbeta <- 0.20;
       thr2 <- thr
       thr <- thr2*1.001;
-#      wthr <- relaxalpha - relaxalpha*(!relaxed);
       thrvalues <- c(0.95,0.90,0.80,0.70,0.50,0.25,0.10);
       nextthr <- 1 + (!relaxed)*length(thrvalues);
       nextthra <- 0;
@@ -237,21 +236,18 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
 
         addedlist <- 0;
         
-#        cormat[cormat < thr2] <- 0;
         maxcor <- apply(cormat,2,max)
         mxScor <- max(maxcor);
 
 
         if ((mxScor >= thr2) && (nextthr <= length(thrvalues)))
         {
-#          thr <- max(c(thr2,thr2 + wthr*(max(maxcor) - thr2)));
            thr <- max(c(thr2,0.5*thrvalues[nextthr] + 0.5*mxScor));
         }
         else
         {
           thr <- thr2;
         }
-#        if (verbose)  cat("\n\r",lp,sprintf("<R=%5.3f,w=%5.3f,thr=%5.3f>",max(maxcor),wthr,thr))
 
         topfeat <- varincluded;
         names(topfeat) <- topfeat;
@@ -465,7 +461,6 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
                 {
                    mtx1 <- t(as.matrix(DeCorrmatrix[totalphaused,allused]))
                    mtx2 <- as.matrix(betamatrix[allused,colused])
-#                   cat("..no Fast..[",ncol(mtx1),"][",nrow(mtx2),"]")
                    DeCorrmatrix[totalphaused,colused] <- mtx1 %*% mtx2;
                 }
               }
@@ -487,7 +482,6 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
                   {
                      mtx1 <- as.matrix(refdata[,alphaused])
                      mtx2 <- t(as.matrix(betamatrix[alphaused,colused]))
-#                     cat("..no Fast..[",ncol(mtx1),"][",nrow(mtx2),"]")
                      refdata[,colused] <- refdata[,colused] + mtx1 %*% mtx2;
                   }
                 }
@@ -506,7 +500,6 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
           topFeatures <- unique(c(topFeatures,intopfeat));
           if (useFastCor)
           {
-#            cormat <- abs(Rfast::cora(as.matrix(refdata[,varincluded]),large=largeSet))
              cormat <- abs(Rfast::cora(as.matrix(refdata[,varincluded])))
           }
           else
@@ -522,7 +515,6 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
           {
             if ((sum(intopfeat %in% lastintopfeat) == length(intopfeat)) && (sum(decorrelatedFetureList %in% lastdecorrelated) == length(decorrelatedFetureList)))
             {
-#              if (verbose) cat (decorrelatedFetureList);
               addedlist <- 0;
             }
           }          
@@ -532,11 +524,6 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
 
         if ((nextthr <= length(thrvalues)) && ((addedlist <= max(c(2.0,0.1*orglentopfeat))) || (length(intopfeat) <= 1)))
         {
-#          wthr <- wthr - relaxbeta;
-#          if (verbose) 
-#          {
-#            cat ("orglentopfeat:",orglentopfeat,", addedlist:",addedlist,", intopfeat:",length(intopfeat));
-#          }
           nextthr <- nextthr + 1; 
         }
       }
@@ -550,7 +537,6 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
       {
         DeCorrmatrix <- DeCorrmatrix[varincluded,varincluded]
         abfeat <- varincluded[apply(DeCorrmatrix!=0,2,sum)==1]
-#        if (verbose) cat("-{",abfeat[!(abfeat %in% bfeat)],"}-")
         bfeat <- unique(c(bfeat,abfeat));
         dataTransformed <- data
         if (length(varincluded) > 1)
@@ -585,7 +571,6 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
           {
              if (useFastCor)
              {
-#              cormat <- abs(Rfast::cora(as.matrix(dataTransformed[,varincluded]),large=largeSet))
               cormat <- abs(Rfast::cora(as.matrix(dataTransformed[,varincluded])))
              }
              else
@@ -595,26 +580,17 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
               diag(cormat) <- 0;
               cat ("\n\r [",lp,"],",max(cormat),"Decor Dimension:",length(varincluded),". Cor to Base:",length(correlatedToBase),", ABase:",length(AdrivingFeatures),", Outcome Base:",length(drivingFeatures),"\n\r")
           }
-#          banames <- colnames(DeCorrmatrix)[apply(DeCorrmatrix!=0,2,sum)==1]
           changed <- (apply(DeCorrmatrix!=0,2,sum) > 1);
           lavariables <- colnames(DeCorrmatrix)[changed]
           newnames <- colnames(dataTransformed)
-#          newnames[newnames %in% bfeat] <- paste("Ba_",newnames[newnames %in% bfeat],sep="") 
-#          newnames[newnames %in% varincluded] <- paste("La_",newnames[newnames %in% varincluded],sep="")
           newnames[newnames %in% lavariables] <- paste("La_",newnames[newnames %in% lavariables],sep="")
           colnames(dataTransformed) <- newnames
           newnames <- colnames(DeCorrmatrix)
-#          newnames[newnames %in% bfeat] <- paste("Ba_",newnames[newnames %in% bfeat],sep="") 
-#          newnames[newnames %in% varincluded] <- paste("La_",newnames[newnames %in% varincluded],sep="")
           newnames[newnames %in% lavariables] <- paste("La_",newnames[newnames %in% lavariables],sep="")
           colnames(DeCorrmatrix) <- newnames
           fscore <- fscore[varincluded];
-#          fcount <- fcount[varincluded];
-#          fscore <- fscore/fcount;
 
           newnames <- names(fscore)
-#          newnames[newnames %in% bfeat] <- paste("Ba_",newnames[newnames %in% bfeat],sep="") 
-#          newnames[newnames %in% varincluded] <- paste("La_",newnames[newnames %in% varincluded],sep="")
           newnames[newnames %in% lavariables] <- paste("La_",newnames[newnames %in% lavariables],sep="")
           names(fscore) <- newnames
         }
