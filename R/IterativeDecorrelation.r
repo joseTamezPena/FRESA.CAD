@@ -184,16 +184,23 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
           }
       }
       cormat <- cormat[varincluded,varincluded];
-      cormat[cormat < thr] <- 0;
+      ordcor <- apply(cormat,2,mean)
+
       maxcor <- apply(cormat,2,max)
       AdrivingFeatures <- varincluded;
       names(AdrivingFeatures) <- AdrivingFeatures;
+      AdrivingFeatures <- AdrivingFeatures[order(-ordcor[AdrivingFeatures])];
+      ordcor <- apply(cormat,2,mean)
+      AdrivingFeatures <- AdrivingFeatures[order(-ordcor[AdrivingFeatures])];
+      ordcor <- apply(1*(cormat>=thr),2,mean)
+      AdrivingFeatures <- AdrivingFeatures[order(-ordcor[AdrivingFeatures])];
       ordcor <- maxcor;
       if (corRank)
       {       
         ordcor <- apply(cormat^2,2,sum);
       }
       AdrivingFeatures <- AdrivingFeatures[order(-ordcor[AdrivingFeatures])];
+#      print(AdrivingFeatures)
       AdrivingFeatures <- as.character(correlated_Remove(cormat,AdrivingFeatures,thr = 0.95*thr,isDataCorMatrix=TRUE))
       
       DeCorrmatrix <- diag(length(varincluded));
@@ -215,7 +222,8 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
           AdrivingFeatures <- AdrivingFeatures[AdrivingFeatures %in% bfeat];
         }
       }
-      
+      cormat[cormat < thr] <- 0;
+
       if (verbose) cat ("\n Included:",length(varincluded),", Uni p:",adjunipvalue,", Uncorrelated Base:",length(AdrivingFeatures),", Outcome-Driven Size:",length(drivingFeatures),", Base Size:",length(bfeat),"\n")
 
       relaxalpha <- 0.80;
@@ -231,7 +239,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
         lp = lp + 1;
 
         addedlist <- 0;
-
+        ordcor <- apply(cormat,2,mean)
         
         cormat[cormat < thr2] <- 0;
         maxcor <- apply(cormat,2,max)
@@ -265,6 +273,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
           betamatrix <- diag(length(varincluded));
           colnames(betamatrix) <- varincluded;
           rownames(betamatrix) <- varincluded;
+          topfeat <- topfeat[order(-ordcor[topfeat])];
           ordcor <- apply(cormat,2,mean)
           topfeat <- topfeat[order(-ordcor[topfeat])];
           ordcor <- apply(1*(cormat >= thr2),2,mean)
