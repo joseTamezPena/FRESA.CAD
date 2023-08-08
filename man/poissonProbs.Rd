@@ -7,6 +7,7 @@
 \title{Probability of more than zero events}
 \description{
  	Returns the probability of having 1 or more Poisson events
+	the adjusted probability (adjustProb)
 	the exptected time to event (meanTimeToEvent)
 	or the exected number of events per interval (expectedEventsPerInterval)
 }
@@ -27,14 +28,11 @@
 	Baseline hazard
 	}
 	\item{probGZero}{
-	The uncalibrated probability of nozero events
+	The probability of having any event
 	}
 	\item{gain}{
 	The calibration gain
 	}	
-	\item{probGZero}{
-	The probability of the event
-	}
 	\item{timeInterval}{
 	The time interval 
 	}

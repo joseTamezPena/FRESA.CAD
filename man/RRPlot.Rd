@@ -148,7 +148,7 @@ The RRPlot function will analyze the provided probabilities of risk and its asso
 									  atRate=c(0.90),
 									  timetoEvent=lungD$time,
 									  title=topf,
-									  #                  plotRR=FALSE
+									  # plotRR=FALSE
 		  )
 		  idx <- idx + 1
 		}
