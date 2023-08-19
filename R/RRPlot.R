@@ -409,13 +409,16 @@ RRPlot <-function(riskData=NULL,
   
   if (plotRR)
   {
+    ypmax <- quantile(URCI,probs=c(0.99))
+
     par(mfrow=c(1,1))
   
     plot(SEN,RR,cex=(0.35 + PPV),
        pch=pshape,
        col=colors[1+floor(10*(1.0-SPE))],
        xlim=c(0,1.15),
-       ylim=c(1.0,ymax+0.5),
+#       ylim=c(1.0,ymax+0.5),
+       ylim=c(1.0,ypmax*1.5),
 #       log="y",
        main=paste("Relative Risk:",title))
     atevent <- isEvent==1
@@ -437,17 +440,17 @@ RRPlot <-function(riskData=NULL,
     }
   
     legtxt <- sprintf("%3.1f",c(5:0)/5)
-    corrplot::colorlegend(heat.colors(10), legtxt,xlim=c(1.05,1.175),ylim=c((ymax-0.75)*0.45+1.0,ymax/10+1.0),cex=0.75)
+    corrplot::colorlegend(heat.colors(10), legtxt,xlim=c(1.05,1.175),ylim=c((ypmax-0.75)*0.45+1.0,ypmax/10+1.0),cex=0.75)
     text(1.075,1,"SPE")
     sizp <- c(5:1)/5.0 + 0.35
     legend("topright",legend=legtxt[1:5],pch=16,cex=sizp)
     legend("bottomleft",legend=c("No","Yes","Loess Fit"),pch=c(2,16,-1),lty=c(0,0,1),cex=0.75)
-    text(0.95,ymax+0.5,"PPV->")
+    text(0.95,ypmax+0.5,"PPV->")
 
 
     abline(v=sensitivity,col="blue")
-    text(x=sensitivity,y=ymax,sprintf("Index(%3.2f)=%4.3f",specificity,isRevesed*thr_atP[1]),pos=4 - 2*(sensitivity>0.5) ,cex=0.7)
-    text(x=sensitivity,y=0.9*(ymax-1.0)+1.0,
+    text(x=sensitivity,y=ypmax*1.5,sprintf("Index(%3.2f)=%4.3f",specificity,isRevesed*thr_atP[1]),pos=4 - 2*(sensitivity>0.5) ,cex=0.7)
+    text(x=sensitivity,y=0.9*(ypmax*1.5-1.0)+1.0,
          sprintf("RR(%3.2f)=%4.3f",
                  sensitivity,
                  RRAtSen[1]),
