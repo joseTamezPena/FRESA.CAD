@@ -409,7 +409,7 @@ RRPlot <-function(riskData=NULL,
   
   if (plotRR)
   {
-    ypmax <- quantile(URCI,probs=c(0.99))
+    ypmax <- max(c(quantile(URCI,probs=c(0.95)),ymax))
 
     par(mfrow=c(1,1))
   
@@ -418,7 +418,7 @@ RRPlot <-function(riskData=NULL,
        col=colors[1+floor(10*(1.0-SPE))],
        xlim=c(0,1.15),
 #       ylim=c(1.0,ymax+0.5),
-       ylim=c(1.0,ypmax*1.5),
+       ylim=c(1.0,ypmax*1.2),
 #       log="y",
        main=paste("Relative Risk:",title))
     atevent <- isEvent==1
@@ -449,8 +449,8 @@ RRPlot <-function(riskData=NULL,
 
 
     abline(v=sensitivity,col="blue")
-    text(x=sensitivity,y=ypmax*1.5,sprintf("Index(%3.2f)=%4.3f",specificity,isRevesed*thr_atP[1]),pos=4 - 2*(sensitivity>0.5) ,cex=0.7)
-    text(x=sensitivity,y=0.9*(ypmax*1.5-1.0)+1.0,
+    text(x=sensitivity,y=ypmax*1.2,sprintf("Index(%3.2f)=%4.3f",specificity,isRevesed*thr_atP[1]),pos=4 - 2*(sensitivity>0.5) ,cex=0.7)
+    text(x=sensitivity,y=0.9*(ypmax*1.2-1.0)+1.0,
          sprintf("RR(%3.2f)=%4.3f",
                  sensitivity,
                  RRAtSen[1]),
