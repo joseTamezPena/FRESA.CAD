@@ -86,3 +86,5 @@ src-x64/FRESAcommons.h
 src-i386/FRESAcommons.cpp
 *.o
 src-x64/FRESAcommons.cpp
+src/FRESA.CAD.so
+src/symbols.rds
