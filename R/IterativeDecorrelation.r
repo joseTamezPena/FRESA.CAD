@@ -26,44 +26,46 @@ IDeA <- function(data=NULL,
     method <- "pearson";
   }
   minUniqueValues <- 5 # more than 5 values and is not factor
+  correlationMeasureEvolution <- numeric()
+  sparcityEvolution <- numeric();
   
 
-featVector <- data[,1];
+  featVector <- data[,1];
 
-getAllBetaCoefficients <- function(feat,varlist=NULL)
-{
-  allBetaCoef <- numeric(length(varlist));
-  featVector <- refdata[,feat]
-
-
-  getBetaCoefficient <- function(x)
+  getAllBetaCoefficients <- function(feat,varlist=NULL)
   {
-    betaCoef <- 0;
-    modellm <- try(lm(x~featVector,model = FALSE,na.action=na.exclude))
-    if (!inherits(modellm, "try-error"))
-    {	
-      f <- summary(modellm)$coefficients
-      if (nrow(f)>1)
-      {
-        betaCoef <- modellm$coef[2]*(f[2,4] < adjunipvalue);
+    allBetaCoef <- numeric(length(varlist));
+    featVector <- refdata[,feat]
+
+
+    getBetaCoefficient <- function(x)
+    {
+      betaCoef <- 0;
+      modellm <- try(lm(x~featVector,model = FALSE,na.action=na.exclude))
+      if (!inherits(modellm, "try-error"))
+      {	
+        f <- summary(modellm)$coefficients
+        if (nrow(f)>1)
+        {
+          betaCoef <- modellm$coef[2]*(f[2,4] < adjunipvalue);
+        }
       }
+      return (betaCoef)
     }
-    return (betaCoef)
+    if (length(varlist) > 1)
+    {
+        allBetaCoef <- apply(refdata[,varlist],2,getBetaCoefficient)
+    }
+    else
+    {
+      allBetaCoef <- getBetaCoefficient(refdata[,varlist])
+    }
+    allBetaCoef[is.na(allBetaCoef)] <- 0;
+    allBetaCoef[is.nan(allBetaCoef)] <- 0;
+    allBetaCoef[is.infinite(allBetaCoef)] <- 0;
+    names(allBetaCoef) <- varlist
+    return (allBetaCoef)
   }
-  if (length(varlist) > 1)
-  {
-      allBetaCoef <- apply(refdata[,varlist],2,getBetaCoefficient)
-  }
-  else
-  {
-    allBetaCoef <- getBetaCoefficient(refdata[,varlist])
-  }
-  allBetaCoef[is.na(allBetaCoef)] <- 0;
-  allBetaCoef[is.nan(allBetaCoef)] <- 0;
-  allBetaCoef[is.infinite(allBetaCoef)] <- 0;
-  names(allBetaCoef) <- varlist
-  return (allBetaCoef)
-}
 
   if (thr < 0.01) # The smallest correlation
   {
@@ -154,13 +156,16 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
   if (thr < rcrit) thr <- rcrit
   
   ################################# end #######################
-  althr <- 0.25;
+  althr <- 0.10;
   cortoInclude <- max(c(althr*thr,rcrit))
   
   varincluded <- names(maxcor)[maxcor >= cortoInclude];
-  if (length(varincluded) > 2000) althr <- 0.5;
-  cortoInclude <- max(c(althr*thr,rcrit))  
-  varincluded <- names(maxcor)[maxcor >= cortoInclude];
+  if (length(varincluded) > 2000) 
+  { 
+    althr <- 0.5;
+    cortoInclude <- max(c(althr*thr,rcrit))
+    varincluded <- names(maxcor)[maxcor >= cortoInclude];
+  }    
   allFeatAdded <- character()
  
   if (length(varincluded) > 1)
@@ -184,26 +189,31 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
           }
       }
       cormat <- cormat[varincluded,varincluded];
-      ordcor <- apply(cormat,2,mean)
-
-      maxcor <- apply(cormat,2,max)
       AdrivingFeatures <- varincluded;
-      names(AdrivingFeatures) <- AdrivingFeatures;
-      AdrivingFeatures <- AdrivingFeatures[order(-ordcor[AdrivingFeatures])];
-      ordcor <- apply(1*(cormat>=thr),2,mean)
-      AdrivingFeatures <- AdrivingFeatures[order(-ordcor[AdrivingFeatures])];
-      ordcor <- maxcor;
+      maxcor <- apply(cormat,2,max)
       if (corRank)
       {       
-        ordcor <- apply(cormat^2,2,sum);
+        axcor <- cormat;
+        axcor[axcor < thr] <- 0;
+        ordcor <- apply(axcor^2,2,mean);
       }
-      AdrivingFeatures <- AdrivingFeatures[order(-ordcor[AdrivingFeatures])];
+      else
+      {
+        ordcor <- apply(cormat,2,mean)
+        names(AdrivingFeatures) <- AdrivingFeatures;
+        AdrivingFeatures <- AdrivingFeatures[order(-ordcor[AdrivingFeatures])];
+        ordcor <- apply(1*(cormat>=thr),2,mean)
+        AdrivingFeatures <- AdrivingFeatures[order(-ordcor[AdrivingFeatures])];
+        ordcor <- maxcor;
+        AdrivingFeatures <- AdrivingFeatures[order(-ordcor[AdrivingFeatures])];
+      }
 #      print(AdrivingFeatures)
-      AdrivingFeatures <- as.character(correlated_Remove(cormat,AdrivingFeatures,thr = 0.95*thr,isDataCorMatrix=TRUE))
+      AdrivingFeatures <- as.character(correlated_Remove(cormat,AdrivingFeatures,thr = 0.75*thr,isDataCorMatrix=TRUE))
       
       DeCorrmatrix <- diag(length(varincluded));
       colnames(DeCorrmatrix) <- varincluded;
       rownames(DeCorrmatrix) <- varincluded;
+      decordim <- length(varincluded);
       bfeat <- AdrivingFeatures;
       if (length(drivingFeatures) > 0)
       {    
@@ -214,7 +224,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
           names(drivingFeatures) <- drivingFeatures;
           bfeat <- unique(c(drivingFeatures,AdrivingFeatures))
           names(bfeat) <- bfeat;
-          bfeat <- as.character(correlated_Remove(cormat,bfeat,thr = 0.95*thr,isDataCorMatrix=TRUE));
+          bfeat <- as.character(correlated_Remove(cormat,bfeat,thr = 0.75*thr,isDataCorMatrix=TRUE));
           bfeat <- bfeat[order(-ordcor[bfeat])];
           drivingFeatures <- drivingFeatures[drivingFeatures %in% bfeat];
           AdrivingFeatures <- AdrivingFeatures[AdrivingFeatures %in% bfeat];
@@ -223,8 +233,6 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
 
       if (verbose) cat ("\n Included:",length(varincluded),", Uni p:",adjunipvalue,", Uncorrelated Base:",length(AdrivingFeatures),", Outcome-Driven Size:",length(drivingFeatures),", Base Size:",length(bfeat),"\n")
 
-      relaxalpha <- 0.80;
-      relaxbeta <- 0.20;
       thr2 <- thr
       thr <- thr2*1.001;
       thrvalues <- c(0.95,0.90,0.80,0.70,0.50,0.25,0.10);
@@ -238,11 +246,20 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
         
         maxcor <- apply(cormat,2,max)
         mxScor <- max(maxcor);
+        correlationMeasureEvolution <- c(correlationMeasureEvolution,mxScor);
+        sparcityEvolution <- c(sparcityEvolution,sum(DeCorrmatrix == 0));
 
 
         if ((mxScor >= thr2) && (nextthr <= length(thrvalues)))
         {
-           thr <- max(c(thr2,0.5*thrvalues[nextthr] + 0.5*mxScor));
+          if (mxScor > thrvalues[nextthr])
+          {
+            thr <- max(c(thr2,0.5*thrvalues[nextthr] + 0.5*mxScor));
+          }
+          else
+          {
+            thr <- max(c(thr2,0.5*(thr2 + mxScor)));
+          }
         }
         else
         {
@@ -257,7 +274,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
           nextthra <- nextthr;
         }
         topfeat <- topfeat[maxcor[topfeat] >= thr];
-        if (verbose)  cat("\n\r",lp,sprintf("<R=%5.3f,w=%3d,N=%5d>",mxScor,nextthr,orglentopfeat))
+        if (verbose)  cat("\n\r",lp,sprintf("<R=%5.3f,r=%5.3f,N=%5d>",mxScor,thr,orglentopfeat))
 
         if (length(topfeat)>0)
         {
@@ -265,14 +282,19 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
           betamatrix <- diag(length(varincluded));
           colnames(betamatrix) <- varincluded;
           rownames(betamatrix) <- varincluded;
-          ordcor <- apply(cormat,2,mean)
-          topfeat <- topfeat[order(-ordcor[topfeat])];
-          ordcor <- apply(1*(cormat >= thr2),2,mean)
-          topfeat <- topfeat[order(-ordcor[topfeat])];
-          ordcor <- maxcor;
           if (corRank)
           {
-            ordcor <- apply(cormat^2,2,mean);
+            axcor <- cormat;
+            axcor[axcor < thr2] <- 0;
+            ordcor <- apply(axcor^2,2,mean);
+          }
+          else
+          {
+            ordcor <- apply(cormat,2,mean)
+            topfeat <- topfeat[order(-ordcor[topfeat])];
+            ordcor <- apply(1*(cormat >= thr2),2,mean)
+            topfeat <- topfeat[order(-ordcor[topfeat])];
+            ordcor <- maxcor;
           }
           ordcor <- ordcor + 1.0*(names(ordcor) %in% allFeatAdded)
           topfeat <- topfeat[order(-ordcor[topfeat])];
@@ -527,6 +549,9 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
           nextthr <- nextthr + 1; 
         }
       }
+      correlationMeasureEvolution <- c(correlationMeasureEvolution,max(cormat));
+      sparcityEvolution <- c(sparcityEvolution,sum(DeCorrmatrix == 0));
+
       betamatrix <- NULL;
       tmparincluded <- varincluded;
       varincluded <- tmparincluded[tmparincluded %in% totused];
@@ -578,7 +603,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
               cormat <- abs(cor(dataTransformed[,varincluded],method=method))
              }
               diag(cormat) <- 0;
-              cat ("\n\r [",lp,"],",max(cormat),"Decor Dimension:",length(varincluded),". Cor to Base:",length(correlatedToBase),", ABase:",length(AdrivingFeatures),", Outcome Base:",length(drivingFeatures),"\n\r")
+              cat ("\n\r [",lp,"],",max(cormat),"Decor Dimension:",length(varincluded),"Nused:",length(totused),". Cor to Base:",length(correlatedToBase),", ABase:",length(AdrivingFeatures),", Outcome Base:",length(drivingFeatures),"\n\r")
           }
           changed <- (apply(DeCorrmatrix!=0,2,sum) > 1);
           lavariables <- colnames(DeCorrmatrix)[changed]
@@ -600,6 +625,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
         dataTransformed <- dataTransformed[dataids,];
       }
   }
+  IDeAEvolution <-list(Corr=correlationMeasureEvolution,Spar=sparcityEvolution/(decordim^2));
   
   
   attr(dataTransformed,"UPSTM") <- DeCorrmatrix;
@@ -612,6 +638,7 @@ getAllBetaCoefficients <- function(feat,varlist=NULL)
   attr(dataTransformed,"unipvalue") <- adjunipvalue
   attr(dataTransformed,"totCorrelated") <- totAtcorr
   attr(dataTransformed,"R.critical") <- rcrit
+  attr(dataTransformed,"IDeAEvolution") <- IDeAEvolution
   return(dataTransformed)
 }
 
