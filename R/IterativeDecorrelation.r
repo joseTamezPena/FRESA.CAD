@@ -167,7 +167,7 @@ IDeA <- function(data=NULL,
     varincluded <- names(maxcor)[maxcor >= cortoInclude];
   }    
   allFeatAdded <- character()
- 
+  decordim <- 0
   if (length(varincluded) > 1)
   {
       if (!is.null(Outcome))
