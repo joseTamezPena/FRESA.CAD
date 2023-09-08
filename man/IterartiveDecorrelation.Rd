@@ -14,7 +14,7 @@
                        drivingFeatures=NULL,
                        useDeCorr=TRUE,
                        relaxed=TRUE,
-                       corRank=FALSE,
+                       corRank=TRUE,
                        maxLoops=100,
                        unipvalue=0.05,
                        verbose=FALSE,
