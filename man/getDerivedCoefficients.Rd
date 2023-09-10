@@ -1,15 +1,20 @@
 \name{getLatentCoefficients}
 \alias{getLatentCoefficients}
+\alias{getObservedCoef}
 \title{Derived Features of the UPSTM transform }
 \description{
 	Returs the list latent features, and their corresponding coeficients, from the UPSTM transform
 }
 \usage{
 	getLatentCoefficients(decorrelatedobject)
+    getObservedCoef(decorrelatedobject,latentCoef)
 }
 \arguments{
 	\item{decorrelatedobject}{
 	The returned dataframe of the \code{IDeA} function
+	}
+	\item{latentCoef}{
+	A named vector of linear cofficients
 	}
 }
 

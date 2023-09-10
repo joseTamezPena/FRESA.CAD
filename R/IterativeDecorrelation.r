@@ -689,3 +689,15 @@ getLatentCoefficients <- function(decorrelatedobject)
   
   return (CoeffList)
 }
+
+getObservedCoef <- function(decorrelatedobject,latentCoef)
+{
+  UPSTM <- attr(decorrelatedobject,"UPSTM")
+  laBetas <- numeric(ncol(UPSTM))
+  names(laBetas) <- colnames(UPSTM)
+  laBetas[names(latentCoef[-1])] <- latentCoef[-1]
+  obsCoef <-  c(latentCoef[1],t(UPSTM %*% laBetas))
+  names(obsCoef) <- c(names(latentCoef)[1],rownames(UPSTM))
+  obsCoef <- obsCoef[obsCoef!=0]
+  return (obsCoef)
+}
