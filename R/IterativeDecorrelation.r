@@ -690,6 +690,9 @@ getLatentCoefficients <- function(decorrelatedobject)
   return (CoeffList)
 }
 
+## Get the coeficients associated with each one of the observed features
+## The latentCoef input should contain the intersept 
+
 getObservedCoef <- function(decorrelatedobject,latentCoef)
 {
   UPSTM <- attr(decorrelatedobject,"UPSTM")
@@ -699,5 +702,6 @@ getObservedCoef <- function(decorrelatedobject,latentCoef)
   obsCoef <-  c(latentCoef[1],t(UPSTM %*% laBetas))
   names(obsCoef) <- c(names(latentCoef)[1],rownames(UPSTM))
   obsCoef <- obsCoef[obsCoef!=0]
+
   return (obsCoef)
 }

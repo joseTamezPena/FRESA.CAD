@@ -20,10 +20,11 @@
 
 \details{
  The UPSTM transformation extracted by the \code{IDeA} function is analyzed and a named list of latent features will be returned with their required formula used to compute the latent varible.
+ Given a coeficient vector of latent variables. The getObservedCoef will return a vector of coefficients associated with the observed variables.
 }
 
 \value{
-	The list of derived features 
+	The list of derived coefficients of each one of latent feature or vector of coefficients	
 }
 
 \author{Jose G. Tamez-Pena}
