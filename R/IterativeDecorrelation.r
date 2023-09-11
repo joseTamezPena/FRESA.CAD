@@ -109,7 +109,7 @@ IDeA <- function(data=NULL,
 
 
   isFactor <- sapply(refdata[,varincluded],class) == "factor";
-  isContinous <- unlist(lapply(lapply(refdata[,varincluded],unique),length)) > minUniqueValues; 
+  isContinous <- unlist(lapply(lapply(refdata[,varincluded],unique),length)) >= minUniqueValues; 
 
   varincluded <- varincluded[!isFactor & isContinous];
   
