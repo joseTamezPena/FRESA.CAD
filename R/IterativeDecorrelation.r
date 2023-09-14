@@ -665,6 +665,56 @@ predictDecorrelate <- function(decorrelatedobject,testData)
   return (testData)
 }
 
+
+getlatentCharFormula <- function(latentCoeff)
+{
+  deFromula <- paste(names(latentCoeff),"=")
+  names(deFromula) <- names(latentCoeff)
+  for (dx in names(deFromula))
+  {
+    coef <- latentCoeff[[dx]]
+    cname <- names(latentCoeff[[dx]])
+    names(cname) <- cname
+    for (cf in names(coef))
+    {
+      if (cf != dx)
+      {
+        if (coef[cf] != 0)
+        {
+          if (abs(log10(abs(coef[cf])))<=2)
+          {
+            if (coef[cf]>0)
+            {
+              deFromula[dx] <- paste(deFromula[dx],
+                                     sprintf("+ %5.3f*%s",coef[cf],cname[cf]))
+            }
+            else
+            {
+              deFromula[dx] <- paste(deFromula[dx],
+                                     sprintf("- %.3f*%s",abs(coef[cf]),cname[cf]))
+            }
+          }
+          else
+          {
+            if (coef[cf]>0)
+            {
+              deFromula[dx] <- paste(deFromula[dx],
+                                     sprintf("+ %.2e*%s",coef[cf],cname[cf]))
+            }
+            else
+            {
+              deFromula[dx] <- paste(deFromula[dx],
+                                     sprintf("- %.2e*%s",abs(coef[cf]),cname[cf]))
+            }
+          }
+        }
+        deFromula[dx] <- str_replace_all(deFromula[dx],"1.000\\*","")
+      }
+    }
+  }
+  return(deFromula)
+}
+
 getLatentCoefficients <- function(decorrelatedobject)
 {
   CoeffList <- list();
@@ -686,7 +736,8 @@ getLatentCoefficients <- function(decorrelatedobject)
     }
     names(CoeffList) <- nonZeronames;
   }
-  
+  attr(CoeffList,"LatentCharFormulas") <- getlatentCharFormula(CoeffList)
+
   return (CoeffList)
 }
 
@@ -707,5 +758,6 @@ getObservedCoef <- function(decorrelatedobject,latentCoef)
   names(obsCoef) <- c(lanamesNotinUPSTM,rownames(UPSTM))
   obsCoef <- obsCoef[obsCoef!=0]
 
+  attr(obsCoef,"LatentCharFormulas") <- attr(getLatentCoefficients(decorrelatedobject),"LatentCharFormulas")
   return (obsCoef)
 }
