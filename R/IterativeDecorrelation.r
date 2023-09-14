@@ -668,7 +668,7 @@ predictDecorrelate <- function(decorrelatedobject,testData)
 
 getlatentCharFormula <- function(latentCoeff)
 {
-  deFromula <- paste(names(latentCoeff),"=")
+  deFromula <- character(length(latentCoeff))
   names(deFromula) <- names(latentCoeff)
   for (dx in names(deFromula))
   {
@@ -686,12 +686,12 @@ getlatentCharFormula <- function(latentCoeff)
             if (coef[cf]>0)
             {
               deFromula[dx] <- paste(deFromula[dx],
-                                     sprintf("+ %5.3f*%s",coef[cf],cname[cf]))
+                                     sprintf("+ (%5.3f)%s",coef[cf],cname[cf]))
             }
             else
             {
               deFromula[dx] <- paste(deFromula[dx],
-                                     sprintf("- %.3f*%s",abs(coef[cf]),cname[cf]))
+                                     sprintf("- (%.3f)%s",abs(coef[cf]),cname[cf]))
             }
           }
           else
@@ -699,16 +699,16 @@ getlatentCharFormula <- function(latentCoeff)
             if (coef[cf]>0)
             {
               deFromula[dx] <- paste(deFromula[dx],
-                                     sprintf("+ %.2e*%s",coef[cf],cname[cf]))
+                                     sprintf("+ (%.2e)%s",coef[cf],cname[cf]))
             }
             else
             {
               deFromula[dx] <- paste(deFromula[dx],
-                                     sprintf("- %.2e*%s",abs(coef[cf]),cname[cf]))
+                                     sprintf("- (%.2e)%s",abs(coef[cf]),cname[cf]))
             }
           }
         }
-        deFromula[dx] <- str_replace_all(deFromula[dx],"1.000\\*","")
+        deFromula[dx] <- str_replace_all(deFromula[dx],"\\(1.000\\)","")
       }
     }
   }
