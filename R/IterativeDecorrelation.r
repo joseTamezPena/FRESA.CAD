@@ -742,10 +742,19 @@ getLatentCoefficients <- function(decorrelatedobject)
 }
 
 ## Get the coeficients associated with each one of the observed features
-## The latentCoef input should contain the intersept 
+## The latentModel coefficients input should contain the linear coefficients 
 
-getObservedCoef <- function(decorrelatedobject,latentCoef)
+getObservedCoef <- function(decorrelatedobject,latentModel)
 {
+  latentCoef <- latentModel
+  Outcome <- NULL;
+  if (!is.null(latentModel$formula))
+  {
+    Outcome <- as.character(latentModel$formula)[2]    
+    latentCoef <- latentModel$coef
+  }
+  
+
   UPSTM <- attr(decorrelatedobject,"UPSTM")
   laBetas <- numeric(ncol(UPSTM))
   names(laBetas) <- colnames(UPSTM)
@@ -758,6 +767,14 @@ getObservedCoef <- function(decorrelatedobject,latentCoef)
   names(obsCoef) <- c(lanamesNotinUPSTM,rownames(UPSTM))
   obsCoef <- obsCoef[obsCoef!=0]
 
-  attr(obsCoef,"LatentCharFormulas") <- attr(getLatentCoefficients(decorrelatedobject),"LatentCharFormulas")
+  theformula <- str_flatten(names(obsCoef)," + ")
+  theformula <- str_replace_all(theformula,"\\(Intercept\\)","1")
+  theformula <- paste(Outcome,"~",theformula)
+  
+  obsCoef <- list(formula=theformula,
+                  coefficients=obsCoef,
+                  LatentCharFormulas=attr(getLatentCoefficients(decorrelatedobject),"LatentCharFormulas")
+                  )
+  class(obsCoef) <- c("ObservedModel")
   return (obsCoef)
 }
