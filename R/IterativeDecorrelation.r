@@ -235,7 +235,7 @@ IDeA <- function(data=NULL,
 
       thr2 <- thr
       thr <- thr2*1.001;
-      thrvalues <- c(0.95,0.90,0.80,0.70,0.50,0.25,0.10);
+      thrvalues <- c(0.90,0.75,0.60,0.45,0.20,0.10);
       nextthr <- 1 + (!relaxed)*length(thrvalues);
       nextthra <- 0;
       while (((addedlist > 0) || (thr > (thr2*1.0001))) && (lp < maxLoops)) 
@@ -249,21 +249,11 @@ IDeA <- function(data=NULL,
         correlationMeasureEvolution <- c(correlationMeasureEvolution,mxScor);
         sparcityEvolution <- c(sparcityEvolution,sum(DeCorrmatrix == 0));
 
-
+        thr <- thr2;
+        nextthr <- sum(thrvalues > mxScor) + 1
         if ((mxScor >= thr2) && (nextthr <= length(thrvalues)))
         {
-          if (mxScor > thrvalues[nextthr])
-          {
-            thr <- max(c(thr2,0.5*thrvalues[nextthr] + 0.5*mxScor));
-          }
-          else
-          {
-            thr <- max(c(thr2,0.5*(thr2 + mxScor)));
-          }
-        }
-        else
-        {
-          thr <- thr2;
+          thr <- max(thr2,thrvalues[nextthr]);
         }
 
         topfeat <- varincluded;
@@ -274,7 +264,7 @@ IDeA <- function(data=NULL,
           nextthra <- nextthr;
         }
         topfeat <- topfeat[maxcor[topfeat] >= thr];
-        if (verbose)  cat("\n\r",lp,sprintf("<R=%5.3f,r=%5.3f,N=%5d>",mxScor,thr,orglentopfeat))
+        if (verbose)  cat("\n\r",lp,sprintf("<R=%5.3f,thr=%5.3f,N=%5d>",mxScor,thr,orglentopfeat))
 
         if (length(topfeat)>0)
         {
@@ -285,7 +275,7 @@ IDeA <- function(data=NULL,
           if (corRank)
           {
             axcor <- cormat;
-            axcor[axcor < thr2] <- 0;
+            axcor[axcor < thr] <- 0;
             ordcor <- apply(axcor^2,2,mean);
           }
           else
@@ -544,7 +534,7 @@ IDeA <- function(data=NULL,
           lastintopfeat <- intopfeat;
         }
 
-        if ((nextthr <= length(thrvalues)) && ((addedlist <= max(c(2.0,0.1*orglentopfeat))) || (length(intopfeat) <= 1)))
+        if ((nextthr <= length(thrvalues)) && ((addedlist <= max(c(2.0,0.5*orglentopfeat))) || (length(intopfeat) <= 1)))
         {
           nextthr <- nextthr + 1; 
         }
