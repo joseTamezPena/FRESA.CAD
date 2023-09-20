@@ -38,7 +38,6 @@ bagPredictType=c("Bag","wNN","Ens")
 	forward.selection.list <- NULL;
 	if (featureSize==0) featureSize = ncol(data)-1;
 	nfeat <- ncol(data)-1;
-#	cat(size,":",pvalue,":",update.pvalue[1],":",elimination.pValue,": fs=",featureSize,"\n")
 	if (inherits(formula,"character"))
 	{
 		formula <- str_replace_all(formula,"[.]","1");
@@ -291,16 +290,21 @@ bagPredictType=c("Bag","wNN","Ens")
 				}
 				else
 				{
-					forward.model <- ForwardSelection.Model.Bin(size=size,fraction=fraction,pvalue,loops,acovariates,Outcome,variableList,data,maxTrainModelSize,type,timeOutcome,selectionType=testType,featureSize=featureSize);
+					forward.model <- ForwardSelection.Model.Bin(size=size,fraction=fraction,2*pvalue,loops,acovariates,Outcome,variableList,data,maxTrainModelSize,type,timeOutcome,selectionType=testType,featureSize=featureSize);
 					update.model <- forward.model$update.model;
 					zthr <- unique(forward.model$theZthr);
 					if (print)
 					{
-						cat("Z:",zthr,"\n")
-						cat("median(Z):",min(zthr),":",abs(qnorm(pvalue)),"\n")
+						cat("Zs:",zthr,"\n")
+						cat("min(Z):",min(zthr),":",abs(qnorm(pvalue)),":")
 					}
 					zthr <- min(zthr);
-					if (zthr < 0.5) zthr <- 0.5
+					pval <- min(pvalue,(1.0-pnorm(zthr)));
+					zthr <- abs(qnorm(pval));
+					if (print)
+					{
+						cat("Z:",zthr,"\n")
+					}
 
 					if (elimination.bootstrap.steps>1)
 					{
@@ -352,18 +356,24 @@ bagPredictType=c("Bag","wNN","Ens")
 			}
 			else
 			{
-				forward.model <- ForwardSelection.Model.Res(size=size,fraction=fraction,pvalue=pvalue,loops=loops,covariates=acovariates,Outcome=Outcome,variableList=variableList,data=data,maxTrainModelSize=maxTrainModelSize,type=type,testType=testType,timeOutcome=timeOutcome,featureSize=featureSize);
+				forward.model <- ForwardSelection.Model.Res(size=size,fraction=fraction,pvalue=2*pvalue,loops=loops,covariates=acovariates,Outcome=Outcome,variableList=variableList,data=data,maxTrainModelSize=maxTrainModelSize,type=type,testType=testType,timeOutcome=timeOutcome,featureSize=featureSize);
 				
 				pvals <- unique(forward.model$p.thresholds);
+				pvals <- min(max(pvals),pvalue);
+				if (print)
+				{
+					cat("Pvalues:",unique(forward.model$p.thresholds),":",pvals,"\n")
+				}
+
 
 				update.model <- forward.model$update.model;
 				if (elimination.bootstrap.steps>1)
 				{
-					BSWiMS.model <- bootstrapVarElimination_Res(object=update.model$final.model,pvalue=max(pvals),Outcome=Outcome,data=data,startOffset=startOffset,type=type,testType=testType,loops=elimination.bootstrap.steps,setIntersect=setIntersect,print=print,plots=plots);
+					BSWiMS.model <- bootstrapVarElimination_Res(object=update.model$final.model,pvalue = pvals,Outcome=Outcome,data=data,startOffset=startOffset,type=type,testType=testType,loops=elimination.bootstrap.steps,setIntersect=setIntersect,print=print,plots=plots);
 				}
 				else
 				{
-					BSWiMS.model <- backVarElimination_Res(object=update.model$final.model,pvalue=max(pvals),Outcome=Outcome,data=data,startOffset=startOffset,type=type,testType=testType,setIntersect=setIntersect);
+					BSWiMS.model <- backVarElimination_Res(object=update.model$final.model,pvalue=pvals,Outcome=Outcome,data=data,startOffset=startOffset,type=type,testType=testType,setIntersect=setIntersect);
 				}
 				if (print)
 				{

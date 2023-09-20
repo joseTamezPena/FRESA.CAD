@@ -1,5 +1,6 @@
 \name{IDeA}
 \alias{IDeA}
+\alias{ILAA}
 \alias{predictDecorrelate}
 \title{Decorrelation of data frames}
 \description{
@@ -7,6 +8,15 @@
 }
 
 \usage{
+  ILAA(data=NULL,
+                thr=0.80,
+                method=c("pearson","spearman"),
+                Outcome=NULL,
+                drivingFeatures=NULL,
+                maxLoops=100,
+                verbose=FALSE,
+                ...)
+                
   IDeA(data=NULL,thr=0.80,
                        method=c("fast","pearson","spearman","kendall"),
                        Outcome=NULL,

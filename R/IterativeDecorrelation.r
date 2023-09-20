@@ -1,3 +1,39 @@
+ILAA <- function(data=NULL,
+                thr=0.80,
+                method=c("pearson","spearman"),
+                Outcome=NULL,
+                drivingFeatures=NULL,
+                maxLoops=100,
+                verbose=FALSE,
+                ...)
+{
+  method <- match.arg(method);
+  if (method=="pearson") 
+  {
+    method <- "fast";
+  }
+  if (verbose)
+  {
+    cat(method,"|")
+  }
+  
+  result <- IDeA(data=data,
+                 thr=thr,
+                 method=method,
+                 Outcome=Outcome,
+                 refdata=NULL,
+                 drivingFeatures=drivingFeatures,
+                 useDeCorr=TRUE,
+                 relaxed=TRUE,
+                 corRank=TRUE,
+                 maxLoops=maxLoops,
+                 unipvalue=0.05,
+                 verbose=verbose,
+                 ...)
+   return(result)
+
+}                                  
+
 IDeA <- function(data=NULL,
                                   thr=0.80,
                                   method=c("fast","pearson","spearman","kendall"),
@@ -12,6 +48,7 @@ IDeA <- function(data=NULL,
                                   verbose=FALSE,
                                   ...)
 {
+
 
 	if (!requireNamespace("Rfast", quietly = TRUE)) {
 		install.packages("Rfast", dependencies = TRUE)
