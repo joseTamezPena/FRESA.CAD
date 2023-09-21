@@ -53,7 +53,7 @@
   Maximum p-value for correlation significance
   }
   \item{useDeCorr}{
-   if TRUE, the transformation matrix (UPSTM) will be computed
+   if TRUE, the transformation matrix (UPLTM) will be computed
   }
   \item{maxLoops}{
   the maxumum number of iteration loops
@@ -86,14 +86,14 @@
  is larger than the user supplied threshold will be decorrelated. 
  Basis feature selection may be based on Outcome association or by an unsupervised method. 
  The default options will run the decorrelation using fast matrix operations using \code{Rfast};
- hence, Pearson correlation will be used to estimate the unit-preserving spatial transformation matrix (UPSTM). 
+ hence, Pearson correlation will be used to estimate the unit-preserving spatial transformation matrix (UPLTM). 
 }
 
 \value{
   \item{decorrelatedDataframe}{
   The decorrelated data frame with the follwing attributes 
   }
-  \item{attr:UPSTM}{
+  \item{attr:UPLTM}{
   Attribute of decorrelatedDataframe: The Decorrelation matrix with the beta coefficients
   }
   \item{attr:fscore}{
@@ -112,7 +112,7 @@
   Attribute of decorrelatedDataframe: List the names of parent latent features 
   }
   \item{attr:useDeCorr}{
-  Attribute of decorrelatedDataframe: If TRUE the estimated UPSTM is used for decorrelation
+  Attribute of decorrelatedDataframe: If TRUE the estimated UPLTM is used for decorrelation
   }
   \item{attr:unipvalue}{
   The p-value used to check for fit significance
@@ -136,15 +136,15 @@
   #Decorrelating with usupervised basis and correlation goal set to 0.25
   system.time(irisDecor <- IDeA(iris,thr=0.25))
   
-  ## The transformation matrix is stored at "UPSTM" attribute
-  UPSTM <- attr(irisDecor,"UPSTM")
-  print(UPSTM)
+  ## The transformation matrix is stored at "UPLTM" attribute
+  UPLTM <- attr(irisDecor,"UPLTM")
+  print(UPLTM)
 
   #Decorrelating with supervised basis and correlation goal set to 0.25
   system.time(irisDecorOutcome <- IDeA(iris,Outcome="Species",thr=0.25))
-  ## The transformation matrix is stored at "UPSTM" attribute
-  UPSTM <- attr(irisDecorOutcome,"UPSTM")
-  print(UPSTM)
+  ## The transformation matrix is stored at "UPLTM" attribute
+  UPLTM <- attr(irisDecorOutcome,"UPLTM")
+  print(UPLTM)
 
   ## Compute PCA 
   features <- colnames(iris[,sapply(iris,is,"numeric")])

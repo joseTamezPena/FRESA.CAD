@@ -1164,7 +1164,7 @@ filteredFit <- function(formula = formula, data=NULL,
 	usedFeatures <-  c(Outcome,fm);
 
 	scaleparm <- NULL;
-	UPSTM <- NULL;
+	UPLTM <- NULL;
 	pcaobj <- NULL;
 	ccaobj <- NULL;
 	transColnames <- NULL;
@@ -1179,8 +1179,8 @@ filteredFit <- function(formula = formula, data=NULL,
 		{
 			data <- do.call(IDeA,c(list(data),DECOR.control));
 		}
-		UPSTM <- attr(data,"UPSTM")
-		attr(data,"UPSTM") <- NULL
+		UPLTM <- attr(data,"UPLTM")
+		attr(data,"UPLTM") <- NULL
 		transColnames <- colnames(data);
 		fm <- colnames(data)
 		fm <- fm[!(fm %in% dependent)]
@@ -1319,7 +1319,7 @@ filteredFit <- function(formula = formula, data=NULL,
 					Outcome = Outcome,
 					pcaobj = pcaobj,
 					ccaobj = ccaobj,
-					UPSTM = UPSTM,
+					UPLTM = UPLTM,
 					transColnames = transColnames
 					);
 	class(result) <- c("FRESA_FILTERFIT");
@@ -1335,9 +1335,9 @@ predict.FRESA_FILTERFIT <- function(object,...)
 {
 	parameters <- list(...);
 	testData <- parameters[[1]];
-	if (!is.null(object$UPSTM))
+	if (!is.null(object$UPLTM))
 	{
-	    testData[,rownames(object$UPSTM)] <- Rfast::mat.mult(as.matrix(testData[,rownames(object$UPSTM)]),object$UPSTM);
+	    testData[,rownames(object$UPLTM)] <- Rfast::mat.mult(as.matrix(testData[,rownames(object$UPLTM)]),object$UPLTM);
 		colnames(testData) <- object$transColnames;
 	}
 	if (!is.null(object$Scale))

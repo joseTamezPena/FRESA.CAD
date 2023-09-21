@@ -104,10 +104,6 @@ IDeA <- function(data=NULL,
     return (allBetaCoef)
   }
 
-  if (thr < 0.01) # The smallest correlation
-  {
-    thr <- 0.01 
-  }
   if (thr >= 1.0) #largest correlation
   {
     thr <- 0.999
@@ -179,10 +175,10 @@ IDeA <- function(data=NULL,
   lastdecorrelated <- character();
   totused <- character();
   totalpha <- character();
-  outcomefeatures <- drivingFeatures;
+#  outcomefeatures <- drivingFeatures;
   bfeat <- NULL
 #  print(totFeatures)
-  adjunipvalue <- min(c(unipvalue,unipvalue*(sqrt(1.0 + totcorr))/totFeatures)); ## Adjusting for false association
+  adjunipvalue <- min(c(unipvalue,5*unipvalue/totFeatures)); ## Adjusting for false association at 5 true associations per feature
   
   ## Min Correlation based on the pearson distribution
   ndf <- nrow(data)-2
@@ -209,20 +205,24 @@ IDeA <- function(data=NULL,
   {
       if (!is.null(Outcome))
       { 
-          if (length(drivingFeatures)==0) 
+          if (length(drivingFeatures)==1)          
           {
-            if (inherits(data[,Outcome],"factor") | (length(unique(data[,Outcome])) == 2))
+            if (drivingFeatures[1] == Outcome)
             {
-              outcomep <- univariate_correlation(data,Outcome,limit=0,pvalue= 0.1*unipvalue,thr = 0.95*thr) # the top associated features to the outcome
+              if (inherits(data[,Outcome],"factor") | (length(unique(data[,Outcome])) == 2))
+              {
+                outcomep <- univariate_correlation(data,Outcome,limit=0,pvalue= unipvalue,thr = thr) # the top associated features to the outcome
+              }
+              else
+              {
+                outcomep <- univariate_correlation(data,Outcome,method=method,limit=0,pvalue= unipvalue,thr = thr) # the top associated features to the outcome
+              }
+  #            outcomefeatures <- attr(outcomep,"Unadjusted");
+  #            outcomefeatures <- names(outcomefeatures[outcomefeatures < unipvalue])
+              drivingFeatures <- names(outcomep);
+              if (verbose) cat (drivingFeatures,"\n")
+              outcomep <- NULL;
             }
-            else
-            {
-              outcomep <- univariate_correlation(data,Outcome,method=method,limit=0,pvalue= 0.1*unipvalue,thr = 0.95*thr) # the top associated features to the outcome
-            }
-            outcomefeatures <- attr(outcomep,"Unadjusted");
-            outcomefeatures <- names(outcomefeatures[outcomefeatures < unipvalue])
-            drivingFeatures <- names(outcomep);
-            outcomep <- NULL;
           }
       }
       cormat <- cormat[varincluded,varincluded];
@@ -242,10 +242,9 @@ IDeA <- function(data=NULL,
         ordcor <- apply(1*(cormat>=thr),2,mean)
         AdrivingFeatures <- AdrivingFeatures[order(-ordcor[AdrivingFeatures])];
         ordcor <- maxcor;
-        AdrivingFeatures <- AdrivingFeatures[order(-ordcor[AdrivingFeatures])];
       }
-#      print(AdrivingFeatures)
-      AdrivingFeatures <- as.character(correlated_Remove(cormat,AdrivingFeatures,thr = 0.75*thr,isDataCorMatrix=TRUE))
+      AdrivingFeatures <- AdrivingFeatures[order(-ordcor[AdrivingFeatures])];
+      AdrivingFeatures <- as.character(correlated_Remove(cormat,AdrivingFeatures,thr = thr,isDataCorMatrix=TRUE))
       
       DeCorrmatrix <- diag(length(varincluded));
       colnames(DeCorrmatrix) <- varincluded;
@@ -255,20 +254,27 @@ IDeA <- function(data=NULL,
       if (length(drivingFeatures) > 0)
       {    
         drivingFeatures <- drivingFeatures[drivingFeatures %in% varincluded];
-        if (length(drivingFeatures)>1)
+        if (length(AdrivingFeatures)>0)
         {
           drivingFeatures <- drivingFeatures[order(-ordcor[drivingFeatures])];
           names(drivingFeatures) <- drivingFeatures;
           bfeat <- unique(c(drivingFeatures,AdrivingFeatures))
+          if (verbose) cat (bfeat,"\n")
           names(bfeat) <- bfeat;
-          bfeat <- as.character(correlated_Remove(cormat,bfeat,thr = 0.75*thr,isDataCorMatrix=TRUE));
+          bfeat <- as.character(correlated_Remove(cormat,bfeat,thr = thr,isDataCorMatrix=TRUE));
           bfeat <- bfeat[order(-ordcor[bfeat])];
           drivingFeatures <- drivingFeatures[drivingFeatures %in% bfeat];
-          AdrivingFeatures <- AdrivingFeatures[AdrivingFeatures %in% bfeat];
+          if (verbose) cat (drivingFeatures,"\n")
+          AdrivingFeatures <- bfeat;
         }
       }
 
-      if (verbose) cat ("\n Included:",length(varincluded),", Uni p:",adjunipvalue,", Uncorrelated Base:",length(AdrivingFeatures),", Outcome-Driven Size:",length(drivingFeatures),", Base Size:",length(bfeat),"\n")
+      if (verbose) cat ("\n Included:",length(varincluded),
+                        ", Uni p:",adjunipvalue,
+                        ", Outcome-Driven Size:",length(drivingFeatures),
+                        ", Base Size:",length(bfeat),
+                        ", Rcrit:",rcrit,
+                        "\n")
 
       thr2 <- thr
       thr <- thr2*1.001;
@@ -354,22 +360,22 @@ IDeA <- function(data=NULL,
                   corlist <- corlist[corlist >= thr];
                   varlist <- names(corlist)
                   varlist <- varlist[!(varlist %in% unique(c(decorrelatedFetureList,bfeat)))]
-                  if (length(outcomefeatures) > 1)
-                  {
-                     ovarlist <- varlist;
-                     if (feat %in% outcomefeatures) 
-                     {
-                        varlist <- varlist[varlist %in% outcomefeatures];
-                     }
-                     else
-                     {
-                        varlist <- varlist[!(varlist %in% outcomefeatures)];
-                     }
-                     if (length(varlist) == 0)
-                     {
-                        varlist <- ovarlist;
-                     }
-                  }
+#                  if (length(outcomefeatures) > 1)
+#                  {
+#                     ovarlist <- varlist;
+#                     if (feat %in% outcomefeatures) 
+#                     {
+#                        varlist <- varlist[varlist %in% outcomefeatures];
+#                     }
+#                     else
+#                     {
+#                        varlist <- varlist[!(varlist %in% outcomefeatures)];
+#                     }
+#                     if (length(varlist) == 0)
+#                     {
+#                        varlist <- ovarlist;
+#                     }
+#                  }
                   olength <- length(varlist)
                   notinfeat <- topfeat[topfeat != feat];
                   allvartested <- TRUE;
@@ -655,10 +661,10 @@ IDeA <- function(data=NULL,
   IDeAEvolution <-list(Corr=correlationMeasureEvolution,Spar=sparcityEvolution/(decordim^2));
   
   
-  attr(dataTransformed,"UPSTM") <- DeCorrmatrix;
+  attr(dataTransformed,"UPLTM") <- DeCorrmatrix;
   attr(dataTransformed,"fscore") <- fscore;
   attr(dataTransformed,"TotalAdjustments") <- countf;
-  attr(dataTransformed,"drivingFeatures") <- drivingFeatures;
+  attr(dataTransformed,"drivingFeatures") <- AdrivingFeatures;
   attr(dataTransformed,"unaltered") <- bfeat;
   attr(dataTransformed,"LatentVariables") <- lavariables;
   attr(dataTransformed,"useDeCorr") <- useDeCorr;
@@ -671,9 +677,9 @@ IDeA <- function(data=NULL,
 
 predictDecorrelate <- function(decorrelatedobject,testData)
 {
-  if (attr(decorrelatedobject,"useDeCorr") && !is.null(attr(decorrelatedobject,"UPSTM")))
+  if (attr(decorrelatedobject,"useDeCorr") && !is.null(attr(decorrelatedobject,"UPLTM")))
   {
-    decorMat <- attr(decorrelatedobject,"UPSTM")
+    decorMat <- attr(decorrelatedobject,"UPLTM")
 #    testData[,rownames(decorMat)] <- as.matrix(testData[,rownames(decorMat)]) %*% decorMat
     testData[,rownames(decorMat)] <- Rfast::mat.mult(as.matrix(testData[,rownames(decorMat)]),decorMat);
 #    varincluded <- attr(decorrelatedobject,"varincluded")
@@ -746,18 +752,18 @@ getLatentCoefficients <- function(decorrelatedobject)
 {
   CoeffList <- list();
   nonZeronames <- character();
-  UPSTM <- attr(decorrelatedobject,"UPSTM")
-  namecol <- colnames(UPSTM);
+  UPLTM <- attr(decorrelatedobject,"UPLTM")
+  namecol <- colnames(UPLTM);
   if (length(namecol) > 0)
   {
     n=1;
-    for (i in 1:ncol(UPSTM))
+    for (i in 1:ncol(UPLTM))
     {
-      associ <- abs(UPSTM[,i])>0;
+      associ <- abs(UPLTM[,i])>0;
       if (sum(associ) > 1)
       {
         nonZeronames <- append(nonZeronames,namecol[i]);
-        CoeffList[[n]] <- UPSTM[associ,i];
+        CoeffList[[n]] <- UPLTM[associ,i];
         n=n+1;
       }
     }
@@ -782,16 +788,16 @@ getObservedCoef <- function(decorrelatedobject,latentModel)
   }
   
 
-  UPSTM <- attr(decorrelatedobject,"UPSTM")
-  laBetas <- numeric(ncol(UPSTM))
-  names(laBetas) <- colnames(UPSTM)
-  namesin <- names(latentCoef) %in% colnames(UPSTM)
-  lanamesinUPSTM <- names(latentCoef)[namesin]
-  lanamesNotinUPSTM <- names(latentCoef)[!namesin]
+  UPLTM <- attr(decorrelatedobject,"UPLTM")
+  laBetas <- numeric(ncol(UPLTM))
+  names(laBetas) <- colnames(UPLTM)
+  namesin <- names(latentCoef) %in% colnames(UPLTM)
+  lanamesinUPLTM <- names(latentCoef)[namesin]
+  lanamesNotinUPLTM <- names(latentCoef)[!namesin]
   
-  laBetas[lanamesinUPSTM] <- latentCoef[lanamesinUPSTM]
-  obsCoef <-  c(latentCoef[lanamesNotinUPSTM],t(UPSTM %*% laBetas))
-  names(obsCoef) <- c(lanamesNotinUPSTM,rownames(UPSTM))
+  laBetas[lanamesinUPLTM] <- latentCoef[lanamesinUPLTM]
+  obsCoef <-  c(latentCoef[lanamesNotinUPLTM],t(UPLTM %*% laBetas))
+  names(obsCoef) <- c(lanamesNotinUPLTM,rownames(UPLTM))
   obsCoef <- obsCoef[obsCoef!=0]
 
   theformula <- str_flatten(names(obsCoef)," + ")

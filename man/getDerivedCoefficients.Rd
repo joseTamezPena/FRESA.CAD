@@ -1,9 +1,9 @@
 \name{getLatentCoefficients}
 \alias{getLatentCoefficients}
 \alias{getObservedCoef}
-\title{Derived Features of the UPSTM transform }
+\title{Derived Features of the UPLTM transform }
 \description{
-	Returs the list latent features, and their corresponding coeficients, from the UPSTM transform
+	Returs the list latent features, and their corresponding coeficients, from the UPLTM transform
 }
 \usage{
 	getLatentCoefficients(decorrelatedobject)
@@ -19,7 +19,7 @@
 }
 
 \details{
- The UPSTM transformation extracted by the \code{IDeA} function is analyzed and a named list of latent features will be returned with their required formula used to compute the latent varible.
+ The UPLTM transformation extracted by the \code{IDeA} function is analyzed and a named list of latent features will be returned with their required formula used to compute the latent varible.
  Given a coeficient vector of latent variables. The getObservedCoef will return a vector of coefficients associated with the observed variables.
 }
 
