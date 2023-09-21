@@ -149,7 +149,6 @@ IDeA <- function(data=NULL,
   
   fscore <- numeric(length(varincluded));
   names(fscore) <- varincluded;
-#  fcount <- fscore;
   
   totFeatures <- length(varincluded);
   largeSet <- (totFeatures > 1000) || ((nrow(refdata) > 1000) && (totFeatures > 100))
@@ -160,7 +159,6 @@ IDeA <- function(data=NULL,
   
   if (useFastCor)
   {
-#    cormat <- abs(Rfast::cora(as.matrix(refdata[,varincluded]),large=largeSet))
     cormat <- abs(Rfast::cora(as.matrix(refdata[,varincluded])))
   }else
   {
@@ -175,16 +173,12 @@ IDeA <- function(data=NULL,
   lastdecorrelated <- character();
   totused <- character();
   totalpha <- character();
-#  outcomefeatures <- drivingFeatures;
   bfeat <- NULL
-#  print(totFeatures)
   adjunipvalue <- min(c(unipvalue,5*unipvalue/totFeatures)); ## Adjusting for false association at 5 true associations per feature
   
   ## Min Correlation based on the pearson distribution
   ndf <- nrow(data)-2
-#  print(c(ndf,adjunipvalue))
   tvalue <- qt(1.0 - adjunipvalue,ndf)
-#  print(tvalue)
   rcrit <- tvalue/sqrt(ndf + tvalue^2)
   if (thr < rcrit) thr <- rcrit
   
@@ -217,8 +211,6 @@ IDeA <- function(data=NULL,
               {
                 outcomep <- univariate_correlation(data,Outcome,method=method,limit=0,pvalue= unipvalue,thr = thr) # the top associated features to the outcome
               }
-  #            outcomefeatures <- attr(outcomep,"Unadjusted");
-  #            outcomefeatures <- names(outcomefeatures[outcomefeatures < unipvalue])
               drivingFeatures <- names(outcomep);
               if (verbose) cat (drivingFeatures,"\n")
               outcomep <- NULL;
@@ -360,22 +352,7 @@ IDeA <- function(data=NULL,
                   corlist <- corlist[corlist >= thr];
                   varlist <- names(corlist)
                   varlist <- varlist[!(varlist %in% unique(c(decorrelatedFetureList,bfeat)))]
-#                  if (length(outcomefeatures) > 1)
-#                  {
-#                     ovarlist <- varlist;
-#                     if (feat %in% outcomefeatures) 
-#                     {
-#                        varlist <- varlist[varlist %in% outcomefeatures];
-#                     }
-#                     else
-#                     {
-#                        varlist <- varlist[!(varlist %in% outcomefeatures)];
-#                     }
-#                     if (length(varlist) == 0)
-#                     {
-#                        varlist <- ovarlist;
-#                     }
-#                  }
+
                   olength <- length(varlist)
                   notinfeat <- topfeat[topfeat != feat];
                   allvartested <- TRUE;
@@ -498,7 +475,6 @@ IDeA <- function(data=NULL,
              colused <- varincluded[varincluded %in% decorrelatedFetureList];
              alphaused <- varincluded[varincluded %in% intopfeat];
              totalphaused <- varincluded[varincluded %in% totalpha];
-#             DeCorrmatrix[,decorrelatedFetureList] <-  DeCorrmatrix %*% as.matrix(betamatrix[,decorrelatedFetureList]);
               if ((length(colused) == 1) && (length(allused) == 1))
               {
                 DeCorrmatrix[totalphaused,colused] <-  as.numeric(DeCorrmatrix[totalphaused,allused]) *
@@ -522,7 +498,6 @@ IDeA <- function(data=NULL,
              if (useFastCor)
              {
                 if (verbose) cat("|")
-#                refdata[,varincluded] <- as.matrix(dataTransformed[refdataids,varincluded]) %*% DeCorrmatrix
                 if (( length(colused) == 1) && (length(alphaused) == 1 ))
                 {
                   refdata[,colused] <- refdata[,colused] + as.numeric(refdata[,alphaused])*as.numeric(betamatrix[alphaused,colused])
@@ -599,7 +574,6 @@ IDeA <- function(data=NULL,
         dataTransformed <- data
         if (length(varincluded) > 1)
         {
-#          dataTransformed[,varincluded] <- as.matrix(data[,varincluded]) %*% DeCorrmatrix;
           dataTransformed[,varincluded] <- Rfast::mat.mult(as.matrix(data[,varincluded]),DeCorrmatrix);
           colsd <- apply(dataTransformed[,varincluded],2,sd,na.rm = TRUE);
           if (sum(colsd==0) > 0)
