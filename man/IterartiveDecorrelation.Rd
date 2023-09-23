@@ -14,8 +14,8 @@
                 Outcome=NULL,
                 drivingFeatures=NULL,
                 maxLoops=100,
-                verbose=FALSE,
-                ...)
+                verbose=FALSE
+                )
                 
   IDeA(data=NULL,thr=0.80,
                        method=c("fast","pearson","spearman","kendall"),

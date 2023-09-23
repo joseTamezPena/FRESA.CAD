@@ -4,17 +4,21 @@ ILAA <- function(data=NULL,
                 Outcome=NULL,
                 drivingFeatures=NULL,
                 maxLoops=100,
-                verbose=FALSE,
-                ...)
+                verbose=FALSE)
 {
   method <- match.arg(method);
+  type="LM";
   if (method=="pearson") 
   {
     method <- "fast";
   }
+  if (method=="spearman") 
+  {
+    type="RLM";
+  }
   if (verbose)
   {
-    cat(method,"|")
+    cat(method,"|",type,"|")
   }
   
   result <- IDeA(data=data,
@@ -29,7 +33,7 @@ ILAA <- function(data=NULL,
                  maxLoops=maxLoops,
                  unipvalue=0.05,
                  verbose=verbose,
-                 ...)
+                 type=type)
    return(result)
 
 }                                  
@@ -165,15 +169,7 @@ IDeA <- function(data=NULL,
     cormat <- abs(cor(refdata[,varincluded],method=method))
   }
   diag(cormat) <- 0;
-  maxcor <- apply(cormat,2,max)
-  totcorr <- sum(cormat >= 0.5); ## For False Discovery estimation
-  totAtcorr <- sum(cormat >= thr); ## 
-  DeCorrmatrix <- NULL;
-  lastintopfeat <- character();
-  lastdecorrelated <- character();
-  totused <- character();
-  totalpha <- character();
-  bfeat <- NULL
+  
   adjunipvalue <- min(c(unipvalue,5*unipvalue/totFeatures)); ## Adjusting for false association at 5 true associations per feature
   
   ## Min Correlation based on the pearson distribution
@@ -181,6 +177,17 @@ IDeA <- function(data=NULL,
   tvalue <- qt(1.0 - adjunipvalue,ndf)
   rcrit <- tvalue/sqrt(ndf + tvalue^2)
   if (thr < rcrit) thr <- rcrit
+
+  maxcor <- apply(cormat,2,max)
+
+  totAtcorr <- sum(cormat >= thr); ## 
+  DeCorrmatrix <- NULL;
+  lastintopfeat <- character();
+  lastdecorrelated <- character();
+  totused <- character();
+  totalpha <- character();
+  bfeat <- NULL
+
   
   ################################# end #######################
   althr <- 0.10;
@@ -271,7 +278,7 @@ IDeA <- function(data=NULL,
       thr2 <- thr
       thr <- thr2*1.001;
       thrvalues <- c(0.90,0.75,0.60,0.45,0.20,0.10);
-      nextthr <- 1 + (!relaxed)*length(thrvalues);
+      nextthr <- 1;
       nextthra <- 0;
       while (((addedlist > 0) || (thr > (thr2*1.0001))) && (lp < maxLoops)) 
       {
@@ -285,21 +292,16 @@ IDeA <- function(data=NULL,
         sparcityEvolution <- c(sparcityEvolution,sum(DeCorrmatrix == 0));
 
         thr <- thr2;
-        nextthr <- sum(thrvalues > mxScor) + 1
-        if ((mxScor >= thr2) && (nextthr <= length(thrvalues)))
+        if ((mxScor >= thr2) && relaxed)
         {
+          nextthr <- sum(thrvalues > mxScor) + 1
           thr <- max(thr2,thrvalues[nextthr]);
         }
 
         topfeat <- varincluded;
         names(topfeat) <- topfeat;
-        if (nextthra != nextthr)
-        {
-          orglentopfeat <- sum(maxcor[topfeat] >= thr);
-          nextthra <- nextthr;
-        }
         topfeat <- topfeat[maxcor[topfeat] >= thr];
-        if (verbose)  cat("\n\r",lp,sprintf("<R=%5.3f,thr=%5.3f,N=%5d>",mxScor,thr,orglentopfeat))
+        if (verbose)  cat("\n\r",lp,sprintf("<R=%5.3f,thr=%5.3f>",mxScor,thr))
 
         if (length(topfeat)>0)
         {
@@ -551,11 +553,21 @@ IDeA <- function(data=NULL,
           lastdecorrelated <- decorrelatedFetureList;
           lastintopfeat <- intopfeat;
         }
+        mxScor <- max(cormat);
+        nextthr <- sum(thrvalues > mxScor) + 1
 
-        if ((nextthr <= length(thrvalues)) && ((addedlist <= max(c(2.0,0.5*orglentopfeat))) || (length(intopfeat) <= 1)))
+        if ((nextthr == nextthra) && (addedlist == 0) && (mxScor > thr))
         {
-          nextthr <- nextthr + 1; 
+            lp <- maxLoops
         }
+        if ((addedlist == 0) && (mxScor > thr))
+        {
+          nextthra <- nextthr
+        }        
+      }
+      if (lp >= maxLoops)
+      {
+        warning("Maximum number of iterations reached: Failed to achieve target correlation\n")
       }
       correlationMeasureEvolution <- c(correlationMeasureEvolution,max(cormat));
       sparcityEvolution <- c(sparcityEvolution,sum(DeCorrmatrix == 0));
