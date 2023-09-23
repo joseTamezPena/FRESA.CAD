@@ -170,7 +170,7 @@ IDeA <- function(data=NULL,
   }
   diag(cormat) <- 0;
   
-  adjunipvalue <- min(c(unipvalue,5*unipvalue/totFeatures)); ## Adjusting for false association at 5 true associations per feature
+  adjunipvalue <- min(c(unipvalue,3*unipvalue/totFeatures)); ## Adjusting for false association at 3 true associations per feature
   
   ## Min Correlation based on the pearson distribution
   ndf <- nrow(data)-2
@@ -242,6 +242,7 @@ IDeA <- function(data=NULL,
         AdrivingFeatures <- AdrivingFeatures[order(-ordcor[AdrivingFeatures])];
         ordcor <- maxcor;
       }
+      ordera <- ordcor*0; # Will store the number of times the feature is selected as independent variable
       AdrivingFeatures <- AdrivingFeatures[order(-ordcor[AdrivingFeatures])];
       AdrivingFeatures <- as.character(correlated_Remove(cormat,AdrivingFeatures,thr = thr,isDataCorMatrix=TRUE))
       
@@ -277,7 +278,7 @@ IDeA <- function(data=NULL,
 
       thr2 <- thr
       thr <- thr2*1.001;
-      thrvalues <- c(0.90,0.75,0.60,0.45,0.20,0.10);
+      thrvalues <- c(0.90,0.75,0.60,0.45,0.20,0.10,0.001);
       nextthr <- 1;
       nextthra <- 0;
       while (((addedlist > 0) || (thr > (thr2*1.0001))) && (lp < maxLoops)) 
@@ -323,7 +324,14 @@ IDeA <- function(data=NULL,
             topfeat <- topfeat[order(-ordcor[topfeat])];
             ordcor <- maxcor;
           }
-          ordcor <- ordcor + 1.0*(names(ordcor) %in% allFeatAdded)
+#            ordcor <- ordcor + 1.0*(names(ordcor) %in% allFeatAdded)
+          ordcor <- ordcor + 1.0e-6*ordera; # For tie break. Choose the feature with more selection hits
+#          if (verbose) 
+#          {
+#            cat("\n\r")
+#            print(head(ordcor[order(-ordcor)]))
+#            cat("\n\r")
+#          }
           topfeat <- topfeat[order(-ordcor[topfeat])];
           atopbase <- bfeat[bfeat %in% topfeat];
           topfeat <- unique(c(atopbase,topfeat));
@@ -454,6 +462,8 @@ IDeA <- function(data=NULL,
                   }
               }
               allFeatAdded <- unique(c(allFeatAdded,featAdded))
+              ordera <- ordera + 1*(names(ordera) %in% featAdded)
+
               if (!testedMedian)
               {
                 featAdded <- character();
