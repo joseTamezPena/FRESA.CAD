@@ -278,7 +278,7 @@ IDeA <- function(data=NULL,
 
       thr2 <- thr
       thr <- thr2*1.001;
-      thrvalues <- c(0.90,0.75,0.60,0.45,0.20,0.10,0.001);
+      thrvalues <- c(0.95,0.90,0.75,0.60,0.45,0.20,0.10,0.001);
       nextthr <- 1;
       nextthra <- 0;
       while (((addedlist > 0) || (thr > (thr2*1.0001))) && (lp < maxLoops)) 
