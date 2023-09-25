@@ -4,7 +4,8 @@ ILAA <- function(data=NULL,
                 Outcome=NULL,
                 drivingFeatures=NULL,
                 maxLoops=100,
-                verbose=FALSE)
+                verbose=FALSE,
+                bootstrap=0)
 {
   method <- match.arg(method);
   type="LM";
@@ -21,22 +22,87 @@ ILAA <- function(data=NULL,
     cat(method,"|",type,"|")
   }
   
-  result <- IDeA(data=data,
+  transf <- IDeA(data=data,
                  thr=thr,
                  method=method,
                  Outcome=Outcome,
-                 refdata=NULL,
                  drivingFeatures=drivingFeatures,
-                 useDeCorr=TRUE,
-                 relaxed=TRUE,
-                 corRank=TRUE,
                  maxLoops=maxLoops,
-                 unipvalue=0.05,
                  verbose=verbose,
                  type=type)
-   return(result)
+  if (bootstrap > 1)
+  {
+    
+    transform <- attr(transf,"UPLTM") 
+    fscore <- attr(transf,"fscore");
+    countf <- attr(transf,"TotalAdjustments");
+    AdrivingFeatures <- attr(transf,"drivingFeatures");
+    bfeat<- attr(transf,"unaltered");
+    useDeCorr <- attr(transf,"useDeCorr");
+    adjunipvalue <- attr(transf,"unipvalue"); 
+    totAtcorr <- attr(transf,"totCorrelated"); 
+    rcrit <- attr(transf,"R.critical");
+    IDeAEvolution <- attr(transf,"IDeAEvolution"); 
+
+    dsize <- nrow(data);
+    lavariables <- names(fscore);
+    lavariables <- str_remove_all(lavariables,"La_");
+
+    taccmatrix <- cor(data[,lavariables]);
+    colnames(transform) <- str_remove_all(colnames(transform),"La_")
+    taccmatrix[colnames(transform),colnames(transform)] <- transform
+    drivingFeatures <- lavariables[order(-fscore)]
+    if (verbose) 
+    {
+      cat("bootstrapping->")
+      cat(head(drivingFeatures),"->\n")
+    }
+    
+    for (lp in c(1:bootstrap))
+    {
+      if (verbose)
+      {         
+        cat(".")
+        if (lp %% 40 == 0) cat("\n")
+      }
+      transf <- IDeA(data[sample(dsize,dsize,replace = TRUE),],
+                   thr=thr,
+                   method=method,
+                   Outcome=Outcome,
+                   drivingFeatures=drivingFeatures,
+                   maxLoops=maxLoops,
+                   type=type)
+      transform <- attr(transf,"UPLTM") 
+      colnames(transform) <- str_remove_all(colnames(transform),"La_")
+      cnames <- colnames(transform)[colnames(transform) %in% colnames(taccmatrix)]
+      taccmatrix[cnames,cnames] <- taccmatrix[cnames,cnames] + transform[cnames,cnames]
+    }
+    transform <- NULL;
+    taccmatrix <- taccmatrix/(1.0 + bootstrap);
+    colnames(taccmatrix) <- paste("La_",colnames(taccmatrix),sep="")
+    attr(transf,"UPLTM") <- taccmatrix
+
+    attr(transf,"LatentVariables") <- lavariables;
+    transf <- predictDecorrelate(transf,data)
+    attr(transf,"UPLTM") <- taccmatrix
+    attr(transf,"fscore") <- fscore;
+    attr(transf,"TotalAdjustments") <- countf;
+    attr(transf,"drivingFeatures") <- AdrivingFeatures;
+    attr(transf,"unaltered") <- bfeat;
+    attr(transf,"LatentVariables") <- lavariables;
+    attr(transf,"useDeCorr") <- useDeCorr;
+    attr(transf,"unipvalue") <- adjunipvalue
+    attr(transf,"totCorrelated") <- totAtcorr
+    attr(transf,"R.critical") <- rcrit
+    attr(transf,"IDeAEvolution") <- IDeAEvolution
+
+    if (verbose) cat("\n\r")
+  }  
+  
+  return(transf)
 
 }                                  
+
 
 IDeA <- function(data=NULL,
                                   thr=0.80,
@@ -155,9 +221,7 @@ IDeA <- function(data=NULL,
   names(fscore) <- varincluded;
   
   totFeatures <- length(varincluded);
-  largeSet <- (totFeatures > 1000) || ((nrow(refdata) > 1000) && (totFeatures > 100))
   
-
   
   models <- NULL
   
@@ -256,7 +320,6 @@ IDeA <- function(data=NULL,
         drivingFeatures <- drivingFeatures[drivingFeatures %in% varincluded];
         if (length(AdrivingFeatures)>0)
         {
-          drivingFeatures <- drivingFeatures[order(-ordcor[drivingFeatures])];
           names(drivingFeatures) <- drivingFeatures;
           bfeat <- unique(c(drivingFeatures,AdrivingFeatures))
           if (verbose) cat (bfeat,"\n")
@@ -324,14 +387,7 @@ IDeA <- function(data=NULL,
             topfeat <- topfeat[order(-ordcor[topfeat])];
             ordcor <- maxcor;
           }
-#            ordcor <- ordcor + 1.0*(names(ordcor) %in% allFeatAdded)
           ordcor <- ordcor + 1.0e-6*ordera; # For tie break. Choose the feature with more selection hits
-#          if (verbose) 
-#          {
-#            cat("\n\r")
-#            print(head(ordcor[order(-ordcor)]))
-#            cat("\n\r")
-#          }
           topfeat <- topfeat[order(-ordcor[topfeat])];
           atopbase <- bfeat[bfeat %in% topfeat];
           topfeat <- unique(c(atopbase,topfeat));

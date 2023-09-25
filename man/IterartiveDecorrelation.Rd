@@ -14,7 +14,8 @@
                 Outcome=NULL,
                 drivingFeatures=NULL,
                 maxLoops=100,
-                verbose=FALSE
+                verbose=FALSE,
+                bootstrap=0
                 )
                 
   IDeA(data=NULL,thr=0.80,
@@ -77,7 +78,10 @@
   The returned dataframe of the \code{IDeA} function
   }
   \item{testData}{
-  the new dataframe to be decorrelated
+  The new dataframe to be decorrelated
+  }
+  \item{bootstrap}{
+   If greater than 1 the number of boostrapping loops
   }
 }
 
@@ -86,7 +90,8 @@
  is larger than the user supplied threshold will be decorrelated. 
  Basis feature selection may be based on Outcome association or by an unsupervised method. 
  The default options will run the decorrelation using fast matrix operations using \code{Rfast};
- hence, Pearson correlation will be used to estimate the unit-preserving spatial transformation matrix (UPLTM). 
+ hence, Pearson correlation will be used to estimate the unit-preserving spatial transformation matrix (UPLTM).
+ ILAA is a wrapper of the more comprensive IDeA method. It estimates linear transforms and allows for boosted transform estimations 
 }
 
 \value{
