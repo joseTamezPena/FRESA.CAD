@@ -51,7 +51,7 @@ ILAA <- function(data=NULL,
     taccmatrix <- cor(data[,lavariables]);
     colnames(transform) <- str_remove_all(colnames(transform),"La_")
     taccmatrix[colnames(transform),colnames(transform)] <- transform
-    drivingFeatures <- lavariables[order(-fscore)]
+#    drivingFeatures <- lavariables[order(-fscore)]
     if (verbose) 
     {
       cat("bootstrapping->")
