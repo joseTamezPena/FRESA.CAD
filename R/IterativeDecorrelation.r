@@ -48,14 +48,15 @@ ILAA <- function(data=NULL,
     lavariables <- names(fscore);
     lavariables <- str_remove_all(lavariables,"La_");
 
-    taccmatrix <- cor(data[,lavariables]);
+    taccmatrix <- cor(data[,lavariables])*0;
+    counts <- taccmatrix
     colnames(transform) <- str_remove_all(colnames(transform),"La_")
     taccmatrix[colnames(transform),colnames(transform)] <- transform
+    counts[colnames(transform),colnames(transform)] <- 1.0*(transform != 0)
 #    drivingFeatures <- lavariables[order(-fscore)]
     if (verbose) 
     {
       cat("bootstrapping->")
-      cat(head(drivingFeatures),"->\n")
     }
     
     for (lp in c(1:bootstrap))
@@ -65,7 +66,15 @@ ILAA <- function(data=NULL,
         cat(".")
         if (lp %% 40 == 0) cat("\n")
       }
-      transf <- IDeA(data[sample(dsize,dsize,replace = TRUE),],
+      if (bootstrap > 100)  ## True bootstrap
+      {
+        smp <- sample(dsize,dsize,replace = TRUE);
+      }
+      else ## pseudo bootrstrap 5% will be duplicated
+      {
+        smp <- c(sample(dsize,0.95*dsize),sample(dsize,0.05*dsize));
+      }
+      transf <- IDeA(data[smp,],
                    thr=thr,
                    method=method,
                    Outcome=Outcome,
@@ -76,9 +85,12 @@ ILAA <- function(data=NULL,
       colnames(transform) <- str_remove_all(colnames(transform),"La_")
       cnames <- colnames(transform)[colnames(transform) %in% colnames(taccmatrix)]
       taccmatrix[cnames,cnames] <- taccmatrix[cnames,cnames] + transform[cnames,cnames]
+      counts[cnames,cnames] <- counts[cnames,cnames] + 1.0*(transform[cnames,cnames] != 0)
     }
     transform <- NULL;
     taccmatrix <- taccmatrix/(1.0 + bootstrap);
+    thrcnt <- 0.025*(bootstrap + 1);
+    taccmatrix[counts < thrcnt] <- 0;
     colnames(taccmatrix) <- paste("La_",colnames(taccmatrix),sep="")
     attr(transf,"UPLTM") <- taccmatrix
 
