@@ -53,7 +53,6 @@ ILAA <- function(data=NULL,
     colnames(transform) <- str_remove_all(colnames(transform),"La_")
     taccmatrix[colnames(transform),colnames(transform)] <- transform
     counts[colnames(transform),colnames(transform)] <- 1.0*(transform != 0)
-#    drivingFeatures <- lavariables[order(-fscore)]
     if (verbose) 
     {
       cat("bootstrapping->")
@@ -288,14 +287,14 @@ IDeA <- function(data=NULL,
             {
               if (inherits(data[,Outcome],"factor") | (length(unique(data[,Outcome])) == 2))
               {
-                outcomep <- univariate_correlation(data,Outcome,limit=0,pvalue= unipvalue,thr = thr) # the top associated features to the outcome
+                outcomep <- univariate_correlation(data,Outcome,limit =-1) # the top associated features to the outcome
               }
               else
               {
-                outcomep <- univariate_correlation(data,Outcome,method=method,limit=0,pvalue= unipvalue,thr = thr) # the top associated features to the outcome
+                outcomep <- univariate_correlation(data,Outcome,method=method,limit= -1) # the top associated features to the outcome
               }
               drivingFeatures <- names(outcomep);
-              if (verbose) cat (drivingFeatures,"\n")
+              if (verbose) print(head(outcomep))
               outcomep <- NULL;
             }
           }
@@ -319,41 +318,36 @@ IDeA <- function(data=NULL,
         ordcor <- maxcor;
       }
       ordera <- ordcor*0; # Will store the number of times the feature is selected as independent variable
-      AdrivingFeatures <- AdrivingFeatures[order(-ordcor[AdrivingFeatures])];
-      AdrivingFeatures <- as.character(correlated_Remove(cormat,AdrivingFeatures,thr = thr,isDataCorMatrix=TRUE))
       
       DeCorrmatrix <- diag(length(varincluded));
       colnames(DeCorrmatrix) <- varincluded;
       rownames(DeCorrmatrix) <- varincluded;
       decordim <- length(varincluded);
-      bfeat <- AdrivingFeatures;
+      AdrivingFeatures <- AdrivingFeatures[order(-ordcor[AdrivingFeatures])];
       if (length(drivingFeatures) > 0)
       {    
-        drivingFeatures <- drivingFeatures[drivingFeatures %in% varincluded];
-        if (length(AdrivingFeatures)>0)
-        {
-          names(drivingFeatures) <- drivingFeatures;
-          bfeat <- unique(c(drivingFeatures,AdrivingFeatures))
-          if (verbose) cat (bfeat,"\n")
-          names(bfeat) <- bfeat;
-          bfeat <- as.character(correlated_Remove(cormat,bfeat,thr = thr,isDataCorMatrix=TRUE));
-          bfeat <- bfeat[order(-ordcor[bfeat])];
-          drivingFeatures <- drivingFeatures[drivingFeatures %in% bfeat];
-          if (verbose) cat (drivingFeatures,"\n")
-          AdrivingFeatures <- bfeat;
-        }
+        AdrivingFeatures <- unique(c(drivingFeatures,AdrivingFeatures))
+        AdrivingFeatures <- AdrivingFeatures[AdrivingFeatures %in% varincluded];
+      }
+      ordera[AdrivingFeatures] <- c(length(AdrivingFeatures):1)
+      ordera <- ordera/length(AdrivingFeatures);
+      AdrivingFeatures <- as.character(correlated_Remove(cormat,AdrivingFeatures,thr = thr,isDataCorMatrix=TRUE))
+      bfeat <- AdrivingFeatures;
+      if (verbose) 
+      {
+        cat ("\n",head(bfeat),"\n");
+        print(head(ordera));
       }
 
       if (verbose) cat ("\n Included:",length(varincluded),
                         ", Uni p:",adjunipvalue,
-                        ", Outcome-Driven Size:",length(drivingFeatures),
                         ", Base Size:",length(bfeat),
                         ", Rcrit:",rcrit,
                         "\n")
 
       thr2 <- thr
       thr <- thr2*1.001;
-      thrvalues <- c(0.95,0.90,0.75,0.60,0.45,0.20,0.10,0.001);
+      thrvalues <- c(0.95,0.90,0.80,0.70,0.60,0.50,0.40,0.30,0.20,0.10,0.05);
       nextthr <- 1;
       nextthra <- 0;
       while (((addedlist > 0) || (thr > (thr2*1.0001))) && (lp < maxLoops)) 
@@ -412,8 +406,6 @@ IDeA <- function(data=NULL,
           featMarked <- character();
           lpct <- 0;
           throff <- 0.01;
-          shortCor <- NULL;
-          themaxthr <- thr;
           while (length(featAdded) > 0)
           {
             lpct <- lpct + 1;
@@ -421,39 +413,31 @@ IDeA <- function(data=NULL,
             topfeat <- topfeat[!(topfeat %in% featMarked)]
             if (length(topfeat) > 0)
             {
-              if (length(topfeat) > 1) shortCor <- cormat[topfeat,];
-              testedMedian <- FALSE;
-              maxthr <- thr;
               for (feat in topfeat)
               {
                   corlist <- cormat[,feat];
                   corlist <- corlist[corlist >= thr];
                   varlist <- names(corlist)
-                  varlist <- varlist[!(varlist %in% unique(c(decorrelatedFetureList,bfeat)))]
 
-                  olength <- length(varlist)
-                  notinfeat <- topfeat[topfeat != feat];
-                  allvartested <- TRUE;
-                  if ((olength > 1) && (length(notinfeat) > 1))
+                  if (length(varlist) > 1)
                   {
-                      medianthr <- median(apply(shortCor[notinfeat,varlist],2,max));
-                      if (medianthr >= (thr + throff))
-                      {
-                        if (verbose && (feat==topfeat[1]))  cat("[",length(varlist),"]");
-                        if (maxthr < medianthr) maxthr <- medianthr;
-                        themaxthr <- max(c(themaxthr,maxthr));
-                        corlist <- corlist[corlist >= medianthr];
-                        varlist <- names(corlist)
-                        allvartested <- (length(varlist) == olength);
-                        testedMedian <- testedMedian | !allvartested;
-                      }
+                    notintop <- topfeat[topfeat != feat];
+                    if (length(notintop) > 0)
+                    {
+                      redcomat <- cormat[varlist,notintop];
+                      thrlocal <- max(c(thr,max(redcomat)));
+                      if (verbose && (feat==topfeat[1]))  cat(" <",length(varlist),"(",thrlocal,")");
+                      corlist <- corlist[corlist >= thrlocal];
+                      varlist <- names(corlist)
+                    }
                   }
+                  varlist <- varlist[!(varlist %in% unique(c(decorrelatedFetureList,bfeat)))]
 
                   ovarlist <- varlist;
 
                   if (length(varlist) > 0)
                   {
-                     if (verbose && (feat==topfeat[1]))  cat("(",length(varlist),")");
+                     if (verbose && (feat==topfeat[1]))  cat(":",length(varlist),">");
                      if (useFastCor)
                      {
                         prebetas <- getAllBetaCoefficients(feat,varlist);
@@ -524,28 +508,15 @@ IDeA <- function(data=NULL,
                     cormat[ovarlist,feat] <- 0;
 
                   }
-                  if (allvartested)
-                  {
-                      featMarked <- unique(c(featMarked,feat));
-                  }
+                  featMarked <- unique(c(featMarked,feat));
               }
               allFeatAdded <- unique(c(allFeatAdded,featAdded))
-              ordera <- ordera + 1*(names(ordera) %in% featAdded)
+              ordera[featAdded] <- ordera[featAdded] + 1;
 
-              if (!testedMedian)
-              {
-                featAdded <- character();
-              }
-              if ((maxthr > thr) && testedMedian)
-              {
-                featAdded <- character(1);
-                if (verbose) cat("=")
-                throff <- throff + 0.025;
-              }
             }
           }
           addedlist <- length(decorrelatedFetureList);
-          if (verbose) cat("[",lpct,":",length(featMarked),"Fa=",length(allFeatAdded),":",sprintf("%5.3f",themaxthr),"](",length(intopfeat),",",addedlist,",",length(totalpha),"),<")
+          if (verbose) cat("[",lpct,":",length(featMarked),"Fa=",length(allFeatAdded),"](",length(intopfeat),",",addedlist,",",length(totalpha),"),<")
           if (addedlist > 0)
           {
              mbetas <- c(intopfeat,decorrelatedFetureList);
