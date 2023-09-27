@@ -302,21 +302,20 @@ IDeA <- function(data=NULL,
       cormat <- cormat[varincluded,varincluded];
       AdrivingFeatures <- varincluded;
       maxcor <- apply(cormat,2,max)
-      ordcor <- maxcor;
+      ordera <- maxcor;
       if (corRank)
       {       
         axcor <- cormat;
-        axcor[axcor < thr] <- 0;
-        ordcor <- apply(axcor^2,2,mean);
+        axcor[axcor < rcrit] <- 0;
+        ordera <- apply(axcor^2,2,mean);
         axcor <- NULL
       }
-      ordera <- ordcor*0; # Will store the number of times the feature is selected as independent variable
       
       DeCorrmatrix <- diag(length(varincluded));
       colnames(DeCorrmatrix) <- varincluded;
       rownames(DeCorrmatrix) <- varincluded;
       decordim <- length(varincluded);
-      AdrivingFeatures <- AdrivingFeatures[order(-ordcor[AdrivingFeatures])];
+      AdrivingFeatures <- AdrivingFeatures[order(-ordera[AdrivingFeatures])];
       if (length(drivingFeatures) > 0)
       {    
         AdrivingFeatures <- unique(c(drivingFeatures,AdrivingFeatures))
@@ -372,16 +371,7 @@ IDeA <- function(data=NULL,
           betamatrix <- diag(length(varincluded));
           colnames(betamatrix) <- varincluded;
           rownames(betamatrix) <- varincluded;
-          ordcor <- maxcor;
-          if (corRank)
-          {
-            axcor <- cormat;
-            axcor[axcor < thr] <- 0;
-            ordcor <- apply(axcor^2,2,mean);
-            axcor <- NULL
-          }
-          topfeat <- topfeat[order(-ordera[topfeat])]; # For tie break. Choose the feature with more selection hits
-          topfeat <- topfeat[order(-ordcor[topfeat])];
+          topfeat <- topfeat[order(-ordera[topfeat])]; 
           atopbase <- bfeat[bfeat %in% topfeat];
           topfeat <- unique(c(atopbase,topfeat));
           topfeat <- correlated_Remove(cormat,topfeat,thr = thr,isDataCorMatrix=TRUE)
