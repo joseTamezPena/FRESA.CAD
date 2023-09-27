@@ -307,7 +307,7 @@ IDeA <- function(data=NULL,
       {       
         axcor <- cormat;
         axcor[axcor < rcrit] <- 0;
-        ordera <- apply(axcor^2,2,mean);
+        ordera <- 0.95*ordera + 0.05*apply(axcor^2,2,mean);
         axcor <- NULL
       }
       
