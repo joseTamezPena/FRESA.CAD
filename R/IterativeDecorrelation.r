@@ -307,6 +307,7 @@ IDeA <- function(data=NULL,
         axcor <- cormat;
         axcor[axcor < thr] <- 0;
         ordcor <- apply(axcor^2,2,mean);
+        axcor <- NULL
       }
       else
       {
@@ -384,6 +385,7 @@ IDeA <- function(data=NULL,
             axcor <- cormat;
             axcor[axcor < thr] <- 0;
             ordcor <- apply(axcor^2,2,mean);
+            axcor <- NULL
           }
           else
           {
@@ -405,7 +407,6 @@ IDeA <- function(data=NULL,
           featAdded <- character(1);
           featMarked <- character();
           lpct <- 0;
-          throff <- 0.01;
           while (length(featAdded) > 0)
           {
             lpct <- lpct + 1;
