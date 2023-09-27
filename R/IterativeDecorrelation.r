@@ -302,21 +302,13 @@ IDeA <- function(data=NULL,
       cormat <- cormat[varincluded,varincluded];
       AdrivingFeatures <- varincluded;
       maxcor <- apply(cormat,2,max)
+      ordcor <- maxcor;
       if (corRank)
       {       
         axcor <- cormat;
         axcor[axcor < thr] <- 0;
         ordcor <- apply(axcor^2,2,mean);
         axcor <- NULL
-      }
-      else
-      {
-        ordcor <- apply(cormat,2,mean)
-        names(AdrivingFeatures) <- AdrivingFeatures;
-        AdrivingFeatures <- AdrivingFeatures[order(-ordcor[AdrivingFeatures])];
-        ordcor <- apply(1*(cormat>=thr),2,mean)
-        AdrivingFeatures <- AdrivingFeatures[order(-ordcor[AdrivingFeatures])];
-        ordcor <- maxcor;
       }
       ordera <- ordcor*0; # Will store the number of times the feature is selected as independent variable
       
@@ -380,20 +372,13 @@ IDeA <- function(data=NULL,
           betamatrix <- diag(length(varincluded));
           colnames(betamatrix) <- varincluded;
           rownames(betamatrix) <- varincluded;
+          ordcor <- maxcor;
           if (corRank)
           {
             axcor <- cormat;
             axcor[axcor < thr] <- 0;
             ordcor <- apply(axcor^2,2,mean);
             axcor <- NULL
-          }
-          else
-          {
-            ordcor <- apply(cormat,2,mean)
-            topfeat <- topfeat[order(-ordcor[topfeat])];
-            ordcor <- apply(1*(cormat >= thr2),2,mean)
-            topfeat <- topfeat[order(-ordcor[topfeat])];
-            ordcor <- maxcor;
           }
           topfeat <- topfeat[order(-ordera[topfeat])]; # For tie break. Choose the feature with more selection hits
           topfeat <- topfeat[order(-ordcor[topfeat])];
