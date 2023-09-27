@@ -395,7 +395,7 @@ IDeA <- function(data=NULL,
             topfeat <- topfeat[order(-ordcor[topfeat])];
             ordcor <- maxcor;
           }
-          ordcor <- ordcor + 1.0e-6*ordera; # For tie break. Choose the feature with more selection hits
+          topfeat <- topfeat[order(-ordera[topfeat])]; # For tie break. Choose the feature with more selection hits
           topfeat <- topfeat[order(-ordcor[topfeat])];
           atopbase <- bfeat[bfeat %in% topfeat];
           topfeat <- unique(c(atopbase,topfeat));
