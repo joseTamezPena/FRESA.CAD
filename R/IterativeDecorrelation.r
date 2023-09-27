@@ -247,7 +247,7 @@ IDeA <- function(data=NULL,
   
   adjunipvalue <- min(c(unipvalue,3*unipvalue/totFeatures)); ## Adjusting for false association at 3 true associations per feature
   
-  ## Min Correlation based on the pearson distribution
+  ## Min Correlation based on the Pearson distribution
   ndf <- nrow(data)-2
   tvalue <- qt(1.0 - adjunipvalue,ndf)
   rcrit <- tvalue/sqrt(ndf + tvalue^2)
@@ -264,8 +264,8 @@ IDeA <- function(data=NULL,
   bfeat <- NULL
 
   
-  ################################# end #######################
-  althr <- 0.10;
+  ################################ #######################
+  althr <- 0.25;
   cortoInclude <- max(c(althr*thr,rcrit))
   
   varincluded <- names(maxcor)[maxcor >= cortoInclude];
@@ -300,22 +300,22 @@ IDeA <- function(data=NULL,
           }
       }
       cormat <- cormat[varincluded,varincluded];
-      AdrivingFeatures <- varincluded;
+      DeCorrmatrix <- diag(length(varincluded));
+      colnames(DeCorrmatrix) <- varincluded;
+      rownames(DeCorrmatrix) <- varincluded;
+      decordim <- length(varincluded);
+      
       maxcor <- apply(cormat,2,max)
       ordera <- maxcor;
       if (corRank)
       {       
         axcor <- cormat;
-        axcor[axcor < rcrit] <- 0;
-        ordera <- 0.95*ordera + 0.05*apply(axcor^2,2,mean);
+        axcor[axcor < 0.5*(1.0 + rcrit)] <- 0; ## Remove low correlated features
+        ordera <- 0.90*maxcor + 0.10*apply(axcor^2,2,mean); ## Add mean of top correlated
         axcor <- NULL
       }
       
-      DeCorrmatrix <- diag(length(varincluded));
-      colnames(DeCorrmatrix) <- varincluded;
-      rownames(DeCorrmatrix) <- varincluded;
-      decordim <- length(varincluded);
-      AdrivingFeatures <- AdrivingFeatures[order(-ordera[AdrivingFeatures])];
+      AdrivingFeatures <- varincluded[order(-ordera[varincluded])];
       if (length(drivingFeatures) > 0)
       {    
         AdrivingFeatures <- unique(c(drivingFeatures,AdrivingFeatures))
@@ -323,26 +323,26 @@ IDeA <- function(data=NULL,
       }
       ordera[AdrivingFeatures] <- c(length(AdrivingFeatures):1)
       ordera <- ordera/length(AdrivingFeatures);
-      AdrivingFeatures <- as.character(correlated_Remove(cormat,AdrivingFeatures,thr = thr,isDataCorMatrix=TRUE))
-      bfeat <- AdrivingFeatures;
+      bfeat <- as.character(correlated_Remove(cormat,AdrivingFeatures,thr = thr,isDataCorMatrix=TRUE))
+      
+
       if (verbose) 
       {
         cat ("\n",head(bfeat),"\n");
         print(head(ordera));
-      }
-
-      if (verbose) cat ("\n Included:",length(varincluded),
+        cat ("\n Included:",length(varincluded),
                         ", Uni p:",adjunipvalue,
                         ", Base Size:",length(bfeat),
                         ", Rcrit:",rcrit,
                         "\n")
+      }
 
       thr2 <- thr
-      thr <- thr2*1.001;
+      thr <- 1.1*thr
       thrvalues <- c(0.95,0.90,0.80,0.70,0.60,0.50,0.40,0.30,0.20,0.10,0.05);
       nextthr <- 1;
       nextthra <- 0;
-      while (((addedlist > 0) || (thr > (thr2*1.0001))) && (lp < maxLoops)) 
+      while (((addedlist > 0) || (thr > thr2)) && (lp < maxLoops)) 
       {
         lp = lp + 1;
 
@@ -600,8 +600,6 @@ IDeA <- function(data=NULL,
       betamatrix <- NULL;
       tmparincluded <- varincluded;
       varincluded <- tmparincluded[tmparincluded %in% totused];
-      drivingFeatures <- drivingFeatures[drivingFeatures %in% varincluded];
-      AdrivingFeatures <- AdrivingFeatures[AdrivingFeatures %in% varincluded];
       bfeat <- bfeat[bfeat %in% varincluded];
       if (useDeCorr)
       {
