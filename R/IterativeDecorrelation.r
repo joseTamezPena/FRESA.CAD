@@ -400,10 +400,10 @@ IDeA <- function(data=NULL,
                     notintop <- topfeat[topfeat != feat];
                     if (length(notintop) > 0)
                     {
-                      redcomat <- cormat[varlist,notintop];
+                      redcomat <- apply(as.matrix(cormat[varlist,notintop]),1,max);
                       thrlocal <- max(c(thr,max(redcomat)));
                       if (verbose && (feat==topfeat[1]))  cat(" <",length(varlist),"(",thrlocal,")");
-                      corlist <- corlist[corlist >= thrlocal];
+                      corlist <- corlist[corlist >= redcomat];
                       varlist <- names(corlist)
                     }
                   }
