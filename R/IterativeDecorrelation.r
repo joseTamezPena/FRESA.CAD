@@ -387,33 +387,31 @@ IDeA <- function(data=NULL,
             lpct <- lpct + 1;
             featAdded <- character();
             topfeat <- topfeat[!(topfeat %in% featMarked)]
-            if (length(topfeat) > 0)
+            lentopf <- length(topfeat) 
+            if (lentopf > 0)
             {
+              if (lentopf > 1)
+              {
+                redcomat <- apply(cormat[,topfeat],1,max);
+              }
               for (feat in topfeat)
               {
                   corlist <- cormat[,feat];
                   corlist <- corlist[corlist >= thr];
                   varlist <- names(corlist)
 
-                  if (length(varlist) > 1)
+                  if ((lentopf > 1) && (length(varlist) > 1))
                   {
-                    notintop <- topfeat[topfeat != feat];
-                    if (length(notintop) > 0)
-                    {
-                      redcomat <- apply(as.matrix(cormat[varlist,notintop]),1,max);
-                      thrlocal <- max(c(thr,max(redcomat)));
-                      if (verbose && (feat==topfeat[1]))  cat(" <",length(varlist),"(",thrlocal,")");
-                      corlist <- corlist[corlist >= redcomat];
-                      varlist <- names(corlist)
-                    }
+                    varlist <- names(corlist[corlist >= redcomat[varlist]])
                   }
+                  
                   varlist <- varlist[!(varlist %in% unique(c(decorrelatedFetureList,bfeat)))]
 
                   ovarlist <- varlist;
 
                   if (length(varlist) > 0)
                   {
-                     if (verbose && (feat==topfeat[1]))  cat(":",length(varlist),">");
+                     if (verbose && (feat==topfeat[1]))  cat("<",length(varlist),">");
                      if (useFastCor)
                      {
                         prebetas <- getAllBetaCoefficients(feat,varlist);
