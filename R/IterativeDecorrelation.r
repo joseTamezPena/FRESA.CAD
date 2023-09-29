@@ -379,12 +379,10 @@ IDeA <- function(data=NULL,
           intopfeat <- character();
           toBeDecorrelated <- length(topfeat)
           if (verbose)  cat(", Top:",toBeDecorrelated);
-          featAdded <- character(1);
           featAdded <- character();
-          lentopf <- length(topfeat) 
-          if (lentopf > 0)
+          if (toBeDecorrelated > 0)
           {
-            if (lentopf > 1)
+            if (toBeDecorrelated > 1)
             {
               maxcomat <- apply(cormat[,topfeat],1,max);
             }
@@ -394,7 +392,7 @@ IDeA <- function(data=NULL,
                 corlist <- corlist[corlist >= thr];
                 varlist <- names(corlist)
 
-                if ((lentopf > 1) && (length(varlist) > 1))
+                if ((toBeDecorrelated > 1) && (length(varlist) > 1))
                 {
                   varlist <- names(corlist[corlist >= maxcomat[varlist]])
                 }
@@ -411,11 +409,11 @@ IDeA <- function(data=NULL,
                       if (length(varlist) > 0)
                       {
                         betamatrix[feat,varlist] <- -1.0*prebetas[prebetas != 0];
-                        featAdded <- c(featAdded,feat);
-                        intopfeat <- unique(c(intopfeat,feat));
-                        if (verbose && (length(intopfeat) %% 100 == 99)) cat(".")
-                        countf[varlist] <- countf[varlist] + 1;
-                        decorrelatedFetureList <- c(decorrelatedFetureList,varlist);
+#                        featAdded <- c(featAdded,feat);
+#                        intopfeat <- unique(c(intopfeat,feat));
+#                        if (verbose && (length(intopfeat) %% 100 == 99)) cat(".")
+#                        countf[varlist] <- countf[varlist] + 1;
+#                        decorrelatedFetureList <- c(decorrelatedFetureList,varlist);
                       }
                    }
                    else
@@ -459,28 +457,34 @@ IDeA <- function(data=NULL,
                           varlist <- varlist[adjusted];
                           if (length(varlist) > 0)
                           {
-                              featAdded <- c(featAdded,feat);
                               dataTransformed[,c(feat,varlist)] <- adataframe[,c(feat,varlist)];
                               refdata[,c(feat,varlist)] <- adataframe[refdataids,c(feat,varlist)];
-                              intopfeat <- unique(c(intopfeat,feat));      
-                              if (verbose && (length(intopfeat) %% 100 == 99)) cat(".")
-                              countf[varlist] <- countf[varlist] + 1;
-                              decorrelatedFetureList <- c(decorrelatedFetureList,varlist);
+#                              featAdded <- c(featAdded,feat);
+#                              intopfeat <- unique(c(intopfeat,feat));      
+#                              if (verbose && (length(intopfeat) %% 100 == 99)) cat(".")
+#                              countf[varlist] <- countf[varlist] + 1;
+#                              decorrelatedFetureList <- c(decorrelatedFetureList,varlist);
                           }
                       }
                   }
+                  if (length(varlist) > 0)
+                  {
+                      featAdded <- c(featAdded,feat);
+                      intopfeat <- unique(c(intopfeat,feat));
+                      if (verbose && (length(intopfeat) %% 100 == 99)) cat(".")
+                      countf[varlist] <- countf[varlist] + 1;
+                      decorrelatedFetureList <- c(decorrelatedFetureList,varlist);
+                  }
                   fscore[feat] <- fscore[feat] + length(varlist);
                   fscore[varlist] <- fscore[varlist] - 1;
-                  if (lentopf > 1)
+                  if (toBeDecorrelated > 1)
                   {
                     maxcomat[varlist] <- 0;
                   }
-
                 }
             }
             allFeatAdded <- unique(c(allFeatAdded,featAdded))
             ordera[featAdded] <- ordera[featAdded] + 1;
-
           }
           addedlist <- length(decorrelatedFetureList);
           if (verbose) cat("[Fa=",length(allFeatAdded),"](",length(intopfeat),",",addedlist,",",length(totalpha),"),<")
