@@ -236,10 +236,13 @@ IDeA <- function(data=NULL,
   
   models <- NULL
   
-  if (useFastCor)
+  if ((useFastCor) && (length(varincluded)>1000))
   {
-    cormat <- abs(Rfast::cora(as.matrix(refdata[,varincluded])))
-  }else
+    cormat <- abs(Rfast::cora(as.matrix(refdata[,varincluded]),large=TRUE))
+    colnames(cormat) <- varincluded
+    rownames(cormat) <- varincluded
+  }
+  else
   {
     cormat <- abs(cor(refdata[,varincluded],method=method))
   }
@@ -269,6 +272,7 @@ IDeA <- function(data=NULL,
   cortoInclude <- max(c(althr*thr,rcrit))
   
   varincluded <- names(maxcor)[maxcor >= cortoInclude];
+  
   if (length(varincluded) > 2000) 
   { 
     althr <- 0.5;
@@ -277,6 +281,8 @@ IDeA <- function(data=NULL,
   }    
   allFeatAdded <- character()
   decordim <- 0
+#  print(c(nrow(cormat),max(cormat),length(varincluded)))
+
   if (length(varincluded) > 1)
   {
       if (!is.null(Outcome))
@@ -478,6 +484,7 @@ IDeA <- function(data=NULL,
           }
           addedlist <- length(decorrelatedFetureList);
           if (verbose) cat("[Fa=",length(allFeatAdded),"](",length(intopfeat),",",addedlist,",",length(totalpha),"),<")
+          colused <- character()
           if (addedlist > 0)
           {
              mbetas <- c(intopfeat,decorrelatedFetureList);
@@ -529,25 +536,37 @@ IDeA <- function(data=NULL,
                 }
              }
           }
-          if (verbose) cat(">")
-          colsd <- apply(refdata[,varincluded],2,sd,na.rm = TRUE);
-          if (sum(colsd==0) > 0)
+          if (verbose) cat("><")
+          if (length(colused) > 0)
           {
-            zerovar <- varincluded[colsd==0];
-            for (zcheck in zerovar)
+            colsd <- apply(as.matrix(refdata[,colused]),2,sd,na.rm = TRUE);
+            if (sum(colsd==0) > 0)
             {
-              refdata[,zcheck] <- refdata[,zcheck] + rnorm(nrow(refdata),0,1.0e-10);
+              zerovar <- colused[colsd==0];
+              for (zcheck in zerovar)
+              {
+                refdata[,zcheck] <- refdata[,zcheck] + rnorm(nrow(refdata),0,1.0e-10);
+              }
             }
           }
           topFeatures <- unique(c(topFeatures,intopfeat));
-          if (useFastCor)
+          if ((useFastCor) && (length(colused)>1000))
           {
-             cormat <- abs(Rfast::cora(as.matrix(refdata[,varincluded])))
+            cormat <- abs(Rfast::cora(as.matrix(refdata[,varincluded]),large=TRUE))
+            colnames(cormat) <- varincluded
+            rownames(cormat) <- varincluded
           }
           else
           {
-            cormat <- abs(cor(refdata[,varincluded],method=method))
+            if (length(colused) > 0)
+            {
+              cormatS <- abs(cor(refdata[,varincluded],refdata[,colused],method=method))
+              cormat[,colused] <- cormatS
+              cormat[colused,] <- t(cormatS)
+              cormatS <- NULL
+            }
           }
+          if (verbose) cat(">")
           diag(cormat) <- 0;
           if (verbose) 
           {
@@ -621,9 +640,11 @@ IDeA <- function(data=NULL,
           correlatedToBase <- correlatedToBase[!(correlatedToBase %in% bfeat)];
           if (verbose) 
           {
-             if (useFastCor)
+             if ((useFastCor) && (length(varincluded)>1000))
              {
-              cormat <- abs(Rfast::cora(as.matrix(dataTransformed[,varincluded])))
+              cormat <- abs(Rfast::cora(as.matrix(dataTransformed[,varincluded]),large=TRUE))
+              colnames(cormat) <- varincluded
+              rownames(cormat) <- varincluded
              }
              else
              {
