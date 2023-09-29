@@ -409,11 +409,6 @@ IDeA <- function(data=NULL,
                       if (length(varlist) > 0)
                       {
                         betamatrix[feat,varlist] <- -1.0*prebetas[prebetas != 0];
-#                        featAdded <- c(featAdded,feat);
-#                        intopfeat <- unique(c(intopfeat,feat));
-#                        if (verbose && (length(intopfeat) %% 100 == 99)) cat(".")
-#                        countf[varlist] <- countf[varlist] + 1;
-#                        decorrelatedFetureList <- c(decorrelatedFetureList,varlist);
                       }
                    }
                    else
@@ -459,11 +454,6 @@ IDeA <- function(data=NULL,
                           {
                               dataTransformed[,c(feat,varlist)] <- adataframe[,c(feat,varlist)];
                               refdata[,c(feat,varlist)] <- adataframe[refdataids,c(feat,varlist)];
-#                              featAdded <- c(featAdded,feat);
-#                              intopfeat <- unique(c(intopfeat,feat));      
-#                              if (verbose && (length(intopfeat) %% 100 == 99)) cat(".")
-#                              countf[varlist] <- countf[varlist] + 1;
-#                              decorrelatedFetureList <- c(decorrelatedFetureList,varlist);
                           }
                       }
                   }
@@ -471,15 +461,15 @@ IDeA <- function(data=NULL,
                   {
                       featAdded <- c(featAdded,feat);
                       intopfeat <- unique(c(intopfeat,feat));
-                      if (verbose && (length(intopfeat) %% 100 == 99)) cat(".")
                       countf[varlist] <- countf[varlist] + 1;
                       decorrelatedFetureList <- c(decorrelatedFetureList,varlist);
-                  }
-                  fscore[feat] <- fscore[feat] + length(varlist);
-                  fscore[varlist] <- fscore[varlist] - 1;
-                  if (toBeDecorrelated > 1)
-                  {
-                    maxcomat[varlist] <- 0;
+                      fscore[feat] <- fscore[feat] + length(varlist);
+                      fscore[varlist] <- fscore[varlist] - 1;
+                      if (toBeDecorrelated > 1)
+                      {
+                        maxcomat[varlist] <- 0;
+                      }
+                      if (verbose && (length(intopfeat) %% 100 == 99)) cat(".")
                   }
                 }
             }
