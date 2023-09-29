@@ -456,21 +456,21 @@ IDeA <- function(data=NULL,
                               refdata[,c(feat,varlist)] <- adataframe[refdataids,c(feat,varlist)];
                           }
                       }
-                  }
-                  if (length(varlist) > 0)
-                  {
-                      featAdded <- c(featAdded,feat);
-                      intopfeat <- unique(c(intopfeat,feat));
-                      countf[varlist] <- countf[varlist] + 1;
-                      decorrelatedFetureList <- c(decorrelatedFetureList,varlist);
-                      fscore[feat] <- fscore[feat] + length(varlist);
-                      fscore[varlist] <- fscore[varlist] - 1;
-                      if (toBeDecorrelated > 1)
-                      {
-                        maxcomat[varlist] <- 0;
-                      }
-                      if (verbose && (length(intopfeat) %% 100 == 99)) cat(".")
-                  }
+                    }
+                    if (length(varlist) > 0)
+                    {
+                        featAdded <- c(featAdded,feat);
+                        intopfeat <- unique(c(intopfeat,feat));
+                        countf[varlist] <- countf[varlist] + 1;
+                        decorrelatedFetureList <- c(decorrelatedFetureList,varlist);
+                        fscore[feat] <- fscore[feat] + length(varlist);
+                        fscore[varlist] <- fscore[varlist] - 1;
+                        if (toBeDecorrelated > 1)
+                        {
+                          maxcomat[varlist] <- 0;
+                        }
+                        if (verbose && (length(intopfeat) %% 100 == 99)) cat(".")
+                    }
                 }
             }
             allFeatAdded <- unique(c(allFeatAdded,featAdded))
