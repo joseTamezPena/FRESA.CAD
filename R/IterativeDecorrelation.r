@@ -47,17 +47,19 @@ ILAA <- function(data=NULL,
     dsize <- nrow(data);
     lavariables <- names(fscore);
     lavariables <- str_remove_all(lavariables,"La_");
+    names(fscore) <- lavariables
 
-    taccmatrix <- cor(data[,lavariables])*0;
-    counts <- taccmatrix
-    colnames(transform) <- str_remove_all(colnames(transform),"La_")
-    taccmatrix[colnames(transform),colnames(transform)] <- transform
-    counts[colnames(transform),colnames(transform)] <- 1.0*(transform != 0)
+    taccmatrix <- diag(length(fscore));
+    colnames(taccmatrix) <- lavariables
+    rownames(taccmatrix) <- lavariables
+    colnames(transform) <- str_remove_all(colnames(transform),"La_");
+    taccmatrix[rownames(transform),colnames(transform)] <- transform
     if (verbose) 
     {
-      cat("bootstrapping->")
+      cat("bootstrapping \n")
     }
     
+    twts <- 1
     for (lp in c(1:bootstrap))
     {
       if (verbose)
@@ -71,26 +73,56 @@ ILAA <- function(data=NULL,
       }
       else ## pseudo bootrstrap 5% will be duplicated
       {
-        smp <- c(sample(dsize,0.95*dsize),sample(dsize,0.05*dsize));
+        smp <- c(sample(dsize,0.95*dsize),sample(dsize,0.10*dsize));
       }
       transf <- IDeA(data[smp,],
                    thr=thr,
                    method=method,
                    Outcome=Outcome,
-                   drivingFeatures=drivingFeatures,
+                   drivingFeatures=AdrivingFeatures,
                    maxLoops=maxLoops,
                    type=type)
       transform <- attr(transf,"UPLTM") 
       colnames(transform) <- str_remove_all(colnames(transform),"La_")
-      cnames <- colnames(transform)[colnames(transform) %in% colnames(taccmatrix)]
-      taccmatrix[cnames,cnames] <- taccmatrix[cnames,cnames] + transform[cnames,cnames]
-      counts[cnames,cnames] <- counts[cnames,cnames] + 1.0*(transform[cnames,cnames] != 0)
+      cnames <- rownames(transform)
+      wo <- 1.0;
+      if (sum(!(cnames %in% rownames(taccmatrix))) > 0)
+      {
+        wo <- 0.5;
+        if (verbose)
+        {
+          cat("[",length(cnames[!(cnames %in% rownames(taccmatrix))]),"]")
+        }        
+        cnames <- cnames[cnames %in% rownames(taccmatrix)];        
+      }
+      mcor <- min(attr(transf,"IDeAEvolution")$Corr)
+      cwt <- (mcor - thr)/(1.0 - thr);
+      if (cwt < 0) cwt <- 0
+      wt <- wo*(1.0 - cwt)^2
+      taccmatrix[cnames,cnames] <- taccmatrix[cnames,cnames] + wt*transform[cnames,cnames]
+      twts <- twts + wt
+      bscore <- attr(transf,"fscore")
+      cnames <- names(bscore)
+      cnames <- str_remove_all(cnames,"La_");
+      names(bscore) <- cnames
+      cnames <- cnames[cnames %in% names(fscore)]
+      fscore[cnames] <- fscore[cnames] + wt*bscore[cnames];
+      if (verbose)
+      {         
+        cat(sprintf("(r=%3.2f,w=%3.2f)",mcor,wt));
+      }
     }
     transform <- NULL;
-    taccmatrix <- taccmatrix/(1.0 + bootstrap);
-    thrcnt <- 0.025*(bootstrap + 1);
-    taccmatrix[counts < thrcnt] <- 0;
-    colnames(taccmatrix) <- paste("La_",colnames(taccmatrix),sep="")
+    taccmatrix <- taccmatrix/twts;
+    fscore <- fscore/twts;
+    islatent <- apply(1*(taccmatrix != 0),2,sum) > 1;
+    ctnames <- colnames(taccmatrix)
+    lavariables <- ctnames[islatent] 
+    ctnames[islatent] <- paste("La_",ctnames[islatent],sep="")
+    snames <- names(fscore)
+    snames[snames %in% lavariables] <- paste("La_",snames[snames %in% lavariables],sep="")
+    names(fscore) <- snames
+    colnames(taccmatrix) <- ctnames
     attr(transf,"UPLTM") <- taccmatrix
 
     attr(transf,"LatentVariables") <- lavariables;
@@ -268,17 +300,19 @@ IDeA <- function(data=NULL,
 
   
   ################################ #######################
-  althr <- 0.25;
-  cortoInclude <- max(c(althr*thr,rcrit))
+#  althr <- 0.25;
+#  cortoInclude <- max(c(althr*thr,rcrit))
+#  
+#  varincluded <- names(maxcor)[maxcor >= cortoInclude];
   
-  varincluded <- names(maxcor)[maxcor >= cortoInclude];
-  
-  if (length(varincluded) > 2000) 
-  { 
-    althr <- 0.5;
-    cortoInclude <- max(c(althr*thr,rcrit))
-    varincluded <- names(maxcor)[maxcor >= cortoInclude];
-  }    
+#  if (length(varincluded) > 2000) 
+#  { 
+#    althr <- 0.5;
+#    cortoInclude <- max(c(althr*thr,rcrit))
+#    varincluded <- names(maxcor)[maxcor >= cortoInclude];
+#    varincluded <- names(maxcor)[maxcor >= rcrit];
+#  }    
+
   allFeatAdded <- character()
   decordim <- 0
 #  print(c(nrow(cormat),max(cormat),length(varincluded)))
@@ -661,7 +695,7 @@ IDeA <- function(data=NULL,
           newnames <- colnames(DeCorrmatrix)
           newnames[newnames %in% lavariables] <- paste("La_",newnames[newnames %in% lavariables],sep="")
           colnames(DeCorrmatrix) <- newnames
-          fscore <- fscore[varincluded];
+#          fscore <- fscore[varincluded];
 
           newnames <- names(fscore)
           newnames[newnames %in% lavariables] <- paste("La_",newnames[newnames %in% lavariables],sep="")
