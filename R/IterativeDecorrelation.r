@@ -71,7 +71,7 @@ ILAA <- function(data=NULL,
       {
         smp <- sample(dsize,dsize,replace = TRUE);
       }
-      else ## pseudo bootrstrap 5% will be duplicated
+      else ## small bootrstrap 5% will be duplicated
       {
         smp <- c(sample(dsize,0.95*dsize),sample(dsize,0.05*dsize));
       }
