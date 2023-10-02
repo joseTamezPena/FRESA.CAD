@@ -67,13 +67,13 @@ ILAA <- function(data=NULL,
         cat(".")
         if (lp %% 40 == 0) cat("\n")
       }
-      if (bootstrap > 100)  ## True bootstrap
+      if (bootstrap > 500)  ## True bootstrap
       {
         smp <- sample(dsize,dsize,replace = TRUE);
       }
       else ## pseudo bootrstrap 5% will be duplicated
       {
-        smp <- c(sample(dsize,0.95*dsize),sample(dsize,0.10*dsize));
+        smp <- c(sample(dsize,0.95*dsize),sample(dsize,0.05*dsize));
       }
       transf <- IDeA(data[smp,],
                    thr=thr,
