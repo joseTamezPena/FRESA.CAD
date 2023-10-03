@@ -382,7 +382,7 @@ IDeA <- function(data=NULL,
       }
       ordera[AdrivingFeatures] <- c(length(AdrivingFeatures):1)
       ordera <- ordera/length(AdrivingFeatures);
-      bfeat <- as.character(correlated_Remove(cormat,AdrivingFeatures,thr = thr,isDataCorMatrix=TRUE))
+      bfeat <- as.character(correlated_Remove(cormat,AdrivingFeatures,thr = rcrit,isDataCorMatrix=TRUE))
       
 
       if (verbose) 
