@@ -133,6 +133,15 @@ ILAA <- function(data=NULL,
     VarTrans <- apply(transf[,colnames(taccmatrix)],2,var);
     VarObs <- apply(data[,rownames(taccmatrix)],2,var);
     VarRatio <- VarTrans/VarObs
+    VarRatio <- VarRatio[order(-VarRatio)]
+    noaltered <- colnames(data)[!(colnames(data) %in% rownames(taccmatrix))]
+    if (length(noaltered)>0)
+    {
+      varone <- rep(1,length(noaltered))
+      names(varone) <- noaltered
+      VarRatio <-  c(varone,VarRatio)
+    }
+
 
     attr(transf,"UPLTM") <- taccmatrix
     attr(transf,"fscore") <- fscore;
@@ -149,8 +158,7 @@ ILAA <- function(data=NULL,
     if (verbose) 
     {
       cat("\n\r")
-      print(head(VarTrans))
-      print(head(VarObs))
+      print(head(VarRatio))
     }
   }  
   
@@ -723,6 +731,15 @@ IDeA <- function(data=NULL,
   VarRatio <- apply(dataTransformed[,colnames(DeCorrmatrix)],2,var);
   VarRatio <- VarRatio/apply(data[,rownames(DeCorrmatrix)],2,var);
   
+  VarRatio <- VarRatio[order(-VarRatio)]
+  noaltered <- colnames(data)[!(colnames(data) %in% rownames(DeCorrmatrix))]
+  if (length(noaltered)>0)
+  {
+    varone <- rep(1,length(noaltered))
+    names(varone) <- noaltered
+    VarRatio <-  c(varone,VarRatio)
+  }
+
   attr(dataTransformed,"UPLTM") <- DeCorrmatrix;
   attr(dataTransformed,"fscore") <- fscore;
   attr(dataTransformed,"TotalAdjustments") <- countf;
