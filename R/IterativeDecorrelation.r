@@ -40,7 +40,6 @@ ILAA <- function(data=NULL,
     bfeat<- attr(transf,"unaltered");
     useDeCorr <- attr(transf,"useDeCorr");
     adjunipvalue <- attr(transf,"unipvalue"); 
-    totAtcorr <- attr(transf,"totCorrelated"); 
     rcrit <- attr(transf,"R.critical");
     IDeAEvolution <- attr(transf,"IDeAEvolution"); 
 
@@ -123,10 +122,18 @@ ILAA <- function(data=NULL,
     snames[snames %in% lavariables] <- paste("La_",snames[snames %in% lavariables],sep="")
     names(fscore) <- snames
     colnames(taccmatrix) <- ctnames
+    
+
+    
     attr(transf,"UPLTM") <- taccmatrix
 
     attr(transf,"LatentVariables") <- lavariables;
     transf <- predictDecorrelate(transf,data)
+    
+    VarTrans <- apply(transf[,colnames(taccmatrix)],2,var);
+    VarObs <- apply(data[,rownames(taccmatrix)],2,var);
+    VarRatio <- VarTrans/VarObs
+
     attr(transf,"UPLTM") <- taccmatrix
     attr(transf,"fscore") <- fscore;
     attr(transf,"TotalAdjustments") <- countf;
@@ -135,11 +142,16 @@ ILAA <- function(data=NULL,
     attr(transf,"LatentVariables") <- lavariables;
     attr(transf,"useDeCorr") <- useDeCorr;
     attr(transf,"unipvalue") <- adjunipvalue
-    attr(transf,"totCorrelated") <- totAtcorr
     attr(transf,"R.critical") <- rcrit
     attr(transf,"IDeAEvolution") <- IDeAEvolution
+    attr(transf,"VarRatio") <- VarRatio
 
-    if (verbose) cat("\n\r")
+    if (verbose) 
+    {
+      cat("\n\r")
+      print(head(VarTrans))
+      print(head(VarObs))
+    }
   }  
   
   return(transf)
@@ -290,7 +302,6 @@ IDeA <- function(data=NULL,
 
   maxcor <- apply(cormat,2,max)
 
-  totAtcorr <- sum(cormat >= thr); ## 
   DeCorrmatrix <- NULL;
   lastintopfeat <- character();
   lastdecorrelated <- character();
@@ -709,6 +720,8 @@ IDeA <- function(data=NULL,
   }
   IDeAEvolution <-list(Corr=correlationMeasureEvolution,Spar=sparcityEvolution/(decordim^2));
   
+  VarRatio <- apply(dataTransformed[,colnames(DeCorrmatrix)],2,var);
+  VarRatio <- VarRatio/apply(data[,rownames(DeCorrmatrix)],2,var);
   
   attr(dataTransformed,"UPLTM") <- DeCorrmatrix;
   attr(dataTransformed,"fscore") <- fscore;
@@ -717,10 +730,10 @@ IDeA <- function(data=NULL,
   attr(dataTransformed,"unaltered") <- bfeat;
   attr(dataTransformed,"LatentVariables") <- lavariables;
   attr(dataTransformed,"useDeCorr") <- useDeCorr;
-  attr(dataTransformed,"unipvalue") <- adjunipvalue
-  attr(dataTransformed,"totCorrelated") <- totAtcorr
-  attr(dataTransformed,"R.critical") <- rcrit
-  attr(dataTransformed,"IDeAEvolution") <- IDeAEvolution
+  attr(dataTransformed,"unipvalue") <- adjunipvalue;
+  attr(dataTransformed,"R.critical") <- rcrit;
+  attr(dataTransformed,"IDeAEvolution") <- IDeAEvolution;
+  attr(dataTransformed,"VarRatio") <- VarRatio;
   return(dataTransformed)
 }
 

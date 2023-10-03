@@ -120,7 +120,16 @@
   Attribute of decorrelatedDataframe: If TRUE the estimated UPLTM is used for decorrelation
   }
   \item{attr:unipvalue}{
-  The p-value used to check for fit significance
+  Attribute of decorrelatedDataframe: The p-value used to check for fit significance
+  }
+  \item{attr:R.critical}{
+  Attribute of decorrelatedDataframe: The pearson correlation critical value
+  }
+  \item{attr:IDeAEvolution}{
+  Attribute of decorrelatedDataframe: The R measure history and the sparcity
+  }
+  \item{attr:VarRatio}{
+  Attribute of decorrelatedDataframe: The variance ratio between the output latent variable and the observed 
   }
 }
 
