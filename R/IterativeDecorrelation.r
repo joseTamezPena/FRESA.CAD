@@ -274,10 +274,11 @@ IDeA <- function(data=NULL,
   }
 
 
+  ischaracter <- sapply(refdata[,varincluded],class) == "character";
   isFactor <- sapply(refdata[,varincluded],class) == "factor";
   isContinous <- unlist(lapply(lapply(refdata[,varincluded],unique),length)) >= minUniqueValues; 
 
-  varincluded <- varincluded[!isFactor & isContinous];
+  varincluded <- varincluded[!isFactor & isContinous & !ischaracter];
   
   
   fscore <- numeric(length(varincluded));
