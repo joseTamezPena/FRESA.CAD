@@ -7,14 +7,14 @@
 }
 \usage{
 	getLatentCoefficients(decorrelatedobject)
-    getObservedCoef(decorrelatedobject,latentCoef)
+    getObservedCoef(decorrelatedobject,latentModel)
 }
 \arguments{
 	\item{decorrelatedobject}{
 	The returned dataframe of the \code{IDeA} function
 	}
-	\item{latentCoef}{
-	A named vector of linear cofficients
+	\item{latentModel}{
+	A linear model with coefficients
 	}
 }
 
