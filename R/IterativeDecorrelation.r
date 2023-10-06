@@ -33,7 +33,8 @@ ILAA <- function(data=NULL,
   if (bootstrap > 1)
   {
     
-    transform <- attr(transf,"UPLTM") 
+    transform <- attr(transf,"UPLTM")
+    ocalnames <- colnames(transform)
     fscore <- attr(transf,"fscore");
     countf <- attr(transf,"TotalAdjustments");
     AdrivingFeatures <- attr(transf,"drivingFeatures");
@@ -53,7 +54,8 @@ ILAA <- function(data=NULL,
     rownames(taccmatrix) <- lavariables
     twts <- rep(1,nrow(taccmatrix));
     names(twts) <- lavariables
-    colnames(transform) <- str_remove_all(colnames(transform),"La_");
+    colnames(transform) <- str_remove_all(ocalnames,"La_");
+
     taccmatrix[rownames(transform),colnames(transform)] <- transform
     if (verbose) 
     {
@@ -82,16 +84,17 @@ ILAA <- function(data=NULL,
                    drivingFeatures=AdrivingFeatures,
                    maxLoops=maxLoops,
                    type=type)
-      transform <- attr(transf,"UPLTM") 
-      colnames(transform) <- str_remove_all(colnames(transform),"La_")
+      transform <- attr(transf,"UPLTM")
+      bcolnames <- colnames(transform)     
+      colnames(transform) <- str_remove_all(bcolnames,"La_")
       cnames <- rownames(transform)
       wo <- 1.0;
-      if (sum(!(cnames %in% rownames(taccmatrix))) > 0)
+      if (sum(!(bcolnames %in% ocalnames)) > 0)
       {
         wo <- 0.5;
         if (verbose)
         {
-          cat("[",length(cnames[!(cnames %in% rownames(taccmatrix))]),"]")
+          cat("[",length(bcolnames[!(bcolnames %in% ocalnames)]),"]")
         }        
         cnames <- cnames[cnames %in% rownames(taccmatrix)];        
       }
