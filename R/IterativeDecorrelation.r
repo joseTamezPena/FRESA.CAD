@@ -51,6 +51,8 @@ ILAA <- function(data=NULL,
     taccmatrix <- diag(length(fscore));
     colnames(taccmatrix) <- lavariables
     rownames(taccmatrix) <- lavariables
+    twts <- rep(1,nrow(taccmatrix));
+    names(twts) <- lavariables
     colnames(transform) <- str_remove_all(colnames(transform),"La_");
     taccmatrix[rownames(transform),colnames(transform)] <- transform
     if (verbose) 
@@ -58,7 +60,6 @@ ILAA <- function(data=NULL,
       cat("bootstrapping \n")
     }
     
-    twts <- 1
     for (lp in c(1:bootstrap))
     {
       if (verbose)
@@ -99,7 +100,7 @@ ILAA <- function(data=NULL,
       if (cwt < 0) cwt <- 0
       wt <- wo*(1.0 - cwt)^2
       taccmatrix[cnames,cnames] <- taccmatrix[cnames,cnames] + wt*transform[cnames,cnames]
-      twts <- twts + wt
+      twts[cnames] <- twts[cnames] + wt
       bscore <- attr(transf,"fscore")
       cnames <- names(bscore)
       cnames <- str_remove_all(cnames,"La_");
@@ -112,7 +113,11 @@ ILAA <- function(data=NULL,
       }
     }
     transform <- NULL;
-    taccmatrix <- taccmatrix/twts;
+    for (cn in colnames(taccmatrix))
+    {
+      taccmatrix[,cn] <- taccmatrix[,cn]/twts[cn];
+    }
+#    diag(taccmatrix) <- 1.0;
     fscore <- fscore/twts;
     islatent <- apply(1*(taccmatrix != 0),2,sum) > 1;
     ctnames <- colnames(taccmatrix)
