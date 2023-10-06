@@ -91,7 +91,7 @@ ILAA <- function(data=NULL,
       wo <- 1.0;
       if (sum(!(bcolnames %in% ocalnames)) > 0)
       {
-        wo <- 0.5;
+        wo <- 0.1;
         if (verbose)
         {
           cat("[",length(bcolnames[!(bcolnames %in% ocalnames)]),"]")
