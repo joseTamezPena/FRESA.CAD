@@ -87,29 +87,28 @@ ILAA <- function(data=NULL,
       transform <- attr(transf,"UPLTM")
       bcolnames <- colnames(transform)     
       colnames(transform) <- str_remove_all(bcolnames,"La_")
-      cnames <- rownames(transform)
+      rnames <- rownames(transform)
+      cnames <- rnames 
       wo <- 1.0;
       if (sum(!(bcolnames %in% ocalnames)) > 0)
       {
-        wo <- 0.1;
         if (verbose)
         {
           cat("[",length(bcolnames[!(bcolnames %in% ocalnames)]),"]")
         }        
-        cnames <- cnames[cnames %in% rownames(taccmatrix)];        
+        wo <- 0.1;
+        cnames <- bcolnames[bcolnames %in% ocalnames];
+        cnames <- str_remove_all(cnames,"La_")
       }
       mcor <- min(attr(transf,"IDeAEvolution")$Corr)
       cwt <- (mcor - thr)/(1.0 - thr);
       if (cwt < 0) cwt <- 0
       wt <- wo*(1.0 - cwt)^2
-      taccmatrix[cnames,cnames] <- taccmatrix[cnames,cnames] + wt*transform[cnames,cnames]
-      twts[cnames] <- twts[cnames] + wt
+      taccmatrix[rnames,cnames] <- taccmatrix[rnames,cnames] + wt*transform[rnames,cnames]
       bscore <- attr(transf,"fscore")
-      cnames <- names(bscore)
-      cnames <- str_remove_all(cnames,"La_");
-      names(bscore) <- cnames
-      cnames <- cnames[cnames %in% names(fscore)]
+      names(bscore) <- str_remove_all(names(bscore),"La_");
       fscore[cnames] <- fscore[cnames] + wt*bscore[cnames];
+      twts[cnames] <- twts[cnames] + wt
       if (verbose)
       {         
         cat(sprintf("(r=%3.2f,w=%3.2f)",mcor,wt));
