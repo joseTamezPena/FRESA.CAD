@@ -57,6 +57,10 @@ ILAA <- function(data=NULL,
     colnames(transform) <- str_remove_all(ocalnames,"La_");
 
     taccmatrix[rownames(transform),colnames(transform)] <- transform
+    sgnmatrix <- 1*(taccmatrix > 0) - 1*(taccmatrix < 0)
+    tmptransform <- sgnmatrix
+#    wmatrix <- 1*(taccmatrix != 0)
+#    ssmatrix <- taccmatrix^2
     if (verbose) 
     {
       cat("bootstrapping \n")
@@ -90,21 +94,31 @@ ILAA <- function(data=NULL,
       rnames <- rownames(transform)
       cnames <- rnames 
       wo <- 1.0;
-      if (sum(!(bcolnames %in% ocalnames)) > 0)
+      tmptransform <- sgnmatrix
+      tmptransform[rnames,cnames] <- 1*(transform > 0) - 1*(transform < 0)
+      sgnmatrix[sgnmatrix == 0] <- tmptransform[sgnmatrix == 0]
+      sgchange <- apply(1*(sgnmatrix*tmptransform < 0),2,sum) 
+#      if (sum(sgchange) > 0) cat("+")
+      if ((sum(!(bcolnames %in% ocalnames)) > 0) | (sum(sgchange) > 0))
       {
         if (verbose)
         {
-          cat("[",length(bcolnames[!(bcolnames %in% ocalnames)]),"]")
+          cat("{",length(bcolnames[!(bcolnames %in% ocalnames)]),",",sum(sgchange),"}")
+#          print(names(sgchange)[sgchange > 0])
         }        
         wo <- 0.1;
         cnames <- bcolnames[bcolnames %in% ocalnames];
         cnames <- str_remove_all(cnames,"La_")
+        cnames <- cnames[cnames %in% names(sgchange)[sgchange == 0]]
+#        print(cnames)
       }
       mcor <- min(attr(transf,"IDeAEvolution")$Corr)
       cwt <- (mcor - thr)/(1.0 - thr);
       if (cwt < 0) cwt <- 0
       wt <- wo*(1.0 - cwt)^2
       taccmatrix[rnames,cnames] <- taccmatrix[rnames,cnames] + wt*transform[rnames,cnames]
+#      ssmatrix[rnames,cnames] <- ssmatrix[rnames,cnames] + wt*transform[rnames,cnames]^2
+#      wmatrix[rnames,cnames] <- wmatrix[rnames,cnames] + wt*(transform[rnames,cnames] != 0)
       bscore <- attr(transf,"fscore")
       names(bscore) <- str_remove_all(names(bscore),"La_");
       fscore[cnames] <- fscore[cnames] + wt*bscore[cnames];
@@ -114,6 +128,8 @@ ILAA <- function(data=NULL,
         cat(sprintf("(r=%3.2f,w=%3.2f)",mcor,wt));
       }
     }
+    tmptransform <- NULL
+    sgnmatrix <- NULL
     transform <- NULL;
     for (cn in colnames(taccmatrix))
     {
@@ -129,7 +145,8 @@ ILAA <- function(data=NULL,
     snames[snames %in% lavariables] <- paste("La_",snames[snames %in% lavariables],sep="")
     names(fscore) <- snames
     colnames(taccmatrix) <- ctnames
-    
+    tokeep <- !((apply(1*(taccmatrix != 0),2,sum) == 1) & (apply(1*(taccmatrix != 0),1,sum) == 1))
+    taccmatrix <- taccmatrix[tokeep,tokeep]
 
     
     attr(transf,"UPLTM") <- taccmatrix
