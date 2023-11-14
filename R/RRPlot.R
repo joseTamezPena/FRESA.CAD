@@ -493,7 +493,7 @@ RRPlot <-function(riskData=NULL,
       paletteplot <- c("green", "red")
       if (isRevesed > 0)
       {
-        labelsplot <- c("Low",sprintf("At Risk > %5.3f",thr_atP[1]));
+        labelsplot <- c("Low Risk",sprintf("High Risk > %5.3f",thr_atP[1]));
         if (length(thr_atP)>1)
         {
           labelsplot <- c(sprintf("Low Risk < %5.3f",thr_atP[2]),sprintf("%5.3f <= Risk < %5.3f",thr_atP[2],thr_atP[1]),
@@ -503,7 +503,7 @@ RRPlot <-function(riskData=NULL,
       }
       else
       {
-        labelsplot <- c("Low",sprintf("At Risk < %5.3f",-thr_atP[1]));
+        labelsplot <- c("Low Risk",sprintf("High Risk < %5.3f",-thr_atP[1]));
         if (length(thr_atP)>1)
         {
           labelsplot <- c(sprintf("Low Risk > %5.3f",-thr_atP[2]),sprintf("%5.3f >= Risk > %5.3f",-thr_atP[2],-thr_atP[1]),
