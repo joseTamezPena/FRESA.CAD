@@ -104,20 +104,8 @@
   \item{attr:fscore}{
   Attribute of decorrelatedDataframe: The score of each feature.
   }
-  \item{attr:TotalAdjustments}{
-  Attribute of decorrelatedDataframe: The count of how many iteration were required
-  }
   \item{attr:drivingFeatures}{
   Attribute of decorrelatedDataframe: The list of features used as base features for supervised basis
-  }
-  \item{attr:unaltered}{
-  Attribute of decorrelatedDataframe: List of correlated features that were left unaltered
-  }
-  \item{attr:LatentVariables}{
-  Attribute of decorrelatedDataframe: List the names of parent latent features 
-  }
-  \item{attr:useDeCorr}{
-  Attribute of decorrelatedDataframe: If TRUE the estimated UPLTM is used for decorrelation
   }
   \item{attr:unipvalue}{
   Attribute of decorrelatedDataframe: The p-value used to check for fit significance

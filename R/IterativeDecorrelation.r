@@ -39,7 +39,6 @@ ILAA <- function(data=NULL,
     countf <- attr(transf,"TotalAdjustments");
     AdrivingFeatures <- attr(transf,"drivingFeatures");
     bfeat<- attr(transf,"unaltered");
-    useDeCorr <- attr(transf,"useDeCorr");
     adjunipvalue <- attr(transf,"unipvalue"); 
     rcrit <- attr(transf,"R.critical");
     IDeAEvolution <- attr(transf,"IDeAEvolution"); 
@@ -169,11 +168,7 @@ ILAA <- function(data=NULL,
 
     attr(transf,"UPLTM") <- taccmatrix
     attr(transf,"fscore") <- fscore;
-    attr(transf,"TotalAdjustments") <- countf;
     attr(transf,"drivingFeatures") <- AdrivingFeatures;
-    attr(transf,"unaltered") <- bfeat;
-    attr(transf,"LatentVariables") <- lavariables;
-    attr(transf,"useDeCorr") <- useDeCorr;
     attr(transf,"unipvalue") <- adjunipvalue
     attr(transf,"R.critical") <- rcrit
     attr(transf,"IDeAEvolution") <- IDeAEvolution
