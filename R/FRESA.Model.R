@@ -27,7 +27,7 @@ function(formula,data,OptType=c("Binary","Residual"),pvalue=0.05,filter.p.value=
 		
 		dependent <- as.character(varlist[[2]])
 		
-		timeOutcome = NA;
+		timeOutcome = NULL;
 		Outcome = NA;
 		
 		type = "LM";
@@ -80,7 +80,7 @@ function(formula,data,OptType=c("Binary","Residual"),pvalue=0.05,filter.p.value=
 				}
 			}
 			if (Outcome == pnames[i]) detected = 1;
-			if (!is.na(timeOutcome) )
+			if (!is.null(timeOutcome) )
 			{
 				if (timeOutcome == pnames[i]) detected = 1;
 			}
@@ -133,7 +133,7 @@ function(formula,data,OptType=c("Binary","Residual"),pvalue=0.05,filter.p.value=
 		if (categorizationType=="RawRaw")
 		{
 			rownames(variables) <- variables[,1];
-			unirank <- uniRankVar(variables,baseModel,Outcome,data,categorizationType="Raw",type,rankingTest="Ztest",cateGroups,raw.dataFrame,description="Description",uniType="Regression",FullAnalysis=FALSE,acovariates=acovariates,timeOutcome=timeOutcome)
+			unirank <- uniRankVar(variables,baseModel,Outcome,data,categorizationType="Raw",type,rankingTest="Ztest",cateGroups,raw.dataFrame,testData=NULL,description="Description",uniType="Regression",FullAnalysis=FALSE,acovariates=acovariates,timeOutcome=timeOutcome)
 			univariate <- unirank$orderframe;
 			featureSize <- nrow(univariate);
 			unitPvalues <- (1.0-pnorm(univariate$ZUni));
@@ -152,7 +152,7 @@ function(formula,data,OptType=c("Binary","Residual"),pvalue=0.05,filter.p.value=
 			}
 
 #			elimination.pValue <- pvalue; 	# To test if the variable is part of the model 
-			unirank <- uniRankVar(variables,baseModel,Outcome,data,categorizationType,type,rankingTest="zIDI",cateGroups,raw.dataFrame,description="Description",uniType="Binary",FullAnalysis=FALSE,acovariates=acovariates,timeOutcome=timeOutcome);
+			unirank <- uniRankVar(variables,baseModel,Outcome,data,categorizationType,type,rankingTest="zIDI",cateGroups,raw.dataFrame,testData=NULL,description="Description",uniType="Binary",FullAnalysis=FALSE,acovariates=acovariates,timeOutcome=timeOutcome);
 			univariate <- unirank$orderframe;
 			featureSize <- nrow(univariate);
 			
@@ -235,7 +235,7 @@ function(formula,data,OptType=c("Binary","Residual"),pvalue=0.05,filter.p.value=
 				if ((length(theScores)>2)||(min(data[,Outcome])<0))
 				{
 					type = "LM";
-					unirank <- uniRankVar(variables,baseModel,Outcome,data,categorizationType,type,rankingTest="Ztest",cateGroups,raw.dataFrame,description="Description",uniType="Regression",FullAnalysis=FALSE,acovariates=acovariates,timeOutcome=timeOutcome)
+					unirank <- uniRankVar(variables,baseModel,Outcome,data,categorizationType,type,rankingTest="Ztest",cateGroups,raw.dataFrame,testData=NULL,description="Description",uniType="Regression",FullAnalysis=FALSE,acovariates=acovariates,timeOutcome=timeOutcome)
 					if ((length(theScores)<=10)&&(testType=="zIDI"))
 					{
 						type = "LOGIT";
@@ -244,12 +244,12 @@ function(formula,data,OptType=c("Binary","Residual"),pvalue=0.05,filter.p.value=
 				else 
 				{
 					if (type == "LM") type = "LOGIT";
-					unirank <- uniRankVar(variables,baseModel,Outcome,data,categorizationType,type,rankingTest="Ztest",cateGroups,raw.dataFrame,description="Description",uniType="Binary",FullAnalysis=FALSE,acovariates=acovariates,timeOutcome=timeOutcome)
+					unirank <- uniRankVar(variables,baseModel,Outcome,data,categorizationType,type,rankingTest="Ztest",cateGroups,raw.dataFrame,testData=NULL,description="Description",uniType="Binary",FullAnalysis=FALSE,acovariates=acovariates,timeOutcome=timeOutcome)
 				}
 			}
 			else
 			{
-				    unirank <- uniRankVar(variables,baseModel,Outcome,data,categorizationType,type,rankingTest="Ztest",cateGroups,raw.dataFrame,description="Description",uniType="Binary",FullAnalysis=FALSE,acovariates=acovariates,timeOutcome=timeOutcome)
+				    unirank <- uniRankVar(variables,baseModel,Outcome,data,categorizationType,type,rankingTest="Ztest",cateGroups,raw.dataFrame,testData=NULL,description="Description",uniType="Binary",FullAnalysis=FALSE,acovariates=acovariates,timeOutcome=timeOutcome)
 			}
 			univariate <- unirank$orderframe;
 			featureSize <- nrow(univariate);

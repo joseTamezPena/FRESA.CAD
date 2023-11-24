@@ -17,7 +17,7 @@ function(object,...)
 	if (is.null(parameters$FullAnalysis)) { FullAnalysis = TRUE} else {FullAnalysis = parameters$FullAnalysis;}
 	
 	
-	updatedRank <- uniRankVar(variableList,formula,Outcome,data,categorizationType,type,rankingTest,cateGroups,raw.dataFrame,description,uniType,FullAnalysis,object$acovariates,object$timeOutcome) 
+	updatedRank <- uniRankVar(variableList,formula,Outcome,data,categorizationType,type,rankingTest,cateGroups,raw.dataFrame,NULL,description,uniType,FullAnalysis,object$acovariates,object$timeOutcome) 
 
 	return (updatedRank);
 	

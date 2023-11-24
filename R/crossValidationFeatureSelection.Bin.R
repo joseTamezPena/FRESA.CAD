@@ -1,7 +1,7 @@
 crossValidationFeatureSelection_Bin <-
 function(size=10,fraction=1.0,pvalue=0.05,loops=100,covariates="1",Outcome,timeOutcome="Time",variableList,data,maxTrainModelSize=20,type=c("LM","LOGIT","COX"),selectionType=c("zIDI","zNRI"),startOffset=0,elimination.bootstrap.steps=100,trainFraction=0.67,trainRepetition=9,bootstrap.steps=100,nk=0,unirank=NULL,print=TRUE,plots=TRUE,lambda="lambda.1se",equivalent=FALSE,bswimsCycles=10,usrFitFun=NULL,featureSize=0)
 {
-
+palta <- NULL
 if (!requireNamespace("cvTools", quietly = TRUE)) {
    install.packages("cvTools", dependencies = TRUE)
 } 
@@ -343,6 +343,7 @@ if (!requireNamespace("glmnet", quietly = TRUE)) {
 				}
 #					cat ("Predict 2\n")
 				medianPred <- ensemblePredict(BSWiMS.models$forward.selection.list,TrainSet,BlindSet, predictType = "linear",type = type)$ensemblePredict;
+				if (is.null(medianPred)) medianPred <- medianBSWIMSPredict;
 				eq <- NULL;
 #					cat ("End Predict\n")
 
@@ -397,7 +398,7 @@ if (!requireNamespace("glmnet", quietly = TRUE)) {
 				knnclass <- getKNNpredictionFromFormula(baggedfoldmodel$formula,KnnTrainSet,BlindSet,Outcome,nk);
 #				cat("A KNN \n")
 
-				palt <- NULL;
+				palt <- palta;
 				if (!is.null(usrFitFun))
 				{
 					fit <- usrFitFun(formula(abaseformula),TrainSet[,c(extvar,shortVarList)]);
@@ -427,6 +428,15 @@ if (!requireNamespace("glmnet", quietly = TRUE)) {
 					{
 						palt <- cbind(palt,numeric(nrow(BlindSet)));
 					}
+					if (!is.null(palta))
+					{
+#						cat(ncol(palta),",",ncol(palt),"\n")
+						if (ncol(palta) > ncol(palt))
+						{
+							palt <- palta
+						}
+					}
+					palta <- palt
 				}
 
 				
@@ -524,6 +534,11 @@ if (!requireNamespace("glmnet", quietly = TRUE)) {
 				px <- cbind(BlindSet[,Outcome],p,i,medianPred,baggedForwardPredict,p.forward,p.AtOpt,eqpredict,firstBSWIMSPredict,medianBSWIMSPredict);
 				if (!is.null(usrFitFun)) {px <- cbind(px,palt);}
 				rownames(px) <- rownames(BlindSet);
+#				if (!is.null(totSamples))
+#				{
+#					print(colnames(px))
+#					cat("\n",ncol(totSamples),",",ncol(px),",",ncol(palt))
+#				}
 				totSamples <- rbind(totSamples,px);
 				px <- cbind(BlindSet[,Outcome],p.AtOpt,i);
 				rownames(px) <- rownames(BlindSet);

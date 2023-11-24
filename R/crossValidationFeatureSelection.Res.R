@@ -2,6 +2,7 @@ crossValidationFeatureSelection_Res <-
 function(size=10,fraction=1.0,pvalue=0.05,loops=100,covariates="1",Outcome,timeOutcome="Time",variableList,data,maxTrainModelSize=20,type=c("LM","LOGIT","COX"),testType=c("Binomial","Wilcox","tStudent","Ftest"),startOffset=0,elimination.bootstrap.steps=100,trainFraction=0.67,trainRepetition=9,setIntersect=1,unirank=NULL,print=TRUE,plots=TRUE,lambda="lambda.1se",equivalent=FALSE,bswimsCycles=10,usrFitFun=NULL,featureSize=0)
 {
 
+palta <- NULL;
 if (!requireNamespace("cvTools", quietly = TRUE)) {
    install.packages("cvTools", dependencies = TRUE)
 } 
@@ -325,7 +326,7 @@ if (!requireNamespace("glmnet", quietly = TRUE)) {
 					eqpredict <- predictTest;
 				}
 				
-				palt <- NULL;
+				palt <- palta;
 				if (!is.null(usrFitFun))
 				{
 					fit <- usrFitFun(formula(abaseformula),TrainSet[,c(extvar,shortVarList)]);
@@ -348,6 +349,15 @@ if (!requireNamespace("glmnet", quietly = TRUE)) {
 					{
 						palt <- cbind(palt,numeric(nrow(BlindSet)));
 					}
+					if (!is.null(palta))
+					{
+						if (ncol(palta) != ncol(palt))
+						{
+							palt <- palta
+						}
+					}
+					palta <- palt
+
 				}
 				
 
