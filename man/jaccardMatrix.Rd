@@ -17,7 +17,7 @@
 	}
 }
 \details{
-This function will compute the Jaccard Index Matrix: ((A==i) and (B==j))/((A==i) or (B==j)) for all {i,j} possible label pairs presenet in A and B
+This function will compute the Jaccard Index Matrix: \eqn{[(A=i) \cap (B=j)]/[(A=i) \cup (B=j)]} for all \eqn{(i,j)} possible label pairs presenet in A and B
 }
 \value{
 	\item{jaccardMat}{
