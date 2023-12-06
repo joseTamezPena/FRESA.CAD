@@ -24,26 +24,31 @@ FRESA.CAD provides a series of functions for: Data conditioning, Feature Selecti
 |---------------------|---------------------|------------------------------|
 | **Conditioning/Preprocessing** | nearestNeighborImpute()    | Impute missing values                     |
 | **Conditioning/Preprocessing** | FRESA.Scale()              | Data Scale/Normalization                  |
+| **Conditioning/Preprocessing** | featureAdjustment()        | Adjust variables removing collinearity    |
 | **Conditioning/Preprocessing** | IDeA()/ILAA()              | Multicollinearity Mitigation              |
 |                                |                            |                                           |
 | **Feature Selection**          | uniRankVar()               | Univariate Analysis                       |
 | **Feature Selection**          | BSWiMS.model()             | Linear Model Subset Selection             |
 | **Feature Selection**          | univariate_BinEnsemble()   | Ensemble Select Top Features              |
-| **Feature Selection**          | univariate...              | Select Top Features ...                   |
+| **Feature Selection**          | univariate...              | Filter Select Top Features ...            |
 |                                |                            |                                           |
 | **Machine Learning**           | BSWiMS.model()             | Bootstrap Modeling                        |
 | **Machine Learning**           | filteredFit()              | Pipeline ML: Scale/Filter/Transform/Learn |
 | **Machine Learning**           | HLCM()/HLCM_EM()           | Latent-Class Based Modeling               |
+| **Machine Learning**           | GMVECluster()           |  | Unsupervised Clustering via GMVE          |
 |                                |                            |                                           |
 | **Benchmarking / Evaluation**  | RandomCV()                 | Random Holdout Validation                 |
 | **Benchmarking / Evaluation**  | BinaryBenchmark()          | Binary Model Evaluation                   |
-| **Benchmarking / Evaluation**  | OrdinalBenchmark()         | Oridinal Model Evaluation                 |
+| **Benchmarking / Evaluation**  | OrdinalBenchmark()         | Ordinal Model Evaluation                  |
 | **Benchmarking / Evaluation**  | CoxBenchmark()             | Cox-based Model Evaluation                |
 |                                |                            |                                           |
 | **Visualization / Reporting**  | RRPlot()                   | Survival Model Evaluation                 |
-| **Visualization / Reporting**  | predictionStats_binary()   | Report Cross Validation Results           |
-| **Visualization / Reporting**  | predictionStats_Ordinal()  | Report Cross Validation Results           |
-| **Visualization / Reporting**  | predictionStats_survival() | Report Cross Validation Results           |
+| **Visualization / Reporting**  | predictionStats_binary()   | Report Cross Validation Results Binary    |
+| **Visualization / Reporting**  | predictionStats_Ordinal()  | Report Cross Validation Results Ordinal   |
+| **Visualization / Reporting**  | predictionStats_survival() | Report Cross Validation Results Survival  |
+
+
+Besides the above listed functions the library provides predictors and wrappers of common machine learning methods, and many other auxiliary functions.
 
 ## Installation {#installation}
 
