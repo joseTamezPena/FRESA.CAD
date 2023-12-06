@@ -13,12 +13,11 @@ Set of functions for: Conditioning, Feature Selection, Machine Learning, Cross-V
 -   [License](#license)
 -   [Contact](#contact)
 
-## Overview {#overview}
+## Overview
 
 The design of diagnostic or prognostic multivariate models via the selection of significantly discriminant features is complex.
 
 FRESA.CAD provides a series of functions for: Data conditioning, Feature Selection, Machine Learning, Benchmarking, Visualization and Reporting.
-
 
 | Category                       | Function(s)                | Purpose                                   |
 |---------------------|---------------------|------------------------------|
@@ -47,10 +46,9 @@ FRESA.CAD provides a series of functions for: Data conditioning, Feature Selecti
 | **Visualization / Reporting**  | predictionStats_Ordinal()  | Report Cross Validation Results Ordinal   |
 | **Visualization / Reporting**  | predictionStats_survival() | Report Cross Validation Results Survival  |
 
-
 Besides the above listed functions the library provides predictors and wrappers of common machine learning methods, and many other auxiliary functions.
 
-## Installation {#installation}
+## Installation
 
 You can install the official release of the package from CRAN using:
 
@@ -68,7 +66,7 @@ install.packages("devtools")
 devtools::install_github("https://github.com/joseTamezPena/FRESA.CAD")
 ```
 
-## Usage {#usage}
+## Usage
 
 ``` r
 #Load the package
@@ -123,7 +121,7 @@ summary(epi.tests(pm$predictionTable))
 
 More examples of FRESA.CAD usage can be found at: <https://rpubs.com/J_Tamez>
 
-## Contributing {#contributing}
+## Contributing
 
 Contributions are welcome! If you'd like to contribute to this project, please follow these guidelines:
 
@@ -137,11 +135,11 @@ Contributions are welcome! If you'd like to contribute to this project, please f
 
 \- Submit a pull request.
 
-## License {#license}
+## License
 
 This project is licensed under the LGPL\>=2.0 see the [LICENSE](LICENSE) file for details.
 
-## Contact {#contact}
+## Contact
 
 For any questions or feedback, feel free to contact us at:
 
