@@ -35,7 +35,7 @@ FRESA.CAD provides a series of functions for: Data conditioning, Feature Selecti
 | **Machine Learning**           | BSWiMS.model()             | Bootstrap Modeling                        |
 | **Machine Learning**           | filteredFit()              | Pipeline ML: Scale/Filter/Transform/Learn |
 | **Machine Learning**           | HLCM()/HLCM_EM()           | Latent-Class Based Modeling               |
-| **Machine Learning**           | GMVECluster()           |  | Unsupervised Clustering via GMVE          |
+| **Machine Learning**           | GMVECluster()              | Unsupervised Clustering via GMVE          |
 |                                |                            |                                           |
 | **Benchmarking / Evaluation**  | RandomCV()                 | Random Holdout Validation                 |
 | **Benchmarking / Evaluation**  | BinaryBenchmark()          | Binary Model Evaluation                   |
