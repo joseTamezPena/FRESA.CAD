@@ -421,6 +421,7 @@ IDeA <- function(data=NULL,
       thrvalues <- c(0.95,0.90,0.80,0.70,0.60,0.50,0.40,0.30,0.20,0.10,0.05);
       nextthr <- 1;
       nextthra <- 0;
+      skv <- 1
       while (((addedlist > 0) || (thr > thr2)) && (lp < maxLoops)) 
       {
         lp = lp + 1;
@@ -429,20 +430,21 @@ IDeA <- function(data=NULL,
         
         maxcor <- apply(cormat,2,max)
         mxScor <- max(maxcor);
-        correlationMeasureEvolution <- c(correlationMeasureEvolution,mxScor);
+        mxScorm <- mean(c(maxcor[maxcor>=thr2],mxScor));
+        correlationMeasureEvolution <- c(correlationMeasureEvolution,mxScorm);
         sparcityEvolution <- c(sparcityEvolution,sum(DeCorrmatrix == 0));
 
         thr <- thr2;
         if ((mxScor >= thr2) && relaxed)
         {
-          nextthr <- sum(thrvalues > mxScor) + 1
+          nextthr <- sum(thrvalues > mxScor) + skv
           thr <- max(thr2,thrvalues[nextthr]);
         }
 
         topfeat <- varincluded;
         names(topfeat) <- topfeat;
         topfeat <- topfeat[maxcor[topfeat] >= thr];
-        if (verbose)  cat("\n\r",lp,sprintf("<R=%5.3f,thr=%5.3f>",mxScor,thr))
+        if (verbose)  cat("\n\r",lp,sprintf("<R=%5.3f,thr=%5.3f>",mxScorm,thr))
         maxcomat <- NULL
         if (length(topfeat)>0)
         {
@@ -657,15 +659,21 @@ IDeA <- function(data=NULL,
         }
         mxScor <- max(cormat);
         nextthr <- sum(thrvalues > mxScor) + 1
-
+#
         if ((nextthr == nextthra) && (addedlist == 0) && (mxScor > thr))
         {
-            lp <- maxLoops
+#            lp <- maxLoops
+            lp <- lp + 2
         }
         if ((addedlist == 0) && (mxScor > thr))
         {
-          nextthra <- nextthr
-        }        
+          skv <- skv + 1 
+        }
+#        else        
+#        {
+#          skv <-  1 
+#        }
+        nextthra <- sum(thrvalues > mxScor) + skv
       }
       if (lp >= maxLoops)
       {
