@@ -42,6 +42,8 @@ ILAA <- function(data=NULL,
     adjunipvalue <- attr(transf,"unipvalue"); 
     rcrit <- attr(transf,"R.critical");
     IDeAEvolution <- attr(transf,"IDeAEvolution"); 
+    useDeCorr <- attr(transf,"useDeCorr")
+    
 
     dsize <- nrow(data);
     lavariables <- names(fscore);
@@ -134,6 +136,7 @@ ILAA <- function(data=NULL,
     {
       taccmatrix[,cn] <- taccmatrix[,cn]/twts[cn];
     }
+
 #    diag(taccmatrix) <- 1.0;
     fscore <- fscore/twts;
     islatent <- apply(1*(taccmatrix != 0),2,sum) > 1;
@@ -149,7 +152,6 @@ ILAA <- function(data=NULL,
 
     
     attr(transf,"UPLTM") <- taccmatrix
-
     attr(transf,"LatentVariables") <- lavariables;
     transf <- predictDecorrelate(transf,data)
     
@@ -166,9 +168,22 @@ ILAA <- function(data=NULL,
     }
 
 
+#    attr(transf,"UPLTM") <- taccmatrix
+#    attr(transf,"useDeCorr") <- useDeCorr
+#    attr(transf,"LatentVariables") <- lavariables;
+#    attr(transf,"fscore") <- fscore;
+#    attr(transf,"drivingFeatures") <- AdrivingFeatures;
+#    attr(transf,"unipvalue") <- adjunipvalue
+#    attr(transf,"R.critical") <- rcrit
+#    attr(transf,"IDeAEvolution") <- IDeAEvolution
+
     attr(transf,"UPLTM") <- taccmatrix
     attr(transf,"fscore") <- fscore;
+    attr(transf,"TotalAdjustments") <- countf;
     attr(transf,"drivingFeatures") <- AdrivingFeatures;
+    attr(transf,"unaltered") <- bfeat;
+    attr(transf,"LatentVariables") <- lavariables;
+    attr(transf,"useDeCorr") <- useDeCorr;
     attr(transf,"unipvalue") <- adjunipvalue
     attr(transf,"R.critical") <- rcrit
     attr(transf,"IDeAEvolution") <- IDeAEvolution
@@ -318,6 +333,7 @@ IDeA <- function(data=NULL,
   {
     cormat <- abs(cor(refdata[,varincluded],method=method))
   }
+  cormat[is.na(cormat)] <- 0
   diag(cormat) <- 0;
   
   adjunipvalue <- min(c(unipvalue,3*unipvalue/totFeatures)); ## Adjusting for false association at 3 true associations per feature
@@ -642,6 +658,7 @@ IDeA <- function(data=NULL,
             }
           }
           if (verbose) cat(">")
+          cormat[is.na(cormat)] <- 0;
           diag(cormat) <- 0;
           if (verbose) 
           {
@@ -732,6 +749,7 @@ IDeA <- function(data=NULL,
               cormat <- abs(cor(dataTransformed[,varincluded],method=method))
              }
               diag(cormat) <- 0;
+              cormat[is.na(cormat)] <- 0;
               cat ("\n\r [",lp,"],",max(cormat),"Decor Dimension:",length(varincluded),"Nused:",length(totused),". Cor to Base:",length(correlatedToBase),", ABase:",length(AdrivingFeatures),", Outcome Base:",length(drivingFeatures),"\n\r")
           }
           changed <- (apply(DeCorrmatrix!=0,2,sum) > 1);
@@ -784,6 +802,7 @@ IDeA <- function(data=NULL,
 
 predictDecorrelate <- function(decorrelatedobject,testData)
 {
+#  if (!is.null(attr(decorrelatedobject,"UPLTM")))
   if (attr(decorrelatedobject,"useDeCorr") && !is.null(attr(decorrelatedobject,"UPLTM")))
   {
     decorMat <- attr(decorrelatedobject,"UPLTM")
