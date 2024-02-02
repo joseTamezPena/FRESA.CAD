@@ -7,6 +7,8 @@ Author: Jose Gerardo Tamez-Pena, Antonio Martinez-Torteya, Israel Alanis and Jor
 Maintainer: Jose Gerardo Tamez-Pena <jose.tamezpena@tec.mx>
 Description: Contains a set of utilities for building and testing statistical models (linear, logistic,ordinal or COX) for Computer Aided Diagnosis/Prognosis applications. Utilities include data adjustment, univariate analysis, model building, model-validation, longitudinal analysis, reporting and visualization.
 License: LGPL (>= 2)
+URL: https://github.com/joseTamezPena/FRESA.CAD
+BugReports: https://github.com/joseTamezPena/FRESA.CAD/issues
 Depends: Rcpp (>= 0.10.0),stringr,miscTools,Hmisc,pROC
 LinkingTo: Rcpp, RcppArmadillo
 Suggests: nlme,rpart,gplots,RColorBrewer,class,cvTools,glmnet,randomForest,survival, e1071,MASS,naivebayes,mRMRe,epiR,DescTools, irr,survminer,BeSS,ggplot2,robustbase,mda,twosamples,Rfast,whitening,corrplot
