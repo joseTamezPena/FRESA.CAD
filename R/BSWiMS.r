@@ -258,10 +258,10 @@ bagPredictType=c("Bag","wNN","Ens")
 					for (s in theScores[-1])
 					{
 						stdata[,Outcome] <- 1*(data[,Outcome] >= s);
-						oforward.model <- ForwardSelection.Model.Bin(size=size,fraction=fraction,pvalue,loops,acovariates,Outcome,variableList,stdata,maxTrainModelSize,type,timeOutcome,selectionType=testType,featureSize=featureSize);
+						oforward.model <- ForwardSelection.Model.Bin(size=size,fraction=fraction,2*pvalue,loops,acovariates,Outcome,variableList,stdata,maxTrainModelSize,type,timeOutcome,selectionType=testType,featureSize=featureSize);
 						zthr <- unique(oforward.model$theZthr);
 						zthr <- min(zthr);
-						if (zthr < 0.5) zthr <- 0.5
+						if (zthr < 1.8) zthr <- pvalue/2;
 
 						oupdate.model <- oforward.model$update.model;
 						oBSWiMS.model <- bootstrapVarElimination_Bin(object=oupdate.model$final.model,pvalue=zthr,Outcome=Outcome,data=stdata,startOffset=startOffset,type=type,selectionType=testType,loops=elimination.bootstrap.steps,print=print,plots=plots);
@@ -299,7 +299,7 @@ bagPredictType=c("Bag","wNN","Ens")
 						cat("min(Z):",min(zthr),":",abs(qnorm(pvalue)),":")
 					}
 					zthr <- min(zthr);
-					pval <- min(pvalue,(1.0-pnorm(zthr)));
+					pval <- min(pvalue/2,(1.0-pnorm(zthr)));
 					zthr <- abs(qnorm(pval));
 					if (print)
 					{

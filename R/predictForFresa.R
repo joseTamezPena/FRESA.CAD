@@ -74,6 +74,7 @@ function (object,...)
 	{
 		stop("No test data");
 	}
+	out <-numeric(nrow(testData))
 
 	
 	classlen=length(class(object))
@@ -274,7 +275,8 @@ function (object,...)
 				pred <-.Call("predictForFresa",cf,mm,predictType[1],object$type);
 				out <- as.vector(pred$prediction);
 			}
-			names(out) <- rownames(testData);
+#			names(out) <- rownames(testData);
+			if (length(out)==nrow(testData)) names(out) <- rownames(testData);
 		},
 		tr =
 		{
@@ -315,7 +317,8 @@ function (object,...)
 			{
 				out <- rep(NA,nrow(testData));
 			}
-			names(out) <- rownames(testData);
+#			names(out) <- rownames(testData);
+			if (length(out)==nrow(testData)) names(out) <- rownames(testData);
 		},
 		sv =
 		{
@@ -440,18 +443,32 @@ function (object,...)
 				{
 					if (object$equivalent)
 					{
-						if (object$bagging$bagged.model$type == "LOGIT")
+						if (length(object$formula.list>1))
 						{
-							pred <- ensemblePredict(object$formula.list,object$BSWiMS.model$bootCV$data,testData,"prob",object$bagging$bagged.model$type)
+							if (object$bagging$bagged.model$type == "LOGIT")
+							{
+								pred <- ensemblePredict(object$formula.list,
+								object$BSWiMS.model$bootCV$data,
+								testData,"prob",
+								object$bagging$bagged.model$type)
+							}
+							else
+							{
+								pred <- ensemblePredict(object$formula.list,
+								object$BSWiMS.model$bootCV$data,
+								testData,predictType,
+								object$bagging$bagged.model$type)
+							}						
+							out <- as.numeric(pred$ensemblePredict)
+	#						names(out) <- rownames(testData);
+							attr(out,"MeanEnsemblePredict") <- pred$wPredict;
+							attr(out,"model") <- "Ensemble";
 						}
 						else
 						{
-							pred <- ensemblePredict(object$formula.list,object$BSWiMS.model$bootCV$data,testData,predictType,object$bagging$bagged.model$type)
-						}						
-						out <- as.numeric(pred$ensemblePredict)
-						names(out) <- rownames(testData);
-						attr(out,"MeanEnsemblePredict") <- pred$wPredict;
-						attr(out,"model") <- "Ensemble";
+							out <- predict(object$bagging$bagged.model,...)
+						}
+						if (length(out)==nrow(testData)) names(out) <- rownames(testData);
 					}
 					else
 					{
@@ -580,7 +597,7 @@ function (object,...)
 					warning(paste(as.character(match.call()),"No formula \n"));
 				}
 			}
-			names(out) <- rownames(testData);
+			if (length(out)==nrow(testData)) names(out) <- rownames(testData);
 		}
 	)
 	s <- is.na(out);
@@ -598,13 +615,13 @@ function (object,...)
 				}
 		)
 	}
-#	if (length(out)!=nrow(testData))
-#	{
-#		warning("Different number of rows:",length(out),"(",nrow(testData),"). Setting to NA missing values\n");
-#		tout <- out;
-#		out=rep(NA,nrow(testData));
-#		names(out) <- rownames(testData);
-#		out[names(tout)] <- tout;
-#	}
+	if (length(out)!=nrow(testData))
+	{
+		warning(object$type,": Different number of rows:",length(out),"(",nrow(testData),"). Setting to NA \n");
+		tout <- out;
+		out=rep(NA,nrow(testData));
+		names(out) <- rownames(testData);
+		out[names(tout)] <- tout;
+	}
     return (out)
 }
