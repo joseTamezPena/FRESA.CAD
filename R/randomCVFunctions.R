@@ -722,10 +722,14 @@ ClassMetric95ci <- function(datatest,nss=4000)
 	  tbstat <- as.matrix(table(datatest[,1]));
 	  nscores <- nrow(tbstat);
 	  scores <- as.numeric(rownames(tbstat));
+	  sindx <- 1 + 1*(nscores==2);
+	  scnt <- nscores - sindx + 1;
+
 	  if (sz > 1)
 	  {
 		acc <- numeric(nss);
 		sen <- numeric(nss);
+		spe <- numeric(nss);
 		csen <- numeric(nscores);
 		cspe <- numeric(nscores);
 		auc <- numeric(nss);
@@ -738,7 +742,7 @@ ClassMetric95ci <- function(datatest,nss=4000)
 		{
 		  bootsample <- datatest[sample(sz,sz,replace = TRUE),];
 		  acc[i] <- mean(bootsample[,1] == bootsample[,2]);
-		  for (n in 1:nscores)
+		  for (n in sindx:nscores)
 		  {
 			scoresamples <- sum(bootsample[,1] == scores[n])
 			allPosPredictions <- sum(bootsample[,2] == scores[n])
@@ -779,23 +783,26 @@ ClassMetric95ci <- function(datatest,nss=4000)
 			sen[i] <- sen[i] + csen[n];
 			auc[i] <- auc[i] + (csen[n] + cspe[n])/2;
 			ber[i] <- ber[i] + 1.0-(csen[n] + cspe[n])/2;
+			spe[i] <- spe[i] + cspe[n];
 			pre[i] <- pre[i] + cpre[n];
 			F1[i] <- F1[i] + cF1[n];
 		  }
-		  sen[i] <- sen[i]/nscores;
-		  auc[i] <- auc[i]/nscores;
-		  ber[i] <- ber[i]/nscores;
-		  pre[i] <- pre[i]/nscores;
-		  F1[i] <- F1[i]/nscores;
+		  sen[i] <- sen[i]/scnt;
+		  spe[i] <- spe[i]/scnt;
+		  auc[i] <- auc[i]/scnt;
+		  ber[i] <- ber[i]/scnt;
+		  pre[i] <- pre[i]/scnt;
+		  F1[i] <- F1[i]/scnt;
 		}
 		accci <- quantile(acc, probs = c(0.5,0.025, 0.975),na.rm = TRUE);
 		senci <- quantile(sen, probs = c(0.5,0.025, 0.975),na.rm = TRUE);
+		speci <- quantile(spe, probs = c(0.5,0.025, 0.975),na.rm = TRUE);
 		aucci <- quantile(auc, probs = c(0.5,0.025, 0.975),na.rm = TRUE);
 		berci <- quantile(ber, probs = c(0.5,0.025, 0.975),na.rm = TRUE);
 		F1ci <- quantile(F1, probs = c(0.5,0.025, 0.975),na.rm = TRUE);
 		preci <- quantile(pre, probs = c(0.5,0.025, 0.975),na.rm = TRUE);
 	  }
-	  return(list(accci = accci,senci = senci,aucci = aucci,berci = berci,preci = preci,F1ci = F1ci));
+	  return(list(accci = accci,senci = senci,speci = speci,aucci = aucci,berci = berci,preci = preci,F1ci = F1ci));
 }
 
 

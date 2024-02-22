@@ -248,7 +248,7 @@ predictionStats_binary <-  function(predictions, plotname="", center=FALSE,...)
 			rownames(pm$predictionTable) <- c("0","1")
 		}
     }
-	class95ci <- ClassMetric95ci(cbind(predictions[,1],predictions[,2] >= thrval),200 + 800*(nrow(predictions) < 1000) );
+	class95ci <- ClassMetric95ci(cbind(predictions[,1],predictions[,2] >= thrval),1000 + 1000*(nrow(predictions) < 1000) );
 
 #    print(pm$predictionTable)
     if (length(pm$predictionTable) > 2 )
