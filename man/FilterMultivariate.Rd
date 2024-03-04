@@ -7,7 +7,7 @@
     Returns the top set of features that are associated with the outcome based on Multivariate logistic models: LASSO and BSWiMS
 }
 \usage{
-multivariate_BinEnsemble(data,Outcome,limit=0,adjustMethod="BH",...)
+multivariate_BinEnsemble(data,Outcome,limit=-1,adjustMethod="BH",...)
 }
 \arguments{
     \item{data}{
