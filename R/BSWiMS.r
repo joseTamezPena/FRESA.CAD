@@ -143,6 +143,7 @@ bagPredictType=c("Bag","wNN","Ens")
 	theScores <- as.numeric(names(table(data[,Outcome])))
 	totScores <- length(theScores);
 #	print(theScores);
+	FSpvalue <- (1.0 + 1.0*(elimination.bootstrap.steps > 0))*pvalue;
 
 	unirank <- NULL;
 	if (is.null(variableList))
@@ -159,16 +160,19 @@ bagPredictType=c("Bag","wNN","Ens")
 #		print(variableList[1:10,]);
 		unirank <- unirank$orderframe;
 		unitPvalues <- (1.0-pnorm(variableList$ZUni));
+		unitPvalues <- unitPvalues[order(unitPvalues)];
 		names(unitPvalues) <- variableList$Name;
 		if (size==0)
 		{
 			featureSize <- max(featureSize,nrow(variableList));
+			topsig <- unitPvalues[unitPvalues <= pvalue];
 			unitPvalues <- p.adjust(unitPvalues,"BH");
-			unitPvalues <- unitPvalues[unitPvalues < 4*pvalue]; # 4 times the pvalue
+			unitPvalues <- unitPvalues[unitPvalues <= 0.5]; # at least some initial value
 #			print(unitPvalues);
 
 #			filtered <- names(unitPvalues);
-			filtered <- correlated_Remove(data,names(unitPvalues),thr=0.999);
+			unitPvalues <- c(unitPvalues,topsig[!(names(topsig) %in% names(unitPvalues))]);
+			filtered <- correlated_Remove(data,names(unitPvalues),thr=0.9999);
 			attr(filtered,"CorrMatrix") <- NULL;
 
 			if (length(filtered) > 1) featureSize <- featureSize*length(filtered)/length(unitPvalues);
@@ -258,7 +262,7 @@ bagPredictType=c("Bag","wNN","Ens")
 					for (s in theScores[-1])
 					{
 						stdata[,Outcome] <- 1*(data[,Outcome] >= s);
-						oforward.model <- ForwardSelection.Model.Bin(size=size,fraction=fraction,2*pvalue,loops,acovariates,Outcome,variableList,stdata,maxTrainModelSize,type,timeOutcome,selectionType=testType,featureSize=featureSize);
+						oforward.model <- ForwardSelection.Model.Bin(size=size,fraction=fraction,FSpvalue,loops,acovariates,Outcome,variableList,stdata,maxTrainModelSize,type,timeOutcome,selectionType=testType,featureSize=featureSize);
 						zthr <- unique(oforward.model$theZthr);
 						zthr <- min(zthr);
 						if (zthr < 1.8) zthr <- pvalue/2;
@@ -290,7 +294,7 @@ bagPredictType=c("Bag","wNN","Ens")
 				}
 				else
 				{
-					forward.model <- ForwardSelection.Model.Bin(size=size,fraction=fraction,2*pvalue,loops,acovariates,Outcome,variableList,data,maxTrainModelSize,type,timeOutcome,selectionType=testType,featureSize=featureSize);
+					forward.model <- ForwardSelection.Model.Bin(size=size,fraction=fraction,FSpvalue,loops,acovariates,Outcome,variableList,data,maxTrainModelSize,type,timeOutcome,selectionType=testType,featureSize=featureSize);
 					update.model <- forward.model$update.model;
 					zthr <- unique(forward.model$theZthr);
 					if (print)
@@ -356,7 +360,7 @@ bagPredictType=c("Bag","wNN","Ens")
 			}
 			else
 			{
-				forward.model <- ForwardSelection.Model.Res(size=size,fraction=fraction,pvalue=2*pvalue,loops=loops,covariates=acovariates,Outcome=Outcome,variableList=variableList,data=data,maxTrainModelSize=maxTrainModelSize,type=type,testType=testType,timeOutcome=timeOutcome,featureSize=featureSize);
+				forward.model <- ForwardSelection.Model.Res(size=size,fraction=fraction,pvalue=FSpvalue,loops=loops,covariates=acovariates,Outcome=Outcome,variableList=variableList,data=data,maxTrainModelSize=maxTrainModelSize,type=type,testType=testType,timeOutcome=timeOutcome,featureSize=featureSize);
 				
 				pvals <- unique(forward.model$p.thresholds);
 				pvals <- min(max(pvals),pvalue);
