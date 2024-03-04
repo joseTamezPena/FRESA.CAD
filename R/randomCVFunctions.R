@@ -703,6 +703,8 @@ multivariate_BinEnsemble <- function(data,Outcome,limit = -1,adjustMethod="BH",.
   lassoSelection <- LASSO_1SE(formula(paste(Outcome,"~.")),data,family="binomial")$selectedfeatures;
   BSWiMSSelection <- BSWiMS.model(formula(paste(Outcome,"~.")),data,loops=1,elimination.bootstrap.steps=0)$selectedfeatures;
   pvalues <- pvalues[unique(c(topKS,lassoSelection,BSWiMSSelection))];
+  pvalues[lassoSelection] <- pvalues[lassoSelection]/10.0;
+  pvalues[BSWiMSSelection] <- pvalues[BSWiMSSelection]/100.0;
   pvalues <- pvalues[order(pvalues)]
 	top <- pvalues[1:2];
 	if (length(pvalues) < 2)
