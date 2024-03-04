@@ -675,6 +675,56 @@ univariate_Strata <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod="BH",
 
 }
 
+## Multivariate Ensemble of KS, BISWiMS and LASSO Selection
+
+multivariate_BinEnsemble <- function(data,Outcome,limit = -1,adjustMethod="BH",...)
+{
+  allf <- numeric();
+  varcount <- numeric(ncol(data));
+  rankVar <- numeric(ncol(data));
+  names(varcount) <- colnames(data);
+  names(rankVar) <- colnames(data);
+
+	if (inherits(Outcome,"formula")) ## We assume that it is Survival Object
+	{
+		dependent <- all.vars(Outcome)
+		Outcome = dependent[1];
+		if (length(dependent) == 3)
+		{
+			Outcome = dependent[2];
+		}
+	}
+
+  
+  pvalues <- univariate_KS(data,Outcome);
+  topKS <- names(pvalues);
+  pvalues <- attr(pvalues,"Unadjusted");
+  pvalues <- p.adjust(pvalues,adjustMethod)
+  lassoSelection <- LASSO_1SE(formula(paste(Outcome,"~.")),data,family="binomial")$selectedfeatures;
+  BSWiMSSelection <- BSWiMS.model(formula(paste(Outcome,"~.")),data,loops=1,elimination.bootstrap.steps=0)$selectedfeatures;
+  pvalues <- pvalues[unique(c(topKS,lassoSelection,BSWiMSSelection))];
+  pvalues <- pvalues[order(pvalues)]
+	top <- pvalues[1:2];
+	if (length(pvalues) < 2)
+	{
+		pvalues <- top;
+	}
+	else
+	{
+		if (limit >= 0)	
+		{
+			pvalues <- correlated_RemoveToLimit(data,pvalues,limit=limit,...);
+		}
+		else
+		{
+			pvalues <- pvalues[correlated_Remove(data,names(pvalues),...)];
+		}
+	}
+	attr(pvalues,"KS") <- topKS
+	attr(pvalues,"LASSO") <- lassoSelection
+	attr(pvalues,"BSWiMS") <- BSWiMSSelection
+  return (pvalues)
+}
 
 sperman95ci <- function(datatest,nss=4000)
 {

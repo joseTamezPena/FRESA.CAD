@@ -2,6 +2,7 @@ Changes from FRESA.CAD 3.4.7 to FRESA.CAD version 3.4.8
 	-ILLA Bootstraping attributes
 	-FRESA.CAD bug fixed
 	-ClassMetric95ci enhanced to report specificity and correct stats for binary outcomes
+	-Added Multivariate Feature Selection via multivariate_BinEnsemble()
 Changes from FRESA.CAD 3.4.6 to FRESA.CAD version 3.4.7
 	-ILLA Bootstraping bug corrected
 Changes from FRESA.CAD 3.4.5 to FRESA.CAD version 3.4.6

@@ -115,6 +115,7 @@ export(ClassMetric95ci)
 export(getMedianSurvCalibratedPrediction)
 export(getMedianLogisticCalibratedPrediction)
 export(getObservedCoef)
+export(multivariate_BinEnsemble)
 
 useDynLib(FRESA.CAD,.registration = TRUE, .fixes = "C_")
 

@@ -1209,12 +1209,12 @@ filteredFit <- function(formula = formula, data=NULL,
 			fm <- do.call(filtermethod,c(list(data,formula),filtermethod.control));
 		}
 		filtout <- fm;
-		if (length(fm) > 1)
-		{
-			selpvalue <- sqrt(median(fm)*(min(fm)+1.0e-12));
-			maxpvalue <- selpvalue*1.0e3 + 1.0e-6;
-			fm <- fm[fm <= maxpvalue];
-		}
+#		if (length(fm) > 1)
+#		{
+#			selpvalue <- sqrt(median(fm)*(min(fm)+1.0e-12));
+#			maxpvalue <- selpvalue*1.0e3 + 1.0e-6;
+#			fm <- fm[fm <= maxpvalue];
+#		}
 		fm <- names(fm)
 		usedFeatures <-  c(Outcome,fm);
 	}
