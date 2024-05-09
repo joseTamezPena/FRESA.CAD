@@ -699,13 +699,14 @@ multivariate_BinEnsemble <- function(data,Outcome,limit = -1,adjustMethod="BH",.
   pvalues <- univariate_KS(data,Outcome);
   topKS <- names(pvalues);
   pvalues <- attr(pvalues,"Unadjusted");
-  pvalues <- p.adjust(pvalues,adjustMethod)
   lassoSelection <- LASSO_1SE(formula(paste(Outcome,"~.")),data,family="binomial")$selectedfeatures;
-  BSWiMSSelection <- BSWiMS.model(formula(paste(Outcome,"~.")),data,loops=1,elimination.bootstrap.steps=0)$selectedfeatures;
+  bmodl <- BSWiMS.model(formula(paste(Outcome,"~.")),data,loops=1,elimination.bootstrap.steps=0)
+  BSWiMSSelection <- bmodl$selectedfeatures;
   pvalues <- pvalues[unique(c(topKS,lassoSelection,BSWiMSSelection))];
-  pvalues[lassoSelection] <- pvalues[lassoSelection]/10.0;
-  pvalues[BSWiMSSelection] <- pvalues[BSWiMSSelection]/100.0;
+  pvalues[lassoSelection] <- pvalues[lassoSelection];
+  pvalues[BSWiMSSelection] <- pmin(pvalues[BSWiMSSelection],(1.0-pnorm(summary(bmodl)$coef[BSWiMSSelection,"z.IDI"])));
   pvalues <- pvalues[order(pvalues)]
+  pvalues <- p.adjust(pvalues,adjustMethod)
 	top <- pvalues[1:2];
 	if (length(pvalues) < 2)
 	{

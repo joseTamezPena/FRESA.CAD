@@ -1,4 +1,4 @@
-FRESAScale <- function(data,refFrame=NULL,method=c("Norm","Order","OrderLogit","RankInv"),refMean=NULL,refDisp=NULL,strata=NA)
+FRESAScale <- function(data,refFrame=NULL,method=c("Norm","Order","OrderLogit","RankInv","LRankInv"),refMean=NULL,refDisp=NULL,strata=NA)
 {
 	if (is.null(refFrame))
 	{
@@ -13,11 +13,13 @@ FRESAScale <- function(data,refFrame=NULL,method=c("Norm","Order","OrderLogit","
 	{
 #		print(class(refFrame));
 		usedFeatures <- colnames(refFrame);
+		usedFeatures <- usedFeatures[sapply(refFrame,is.numeric)];
 #		print(usedFeatures)
-		outs <- lapply(refFrame,table);
+		outs <- lapply(refFrame[,usedFeatures],table);
 		outl <- numeric(length(outs));
 		for (i in 1:length(outs)) outl[i] <- length(outs[[i]]);
 #		print(outl)
+
 		usedFeatures <- usedFeatures[outl > 5];
 #		print(usedFeatures);
 	}
@@ -88,6 +90,12 @@ FRESAScale <- function(data,refFrame=NULL,method=c("Norm","Order","OrderLogit","
 				RankInv =
 				{
 					data <- rankInverseNormalDataFrame(usedFeatures,data,refFrame,strata); 			
+				},
+				LRankInv =
+				{
+					iqrsdratio = 0.5;
+					data <- rankInverseNormalDataFrame(usedFeatures,data,refFrame,strata);
+					data[,usedFeatures] <- 4.0*(1.0/(1.0+exp(-iqrsdratio*data[,usedFeatures])) - 0.5)/iqrsdratio;
 				}
 			)
 		if (!is.null(refMean))
@@ -96,7 +104,8 @@ FRESAScale <- function(data,refFrame=NULL,method=c("Norm","Order","OrderLogit","
 			names(refDisp) <- usedFeatures;
 		}
 	}
-
-	result <- list(scaledData=as.data.frame(data),refMean=refMean,refDisp=refDisp,strata=strata,method=method);
+	scaledData=as.data.frame(data);
+	attr(scaledData,"usedFeatures") <- usedFeatures;
+	result <- list(scaledData=scaledData,refMean=refMean,refDisp=refDisp,strata=strata,method=method);
 	return (result);
 }
