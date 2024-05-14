@@ -626,7 +626,8 @@ bagPredictType=c("Bag","wNN","Ens")
 		{
 			equiMaxFreq <- equiMaxFreq/addedEquFreq;
 		}
-		bagg <- baggedModel(formula.list,data,type,univariate=unirank,useFreq=FALSE,equifreqCorrection=equiMaxFreq,n_bootstrap=1);
+#		bagg <- baggedModel(formula.list,data,type,univariate=unirank,useFreq=FALSE,equifreqCorrection=equiMaxFreq,n_bootstrap=1);
+		bagg <- baggedModelS(formula.list,data,type);
 	}
 	selectedfeatures <- names(firstModel$at.opt.model$coefficients)[-1];
 	if (!is.null(bagg))
