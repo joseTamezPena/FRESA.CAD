@@ -1,4 +1,5 @@
 Changes from FRESA.CAD 3.4.7 to FRESA.CAD version 3.4.8
+    -Bagged predict with predict fitting
 	-ILLA Bootstraping attributes
 	-FRESA.CAD bug fixed
 	-ClassMetric95ci enhanced to report specificity and correct stats for binary outcomes

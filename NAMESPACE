@@ -1,6 +1,8 @@
 export(backVarElimination_Bin)
 export(backVarElimination_Res)
 export(baggedModel)
+export(baggedModelS)
+export(predict.BAGGS)
 export(bootstrapValidation_Bin)
 export(bootstrapValidation_Res)
 export(bootstrapVarElimination_Bin)
@@ -140,6 +142,7 @@ S3method(predict, CLUSTER_CLASS)
 S3method(predict, GMVE)
 S3method(predict, FRESA_BESS)
 S3method(predict, FRESA_FILTERFIT) 
+S3method(predict, BAGGS) 
 
 
 importFrom(Rcpp, evalCpp)

@@ -24,6 +24,8 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 	wtsList <- NULL;
 	oF <- NULL;
 	nnmodel <- NULL;
+	wtsfit <- NULL;
+	outPred <- NULL;
 	if (length(modelFormulas) > 0)
 	{
 		if (modelFormulas[1] != "=-=End=-=")
@@ -246,8 +248,10 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 								onlypred <- NULL;
 #								print(predtype)
 								bestfit <- NULL
-								bestformula <- baseForm
-								allprednames <- NULL
+#								bestformula <- baseForm
+#								allprednames <- NULL
+								fidx=1;
+								outPred <- list();
 								for (n in 1:loops)
 								{
 									if ((n %% 10) == 0) cat(".");
@@ -255,28 +259,27 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 									if (length(feat)>0)
 									{
 										pname <- sprintf("V%d",n)
-										out <- modelFitting(formula(modelFormulas[n]),data,type,fitFRESA=TRUE);
-										preddata <- cbind(preddata,predict.fitFRESA(out,data,predtype));
+										outPred[[fidx]] <- modelFitting(formula(modelFormulas[n]),data,type,fitFRESA=TRUE);
+										outPred[[fidx]]$model <- NULL
+										environment(outPred[[fidx]]$formula) <- globalenv();
+										environment(outPred[[fidx]]$terms) <- globalenv();		
+										preddata <- cbind(preddata,predict.fitFRESA(outPred[[fidx]],data,"linear"));
 										prenames <- c(prenames,pname);
 										predformula <- paste(predformula," + ",pname,sep="")
 										onlypred <- c(onlypred,pname);
-#										predformula <- paste(bestformula," + ",pname,sep="")
-#										preddata <- as.data.frame(preddata)
-#										colnames(preddata) <- prenames;
-#										wtsfit <- modelFitting(formula(predformula),preddata,type,fitFRESA=TRUE);
-#										print(wtsfit$coefficients)
-#										if (wtsfit$coefficients[pname]>0)
-#										{
-#											bestformula <- predformula
-#											bestfit <- wtsfit
-#											onlypred <- c(onlypred,pname);
-#										}
-#										allprednames <- c(allprednames,pname);
+										fidx <- fidx + 1 
 									}
 								}
 								preddata <- as.data.frame(preddata)
 								colnames(preddata) <- prenames;
 								wtsfit <- modelFitting(formula(predformula),preddata,type,fitFRESA=TRUE);
+#								wtsfit$model <- NULL
+								attr(wtsfit,"baseForm") <- baseForm
+								attr(wtsfit,"outcomes") <- outcomes
+								attr(wtsfit,"prenames") <- prenames
+								attr(wtsfit,"predtype") <- predtype
+								environment(wtsfit$formula) <- globalenv();
+								environment(wtsfit$terms) <- globalenv();		
 #								print(summary(wtsfit)$coef)
 								allwts <- wtsfit$coefficients[onlypred];
 #								print(predformula)
@@ -514,7 +517,6 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 		coefEvolution <- NULL;
 	}
 	
-
   	result <- list(bagged.model=model,
 				   formula=frma,
 				   frequencyTable=VarFrequencyTable,
@@ -524,8 +526,85 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 				   Jaccard.SM = Jaccard.SM,
 				   coefEvolution=coefEvolution,
 				   featureLocation=forder,
-				   predfit = wtsfit
+				   predfit = wtsfit,
+				   outPred = outPred
 				   );
-  
+    class(result) <- c("BAGGS");
 	return (result);
 }
+
+#' @method predict BAGGS
+predict.BAGGS <-
+function (object,...) 
+{
+	out <- NULL
+	testData <- NULL
+	impute=FALSE;
+	parameters <- list(...);
+	if (length(parameters)==2)
+	{
+		testData <- parameters[[1]];
+		predictType <- parameters[[2]];
+	}
+	else
+	{
+		if (length(parameters)==1)
+		{
+			testData <- parameters[[1]];
+			predictType <- "linear";
+			if (!is.null(object$predfit$type))
+			{
+				if (object$predfit$type== "LOGIT")
+				{
+					predictType <- "prob";
+				}
+			}			
+		}
+		else
+		{
+			if (is.null(parameters$testData))
+			{
+				testData <- object$model;
+			}
+			else
+			{
+				testData <- parameters$testData
+			}
+			if (is.null(parameters$predictType))
+			{
+				predictType <- "linear";
+				if (!is.null(object$predfit$type))
+				{
+					if (object$predfit$type== "LOGIT")
+					{
+						predictType <- "prob";
+					}
+				}			
+				if (!is.null(object$coefficients.List))
+				{
+					predictType <- "bagg";
+				}
+			}
+			else
+			{
+				predictType <- parameters$predictType
+			}
+		}
+	}
+#	print(predictType)
+	outcomes <- attr(object$predfit,"outcomes")
+
+	preddata <- testData[,outcomes];
+	for (ffit in object$outPred)
+	{
+		preddata <- cbind(preddata,predict.fitFRESA(ffit,testData,"linear"));
+	}
+#	print(colnames(preddata))
+	preddata <- as.data.frame(preddata)
+	colnames(preddata) <- attr(object$predfit,"prenames");
+#	print(colnames(preddata))
+	out <- predict.fitFRESA(object$predfit,preddata,predictType)
+
+	return (out)
+}
+
