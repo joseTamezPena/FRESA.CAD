@@ -243,29 +243,50 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 								preddata <- data[,outcomes];
 								predformula <- baseForm
 								prenames <- outcomes
+								onlypred <- NULL;
+#								print(predtype)
+								bestfit <- NULL
+								bestformula <- baseForm
+								allprednames <- NULL
 								for (n in 1:loops)
 								{
 									if ((n %% 10) == 0) cat(".");
 									feat <- theterms[[n]]
-									avgsize = avgsize+length(feat);
 									if (length(feat)>0)
 									{
 										pname <- sprintf("V%d",n)
 										out <- modelFitting(formula(modelFormulas[n]),data,type,fitFRESA=TRUE);
-#										preddata <- cbind(preddata,predict(out,data));
 										preddata <- cbind(preddata,predict.fitFRESA(out,data,predtype));
-										predformula <- paste(predformula," + ",pname,sep="")
 										prenames <- c(prenames,pname);
+										predformula <- paste(predformula," + ",pname,sep="")
+										onlypred <- c(onlypred,pname);
+#										predformula <- paste(bestformula," + ",pname,sep="")
+#										preddata <- as.data.frame(preddata)
+#										colnames(preddata) <- prenames;
+#										wtsfit <- modelFitting(formula(predformula),preddata,type,fitFRESA=TRUE);
+#										print(wtsfit$coefficients)
+#										if (wtsfit$coefficients[pname]>0)
+#										{
+#											bestformula <- predformula
+#											bestfit <- wtsfit
+#											onlypred <- c(onlypred,pname);
+#										}
+#										allprednames <- c(allprednames,pname);
 									}
 								}
 								preddata <- as.data.frame(preddata)
-#								print(prenames)
 								colnames(preddata) <- prenames;
-#								print(predformula)
-#								print(colnames(preddata))
 								wtsfit <- modelFitting(formula(predformula),preddata,type,fitFRESA=TRUE);
 #								print(summary(wtsfit)$coef)
-								allwts <- summary(wtsfit)$coef[,1]; 
+								allwts <- wtsfit$coefficients[onlypred];
+#								print(predformula)
+#								print(colnames(preddata))
+#								wtsfit <- modelFitting(formula(bestformula),preddata,type,fitFRESA=TRUE);
+#								print(onlypred);
+#								allwts <- numeric(length(allprednames));
+#								names(allwts) <- allprednames
+#								allwts[onlypred] <- wtsfit$coefficients[onlypred];
+#								print(allwts);
 								fidx=1;
 
 								for (n in 1:loops)
@@ -276,6 +297,7 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 									if (length(feat)>0)
 									{
 											Rwts <- allwts[fidx]
+#											print(Rwts);
 											fidx <- fidx + 1;
 											out <- modelFitting(formula(modelFormulas[n]),data,type,fitFRESA=TRUE);
 											if (!inherits(out, "try-error")) 
@@ -501,7 +523,8 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 				   WformulaNetwork=WformulaNetwork,
 				   Jaccard.SM = Jaccard.SM,
 				   coefEvolution=coefEvolution,
-				   featureLocation=forder
+				   featureLocation=forder,
+				   predfit = wtsfit
 				   );
   
 	return (result);
