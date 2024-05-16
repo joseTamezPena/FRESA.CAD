@@ -23,7 +23,6 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 	formulaList <- NULL;
 	wtsList <- NULL;
 	oF <- NULL;
-	nnmodel <- NULL;
 	wtsfit <- NULL;
 	outPred <- NULL;
 	if (length(modelFormulas) > 0)
@@ -49,7 +48,6 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 
 
 			theoutcome <- data[,Outcome];
-			varOutcome <- var(theoutcome);
 			binoutcome <- (length(table(theoutcome))==2) && (min(theoutcome)==0);
 			predtype="linear";
 			if (binoutcome) predtype="prob";
@@ -67,15 +65,6 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 			{
 				baseForm <- paste("Surv(",timeOutcome,",",Outcome,")~ 1");
 			}
-			EquTrainSet <- data;
-			minTrainSamples <- nrow(data);
-			maxTrainSamples = minTrainSamples;
-			casesample  <- NULL;
-			controlsample <- NULL;
-			noequalSets <- FALSE;
-			nrowcases <- minTrainSamples;
-			nrowcontrols <- minTrainSamples;
-			nrep <- 1;
 			frma <- baseForm;
 			Jaccard.SM <- 0;
 			coefEvolution <- NULL;
@@ -142,20 +131,11 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 
 				#	cat("Size :",nrow(data)," Features :",length(VarFrequencyTable))
 					
-					nsize <- nrow(data)
-					
-					lastTopVariable = length(VarFrequencyTable);
-			#		if (lastTopVariable >= 2*(nsize-2)) lastTopVariable <- 2*(nsize-2); #The largest model size
-					
+				
 					frma <- baseForm;
-					enterlist <- vector();
-					toRemove <- vector();
 					bmodelsize <- 1;
-					removed <- 0;
 					avgsize <- 0;
 					coefEvolution <- NULL;
-					zthr <- 0;
-					fistfreq <- VarFrequencyTable[1];
 					for ( i in 1:length(vnames))
 					{
 						if ((vnames[i] != " ") && (vnames[i] != ""))
@@ -164,9 +144,7 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 							bmodelsize = bmodelsize + 1;
 						}
 					}
-#					cat("\nNum. Models:",loops," To Test:",length(vnames)," TopFreq:",fistfreq," Thrf:",thrsfreq," Removed:",removed,"\n")
 					model <- modelFitting(frma,data,type=type,fitFRESA=TRUE);
-					nnmodel <- model;
 					if (bmodelsize>1)
 					{
 						thevars <- all.vars(formula(frma));
@@ -237,8 +215,6 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 								names(coefEvolution) <- c("Weight",names(model$coefficients));
 							#	cat("\n");
 								tot_cycles <- 0;
-								b_casesample <- casesample;
-								b_controlsample <- controlsample;
 #								print(model$coefficients);
 
 								avgsize = 0;
@@ -273,7 +249,6 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 								preddata <- as.data.frame(preddata)
 								colnames(preddata) <- prenames;
 								wtsfit <- modelFitting(formula(predformula),preddata,type,fitFRESA=TRUE);
-#								wtsfit$model <- NULL
 								attr(wtsfit,"baseForm") <- baseForm
 								attr(wtsfit,"outcomes") <- outcomes
 								attr(wtsfit,"prenames") <- prenames
@@ -282,6 +257,7 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 								environment(wtsfit$terms) <- globalenv();		
 #								print(summary(wtsfit)$coef)
 								allwts <- wtsfit$coefficients[onlypred];
+								allwts[allwts < 0] <- 0
 #								print(predformula)
 #								print(colnames(preddata))
 #								wtsfit <- modelFitting(formula(bestformula),preddata,type,fitFRESA=TRUE);
@@ -317,11 +293,11 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 													if ((type!="COX") || inherits(out,"fitFRESA")) znames <- onames[-1];
 													if (predtype=="linear")
 													{
-														gvar <- getVar.Res(out,data=EquTrainSet,Outcome=Outcome,type=type,testData=data)
+														gvar <- getVar.Res(out,data=data,Outcome=Outcome,type=type,testData=data)
 													}
 													else
 													{
-														gvar <- getVar.Bin(out,data=EquTrainSet,Outcome=Outcome,type=type,testData=data)
+														gvar <- getVar.Bin(out,data=data,Outcome=Outcome,type=type,testData=data)
 													}
 													if (predtype=="linear")
 													{
@@ -537,41 +513,22 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 predict.BAGGS <-
 function (object,...) 
 {
-	out <- NULL
-	testData <- NULL
-	impute=FALSE;
-	parameters <- list(...);
-	if (length(parameters)==2)
+	if (!is.null(object$predfit))
 	{
-		testData <- parameters[[1]];
-		predictType <- parameters[[2]];
-	}
-	else
-	{
-		if (length(parameters)==1)
+		out <- NULL
+		testData <- NULL
+		impute=FALSE;
+		parameters <- list(...);
+		if (length(parameters)==2)
 		{
 			testData <- parameters[[1]];
-			predictType <- "linear";
-			if (!is.null(object$predfit$type))
-			{
-				if (object$predfit$type== "LOGIT")
-				{
-					predictType <- "prob";
-				}
-			}			
+			predictType <- parameters[[2]];
 		}
 		else
 		{
-			if (is.null(parameters$testData))
+			if (length(parameters)==1)
 			{
-				testData <- object$model;
-			}
-			else
-			{
-				testData <- parameters$testData
-			}
-			if (is.null(parameters$predictType))
-			{
+				testData <- parameters[[1]];
 				predictType <- "linear";
 				if (!is.null(object$predfit$type))
 				{
@@ -580,30 +537,56 @@ function (object,...)
 						predictType <- "prob";
 					}
 				}			
-				if (!is.null(object$coefficients.List))
-				{
-					predictType <- "bagg";
-				}
 			}
 			else
 			{
-				predictType <- parameters$predictType
+				if (is.null(parameters$testData))
+				{
+					testData <- object$model;
+				}
+				else
+				{
+					testData <- parameters$testData
+				}
+				if (is.null(parameters$predictType))
+				{
+					predictType <- "linear";
+					if (!is.null(object$predfit$type))
+					{
+						if (object$predfit$type== "LOGIT")
+						{
+							predictType <- "prob";
+						}
+					}			
+					if (!is.null(object$coefficients.List))
+					{
+						predictType <- "bagg";
+					}
+				}
+				else
+				{
+					predictType <- parameters$predictType
+				}
 			}
 		}
-	}
-#	print(predictType)
-	outcomes <- attr(object$predfit,"outcomes")
+	#	print(predictType)
+		outcomes <- attr(object$predfit,"outcomes")
 
-	preddata <- testData[,outcomes];
-	for (ffit in object$outPred)
-	{
-		preddata <- cbind(preddata,predict.fitFRESA(ffit,testData,"linear"));
+		preddata <- testData[,outcomes];
+		for (ffit in object$outPred)
+		{
+			preddata <- cbind(preddata,predict.fitFRESA(ffit,testData,"linear"));
+		}
+	#	print(colnames(preddata))
+		preddata <- as.data.frame(preddata)
+		colnames(preddata) <- attr(object$predfit,"prenames");
+	#	print(colnames(preddata))
+		out <- predict.fitFRESA(object$predfit,preddata,predictType)
 	}
-#	print(colnames(preddata))
-	preddata <- as.data.frame(preddata)
-	colnames(preddata) <- attr(object$predfit,"prenames");
-#	print(colnames(preddata))
-	out <- predict.fitFRESA(object$predfit,preddata,predictType)
+	else
+	{
+		out <- predict(object$bagged.model,...)
+	}
 
 	return (out)
 }
