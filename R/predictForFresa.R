@@ -56,10 +56,10 @@ function (object,...)
 						predictType <- "prob";
 					}
 				}			
-				if (!is.null(object$coefficients.List))
-				{
-					predictType <- "bagg";
-				}
+#				if (!is.null(object$coefficients.List))
+#				{
+#					predictType <- "bagg";
+#				}
 			}
 			else
 			{
@@ -441,36 +441,36 @@ function (object,...)
 				}
 				else
 				{
-					if (object$equivalent)
-					{
-						if (length(object$formula.list>1))
-						{
-							if (object$bagging$bagged.model$type == "LOGIT")
-							{
-								pred <- ensemblePredict(object$formula.list,
-								object$BSWiMS.model$bootCV$data,
-								testData,"prob",
-								object$bagging$bagged.model$type)
-							}
-							else
-							{
-								pred <- ensemblePredict(object$formula.list,
-								object$BSWiMS.model$bootCV$data,
-								testData,predictType,
-								object$bagging$bagged.model$type)
-							}						
-							out <- as.numeric(pred$ensemblePredict)
-	#						names(out) <- rownames(testData);
-							attr(out,"MeanEnsemblePredict") <- pred$wPredict;
-							attr(out,"model") <- "Ensemble";
-						}
-						else
-						{
-							out <- predict(object$bagging$bagged.model,...)
-						}
-						if (length(out)==nrow(testData)) names(out) <- rownames(testData);
-					}
-					else
+					# if (object$equivalent)
+					# {
+						# if (length(object$formula.list>1))
+						# {
+							# if (object$bagging$bagged.model$type == "LOGIT")
+							# {
+								# pred <- ensemblePredict(object$formula.list,
+								# object$BSWiMS.model$bootCV$data,
+								# testData,"prob",
+								# object$bagging$bagged.model$type)
+							# }
+							# else
+							# {
+								# pred <- ensemblePredict(object$formula.list,
+								# object$BSWiMS.model$bootCV$data,
+								# testData,predictType,
+								# object$bagging$bagged.model$type)
+							# }						
+							# out <- as.numeric(pred$ensemblePredict)
+	 #						names(out) <- rownames(testData);
+							# attr(out,"MeanEnsemblePredict") <- pred$wPredict;
+							# attr(out,"model") <- "Ensemble";
+						# }
+						# else
+						# {
+							# out <- predict(object$bagging$bagged.model,...)
+						# }
+						# if (length(out)==nrow(testData)) names(out) <- rownames(testData);
+					# }
+					# else
 					{
 						out <- predict(object$bagging$bagged.model,...);
 						attr(out,"model") <- "bagged";
