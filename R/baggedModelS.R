@@ -256,8 +256,15 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 								environment(wtsfit$formula) <- globalenv();
 								environment(wtsfit$terms) <- globalenv();		
 #								print(summary(wtsfit)$coef)
-								allwts <- wtsfit$coefficients[onlypred];
-								allwts[allwts < 0] <- 0
+								if (!inherits(wtsfit, "try-error")) 
+								{								
+									allwts <- wtsfit$coefficients[onlypred];
+								}
+								else
+								{
+									allwts <- rep(1.0,fidx-1);
+								}
+								allwts[allwts < 1.0e-12] <- 1.0e-12
 #								print(predformula)
 #								print(colnames(preddata))
 #								wtsfit <- modelFitting(formula(bestformula),preddata,type,fitFRESA=TRUE);

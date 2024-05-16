@@ -707,6 +707,7 @@ multivariate_BinEnsemble <- function(data,Outcome,limit = -1,adjustMethod="BH",.
   pvalues[BSWiMSSelection] <- pmin(pvalues[BSWiMSSelection],(1.0-pnorm(summary(bmodl)$coef[BSWiMSSelection,"z.IDI"])));
   pvalues <- pvalues[order(pvalues)]
   pvalues <- p.adjust(pvalues,adjustMethod)
+#  print(pvalues)
 	top <- pvalues[1:2];
 	if (length(pvalues) < 2)
 	{
