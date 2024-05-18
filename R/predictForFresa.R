@@ -478,7 +478,7 @@ function (object,...)
 						{
 							if (!is.null(object$bagging$nnmodel))
 							{
-								out <- predict(object$bagging$nnmodel,...);
+								out <- predict(object$bagging,...);
 								attr(out,"model") <- "wNN";
 							}
 						}
@@ -486,7 +486,7 @@ function (object,...)
 						{
 							if (!is.null(object$bagging$nnmodel))
 							{
-								out <- (predict(object$bagging$bagged.model,...) + predict(object$bagging$nnmodel,...))/2.0;
+								out <- (out + predict(object$bagging,...))/2.0;
 								attr(out,"model") <- "Ens";
 							}
 						}
