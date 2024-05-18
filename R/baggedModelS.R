@@ -554,7 +554,10 @@ function (object,...)
 		colnames(preddata) <- attr(object$predfit,"prenames");
 	#	print(colnames(preddata))
 		out <- predict(object$predfit,preddata)
-		out <- 1.0/(1.0+exp(-out));
+		if (attr(object$predfit,"predtype")=="prob")
+		{
+			out <- 1.0/(1.0+exp(-out));
+		}
 	}
 	else
 	{
