@@ -497,7 +497,7 @@ if (!requireNamespace("naivebayes", quietly = TRUE)) {
 		}
 		else
 		{
-			pcaobj <- prcomp(data,center = FALSE,tol=0.025);
+			pcaobj <- prcomp(data,center = TRUE,tol=0.025);
 		}
 		data <- as.data.frame(cbind(outcome,pcaobj$x));
 		colnames(data) <- c(baseformula[2],colnames(pcaobj$x));
