@@ -1187,6 +1187,7 @@ filteredFit <- function(formula = formula, data=NULL,
 	pcaobj <- NULL;
 	ccaobj <- NULL;
 	transColnames <- NULL;
+#	print(head(rownames(data)))
 
 	if (DECOR && (length(fm) > 1))
 	{
@@ -1204,6 +1205,7 @@ filteredFit <- function(formula = formula, data=NULL,
 		fm <- colnames(data)
 		fm <- fm[!(fm %in% dependent)]
 		usedFeatures <-  c(Outcome,fm);
+#		print(head(rownames(data)))
 	}
 	filtout <- filtermethod
 	if (!is.null(filtermethod))
@@ -1265,6 +1267,7 @@ filteredFit <- function(formula = formula, data=NULL,
 		data[,fm] <- as.data.frame(scaleparm$scaledData);
 		scaleparm$scaledData <- NULL;
 	}
+#	print(head(rownames(data)))
 
 	fit <- try(fitmethod(formula,data,...));
 	selectedfeatures <- character();
@@ -1314,6 +1317,8 @@ filteredFit <- function(formula = formula, data=NULL,
 		  doutcome <- as.numeric(as.character(doutcome));
 	  }
 	  pretrain <- as.data.frame(cbind(pootcome=doutcome,tpre=tpred))
+	  rownames(pretrain) <- rownames(data)
+
 	  logitPred <- glm(pootcome~.,pretrain,family="binomial",model = FALSE)
 	  environment(logitPred$formula) <- globalenv();
 	  environment(logitPred$terms) <- globalenv();
@@ -1353,10 +1358,20 @@ predict.FRESA_FILTERFIT <- function(object,...)
 	testData <- parameters[[1]];
 	if (!is.null(object$UPLTM))
 	{
+#		print(head(colnames(testData)))
+#	 	print(tail(colnames(testData)))
 	    testData[,rownames(object$UPLTM)] <- Rfast::mat.mult(as.matrix(testData[,rownames(object$UPLTM)]),object$UPLTM);
-		colnames(testData) <- object$transColnames;
+		tdcolnames <- colnames(testData)
+		names(tdcolnames) <- tdcolnames
+		tdcolnames[rownames(object$UPLTM)] <- colnames(object$UPLTM)
+#		print(head(colnames(tdcolnames)))
+#	 	print(tail(colnames(tdcolnames)))
+		colnames(testData) <- tdcolnames
+#		print(head(colnames(testData)))
+#	 	print(tail(colnames(testData)))
 	}
 	testData <- as.data.frame(testData[,object$usedFeatures])
+#	print(head(colnames(testData)))
 	if (!is.null(object$pcaobj))
 	{
 		pcapred <- predict(object$pcaobj,testData[,object$processedFeatures]);
@@ -1373,14 +1388,21 @@ predict.FRESA_FILTERFIT <- function(object,...)
 	}
 	if (!is.null(object$Scale))
 	{
+# 	 print(head(rownames(testData)))
+# 	 print(tail(rownames(testData)))
+#	 cat(object$Scale$method," ",head(colnames(object$Scale$refFrame)),"\n",tail(colnames(object$Scale$refFrame)),"\n");
+#	 cat(object$Scale$strata," ",head(colnames(testData)),"\n",tail(colnames(testData)),"\n");
 		testData <- FRESAScale(as.data.frame(testData),
+								refFrame=object$Scale$refFrame,
 								method=object$Scale$method,
 								refMean=object$Scale$refMean,
 								refDisp=object$Scale$refDisp,
-								strata=object$Scale$strata,
-								refFrame=object$Scale$refFrame
+								strata=object$Scale$strata
 							  )$scaledData;
+# 	 print(head(rownames(testData)))
+# 	 print(tail(rownames(testData)))
 	}
+#	print(head(rownames(testData)))
 
 	probability <- FALSE;
 	if (!is.null(object$parameters$probability))
@@ -1389,8 +1411,10 @@ predict.FRESA_FILTERFIT <- function(object,...)
 	}
 	if (!is.null(object$logitPred))
 	{
+#		print(head(rownames(testData)))
 		pLS <- rpredict(object$fit,testData,asFactor=object$asFactor,classLen=object$classLen,probability=TRUE,...);
 		pretest <- as.data.frame(cbind(pootcome=rep(0,nrow(testData)),tpre=pLS))
+		rownames(pretest) <- rownames(testData)
 		pLS <- predict(object$logitPred,pretest,type = "response")
 	}
 	else
