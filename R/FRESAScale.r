@@ -30,6 +30,7 @@ FRESAScale <- function(data,refFrame=NULL,method=c("Norm","Order","OrderLogit","
 		datRefUses <-  as.data.frame(refFrame[,usedFeatures]);
 		colnames(datRefUses) <- usedFeatures;
 		rownames(datRefUses) <- rownames(refFrame);
+		srownames <- rownames(data)
 
 		switch(method,
 				Norm =
@@ -98,6 +99,7 @@ FRESAScale <- function(data,refFrame=NULL,method=c("Norm","Order","OrderLogit","
 					data[,usedFeatures] <- 4.0*(1.0/(1.0+exp(-iqrsdratio*data[,usedFeatures])) - 0.5)/iqrsdratio;
 				}
 			)
+		data <- data[srownames,]
 		if (!is.null(refMean))
 		{	
 			names(refMean) <- usedFeatures;
@@ -106,6 +108,6 @@ FRESAScale <- function(data,refFrame=NULL,method=c("Norm","Order","OrderLogit","
 	}
 	scaledData=as.data.frame(data);
 	attr(scaledData,"usedFeatures") <- usedFeatures;
-	result <- list(scaledData=scaledData,refMean=refMean,refDisp=refDisp,strata=strata,method=method);
+	result <- list(scaledData=scaledData,refMean=refMean,refDisp=refDisp,strata=strata,method=method,refFrame=refFrame);
 	return (result);
 }

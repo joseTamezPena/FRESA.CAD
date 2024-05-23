@@ -45,6 +45,9 @@
 	\item{refDisp}{
 	The data dispersion (standard deviation or IQR)
 	}
+	\item{refFrame}{
+	The data frame used to estimate the normalization
+	}
 }
 \author{Jose G. Tamez-Pena}
 \seealso{\code{\link{rankInverseNormalDataFrame}}}
