@@ -489,7 +489,7 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 				model <- modelFitting(formula(frma),data,type=type,fitFRESA=TRUE);
 			}
 #			print(model$coefficients);
-			model$model <- NULL
+#			model$model <- NULL
 			environment(model$formula) <- globalenv();
 			environment(model$terms) <- globalenv();		
 		}

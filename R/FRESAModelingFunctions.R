@@ -1310,7 +1310,7 @@ filteredFit <- function(formula = formula, data=NULL,
 	if (binOutcome)
 	{
 	  fit_env <- environment(fit)
-	  tpred <- rpredict(fit,data,asFactor=asFactor,classLen=classLen,probability=TRUE,...);
+	  tpred <- rpredict(fit,data,asFactor=asFactor,classLen=classLen,probability=TRUE);
 	  doutcome <- data[,Outcome]
 	  if (isFactor)
 	  {
@@ -1415,14 +1415,14 @@ predict.FRESA_FILTERFIT <- function(object,...)
 	if (!is.null(object$logitPred))
 	{
 #		print(head(rownames(testData)))
-		pLS <- rpredict(object$fit,testData,asFactor=object$asFactor,classLen=object$classLen,probability=TRUE,...);
+		pLS <- rpredict(object$fit,testData,asFactor=object$asFactor,classLen=object$classLen,probability=TRUE);
 		pretest <- as.data.frame(cbind(pootcome=rep(0,nrow(testData)),tpre=pLS))
 		rownames(pretest) <- rownames(testData)
 		pLS <- predict.fitFRESA(object$logitPred,pretest,type = "prob")
 	}
 	else
 	{
-		pLS <- rpredict(object$fit,testData,asFactor=object$asFactor,classLen=object$classLen,probability=probability,...);
+		pLS <- rpredict(object$fit,testData,asFactor=object$asFactor,classLen=object$classLen,probability=probability);
 	}
 	return (pLS);
 }
