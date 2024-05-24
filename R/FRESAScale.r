@@ -4,6 +4,20 @@ FRESAScale <- function(data,refFrame=NULL,method=c("Norm","Order","OrderLogit","
 	{
 		refFrame <- as.data.frame(data);
 	}
+	
+	if (inherits(refFrame,"character"))
+	{
+		refFrame <- refFrame[refFrame %in% rownames(data)];
+		if (length(refFrame)>10)
+		{
+			refFrame <- as.data.frame(data[refFrame,]);
+		}
+		else
+		{
+			warning("Ref IDs not in data. All data will be used");
+			refFrame <- as.data.frame(data);
+		}
+	}
 
 	if (!is.null(refMean))
 	{

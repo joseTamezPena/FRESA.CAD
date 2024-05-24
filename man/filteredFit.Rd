@@ -14,6 +14,7 @@
 	            Scale="none",
 				Scale.control=list(strata=NA),
 	            fitmethod=e1071::svm,
+				trainIDs=NULL,
 	            ...
 	            )
 }
@@ -46,6 +47,9 @@
 	}
 	\item{fitmethod}{
 	The fit function to be used
+	}
+	\item{trainIDs}{
+	The list of sample IDs to be used for training
 	}
 	\item{...}{
 	Parameters for the fitting function

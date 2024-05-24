@@ -1143,10 +1143,25 @@ filteredFit <- function(formula = formula, data=NULL,
 							Scale="none",
 							Scale.control=list(strata=NA),
 							fitmethod=e1071::svm,
+							trainIDs=NULL,
 							...
 						)
 {
 
+	if (!inherits(trainIDs,"character"))
+	{
+		trainIDs <- NULL
+	}
+	if (is.null(trainIDs))
+	{
+		trainIDs <- rownames(data)
+	}
+	trainIDs <- trainIDs[trainIDs %in% rownames(data)]
+	if (length(trainIDs) < 2)
+	{
+		warning("No train data. Setting all samples to train \n")
+		trainIDs <- rownames(data)
+	}
 	Transf <- match.arg(Transf);
 	DECOR <- FALSE
 	PCA <- FALSE
@@ -1191,6 +1206,7 @@ filteredFit <- function(formula = formula, data=NULL,
 
 	if (DECOR && (length(fm) > 1))
 	{
+		cat("<Decor")
 		if (is.null(Transf.control))
 		{
 			data <- IDeA(data);
@@ -1206,22 +1222,24 @@ filteredFit <- function(formula = formula, data=NULL,
 		fm <- fm[!(fm %in% dependent)]
 		usedFeatures <-  c(Outcome,fm);
 #		print(head(rownames(data)))
+		cat(">")
 	}
 	filtout <- filtermethod
 	if (!is.null(filtermethod))
 	{
-		
+		cat("<FS")
 		if (is.null(filtermethod.control))
 		{
-			fm <- filtermethod(data,formula);
+			fm <- filtermethod(data[trainIDs,],formula);
 		}
 		else
 		{
-			fm <- do.call(filtermethod,c(list(data,formula),filtermethod.control));
+			fm <- do.call(filtermethod,c(list(data[trainIDs,],formula),filtermethod.control));
 		}
 		filtout <- fm;
 		fm <- names(fm)
 		usedFeatures <-  unique(c(fixFeatures,fm));
+		cat(">")
 	}
 	data <- data[,usedFeatures]
 
@@ -1233,6 +1251,7 @@ filteredFit <- function(formula = formula, data=NULL,
 	{
 	  if (PCA)
 	  {
+		  cat("<PCA")
 		  pcaobj <- prcomp(data[,processedFeatures],center = TRUE, scale.= TRUE,tol=0.025);
 		  data <- as.data.frame(cbind(data[,fixFeatures],as.data.frame(pcaobj$x)));
 		  colnames(data) <- c(fixFeatures,colnames(pcaobj$x));
@@ -1240,9 +1259,11 @@ filteredFit <- function(formula = formula, data=NULL,
 		  {
 			  data[,Outcome] <-as.factor(data[,Outcome])
 		  }
+		  cat(">")
 	  }
 	  if (Transf=="CCA")
 	  {
+		  cat("<CCA")
 		  if (!requireNamespace("whitening", quietly = TRUE)) {
 			   install.packages("whitening", dependencies = TRUE)
 		  }
@@ -1256,20 +1277,25 @@ filteredFit <- function(formula = formula, data=NULL,
 		  {
 			  data[,Outcome] <-as.factor(data[,Outcome])
 		  }
+		  cat(">")
   #		cat(colnames(data));
 	  }
+
 	}
 	fm <- colnames(data)
 	fm <- fm[!(fm %in% dependent)]
 	if ((Scale != "none") && (length(fm) > 1) )
 	{
+		cat("<Scale")
 		scaleparm <- do.call(FRESAScale,c(list(as.data.frame(data[,fm]),method=Scale),Scale.control));
 		data[,fm] <- as.data.frame(scaleparm$scaledData);
 		scaleparm$scaledData <- NULL;
+		cat(">")
 	}
-#	print(head(rownames(data)))
 
-	fit <- try(fitmethod(formula,data,...));
+	cat("<Fit:",nrow(data[trainIDs,]))
+	fit <- try(fitmethod(formula,data[trainIDs,],...));
+	cat(">")
 	selectedfeatures <- character();
 	if ( !inherits(fit, "try-error"))
 	{
@@ -1310,14 +1336,14 @@ filteredFit <- function(formula = formula, data=NULL,
 	if (binOutcome)
 	{
 	  fit_env <- environment(fit)
-	  tpred <- rpredict(fit,data,asFactor=asFactor,classLen=classLen,probability=TRUE);
-	  doutcome <- data[,Outcome]
+	  tpred <- rpredict(fit,data[trainIDs,],asFactor=asFactor,classLen=classLen,probability=TRUE);
+	  doutcome <- data[trainIDs,Outcome]
 	  if (isFactor)
 	  {
 		  doutcome <- as.numeric(as.character(doutcome));
 	  }
 	  pretrain <- as.data.frame(cbind(pootcome=doutcome,tpre=tpred))
-	  rownames(pretrain) <- rownames(data)
+	  rownames(pretrain) <- trainIDs
 
 #	  logitPred <- glm(pootcome~.,pretrain,family="binomial",model = FALSE)
 	  logitPred <- modelFitting(formula(pootcome~tpre),pretrain,"LOGIT",fitFRESA=TRUE);
