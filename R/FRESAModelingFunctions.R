@@ -1319,7 +1319,10 @@ filteredFit <- function(formula = formula, data=NULL,
 	  pretrain <- as.data.frame(cbind(pootcome=doutcome,tpre=tpred))
 	  rownames(pretrain) <- rownames(data)
 
-	  logitPred <- glm(pootcome~.,pretrain,family="binomial",model = FALSE)
+#	  logitPred <- glm(pootcome~.,pretrain,family="binomial",model = FALSE)
+	  logitPred <- modelFitting(formula(pootcome~tpre),pretrain,"LOGIT",fitFRESA=TRUE);
+	  logitPred$model <- NULL
+	  logitPred$response <- NULL
 	  environment(logitPred$formula) <- globalenv();
 	  environment(logitPred$terms) <- globalenv();
 	  environment(fit) <- fit_env
@@ -1415,7 +1418,7 @@ predict.FRESA_FILTERFIT <- function(object,...)
 		pLS <- rpredict(object$fit,testData,asFactor=object$asFactor,classLen=object$classLen,probability=TRUE,...);
 		pretest <- as.data.frame(cbind(pootcome=rep(0,nrow(testData)),tpre=pLS))
 		rownames(pretest) <- rownames(testData)
-		pLS <- predict(object$logitPred,pretest,type = "response")
+		pLS <- predict.fitFRESA(object$logitPred,pretest,type = "prob")
 	}
 	else
 	{
