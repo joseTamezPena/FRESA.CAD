@@ -1142,8 +1142,9 @@ filteredFit <- function(formula = formula, data=NULL,
 							Transf.control=list(thr=0.8),
 							Scale="none",
 							Scale.control=list(strata=NA),
-							fitmethod=e1071::svm,
+							refNormIDs=NULL,
 							trainIDs=NULL,
+							fitmethod=e1071::svm,
 							...
 						)
 {
@@ -1156,7 +1157,22 @@ filteredFit <- function(formula = formula, data=NULL,
 	{
 		trainIDs <- rownames(data)
 	}
-	trainIDs <- trainIDs[trainIDs %in% rownames(data)]
+	else
+	{
+		trainIDs <- trainIDs[trainIDs %in% rownames(data)]
+	}
+	if (!inherits(refNormIDs,"character"))
+	{
+		refNormIDs <- NULL
+	}
+	if (is.null(refNormIDs))
+	{
+		refNormIDs <- rownames(data)
+	}
+	else
+	{
+		refNormIDs <- refNormIDs[refNormIDs %in% rownames(data)]
+	}
 	if (length(trainIDs) < 2)
 	{
 		warning("No train data. Setting all samples to train \n")
@@ -1209,14 +1225,15 @@ filteredFit <- function(formula = formula, data=NULL,
 		cat("<Decor")
 		if (is.null(Transf.control))
 		{
-			data <- IDeA(data);
+			dataDe <- IDeA(data[refNormIDs,]);
 		}
 		else
 		{
-			data <- do.call(IDeA,c(list(data),Transf.control));
+			dataDe <- do.call(IDeA,c(list(data[refNormIDs,]),Transf.control));
 		}
-		UPLTM <- attr(data,"UPLTM")
-		attr(data,"UPLTM") <- NULL
+		UPLTM <- attr(dataDe,"UPLTM")
+		data <- predictDecorrelate(dataDe,data)
+		dataDe <- NULL
 		transColnames <- colnames(data);
 		fm <- colnames(data)
 		fm <- fm[!(fm %in% dependent)]
@@ -1247,14 +1264,20 @@ filteredFit <- function(formula = formula, data=NULL,
 	binOutcome <- length(table(data[,Outcome])) == 2
 	isFactor <- inherits(data[,Outcome], "factor")
 	processedFeatures <- fm
+	isContinous <- unlist(lapply(lapply(data[refNormIDs,processedFeatures],unique),length)) > 4;
+	tansFeat <- processedFeatures[isContinous];
+	disFeat <- unique(c(fixFeatures,processedFeatures[!isContinous]));
+	processedFeatures <- tansFeat[!(tansFeat %in% disFeat)];
 	if (length(processedFeatures) > 1)
 	{
 	  if (PCA)
 	  {
 		  cat("<PCA")
-		  pcaobj <- prcomp(data[,processedFeatures],center = TRUE, scale.= TRUE,tol=0.025);
-		  data <- as.data.frame(cbind(data[,fixFeatures],as.data.frame(pcaobj$x)));
-		  colnames(data) <- c(fixFeatures,colnames(pcaobj$x));
+		  pcaobj <- prcomp(data[refNormIDs,processedFeatures],center = TRUE, scale.= TRUE,tol=0.05);
+#		  data <- as.data.frame(cbind(data[,fixFeatures],as.data.frame(pcaobj$x)));
+		  pcapred <- predict(pcaobj,data[,processedFeatures]);
+		  data <- as.data.frame(cbind(data[,disFeat],pcapred));
+		  colnames(data) <- c(disFeat,colnames(pcaobj$x));
 		  if (isFactor)
 		  {
 			  data[,Outcome] <-as.factor(data[,Outcome])
@@ -1267,12 +1290,13 @@ filteredFit <- function(formula = formula, data=NULL,
 		  if (!requireNamespace("whitening", quietly = TRUE)) {
 			   install.packages("whitening", dependencies = TRUE)
 		  }
-		  mx <- as.matrix(data[,processedFeatures]);
+		  mx <- as.matrix(data[refNormIDs,processedFeatures]);
 		  ccaobj <- whitening::scca(mx, mx,verbose=FALSE);
 		  ccaobj$WY <- NULL
+		  mx <- as.matrix(data[,processedFeatures]);
 		  CCAX <- as.data.frame(tcrossprod( mx, ccaobj$WX ))
-		  data <- as.data.frame(cbind(data[,fixFeatures],CCAX));
-		  colnames(data) <-  c(fixFeatures,colnames(CCAX));
+		  data <- as.data.frame(cbind(data[,disFeat],CCAX));
+		  colnames(data) <-  c(disFeat,colnames(CCAX));
 		  if (isFactor)
 		  {
 			  data[,Outcome] <-as.factor(data[,Outcome])
@@ -1293,7 +1317,7 @@ filteredFit <- function(formula = formula, data=NULL,
 		cat(">")
 	}
 
-	cat("<Fit:",nrow(data[trainIDs,]))
+	cat("<Fit")
 	fit <- try(fitmethod(formula,data[trainIDs,],...));
 	cat(">")
 	selectedfeatures <- character();
@@ -1358,6 +1382,7 @@ filteredFit <- function(formula = formula, data=NULL,
 					filter=filtout,
 					fixFeatures=fixFeatures,
 					processedFeatures = processedFeatures,
+					disFeat = disFeat,
 					selectedfeatures = selectedfeatures,
 					usedFeatures = usedFeatures,
 					parameters=parameters,
@@ -1404,15 +1429,15 @@ predict.FRESA_FILTERFIT <- function(object,...)
 	if (!is.null(object$pcaobj))
 	{
 		pcapred <- predict(object$pcaobj,testData[,object$processedFeatures]);
-		testData <- as.data.frame(cbind(testData[,object$fixFeatures],pcapred));
-		colnames(testData) <-  c(object$fixFeatures,colnames(pcapred));
+		testData <- as.data.frame(cbind(testData[,object$disFeat],pcapred));
+		colnames(testData) <-  c(object$disFeat,colnames(pcapred));
 	}
 	if (!is.null(object$ccaobj))
 	{
 		mx <- as.matrix(testData[,object$processedFeatures]);
 		CCAX <- as.data.frame(tcrossprod( mx, object$ccaobj$WX ))
-		testData <- as.data.frame(cbind(testData[,object$fixFeatures],CCAX));
-		colnames(testData) <-  c(object$fixFeatures,colnames(CCAX));
+		testData <- as.data.frame(cbind(testData[,object$disFeat],CCAX));
+		colnames(testData) <-  c(object$disFeat,colnames(CCAX));
 #		cat(colnames(testData));
 	}
 	if (!is.null(object$Scale))

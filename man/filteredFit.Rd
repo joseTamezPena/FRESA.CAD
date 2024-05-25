@@ -15,6 +15,7 @@
 				Scale.control=list(strata=NA),
 	            fitmethod=e1071::svm,
 				trainIDs=NULL,
+				refNormIDs=NULL,
 	            ...
 	            )
 }
@@ -50,6 +51,9 @@
 	}
 	\item{trainIDs}{
 	The list of sample IDs to be used for training
+	}
+	\item{refNormIDs}{
+	The list of sample IDs to be used for transformations. ie. Reference Control IDs
 	}
 	\item{...}{
 	Parameters for the fitting function
