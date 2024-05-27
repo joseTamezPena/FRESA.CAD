@@ -118,6 +118,8 @@ export(getMedianSurvCalibratedPrediction)
 export(getMedianLogisticCalibratedPrediction)
 export(getObservedCoef)
 export(multivariate_BinEnsemble)
+export(calBinProb)
+export(predict.LogitCalPred)
 
 useDynLib(FRESA.CAD,.registration = TRUE, .fixes = "C_")
 
@@ -143,6 +145,7 @@ S3method(predict, GMVE)
 S3method(predict, FRESA_BESS)
 S3method(predict, FRESA_FILTERFIT) 
 S3method(predict, BAGGS) 
+S3method(predict, LogitCalPred) 
 
 
 importFrom(Rcpp, evalCpp)

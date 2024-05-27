@@ -1740,3 +1740,27 @@ predict.GMVE_BSWiMS <- function(object,...)
 	}
 	return(pLS);
 }
+
+
+calBinProb <- function(BinaryOutcome=NULL,OutcomeProbability=NULL)
+{
+   	predictFrame <- as.data.frame(cbind(pootcome=BinaryOutcome,tpre=OutcomeProbability))
+
+	logitPred <- modelFitting(formula(pootcome~tpre),predictFrame,"LOGIT",fitFRESA=TRUE);
+	logitPred$model <- NULL
+	logitPred$response <- NULL
+	environment(logitPred$formula) <- globalenv();
+	environment(logitPred$terms) <- globalenv();
+	class(logitPred) <- c("LogitCalPred")
+	return(logitPred)
+}
+
+predict.LogitCalPred <- function(object,...)
+{
+	parameters <- list(...);
+	testData <- parameters[[1]];
+	pretest <- as.data.frame(cbind(pootcome=rep(0,length(testData)),tpre=testData))
+	rownames(pretest) <- names(testData)
+	pLS <- predict.fitFRESA(object,pretest,type = "prob")
+	return(pLS)
+}
