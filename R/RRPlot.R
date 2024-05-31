@@ -24,7 +24,23 @@ RRPlot <-function(riskData=NULL,
   
   uvalues <- length(unique(riskData[,2]))
   isProbability <- (min(riskData[,2]) >= 0) && (max(riskData[,2]) <= 1.0) && (sd(riskData[,2]) > 0.00001)
-  
+  meanTimecens <- 0;
+  if (is.null(timetoEvent))
+  {
+    if (!is.null(riskData[,3]))
+    {
+      timetoEvent <- riskData[,3]
+    }
+  }
+  steps <- rep(1.0,nrow(riskData));
+  if (!is.null(timetoEvent))
+  {
+    meanTimecens <- mean(timetoEvent[riskData[,1] == 0]);
+    steps[riskData[,1] == 0] <- timetoEvent[riskData[,1] == 0]/meanTimecens;
+    steps[steps > 1] <- 1.0
+  }
+#  print(meanTimecens)
+#  print(summary(steps))
   
   if (uvalues < 10)
   {
@@ -76,6 +92,26 @@ RRPlot <-function(riskData=NULL,
   if (is.null(atThr))
   {
     thr_atP <- quantile(riskData[riskData[,1]==0,2],probs=c(atRate)) - deltaR
+#    print(thr_atP)
+    if (!is.null(timetoEvent))
+    {
+      noeventdata <- cbind(riskData[riskData[,1]==0,2],steps[riskData[,1]==0])
+      noeventdata <- noeventdata[order(noeventdata[,1]),]
+      thrstep <- sum(noeventdata[,2])*atRate;
+#      print(c(nrow(noeventdata),thrstep))
+      acum <- 0;
+      for (idx in c(1:nrow(noeventdata)))
+      {
+        acum <- acum + noeventdata[idx,2];
+        if (acum < thrstep[1]) thr_atP[1] <- noeventdata[idx,1];
+        if (length(thrstep) > 1)
+        {
+          if (acum < thrstep[2]) thr_atP[2] <- noeventdata[idx,1];
+        }
+      }
+#      print(thr_atP)
+    }
+     
     if (atRate[1]<0.5)
     {
       thr_atP <- quantile(riskData[riskData[,1]==1,2],probs=c(atRate)) + deltaR
@@ -103,12 +139,13 @@ RRPlot <-function(riskData=NULL,
     atRate <- atThr
   }
   
-  
+#  print(thr_atP)
+
   
   
         
   numberofEvents <- sum(riskData[,1])
-  numberofNoEvents <- sum(riskData[,1]==0)
+  numberofNoEvents <- sum((riskData[,1]==0)*steps)
   
   samplePrevalence <- numberofEvents/totobs;
   ExpectedNoEventsGain <- 1.0
@@ -160,6 +197,7 @@ RRPlot <-function(riskData=NULL,
   
   idx <- 1;
   noMoreLowEventsIdx <- minRiskAtEvent
+  cenAUC <- 0;
   for (thr in thrsWhitinEvents)
   {
     
@@ -173,10 +211,10 @@ RRPlot <-function(riskData=NULL,
     }
     HighEvents <- sum(riskData[atHighRisk,1]);
     SEN[idx] <-  HighEvents/numberofEvents;
-    SPE[idx] <- sum(riskData[atLowRisk,1]==0)/numberofNoEvents;
+    SPE[idx] <- sum((riskData[atLowRisk,1]==0)*steps[atLowRisk])/numberofNoEvents;
     BACC[idx] <- (SEN[idx] + SPE[idx])/2
-    n1 <- sum(atHighRisk)
-    n2 <- sum(atLowRisk)
+    n1 <- sum(atHighRisk*steps)
+    n2 <- sum(atLowRisk*steps)
     PPV[idx] <- HighEvents/n1
     LowFraction <- LowEvents/n2;
     HighFraction <- HighEvents/n1;
@@ -204,8 +242,14 @@ RRPlot <-function(riskData=NULL,
     {
       netBenefit[idx] <- (HighEvents - ExpectedNoEventsGain*sum(riskData[atHighRisk,1]==0)*thrsWhitinEvents[idx]/(1.0001-thrsWhitinEvents[idx]))/totobs;
     }
+    if (idx>1)
+    {
+      cenAUC <- cenAUC + SEN[idx]*(SPE[idx]-SPE[idx-1])
+    }
     idx <- idx + 1;
   }
+  names(cenAUC) <- NULL
+#  print(cenAUC)
   colors <- heat.colors(10)
   rgbcolors <- rainbow(10)
 
@@ -295,6 +339,7 @@ RRPlot <-function(riskData=NULL,
     ## Decision curve analysis
     pshape <- 4 + 12*isEvent
     xmax <- min(quantile(thrsWhitinEvents,probs=c(0.95),0.95))
+    xmin <- min(quantile(thrsWhitinEvents,probs=c(0.01),0.001))
     ymin <- min(quantile(netBenefit,probs=c(0.10)),0)
     DCA <- as.data.frame(cbind(Thrs=thrsWhitinEvents,NetBenefit=netBenefit))
     rownames(DCA) <- names(thrsWhitinEvents)
@@ -304,7 +349,7 @@ RRPlot <-function(riskData=NULL,
     {
       plot(thrsWhitinEvents,netBenefit,main=paste("Decision Curve Analysis:",title),ylab="Net Benefit",xlab="Threshold",
          ylim=c(ymin,pre),
-         xlim=c(0,xmax),
+         xlim=c(xmin,xmax),
          pch=pshape,col=rgbcolors[1+floor(10*(1.0-SEN))],cex=(0.35 + isEvent))
       fiveper <- as.integer(0.05*length(netBenefit)+0.5)
       range <- c(fiveper:length(netBenefit)-fiveper)
@@ -322,7 +367,7 @@ RRPlot <-function(riskData=NULL,
       abline(h=0,col="blue")
       lines(x=c(0,ExpectedPrevalence),y=c(pre,0),col="red")
       legtxt <- sprintf("%3.1f",c(5:0)/5)
-      corrplot::colorlegend(rgbcolors, legtxt,xlim=c(0.92*xmax,0.98*xmax),ylim=c(pre*0.45,pre*0.1),cex=0.75)
+      corrplot::colorlegend(rgbcolors, legtxt,xlim=c(0.92*(xmax-xmin)+xmin,0.98*(xmax-xmin)+xmin),ylim=c(pre*0.45,pre*0.1),cex=0.75)
       text(0.92*xmax,pre*0.5,"SEN")
       
       thrlty <- c(1)
@@ -398,14 +443,14 @@ RRPlot <-function(riskData=NULL,
 #  print(thrPoints)
   
   ## Sensitivity, Specificity and RR at top threshold
-  lowRisk <- riskData[,2] < thr_atP[1]
-  LowEventsFrac <- sum(riskData[lowRisk,1])/sum(lowRisk)
-  HighEventsFrac <- sum(riskData[!lowRisk,1])/sum(!lowRisk)
+  lowRisk <- (riskData[,2] < thr_atP[1])
+  LowEventsFrac <- sum(riskData[lowRisk,1]*steps[lowRisk])/sum(lowRisk*steps)
+  HighEventsFrac <- sum(riskData[!lowRisk,1]*steps[!lowRisk])/sum(!lowRisk*steps)
   sensitivity=sum(riskData[!lowRisk,1])/numberofEvents
   who <- names(SEN)[SEN==sensitivity]
   RRAtSen <- c(est=mean(RR[who]),lower=mean(LRCI[who]),upper=mean(URCI[who]))
   
-  specificity=sum(riskData[lowRisk,1]==0)/numberofNoEvents
+  specificity=sum((riskData[lowRisk,1]==0)*steps[lowRisk])/numberofNoEvents
   
   if (plotRR)
   {
@@ -463,15 +508,27 @@ RRPlot <-function(riskData=NULL,
   if (plotRR)
   {
     par(tmop)
-    ROCAnalysis <- predictionStats_binary(riskData,
-                                        plotname=paste("ROC:",title),
-                                        thr=thr_atP[1],cex=0.85)
-
+    ROCAnalysis <- predictionStats_binary(riskData[,c(1,2)],
+                                        thr=thr_atP[1],
+                                        )
+    par(pty='s');
+    procdta <- roc(riskData[,1],riskData[,2],
+                              grid=c(0.1, 0.1),
+                              grid.col=c("gray", "gray"),
+                              print.auc=TRUE,
+                               quiet = TRUE,
+                              main=paste("ROC"),
+                               plot=TRUE,
+                              col="black",
+                              lty=1,
+                              lwd=3,
+                              ) 
+    lines(x=SPE,y=SEN,lty=2,lwd=1,col="red");
     par(tmop)
   }
   else
   {
-    ROCAnalysis <- predictionStats_binary(riskData,
+    ROCAnalysis <- predictionStats_binary(riskData[,c(1,2)],
                                           thr=thr_atP[1])
   }
   surfit <- NULL
@@ -498,7 +555,7 @@ RRPlot <-function(riskData=NULL,
         {
           labelsplot <- c(sprintf("Low Risk < %5.3f",thr_atP[2]),sprintf("%5.3f <= Risk < %5.3f",thr_atP[2],thr_atP[1]),
                           sprintf("High Risk >= %5.3f",thr_atP[1]));
-          paletteplot <- c("green", "pink","red")
+          paletteplot <- c("green", "blue","red")
         }
       }
       else
@@ -508,7 +565,7 @@ RRPlot <-function(riskData=NULL,
         {
           labelsplot <- c(sprintf("Low Risk > %5.3f",-thr_atP[2]),sprintf("%5.3f >= Risk > %5.3f",-thr_atP[2],-thr_atP[1]),
                           sprintf("High Risk <= %5.3f",-thr_atP[1]));
-          paletteplot <- c("green", "pink","red")
+          paletteplot <- c("green", "blue","red")
         }
         
       }

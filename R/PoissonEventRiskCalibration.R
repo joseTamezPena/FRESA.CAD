@@ -37,15 +37,13 @@ CalibrationProbPoissonRisk <- function(Riskdata,trim=0.10)
   meaninterval <- mean(subset(Riskdata,Riskdata$Event==1)$Time);
   timeInterval <- 2*meaninterval;
   
-  h0 <- sum(Riskdata$Event & Riskdata$Time <= timeInterval)
-  h0 <- h0/sum((Riskdata$Time > timeInterval) | (Riskdata$Event==1))
-  
-#  print(c(h0,timeInterval))
   
   probGZero <- Riskdata$pGZ
   probGZero[probGZero > 0.999999] <- 0.999999
 
   hazard <- -log(1.00-probGZero)
+  h0 <- mean(hazard[Riskdata$Event==1])
+#  print(c(h0,timeInterval))
 
    ## Adjust probabilites of no-event that share similar time than events 
   atRisktime <- 3.0*meaninterval
@@ -150,9 +148,11 @@ CoxRiskCalibration <- function(ml,data,outcome,time,trim=0.10,timeInterval=NULL)
     meaninterval <- mean(data[data[,outcome]==1,time]);
     timeInterval <- 2*meaninterval;
   }
-  h0 <- sum(data[,outcome]==1 & data[,time] <= timeInterval)
-  h0 <- h0/sum((data[,time] > timeInterval) | (data[,outcome]==1))
+#  h0 <- sum(data[,outcome]==1 & data[,time] <= timeInterval)
+#  h0 <- h0/sum((data[,time] > timeInterval) | (data[,outcome]==1))
   
+  h0 <- 1.0
+
   
   hazard <- h0*exp(index)
   probGZero <- 1.0-exp(-hazard)
