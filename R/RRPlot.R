@@ -663,6 +663,8 @@ RRPlot <-function(riskData=NULL,
         ## Now lets plot
         if (plotRR)
         {
+          orderplot <- order(cClass)
+          pchtypes <- c(1,16,17)
           par(mfrow=c(1,1))
           plot(timed,Expected,pch=4,type="b",cex=0.5,
              main=paste("Time vs. Events:",title),
@@ -674,8 +676,8 @@ RRPlot <-function(riskData=NULL,
           se <- 2*sqrt(Observed)
           errbar(timed,Observed,Observed-se,Observed+se,add=TRUE,pch=0,errbar.col="gray",cex=0.25)
           points(timed,Expected,pch=4,type="b",cex=0.5)
-          points(timed,Observed,pch=1,col=paletteplot[1+cClass])
-          legend("topleft",legend=c("Expected",labelsplot),pch=c(4,1,1,1),lty=c(1,0,0,0),col=c(1,paletteplot),cex=0.80)
+          points(timed[orderplot],Observed[orderplot],pch=pchtypes[1+cClass[orderplot]],col=paletteplot[1+cClass[orderplot]])
+          legend("topleft",legend=c("Expected",labelsplot),pch=c(4,pchtypes),lty=c(1,0,0,0),col=c(1,paletteplot),cex=0.80)
         }
       }
         ## Survival plot
