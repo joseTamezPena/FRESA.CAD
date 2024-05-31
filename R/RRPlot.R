@@ -35,8 +35,11 @@ RRPlot <-function(riskData=NULL,
   steps <- rep(1.0,nrow(riskData));
   if (!is.null(timetoEvent))
   {
-    meanTimecens <- mean(timetoEvent[riskData[,1] == 0]);
+    meanTimecens <- median(timetoEvent[riskData[,1] == 0]);
+    meanTimeNocens <- median(timetoEvent[riskData[,1] == 1]);
     steps[riskData[,1] == 0] <- timetoEvent[riskData[,1] == 0]/meanTimecens;
+    scalestep <- meanTimeNocens/(timetoEvent[riskData[,1] == 0])
+    steps[riskData[,1] == 0] <- steps[riskData[,1] == 0]/(1.0 + scalestep);
     steps[steps > 1] <- 1.0
   }
 #  print(meanTimecens)
