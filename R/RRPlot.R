@@ -24,7 +24,6 @@ RRPlot <-function(riskData=NULL,
   
   uvalues <- length(unique(riskData[,2]))
   isProbability <- (min(riskData[,2]) >= 0) && (max(riskData[,2]) <= 1.0) && (sd(riskData[,2]) > 0.00001)
-  meanTimecens <- 0;
   if (is.null(timetoEvent))
   {
     if (!is.null(riskData[,3]))
@@ -33,17 +32,16 @@ RRPlot <-function(riskData=NULL,
     }
   }
   steps <- rep(1.0,nrow(riskData));
-  if (!is.null(timetoEvent))
+  if (!is.null(timetoEvent)) # Adjust the censored (no events) at short times
   {
-    meanTimecens <- median(timetoEvent[riskData[,1] == 0]);
-    meanTimeNocens <- median(timetoEvent[riskData[,1] == 1]);
-    steps[riskData[,1] == 0] <- timetoEvent[riskData[,1] == 0]/meanTimecens;
-    scalestep <- meanTimeNocens/(timetoEvent[riskData[,1] == 0])
-    steps[riskData[,1] == 0] <- steps[riskData[,1] == 0]/(1.0 + scalestep);
-    steps[steps > 1] <- 1.0
+    medianTimeNocens <- median(timetoEvent[riskData[,1] == 1]); # The expected event rate
+    cenevents <- riskData[,1] == 0
+    # If the event time is short the is a chance of a future event in the near future. 
+    steps[cenevents] <- (1.0 - exp(-timetoEvent[cenevents]/(medianTimeNocens))) #the probability of zero events.
+#    steps[steps > 1.0] <- 1.0; 
+    print(medianTimeNocens)
+    print(summary(steps))
   }
-#  print(meanTimecens)
-#  print(summary(steps))
   
   if (uvalues < 10)
   {
@@ -95,25 +93,25 @@ RRPlot <-function(riskData=NULL,
   if (is.null(atThr))
   {
     thr_atP <- quantile(riskData[riskData[,1]==0,2],probs=c(atRate)) - deltaR
-#    print(thr_atP)
-    if (!is.null(timetoEvent))
-    {
-      noeventdata <- cbind(riskData[riskData[,1]==0,2],steps[riskData[,1]==0])
-      noeventdata <- noeventdata[order(noeventdata[,1]),]
-      thrstep <- sum(noeventdata[,2])*atRate;
-#      print(c(nrow(noeventdata),thrstep))
-      acum <- 0;
-      for (idx in c(1:nrow(noeventdata)))
-      {
-        acum <- acum + noeventdata[idx,2];
-        if (acum < thrstep[1]) thr_atP[1] <- noeventdata[idx,1];
-        if (length(thrstep) > 1)
-        {
-          if (acum < thrstep[2]) thr_atP[2] <- noeventdata[idx,1];
-        }
-      }
-#      print(thr_atP)
-    }
+#   print(thr_atP)
+   if (!is.null(timetoEvent))
+   {
+     noeventdata <- cbind(riskData[riskData[,1]==0,2],steps[riskData[,1]==0])
+     noeventdata <- noeventdata[order(noeventdata[,1]),]
+     thrstep <- sum(noeventdata[,2])*atRate;
+#     print(c(nrow(noeventdata),thrstep))
+     acum <- 0;
+     for (idx in c(1:nrow(noeventdata)))
+     {
+       acum <- acum + noeventdata[idx,2];
+       if (acum < thrstep[1]) thr_atP[1] <- noeventdata[idx,1];
+       if (length(thrstep) > 1)
+       {
+         if (acum < thrstep[2]) thr_atP[2] <- noeventdata[idx,1];
+       }
+     }
+#     print(thr_atP)
+   }
      
     if (atRate[1]<0.5)
     {
@@ -453,6 +451,8 @@ RRPlot <-function(riskData=NULL,
   who <- names(SEN)[SEN==sensitivity]
   RRAtSen <- c(est=mean(RR[who]),lower=mean(LRCI[who]),upper=mean(URCI[who]))
   
+
+  
   specificity=sum((riskData[lowRisk,1]==0)*steps[lowRisk])/numberofNoEvents
   
   if (plotRR)
@@ -497,6 +497,13 @@ RRPlot <-function(riskData=NULL,
 
 
     abline(v=sensitivity,col="blue")
+    if (length(thr_atP)>1) 
+    {
+       lowRisk2 <- (riskData[,2] < thr_atP[2])
+       sensitivity2=sum(riskData[!lowRisk2,1])/numberofEvents
+       abline(v=sensitivity2,col="cyan",lty=2)
+    }
+
     text(x=sensitivity,y=ypmax*1.2,sprintf("Index(%3.2f)=%4.3f",specificity,isRevesed*thr_atP[1]),pos=4 - 2*(sensitivity>0.5) ,cex=0.7)
     text(x=sensitivity,y=0.9*(ypmax*1.2-1.0)+1.0,
          sprintf("RR(%3.2f)=%4.3f",
