@@ -37,7 +37,7 @@ RRPlot <-function(riskData=NULL,
     medianTimeNocens <- median(timetoEvent[riskData[,1] == 1]); # The expected event rate
     cenevents <- riskData[,1] == 0
     # If the event time is short the is a chance of a future event in the near future. 
-    steps[cenevents] <- (1.0 - exp(-timetoEvent[cenevents]/(medianTimeNocens))) #the probability of zero events.
+    steps[cenevents] <- (1.0 - exp(-timetoEvent[cenevents]/(medianTimeNocens))) #1.0 - the probability of zero events.
 #    steps[steps > 1.0] <- 1.0; 
     print(medianTimeNocens)
     print(summary(steps))
