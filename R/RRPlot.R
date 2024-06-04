@@ -303,6 +303,7 @@ RRPlot <-function(riskData=NULL,
     ## Probability Calibration Curve
     if (plotRR)
     {
+     
       plot(tmpExplected,tmpObserved,
            ylab="Observed",
            xlab="Cumulative Probability",
@@ -314,13 +315,32 @@ RRPlot <-function(riskData=NULL,
            cex=c(0.2+xdata[,1]))
            se <- 2*sqrt(tmpObserved)
       errbar(tmpExplected,tmpObserved,tmpObserved-se,tmpObserved+se,add=TRUE,pch=0,errbar.col="gray",cex=0.25)
-      points(tmpExplected,tmpObserved,
-              pch=c(5+14*xdata[,1]),
-                 col=c(1+xdata[,1]),
-                 cex=c(0.2+xdata[,1]))
+      eventExpected <- tmpExplected[xdata[,1]==1]
+      eventObserved <- tmpObserved[xdata[,1]==1]
+      coltimes <- rep(1,length(eventExpected));
+      if (!is.null(timetoEvent))
+      {
+        ncolors <- 7
+        timecolors  <- heat.colors(6);
+        coltimes <- timetoEvent[order(-riskData[,2])];
+        coltimes <- coltimes[xdata[,1]==1]
+        mintime <- min(coltimes);
+        maxtime <- max(coltimes);
+        thetimes <- ncolors - 1 - floor((ncolors-1)*(coltimes-mintime)/(maxtime-mintime));
+        coltimes <- timecolors[1+thetimes];
+        thetimes <- c(0:(ncolors-1))*(maxtime-mintime)/ncolors + mintime;
+        legtxt <- sprintf("%3.1f",thetimes)
+        text(0.070*maxobs,0.99*maxobs,"Time to Event",cex=0.65)
+        corrplot::colorlegend(timecolors, legtxt,xlim=c(0.025*maxobs,0.125*maxobs),ylim=c(c(0.65*maxobs,0.95*maxobs)),cex=0.65)
 
+      }
       lines(x=c(0,maxobs),y=c(0,maxobs),lty=2)
-      legend("bottomright",legend=c("Event","Expected"),
+      points(eventExpected,eventObserved,
+              pch=c(19),
+                 col=coltimes
+                 )
+
+      legend("bottomright",legend=c("Observed","Expected"),
              lty=c(-1,2),
              pch=c(19,-1),
              col=c(2,1),cex=0.75)
