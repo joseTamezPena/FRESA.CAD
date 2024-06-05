@@ -330,7 +330,7 @@ RRPlot <-function(riskData=NULL,
         coltimes <- timecolors[1+thetimes];
         thetimes <- c(0:(ncolors-1))*(maxtime-mintime)/ncolors + mintime;
         legtxt <- sprintf("%3.1f",thetimes)
-        text(0.070*maxobs,0.99*maxobs,"Time to Event",cex=0.65)
+        text(0.10*maxobs,0.99*maxobs,"Time to Event",cex=0.65)
         corrplot::colorlegend(timecolors, legtxt,xlim=c(0.025*maxobs,0.125*maxobs),ylim=c(c(0.65*maxobs,0.95*maxobs)),cex=0.65)
 
       }
