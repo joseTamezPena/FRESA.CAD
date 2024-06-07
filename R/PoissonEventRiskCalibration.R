@@ -35,22 +35,14 @@ CalibrationProbPoissonRisk <- function(Riskdata,trim=0.10)
   observed <- sum(Riskdata$Event)
   
   meaninterval <- mean(subset(Riskdata,Riskdata$Event==1)$Time);
-  timeInterval <- 2*meaninterval;
+  timeInterval <- meaninterval;
   
-  h0 <- sum(Riskdata$Event & Riskdata$Time <= timeInterval)
-  h0 <- h0/sum((Riskdata$Time > timeInterval) | (Riskdata$Event==1))
-  
-#  print(c(h0,timeInterval))
   
   probGZero <- Riskdata$pGZ
   probGZero[probGZero > 0.999999] <- 0.999999
 
   hazard <- -log(1.00-probGZero)
-
-   ## Adjust probabilites of no-event that share similar time than events 
-  atRisktime <- 3.0*meaninterval
-  isnoevent <- (Riskdata$Time < atRisktime) & (Riskdata$Event==0) # Adjust only if short time to event on censored events
-  probGZero[isnoevent] <- 1.0 - exp(-hazard[isnoevent]*Riskdata[isnoevent,"Time"]/timeInterval)
+  h0 <- mean(hazard[Riskdata$Event==1])
 
   index <- log(-log(1.00-probGZero)/h0)
   hazard <- -log(1.00-probGZero)
@@ -60,18 +52,23 @@ CalibrationProbPoissonRisk <- function(Riskdata,trim=0.10)
   delta <- abs(observed-expected)/observed
   totgain <- 1.0;
   eindex <- exp(index)
-  while (delta>0.005)
+#  print(c(expected,observed,h0,totgain,delta))
+  while (delta>0.001)
   {
     gain <- expected/observed
-#    print(c(gain,totgain))
     h0 <- h0/gain
     hazard <- h0*eindex
     probGZero <- 1.0-exp(-hazard)
     expected <- sum(probGZero)
     delta <- abs(observed-expected)/observed
     totgain <- totgain/gain
+#    print(c(h0,gain,totgain,delta))
   }
   probGZero <- adjustProb(Riskdata$pGZ,totgain)
+  expected <- sum(probGZero)
+  delta <- abs(observed-expected)/observed
+#  print(c(expected,observed,h0,totgain,delta))
+
   timeSorted <- Riskdata
   timeSorted$pGZ <- probGZero
   probGZero[probGZero > 0.999999] <- 0.999999
@@ -81,10 +78,10 @@ CalibrationProbPoissonRisk <- function(Riskdata,trim=0.10)
 #  print(head(timeSorted))
   touse <- c(1:nrow(timeSorted))
   firstrimObserved <- trim*observed
-  lasttrimObserved <- (1.0 - 0.1*trim)*observed 
+  lasttrimObserved <- (1.0 - trim)*observed 
   timed <- unique(timeSorted[timeSorted$Event==1,"Time"])
   allTimes <- timeSorted$Time
-#  for (lp in 1:3)
+#  for (lp in 1:2)
   {
     lasttime <- 0;
     lastObs <- 0;
@@ -106,7 +103,7 @@ CalibrationProbPoissonRisk <- function(Riskdata,trim=0.10)
           lasttime <- timed[idx]
           if ((totObs >= firstrimObserved) & (totObs <= lasttrimObserved))
           {
-            wt <- sqrt(totObs)
+            wt <- log(totObs)
             gainAdded <- gainAdded + wt
             meanGain <- meanGain + wt*(acuHazard/totObs)
           }
@@ -120,8 +117,7 @@ CalibrationProbPoissonRisk <- function(Riskdata,trim=0.10)
     {
       meanGain <- acuHazard/totObs
     }
-    timeInterval <- timeInterval*meanGain
-    cat("(",timeInterval,",",gainAdded,",",meanGain,",",totObs,",",acuHazard,")")
+    cat("(",timeInterval,",",gainAdded,",",meanGain,",",totObs,",",acuHazard,")\n")
   }
 #    cat("(",timeInterval,",",gainAdded,",",meanGain,",",totObs,",",acuHazard,")")
 #  probGZero <- adjustProb(Riskdata$pGZ,totgain)
@@ -148,11 +144,13 @@ CoxRiskCalibration <- function(ml,data,outcome,time,trim=0.10,timeInterval=NULL)
   if (is.null(timeInterval))
   {
     meaninterval <- mean(data[data[,outcome]==1,time]);
-    timeInterval <- 2*meaninterval;
+    timeInterval <- meaninterval;
   }
-  h0 <- sum(data[,outcome]==1 & data[,time] <= timeInterval)
-  h0 <- h0/sum((data[,time] > timeInterval) | (data[,outcome]==1))
+#  h0 <- sum(data[,outcome]==1 & data[,time] <= timeInterval)
+#  h0 <- h0/sum((data[,time] > timeInterval) | (data[,outcome]==1))
   
+  h0 <- 1.0
+
   
   hazard <- h0*exp(index)
   probGZero <- 1.0-exp(-hazard)

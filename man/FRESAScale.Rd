@@ -6,7 +6,7 @@
 }
 
 \usage{
-	FRESAScale(data,refFrame=NULL,method=c("Norm","Order","OrderLogit","RankInv"),
+	FRESAScale(data,refFrame=NULL,method=c("Norm","Order","OrderLogit","RankInv","LRankInv"),
     refMean=NULL,refDisp=NULL,strata=NA)
 }
 \arguments{
@@ -34,7 +34,6 @@
  The data-frame will be normalized according to the distribution of the reference frame or the mean vector(\code{refMean}) scaled by the reference dispersion vector(\code{refDisp}).
 }
 
-	
 \value{
 	\item{scaledData}{
 	The scaled data set
@@ -44,6 +43,15 @@
 	}
 	\item{refDisp}{
 	The data dispersion (standard deviation or IQR)
+	}
+	\item{strata}{
+	The normalization strata
+	}
+	\item{method}{
+	The normalization method
+	}
+	\item{refFrame}{
+	The data frame used to estimate the normalization
 	}
 }
 \author{Jose G. Tamez-Pena}

@@ -1,23 +1,26 @@
 \name{filteredFit}
 \alias{filteredFit}
-\title{A generic fit method with a filtered step for feature selection}
+\title{A generic pipeline of Feature Selection, Transformation, Scale and fit}
 \description{
-	Sequential application of decorrelation, scaling, feature selection, and PCA/Whitening then fit
+	Sequential application of feature selection, linear transformation, data scaling then fit
 }
 \usage{	
     filteredFit(formula = formula, 
 	            data=NULL,
 	            filtermethod=univariate_KS,
-	            fitmethod=e1071::svm,
-	            filtermethod.control=list(pvalue=0.10,limit=0),
+	            filtermethod.control=list(limit=0),
+				Transf=c("none","PCA","CCA","ILAA"),
+				Transf.control=list(thr=0.8),
 	            Scale="none",
-				PCA=FALSE,
-				WHITE=c("none","CCA"),
-	            DECOR=FALSE,
-	            DECOR.control=list(thr=0.80,method="fast",type="NZLM"),
+				Scale.control=list(strata=NA),
+	            fitmethod=e1071::svm,
+				trainIDs=NULL,
+				refNormIDs=NULL,
 	            ...
 	            )
 }
+
+
 \arguments{
 	\item{formula}{
 	the base formula to extract the outcome
@@ -28,29 +31,32 @@
 	\item{filtermethod}{
 	the method for feature selection
 	}
-	\item{fitmethod}{
-	the fit function to be used
-	}
 	\item{filtermethod.control}{
 	the set of parameters required by the feature selection function
 	}
 	\item{Scale}{
 	Scale the data using the provided method
 	}
-	\item{PCA}{
-	Decorrelate the input data using PCA
+	\item{Scale.control}{
+	Scale parameters
 	}
-	\item{WHITE}{
-	Whittening process: "PCA" or "CCA"
+	\item{Trans}{
+	Data transformations: "none","PCA","CCA" or "ILAA",
 	}
-	\item{DECOR}{
-	Decorrelate the input data estimating the UPSTM
+	\item{Trans.control}{
+	Parameters to the transformation function
 	}
-	\item{DECOR.control}{
-	Parameters to the decorrelation function
+	\item{fitmethod}{
+	The fit function to be used
+	}
+	\item{trainIDs}{
+	The list of sample IDs to be used for training
+	}
+	\item{refNormIDs}{
+	The list of sample IDs to be used for transformations. ie. Reference Control IDs
 	}
 	\item{...}{
-	parameters for the fitting function
+	Parameters for the fitting function
 	}
 }
 

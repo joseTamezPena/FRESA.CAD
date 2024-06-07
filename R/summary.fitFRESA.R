@@ -165,7 +165,7 @@ summary.fitFRESA <- function(object,type=c("Improvement","Residual"),ci=c(0.025,
 				{
 					cis[i,] = as.vector(quantile(bv$s.coef[,i+coffset], probs = c(ci[1],0.5,ci[2]), na.rm = TRUE,names = FALSE, type = 7));
 				}
-				vres$DeltaAUC <- vres$redtrainAUC - vres$fullTrainAUC;
+				vres$DeltaAUC <- vres$fullTrainAUC - vres$redtrainAUC;
 				vres$RelativeFrequency <- rep(1,ncoef);
 			}
 			coefficients=as.data.frame(cbind(coefficients,cis,vres$uniTrainAccuracy,vres$redtrainAccuracy,vres$fullTrainAccuracy,vres$uniTrainAUC,vres$redtrainAUC,vres$fullTrainAUC,vres$IDIs,vres$NRIs,vres$z.IDIs,vres$z.NRIs,vres$DeltaAUC,vres$RelativeFrequency));

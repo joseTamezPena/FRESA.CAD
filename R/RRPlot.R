@@ -24,11 +24,28 @@ RRPlot <-function(riskData=NULL,
   
   uvalues <- length(unique(riskData[,2]))
   isProbability <- (min(riskData[,2]) >= 0) && (max(riskData[,2]) <= 1.0) && (sd(riskData[,2]) > 0.00001)
-  
-  
+  if (is.null(timetoEvent))
+  {
+    if (!is.null(riskData[,3]))
+    {
+      timetoEvent <- riskData[,3]
+    }
+  }
+  steps <- rep(1.0,nrow(riskData));
+  if (!is.null(timetoEvent)) # Adjust the censored (no events) at short times
+  {
+    medianTimeNocens <- median(timetoEvent[riskData[,1] == 1]); # The expected event rate
+    cenevents <- riskData[,1] == 0
+    # If the event time is short the is a chance of a future event in the near future. 
+    steps[cenevents] <- (1.0 - exp(-timetoEvent[cenevents]/(medianTimeNocens))) #1.0 - the probability of zero events.
+#    steps[steps > 1.0] <- 1.0; 
+#    print(medianTimeNocens)
+#    print(summary(steps))
+  }
+#  print(sum(riskData[,2]))
   if (uvalues < 10)
   {
-    warning(paste("Not a continous variable;",title))
+    warning(paste("Not a continuous variable;",title))
     return (0)
   }
   ## Removing ties
@@ -76,6 +93,26 @@ RRPlot <-function(riskData=NULL,
   if (is.null(atThr))
   {
     thr_atP <- quantile(riskData[riskData[,1]==0,2],probs=c(atRate)) - deltaR
+#   print(thr_atP)
+   if (!is.null(timetoEvent))
+   {
+     noeventdata <- cbind(riskData[riskData[,1]==0,2],steps[riskData[,1]==0])
+     noeventdata <- noeventdata[order(noeventdata[,1]),]
+     thrstep <- sum(noeventdata[,2])*atRate;
+#     print(c(nrow(noeventdata),thrstep))
+     acum <- 0;
+     for (idx in c(1:nrow(noeventdata)))
+     {
+       acum <- acum + noeventdata[idx,2];
+       if (acum < thrstep[1]) thr_atP[1] <- noeventdata[idx,1];
+       if (length(thrstep) > 1)
+       {
+         if (acum < thrstep[2]) thr_atP[2] <- noeventdata[idx,1];
+       }
+     }
+#     print(thr_atP)
+   }
+     
     if (atRate[1]<0.5)
     {
       thr_atP <- quantile(riskData[riskData[,1]==1,2],probs=c(atRate)) + deltaR
@@ -103,12 +140,13 @@ RRPlot <-function(riskData=NULL,
     atRate <- atThr
   }
   
-  
+#  print(thr_atP)
+
   
   
         
   numberofEvents <- sum(riskData[,1])
-  numberofNoEvents <- sum(riskData[,1]==0)
+  numberofNoEvents <- sum((riskData[,1]==0)*steps)
   
   samplePrevalence <- numberofEvents/totobs;
   ExpectedNoEventsGain <- 1.0
@@ -117,7 +155,7 @@ RRPlot <-function(riskData=NULL,
   if (!is.null(ExpectedPrevalence))
   {
     ExpectedNoEvents <- (1.0-ExpectedPrevalence)*totobs*samplePrevalence/ExpectedPrevalence
-    ExpectedNoEventsGain <- ExpectedNoEvents/numberofNoEvents
+    ExpectedNoEventsGain <- ExpectedNoEvents/sum(riskData[,1]==0)
   }
   else
   {
@@ -128,8 +166,8 @@ RRPlot <-function(riskData=NULL,
       pre <- samplePrevalence
     }
     ExpectedPrevalence <- samplePrevalence
- #   print(ExpectedPrevalence)
   }
+#  print(c(ExpectedPrevalence,ExpectedNoEventsGain))
   
   minRiskAtEvent <- min(riskData[riskData[,1]==1,2])
   thrsWhitinEvents <- riskData[riskData[,2] >= minRiskAtEvent,2]
@@ -160,6 +198,7 @@ RRPlot <-function(riskData=NULL,
   
   idx <- 1;
   noMoreLowEventsIdx <- minRiskAtEvent
+  cenAUC <- 0;
   for (thr in thrsWhitinEvents)
   {
     
@@ -173,10 +212,10 @@ RRPlot <-function(riskData=NULL,
     }
     HighEvents <- sum(riskData[atHighRisk,1]);
     SEN[idx] <-  HighEvents/numberofEvents;
-    SPE[idx] <- sum(riskData[atLowRisk,1]==0)/numberofNoEvents;
+    SPE[idx] <- sum((riskData[atLowRisk,1]==0)*steps[atLowRisk])/numberofNoEvents;
     BACC[idx] <- (SEN[idx] + SPE[idx])/2
-    n1 <- sum(atHighRisk)
-    n2 <- sum(atLowRisk)
+    n1 <- sum(atHighRisk*steps)
+    n2 <- sum(atLowRisk*steps)
     PPV[idx] <- HighEvents/n1
     LowFraction <- LowEvents/n2;
     HighFraction <- HighEvents/n1;
@@ -204,8 +243,14 @@ RRPlot <-function(riskData=NULL,
     {
       netBenefit[idx] <- (HighEvents - ExpectedNoEventsGain*sum(riskData[atHighRisk,1]==0)*thrsWhitinEvents[idx]/(1.0001-thrsWhitinEvents[idx]))/totobs;
     }
+    if (idx>1)
+    {
+      cenAUC <- cenAUC + 0.5*(SEN[idx]+SEN[idx-1])*(SPE[idx]-SPE[idx-1])
+    }
     idx <- idx + 1;
   }
+  names(cenAUC) <- NULL
+#  print(cenAUC)
   colors <- heat.colors(10)
   rgbcolors <- rainbow(10)
 
@@ -219,54 +264,47 @@ RRPlot <-function(riskData=NULL,
 #    par(pty='s',mfrow=c(1,2),cex=0.5)
     par(pty='s')
     xdata <- riskData[order(-riskData[,2]),]
-    observed <- numeric(nrow(xdata))
-    expected <- numeric(nrow(xdata))
-    observed[1] <- xdata[1,1]
-    expected[1] <- xdata[1,2]
+    tmpObserved <- numeric(nrow(xdata))
+    tmpExplected <- numeric(nrow(xdata))
+    tmpObserved[1] <- xdata[1,1]
+    tmpExplected[1] <- xdata[1,2]
     pgzero <- xdata[,2]
     
-    if (!is.null(timetoEvent) && !is.null(riskTimeInterval))
-    {
-      atRisktime <- 3.0*mean(timetoEvent[riskData[,1]==1])
-      otime <- timetoEvent[order(-riskData[,2])]
-      isnoevent <- (otime < atRisktime) & (xdata[,1]==0) # Adjust only if short time to event on censored events
-      hazard <- -log(1.00-pgzero[isnoevent])
-      pgzero[isnoevent] <- 1.0 - exp(-hazard*otime[isnoevent]/riskTimeInterval)
-    }
-
 
     for (idx in c(2:nrow(xdata)))
     {
       if (xdata[idx,1]==1)
       {
-        expected[idx] <- expected[idx-1] + pgzero[idx];
+        tmpExplected[idx] <- tmpExplected[idx-1] + pgzero[idx];
       }
       else
       {
-        expected[idx] <- expected[idx-1] + pgzero[idx]*ExpectedNoEventsGain;
+        tmpExplected[idx] <- tmpExplected[idx-1] + pgzero[idx]*ExpectedNoEventsGain;
       }
-      observed[idx] <- observed[idx-1] + xdata[idx,1];
+      tmpObserved[idx] <- tmpObserved[idx-1] + xdata[idx,1];
     }
     totObserved <- sum(xdata[,1])
-    tokeep <- (expected > 0.10*totObserved)
-    tokeep <- tokeep & (observed > 0.10*totObserved)
-    CumulativeOvs <- as.data.frame(cbind(Observed=observed,Cumulative=expected,Included=tokeep))
+    tokeep <- (tmpExplected > 0.10*totObserved)
+    tokeep <- tokeep & (tmpObserved > 0.10*totObserved)
+    CumulativeOvs <- as.data.frame(cbind(Observed=tmpObserved,Cumulative=tmpExplected,Included=tokeep))
     
-    OEratio <- observed[tokeep]/expected[tokeep]
+    OEratio <- tmpObserved[tokeep]/tmpExplected[tokeep]
     OAcum95ci <- c(mean=mean(OEratio),metric95ci(OEratio))
     
-    observedCI <- stats::poisson.test(max(observed[tokeep]),max(expected[tokeep]), conf.level = 0.95 )
+    observedCI <- stats::poisson.test(max(tmpObserved[tokeep]),max(tmpExplected[tokeep]), conf.level = 0.95 )
     OARatio <- observedCI
     OARatio$estimate <- c(OARatio$estimate,OARatio$conf.int,OARatio$p.value)
     names(OARatio$estimate) <- c("O/A","Low","Upper","p.value")
     
     
     rownames(CumulativeOvs) <- rownames(xdata)
-    maxobs <- max(c(observed,expected))
+    maxobs <- max(c(tmpObserved,tmpExplected))
     
+    ## Probability Calibration Curve
     if (plotRR)
     {
-      plot(expected,observed,
+     
+      plot(tmpExplected,tmpObserved,
            ylab="Observed",
            xlab="Cumulative Probability",
            xlim=c(0,maxobs),
@@ -275,15 +313,34 @@ RRPlot <-function(riskData=NULL,
            pch=c(5+14*xdata[,1]),
            col=c(1+xdata[,1]),
            cex=c(0.2+xdata[,1]))
-           se <- 2*sqrt(observed)
-      errbar(expected,observed,observed-se,observed+se,add=TRUE,pch=0,errbar.col="gray",cex=0.25)
-      points(expected,observed,
-              pch=c(5+14*xdata[,1]),
-                 col=c(1+xdata[,1]),
-                 cex=c(0.2+xdata[,1]))
+           se <- 2*sqrt(tmpObserved)
+      errbar(tmpExplected,tmpObserved,tmpObserved-se,tmpObserved+se,add=TRUE,pch=0,errbar.col="gray",cex=0.25)
+      eventExpected <- tmpExplected[xdata[,1]==1]
+      eventObserved <- tmpObserved[xdata[,1]==1]
+      coltimes <- rep(1,length(eventExpected));
+      if (!is.null(timetoEvent))
+      {
+        ncolors <- 7
+        timecolors  <- heat.colors(6);
+        coltimes <- timetoEvent[order(-riskData[,2])];
+        coltimes <- coltimes[xdata[,1]==1]
+        mintime <- min(coltimes);
+        maxtime <- max(coltimes);
+        thetimes <- ncolors - 1 - floor((ncolors-1)*(coltimes-mintime)/(maxtime-mintime));
+        coltimes <- timecolors[1+thetimes];
+        thetimes <- c(0:(ncolors-1))*(maxtime-mintime)/ncolors + mintime;
+        legtxt <- sprintf("%3.1f",thetimes)
+        text(0.10*maxobs,0.99*maxobs,"Time to Event",cex=0.65)
+        corrplot::colorlegend(timecolors, legtxt,xlim=c(0.025*maxobs,0.125*maxobs),ylim=c(c(0.65*maxobs,0.95*maxobs)),cex=0.65)
 
+      }
       lines(x=c(0,maxobs),y=c(0,maxobs),lty=2)
-      legend("bottomright",legend=c("Event","Expected"),
+      points(eventExpected,eventObserved,
+              pch=c(19),
+                 col=coltimes
+                 )
+
+      legend("bottomright",legend=c("Observed","Expected"),
              lty=c(-1,2),
              pch=c(19,-1),
              col=c(2,1),cex=0.75)
@@ -295,16 +352,17 @@ RRPlot <-function(riskData=NULL,
     ## Decision curve analysis
     pshape <- 4 + 12*isEvent
     xmax <- min(quantile(thrsWhitinEvents,probs=c(0.95),0.95))
+    xmin <- min(quantile(thrsWhitinEvents,probs=c(0.01),0.001))
     ymin <- min(quantile(netBenefit,probs=c(0.10)),0)
     DCA <- as.data.frame(cbind(Thrs=thrsWhitinEvents,NetBenefit=netBenefit))
     rownames(DCA) <- names(thrsWhitinEvents)
     
-
+## Decision Curve Analysis
     if (plotRR)
     {
       plot(thrsWhitinEvents,netBenefit,main=paste("Decision Curve Analysis:",title),ylab="Net Benefit",xlab="Threshold",
          ylim=c(ymin,pre),
-         xlim=c(0,xmax),
+         xlim=c(xmin,xmax),
          pch=pshape,col=rgbcolors[1+floor(10*(1.0-SEN))],cex=(0.35 + isEvent))
       fiveper <- as.integer(0.05*length(netBenefit)+0.5)
       range <- c(fiveper:length(netBenefit)-fiveper)
@@ -322,7 +380,7 @@ RRPlot <-function(riskData=NULL,
       abline(h=0,col="blue")
       lines(x=c(0,ExpectedPrevalence),y=c(pre,0),col="red")
       legtxt <- sprintf("%3.1f",c(5:0)/5)
-      corrplot::colorlegend(rgbcolors, legtxt,xlim=c(0.92*xmax,0.98*xmax),ylim=c(pre*0.45,pre*0.1),cex=0.75)
+      corrplot::colorlegend(rgbcolors, legtxt,xlim=c(0.92*(xmax-xmin)+xmin,0.98*(xmax-xmin)+xmin),ylim=c(pre*0.45,pre*0.1),cex=0.75)
       text(0.92*xmax,pre*0.5,"SEN")
       
       thrlty <- c(1)
@@ -398,15 +456,18 @@ RRPlot <-function(riskData=NULL,
 #  print(thrPoints)
   
   ## Sensitivity, Specificity and RR at top threshold
-  lowRisk <- riskData[,2] < thr_atP[1]
-  LowEventsFrac <- sum(riskData[lowRisk,1])/sum(lowRisk)
-  HighEventsFrac <- sum(riskData[!lowRisk,1])/sum(!lowRisk)
+  lowRisk <- (riskData[,2] < thr_atP[1])
+  LowEventsFrac <- sum(riskData[lowRisk,1]*steps[lowRisk])/sum(lowRisk*steps)
+  HighEventsFrac <- sum(riskData[!lowRisk,1]*steps[!lowRisk])/sum(!lowRisk*steps)
   sensitivity=sum(riskData[!lowRisk,1])/numberofEvents
   who <- names(SEN)[SEN==sensitivity]
   RRAtSen <- c(est=mean(RR[who]),lower=mean(LRCI[who]),upper=mean(URCI[who]))
   
-  specificity=sum(riskData[lowRisk,1]==0)/numberofNoEvents
+
   
+  specificity=sum((riskData[lowRisk,1]==0)*steps[lowRisk])/numberofNoEvents
+  
+  ## Risk Ratio Plot
   if (plotRR)
   {
     ypmax <- max(c(quantile(URCI,probs=c(0.95),na.rm = TRUE),ymax))
@@ -449,6 +510,13 @@ RRPlot <-function(riskData=NULL,
 
 
     abline(v=sensitivity,col="blue")
+    if (length(thr_atP)>1) 
+    {
+       lowRisk2 <- (riskData[,2] < thr_atP[2])
+       sensitivity2=sum(riskData[!lowRisk2,1])/numberofEvents
+       abline(v=sensitivity2,col="cyan",lty=2)
+    }
+
     text(x=sensitivity,y=ypmax*1.2,sprintf("Index(%3.2f)=%4.3f",specificity,isRevesed*thr_atP[1]),pos=4 - 2*(sensitivity>0.5) ,cex=0.7)
     text(x=sensitivity,y=0.9*(ypmax*1.2-1.0)+1.0,
          sprintf("RR(%3.2f)=%4.3f",
@@ -460,25 +528,37 @@ RRPlot <-function(riskData=NULL,
   
   ## ROC At threshold
   
+  ROCAnalysis <- predictionStats_binary(riskData[,c(1,2)],
+                                          thr=thr_atP[1])
+                                          
+  ## ROC Plot
   if (plotRR)
   {
     par(tmop)
-    ROCAnalysis <- predictionStats_binary(riskData,
-                                        plotname=paste("ROC:",title),
-                                        thr=thr_atP[1],cex=0.85)
+    par(pty='s');
+    procdta <- roc(riskData[,1],riskData[,2],
+                              grid=c(0.1, 0.1),
+                              grid.col=c("gray", "gray"),
+                              print.auc=TRUE,
+                               quiet = TRUE,
+                              main=paste("ROC:",title),
+                               plot=TRUE,
+                              col="black",
+                              lty=1,
+                              lwd=3,
+                              ) 
+    lines(x=SPE,y=SEN,lty=2,lwd=1,col="red");
+    text(0.4,0.4,sprintf("AAUC:%4.3f",cenAUC),col="red");
+    legend("bottomright",legend=c("Observed","p-Adjusted"),pch=c(-1,-1),lty=c(1,2),col=c("black","red"),cex=0.80)
 
     par(tmop)
-  }
-  else
-  {
-    ROCAnalysis <- predictionStats_binary(riskData,
-                                          thr=thr_atP[1])
   }
   surfit <- NULL
   surdif <- NULL
   LogRankE <- NULL
   cstat <- NULL
   timetoEventData <- NULL
+#  print(sum(riskData[,2]))
   if (!is.null(timetoEvent))
   {
       timetoEventData <- as.data.frame(cbind(eStatus=riskData[,1],
@@ -498,7 +578,7 @@ RRPlot <-function(riskData=NULL,
         {
           labelsplot <- c(sprintf("Low Risk < %5.3f",thr_atP[2]),sprintf("%5.3f <= Risk < %5.3f",thr_atP[2],thr_atP[1]),
                           sprintf("High Risk >= %5.3f",thr_atP[1]));
-          paletteplot <- c("green", "pink","red")
+          paletteplot <- c("green", "blue","red")
         }
       }
       else
@@ -508,7 +588,7 @@ RRPlot <-function(riskData=NULL,
         {
           labelsplot <- c(sprintf("Low Risk > %5.3f",-thr_atP[2]),sprintf("%5.3f >= Risk > %5.3f",-thr_atP[2],-thr_atP[1]),
                           sprintf("High Risk <= %5.3f",-thr_atP[1]));
-          paletteplot <- c("green", "pink","red")
+          paletteplot <- c("green", "blue","red")
         }
         
       }
@@ -516,9 +596,10 @@ RRPlot <-function(riskData=NULL,
       {
         ## Time Plot
         prisk <- riskData[,2]
-#        prisk[prisk > 0.999999] <- 0.999999
-#        timetoEventData$lammda <- -log(1.0-prisk) # From probability to expected events per time interval
         timetoEventData$lammda <- expectedEventsPerInterval(prisk)
+#        print(sum(prisk))
+        TOEratio <- tmpObserved/tmpExplected
+
         aliveEvents <- timetoEventData
         aliveEvents <- aliveEvents[order(-aliveEvents$risk),]
         aliveEvents <- aliveEvents[order(aliveEvents$eTime),]
@@ -529,7 +610,7 @@ RRPlot <-function(riskData=NULL,
         }
         else
         {
-          timeInterval <- 2*mean(subset(aliveEvents,
+          timeInterval <- mean(subset(aliveEvents,
                                 aliveEvents$eStatus==1)$eTime);
         }
         timetoEventData$expectedTime <- meanTimeToEvent(prisk,timeInterval)
@@ -540,11 +621,34 @@ RRPlot <-function(riskData=NULL,
         Expected <- Observed
         cClass <- Observed
         aliveEvents[aliveEvents$eStatus == 0,"lammda"] <- aliveEvents[aliveEvents$eStatus == 0,"lammda"]*ExpectedNoEventsGain
-        passAcum <- 0;
+#        print(mean(aliveEvents$lammda));
         lastObs <- 0;
         allTimes <- aliveEvents$eTime
         lasttime <- 0
-
+#        print(c(nrow(aliveEvents),sum(aliveEvents$risk),timeInterval))
+      
+        minTimeCens <- min(aliveEvents[aliveEvents$eStatus==0,"eTime"])
+        meanTimeCens <- mean(aliveEvents[aliveEvents$eStatus==0,"eTime"])
+        meanCenlammda <- mean(aliveEvents[(aliveEvents$eStatus==0),"lammda"])
+        meanEvelammda <- mean(aliveEvents[(aliveEvents$eStatus==1),"lammda"])
+        pzeroAtMean <- exp(-meanCenlammda*meanTimeCens/timeInterval);
+        pzeroAtMin <- exp(-meanCenlammda*minTimeCens/timeInterval);
+        pzEventAtMin <- exp(-meanEvelammda*minTimeCens/timeInterval);
+        ExpectCenEventsAtMin <- sum(aliveEvents$eStatus==0)*(1.0 - pzeroAtMin);
+        ExpectEventsAtMin <- sum(aliveEvents$eStatus==1)*(1.0 - pzEventAtMin);
+        obsAtMin <- sum((aliveEvents$eStatus==1) & (aliveEvents$eTime < minTimeCens))
+        fractNoObserb <- (ExpectCenEventsAtMin + ExpectEventsAtMin - obsAtMin)/(ExpectCenEventsAtMin+ExpectEventsAtMin);
+        if (fractNoObserb < 0) ## Something is ODD in estimated probabilities
+        {
+          fractNoObserb <- 0;
+        }
+        if ((mean(TOEratio) > 1.5) | (mean(TOEratio) < 0.75)) ## Not calibrated probabilities
+        {
+          fractNoObserb <- 0;
+        }
+        print(c(mean(TOEratio),pzeroAtMin,minTimeCens,meanTimeCens,ExpectCenEventsAtMin,ExpectEventsAtMin,obsAtMin,fractNoObserb));
+        passAcum <- 0;
+        acuexpecCen <- 0;
         for (idx in c(1:length(timed)))
         {
           whosum <- (allTimes <= timed[idx]) & (allTimes > lasttime)
@@ -552,8 +656,19 @@ RRPlot <-function(riskData=NULL,
           Observed[idx] <- lastObs + sum(aliveEvents[whosum,"eStatus"])
           cClass[idx] <- round(mean(aliveEvents[whosum,"class"]),0)
           lastObs <- Observed[idx]
-          eevents <- sum(aliveEvents[allTimes > lasttime,"lammda"])*deltatime/timeInterval
+          eevents <- sum(aliveEvents[allTimes > lasttime,"lammda"])*deltatime/timeInterval;
           Expected[idx] <- passAcum + eevents;
+          if ((timed[idx] <= minTimeCens) || (idx==1))
+          {
+            Noobseevents <- sum(aliveEvents[(allTimes > lasttime) & aliveEvents$eStatus==0,"lammda"])*deltatime/timeInterval;
+            missevents <- Noobseevents*fractNoObserb
+            Expected[idx] <- Expected[idx] - missevents;
+#            print(c(timed[idx],Noobseevents,missevents));
+          }
+          if (Expected[idx] < 1)
+          {
+            Expected[idx] <- 1
+          }
           passAcum <- Expected[idx]
           lasttime <- timed[idx]
         }
@@ -576,7 +691,7 @@ RRPlot <-function(riskData=NULL,
         values <- values[order(values)]
         names(values) <- c("low",names(thr_atP))
         obs <- numeric()
-        expected <- numeric()
+        tmpExplected <- numeric()
         lci <- numeric()
         uci <- numeric()
         lciOE <- numeric()
@@ -588,7 +703,7 @@ RRPlot <-function(riskData=NULL,
           totobs <- sum(riskData[procat==ct,1])
           obs <-c(obs,totobs)
           expe <- sum(hazards[procat==ct]);
-          expected <- c(expected,expe)
+          tmpExplected <- c(tmpExplected,expe)
           pt <- stats::poisson.test(totobs,1)
           lci <- c(lci,pt$conf.int[1])
           uci <- c(uci,pt$conf.int[2])
@@ -599,26 +714,32 @@ RRPlot <-function(riskData=NULL,
         }
         totobservedCI <- stats::poisson.test(max(Observed),1, conf.level = 0.95 )
         totalEstimated <- c(max(Observed),totobservedCI$conf.int,max(Expected),max(Observed)/max(Expected),OERatio$conf.int,OERatio$p.value)
-        OERatio$atThrEstimates <- as.data.frame(cbind(obs,lci,uci,expected,obs/expected,lciOE,uciOE,pval))
+        OERatio$atThrEstimates <- as.data.frame(cbind(obs,lci,uci,tmpExplected,obs/tmpExplected,lciOE,uciOE,pval))
         OERatio$atThrEstimates <- rbind(totalEstimated,OERatio$atThrEstimates)
         colnames(OERatio$atThrEstimates) <- c("Observed","L.CI","H.CI","Expected","O/E","Low","Upper","pvalue")
         rownames(OERatio$atThrEstimates) <- c("Total",names(values))
         ## Now lets plot
+        colorsAtMin <- 1 + 1*(timed < minTimeCens);
+        leyGMin <- sprintf("Expected > %3.1f",minTimeCens)
+        leyLMin <- sprintf("Expected < %3.1f",minTimeCens)
         if (plotRR)
         {
+          orderplot <- order(cClass)
+          pchtypes <- c(1,16,17)
           par(mfrow=c(1,1))
           plot(timed,Expected,pch=4,type="b",cex=0.5,
              main=paste("Time vs. Events:",title),
              ylab="Events",
              xlab="Time",
+             col=colorsAtMin,
              ylim=c(0,1.05*maxevents),
              xlim=c(0,1.05*maxtime),
              )
           se <- 2*sqrt(Observed)
           errbar(timed,Observed,Observed-se,Observed+se,add=TRUE,pch=0,errbar.col="gray",cex=0.25)
-          points(timed,Expected,pch=4,type="b",cex=0.5)
-          points(timed,Observed,pch=1,col=paletteplot[1+cClass])
-          legend("topleft",legend=c("Expected",labelsplot),pch=c(4,1,1,1),lty=c(1,0,0,0),col=c(1,paletteplot),cex=0.80)
+          points(timed,Expected,pch=4,type="b",cex=0.5,col=colorsAtMin)
+          points(timed[orderplot],Observed[orderplot],pch=pchtypes[1+cClass[orderplot]],col=paletteplot[1+cClass[orderplot]])
+          legend("topleft",legend=c(leyGMin,leyLMin,labelsplot),pch=c(4,4,pchtypes),lty=c(1,1,0,0,0),col=c(1,2,paletteplot),cex=0.80)
         }
       }
         ## Survival plot

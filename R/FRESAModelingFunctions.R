@@ -497,7 +497,7 @@ if (!requireNamespace("naivebayes", quietly = TRUE)) {
 		}
 		else
 		{
-			pcaobj <- prcomp(data,center = FALSE,tol=0.025);
+			pcaobj <- prcomp(data,center = TRUE,tol=0.025);
 		}
 		data <- as.data.frame(cbind(outcome,pcaobj$x));
 		colnames(data) <- c(baseformula[2],colnames(pcaobj$x));
@@ -1137,18 +1137,61 @@ predict.FRESA_HLCM <- function(object,...)
 
 filteredFit <- function(formula = formula, data=NULL, 
 							filtermethod=univariate_KS, 
-							fitmethod=e1071::svm,
-							filtermethod.control=list(pvalue=0.10,limit=0),
+							filtermethod.control=list(limit=0),
+							Transf=c("none","PCA","CCA","ILAA"),
+							Transf.control=list(thr=0.8),
 							Scale="none",
-							PCA=FALSE,
-							WHITE=c("none","CCA"),
-							DECOR=FALSE,
-							DECOR.control=list(thr=0.80,method="fast",type="NZLM"),
+							Scale.control=list(strata=NA),
+							refNormIDs=NULL,
+							trainIDs=NULL,
+							fitmethod=e1071::svm,
 							...
 						)
 {
 
-	WHITE <- match.arg(WHITE);
+	if (!inherits(trainIDs,"character"))
+	{
+		trainIDs <- NULL
+	}
+	if (is.null(trainIDs))
+	{
+		trainIDs <- rownames(data)
+	}
+	else
+	{
+		trainIDs <- trainIDs[trainIDs %in% rownames(data)]
+	}
+	if (!inherits(refNormIDs,"character"))
+	{
+		refNormIDs <- NULL
+	}
+	if (is.null(refNormIDs))
+	{
+		refNormIDs <- rownames(data)
+	}
+	else
+	{
+		refNormIDs <- refNormIDs[refNormIDs %in% rownames(data)]
+	}
+	if (length(trainIDs) < 2)
+	{
+		warning("No train data. Setting all samples to train \n")
+		trainIDs <- rownames(data)
+	}
+	Transf <- match.arg(Transf);
+	DECOR <- FALSE
+	PCA <- FALSE
+	if (Transf == "ILAA")
+	{
+		DECOR <- TRUE;
+		Transf <- "none";
+	}
+	if (Transf == "PCA")
+	{
+		PCA <- TRUE;
+		Transf <- "none";
+	}
+	
 	if (inherits(formula, "character"))
 	{
 		formula <- formula(formula);
@@ -1161,114 +1204,122 @@ filteredFit <- function(formula = formula, data=NULL,
 	}
 	fm <- colnames(data)
 	fm <- fm[!(fm %in% dependent)]
-	usedFeatures <-  c(Outcome,fm);
+	usedFeatures <-  unique(c(Outcome,fm));
+	fixFeatures <- Outcome
+	if (!is.na(Scale.control$strata))
+	{
+		fixFeatures <-  unique(c(Outcome,Scale.control$strata));
+	}
+	
+
 
 	scaleparm <- NULL;
 	UPLTM <- NULL;
 	pcaobj <- NULL;
 	ccaobj <- NULL;
 	transColnames <- NULL;
+#	print(head(rownames(data)))
 
 	if (DECOR && (length(fm) > 1))
 	{
-		if (is.null(DECOR.control))
+		cat("<Decor")
+		if (is.null(Transf.control))
 		{
-			data <- IDeA(data);
+			dataDe <- IDeA(data[refNormIDs,]);
 		}
 		else
 		{
-			data <- do.call(IDeA,c(list(data),DECOR.control));
+			dataDe <- do.call(IDeA,c(list(data[refNormIDs,]),Transf.control));
 		}
-		UPLTM <- attr(data,"UPLTM")
-		attr(data,"UPLTM") <- NULL
+		UPLTM <- attr(dataDe,"UPLTM")
+		data <- predictDecorrelate(dataDe,data)
+		dataDe <- NULL
 		transColnames <- colnames(data);
 		fm <- colnames(data)
 		fm <- fm[!(fm %in% dependent)]
 		usedFeatures <-  c(Outcome,fm);
-	}
-	if (!PCA && (WHITE=="CCA") && (Scale == "none"))
-	{
-		Scale <- "Norm"
-	}
-	if ((Scale != "none") && (length(fm) > 1) )
-	{
-		scaleparm <- FRESAScale(as.data.frame(data[,fm]),method=Scale);
-		data[,fm] <- as.data.frame(scaleparm$scaledData);
-		scaleparm$scaledData <- NULL;
+#		print(head(rownames(data)))
+		cat(">")
 	}
 	filtout <- filtermethod
 	if (!is.null(filtermethod))
 	{
-		
+		cat("<FS")
 		if (is.null(filtermethod.control))
 		{
-			fm <- filtermethod(data,formula);
+			fm <- filtermethod(data[trainIDs,],formula);
 		}
 		else
 		{
-			fm <- do.call(filtermethod,c(list(data,formula),filtermethod.control));
+			fm <- do.call(filtermethod,c(list(data[trainIDs,],formula),filtermethod.control));
 		}
 		filtout <- fm;
-		if (length(fm) > 1)
-		{
-			selpvalue <- sqrt(median(fm)*(min(fm)+1.0e-12));
-			maxpvalue <- selpvalue*1.0e3 + 1.0e-6;
-			fm <- fm[fm <= maxpvalue];
-		}
 		fm <- names(fm)
-		usedFeatures <-  c(Outcome,fm);
+		usedFeatures <-  unique(c(fixFeatures,fm));
+		cat(">")
 	}
 	data <- data[,usedFeatures]
 
 
 	binOutcome <- length(table(data[,Outcome])) == 2
 	isFactor <- inherits(data[,Outcome], "factor")
-	if (PCA && (length(fm) > 1))
+	processedFeatures <- fm
+	isContinous <- unlist(lapply(lapply(data[refNormIDs,processedFeatures],unique),length)) > 4;
+	tansFeat <- processedFeatures[isContinous];
+	disFeat <- unique(c(fixFeatures,processedFeatures[!isContinous]));
+	processedFeatures <- tansFeat[!(tansFeat %in% disFeat)];
+	if (length(processedFeatures) > 1)
 	{
-		if (binOutcome)
-		{
-			controlSet <- subset(data,get(Outcome) == 0)
-			if (length(usedFeatures) > 2)
-			{
-				pcaobj <- prcomp(controlSet[,fm],center = (Scale == "none"), scale.= (Scale == "none"),tol=0.025);
-				data <- as.data.frame(cbind(data[,Outcome],as.data.frame(predict(pcaobj,data[,fm]))));
-				colnames(data) <- c(Outcome,colnames(pcaobj$x));
-				if (isFactor)
-				{
-					data[,Outcome] <-as.factor(data[,Outcome])
-				}
-			}
-		}
-		else
-		{
-			pcaobj <- prcomp(data[,fm],center = (Scale == "none"), scale.= (Scale == "none"),tol=0.025);
-			data <- as.data.frame(cbind(data[,Outcome],as.data.frame(pcaobj$x)));
-			colnames(data) <- c(Outcome,colnames(pcaobj$x));
-			if (isFactor)
-			{
-				data[,Outcome] <-as.factor(data[,Outcome])
-			}
-		}
+	  if (PCA)
+	  {
+		  cat("<PCA")
+		  pcaobj <- prcomp(data[refNormIDs,processedFeatures],center = TRUE, scale.= TRUE,tol=0.05);
+#		  data <- as.data.frame(cbind(data[,fixFeatures],as.data.frame(pcaobj$x)));
+		  pcapred <- predict(pcaobj,data[,processedFeatures]);
+		  data <- as.data.frame(cbind(data[,disFeat],pcapred));
+		  colnames(data) <- c(disFeat,colnames(pcaobj$x));
+		  if (isFactor)
+		  {
+			  data[,Outcome] <-as.factor(data[,Outcome])
+		  }
+		  cat(">")
+	  }
+	  if (Transf=="CCA")
+	  {
+		  cat("<CCA")
+		  if (!requireNamespace("whitening", quietly = TRUE)) {
+			   install.packages("whitening", dependencies = TRUE)
+		  }
+		  mx <- as.matrix(data[refNormIDs,processedFeatures]);
+		  ccaobj <- whitening::scca(mx, mx,verbose=FALSE);
+		  ccaobj$WY <- NULL
+		  mx <- as.matrix(data[,processedFeatures]);
+		  CCAX <- as.data.frame(tcrossprod( mx, ccaobj$WX ))
+		  data <- as.data.frame(cbind(data[,disFeat],CCAX));
+		  colnames(data) <-  c(disFeat,colnames(CCAX));
+		  if (isFactor)
+		  {
+			  data[,Outcome] <-as.factor(data[,Outcome])
+		  }
+		  cat(">")
+  #		cat(colnames(data));
+	  }
+
 	}
-	if (!PCA && (WHITE=="CCA") && (length(fm) > 1))
+	fm <- colnames(data)
+	fm <- fm[!(fm %in% dependent)]
+	if ((Scale != "none") && (length(fm) > 1) )
 	{
-		if (!requireNamespace("whitening", quietly = TRUE)) {
-			 install.packages("whitening", dependencies = TRUE)
-		}
-		mx <- as.matrix(data[,fm]);
-		ccaobj <- whitening::scca(mx, mx,verbose=FALSE);
-		ccaobj$WY <- NULL
-		CCAX <- as.data.frame(tcrossprod( mx, ccaobj$WX ))
-		data <- as.data.frame(cbind(data[,Outcome],CCAX));
-		colnames(data) <-  c(Outcome,colnames(CCAX));
-		if (isFactor)
-		{
-			data[,Outcome] <-as.factor(data[,Outcome])
-		}
-#		cat(colnames(data));
+		cat("<Scale")
+		scaleparm <- do.call(FRESAScale,c(list(as.data.frame(data[,fm]),method=Scale),Scale.control));
+		data[,fm] <- as.data.frame(scaleparm$scaledData);
+		scaleparm$scaledData <- NULL;
+		cat(">")
 	}
-	
-	fit <- try(fitmethod(formula,data,...));
+
+	cat("<Fit")
+	fit <- try(fitmethod(formula,data[trainIDs,],...));
+	cat(">")
 	selectedfeatures <- character();
 	if ( !inherits(fit, "try-error"))
 	{
@@ -1303,24 +1354,48 @@ filteredFit <- function(formula = formula, data=NULL,
 			  }
 		}
 	}
+	logitPred <- NULL
+	asFactor=(class(data[,Outcome])=="factor")
+	classLen=length(table(data[,Outcome]))
+	if (binOutcome)
+	{
+	  fit_env <- environment(fit)
+	  tpred <- rpredict(fit,data[trainIDs,],asFactor=asFactor,classLen=classLen,probability=TRUE);
+	  doutcome <- data[trainIDs,Outcome]
+	  if (isFactor)
+	  {
+		  doutcome <- as.numeric(as.character(doutcome));
+	  }
+	  pretrain <- as.data.frame(cbind(pootcome=doutcome,tpre=tpred))
+	  rownames(pretrain) <- trainIDs
 
-	
+#	  logitPred <- glm(pootcome~.,pretrain,family="binomial",model = FALSE)
+	  logitPred <- modelFitting(formula(pootcome~tpre),pretrain,"LOGIT",fitFRESA=TRUE);
+	  logitPred$model <- NULL
+	  logitPred$response <- NULL
+	  environment(logitPred$formula) <- globalenv();
+	  environment(logitPred$terms) <- globalenv();
+	  environment(fit) <- fit_env
+	}
 	parameters <- list(...);
 	result <- list(fit=fit,
 					filter=filtout,
-					processedFeatures = fm,
+					fixFeatures=fixFeatures,
+					processedFeatures = processedFeatures,
+					disFeat = disFeat,
 					selectedfeatures = selectedfeatures,
 					usedFeatures = usedFeatures,
 					parameters=parameters,
-					asFactor=(class(data[,Outcome])=="factor"),
-					classLen=length(table(data[,Outcome])),
+					asFactor=asFactor,
+					classLen=classLen,
 					Scale = scaleparm,
 					binOutcome = binOutcome,
 					Outcome = Outcome,
 					pcaobj = pcaobj,
 					ccaobj = ccaobj,
 					UPLTM = UPLTM,
-					transColnames = transColnames
+					transColnames = transColnames,
+					logitPred = logitPred
 					);
 	class(result) <- c("FRESA_FILTERFIT");
 	if (inherits(fit, "try-error"))
@@ -1337,39 +1412,69 @@ predict.FRESA_FILTERFIT <- function(object,...)
 	testData <- parameters[[1]];
 	if (!is.null(object$UPLTM))
 	{
+#		print(head(colnames(testData)))
+#	 	print(tail(colnames(testData)))
 	    testData[,rownames(object$UPLTM)] <- Rfast::mat.mult(as.matrix(testData[,rownames(object$UPLTM)]),object$UPLTM);
-		colnames(testData) <- object$transColnames;
-	}
-	if (!is.null(object$Scale))
-	{
-		testData <- FRESAScale(as.data.frame(testData),
-								method=object$Scale$method,
-								refMean=object$Scale$refMean,
-								refDisp=object$Scale$refDisp
-							  )$scaledData;
+		tdcolnames <- colnames(testData)
+		names(tdcolnames) <- tdcolnames
+		tdcolnames[rownames(object$UPLTM)] <- colnames(object$UPLTM)
+#		print(head(colnames(tdcolnames)))
+#	 	print(tail(colnames(tdcolnames)))
+		colnames(testData) <- tdcolnames
+#		print(head(colnames(testData)))
+#	 	print(tail(colnames(testData)))
 	}
 	testData <- as.data.frame(testData[,object$usedFeatures])
+#	print(head(colnames(testData)))
 	if (!is.null(object$pcaobj))
 	{
 		pcapred <- predict(object$pcaobj,testData[,object$processedFeatures]);
-		testData <- as.data.frame(cbind(testData[,object$usedFeatures[1]],pcapred));
-		colnames(testData) <-  c(object$usedFeatures[1],colnames(pcapred));
+		testData <- as.data.frame(cbind(testData[,object$disFeat],pcapred));
+		colnames(testData) <-  c(object$disFeat,colnames(pcapred));
 	}
 	if (!is.null(object$ccaobj))
 	{
 		mx <- as.matrix(testData[,object$processedFeatures]);
 		CCAX <- as.data.frame(tcrossprod( mx, object$ccaobj$WX ))
-		testData <- as.data.frame(cbind(testData[,object$usedFeatures[1]],CCAX));
-		colnames(testData) <-  c(object$usedFeatures[1],colnames(CCAX));
+		testData <- as.data.frame(cbind(testData[,object$disFeat],CCAX));
+		colnames(testData) <-  c(object$disFeat,colnames(CCAX));
 #		cat(colnames(testData));
 	}
-	
+	if (!is.null(object$Scale))
+	{
+# 	 print(head(rownames(testData)))
+# 	 print(tail(rownames(testData)))
+#	 cat(object$Scale$method," ",head(colnames(object$Scale$refFrame)),"\n",tail(colnames(object$Scale$refFrame)),"\n");
+#	 cat(object$Scale$strata," ",head(colnames(testData)),"\n",tail(colnames(testData)),"\n");
+		testData <- FRESAScale(as.data.frame(testData),
+								refFrame=object$Scale$refFrame,
+								method=object$Scale$method,
+								refMean=object$Scale$refMean,
+								refDisp=object$Scale$refDisp,
+								strata=object$Scale$strata
+							  )$scaledData;
+# 	 print(head(rownames(testData)))
+# 	 print(tail(rownames(testData)))
+	}
+#	print(head(rownames(testData)))
+
 	probability <- FALSE;
 	if (!is.null(object$parameters$probability))
 	{
 		probability <- object$parameters$probability;
 	}
-	pLS <- rpredict(object$fit,testData,asFactor=object$asFactor,classLen=object$classLen,probability=probability,...);
+	if (!is.null(object$logitPred))
+	{
+#		print(head(rownames(testData)))
+		pLS <- rpredict(object$fit,testData,asFactor=object$asFactor,classLen=object$classLen,probability=TRUE);
+		pretest <- as.data.frame(cbind(pootcome=rep(0,nrow(testData)),tpre=pLS))
+		rownames(pretest) <- rownames(testData)
+		pLS <- predict.fitFRESA(object$logitPred,pretest,type = "prob")
+	}
+	else
+	{
+		pLS <- rpredict(object$fit,testData,asFactor=object$asFactor,classLen=object$classLen,probability=probability);
+	}
 	return (pLS);
 }
 
@@ -1634,4 +1739,28 @@ predict.GMVE_BSWiMS <- function(object,...)
 		pLS <- predict(object$models[[1]],testData);
 	}
 	return(pLS);
+}
+
+
+calBinProb <- function(BinaryOutcome=NULL,OutcomeProbability=NULL)
+{
+   	predictFrame <- as.data.frame(cbind(pootcome=BinaryOutcome,tpre=OutcomeProbability))
+
+	logitPred <- modelFitting(formula(pootcome~tpre),predictFrame,"LOGIT",fitFRESA=TRUE);
+	logitPred$model <- NULL
+	logitPred$response <- NULL
+	environment(logitPred$formula) <- globalenv();
+	environment(logitPred$terms) <- globalenv();
+	class(logitPred) <- c("LogitCalPred")
+	return(logitPred)
+}
+
+predict.LogitCalPred <- function(object,...)
+{
+	parameters <- list(...);
+	testData <- parameters[[1]];
+	pretest <- as.data.frame(cbind(pootcome=rep(0,length(testData)),tpre=testData))
+	rownames(pretest) <- names(testData)
+	pLS <- predict.fitFRESA(object,pretest,type = "prob")
+	return(pLS)
 }

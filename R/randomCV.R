@@ -378,6 +378,9 @@ randomCV <-  function(theData = NULL,
       testSet <- theData[-unique(sampleTrain),];
     }
     
+#    print(table(trainSet[,theOutcome]));
+#    print(table(testSet[,theOutcome]));
+    
     if (!is.null(testingSet))
     {
        toremove <- (rownames(testingSet) %in% rownames(trainSet)) | (rownames(testingSet) %in% rownames(testSet))
