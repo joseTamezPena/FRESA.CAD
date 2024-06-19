@@ -101,19 +101,25 @@ rpredict <-	function(currentModel,DataSet,asFactor=FALSE,classLen=2,...)
 	}
 	if (classLen == 2)
 	{
-		if (class(pred)[1] == "numeric")
+		if (!is.null(currentModel$type))
 		{
-			pred[pred == Inf] <- 36;
-			pred[pred == -Inf] <- -36;
-			if ((min(pred,na.rm=TRUE) < -0.01) || (max(pred,na.rm=TRUE) > 1.01 ))
+			if (currentModel$type== "LOGIT")
 			{
-				pred[pred < -36] <- -36;
-				pred[pred > 36] <- 36;
-				pred <- 1.0/(1.0 + exp(-pred));
+				if (class(pred)[1] == "numeric")
+				{
+					pred[pred == Inf] <- 36;
+					pred[pred == -Inf] <- -36;
+					if ((min(pred,na.rm=TRUE) < -0.01) || (max(pred,na.rm=TRUE) > 1.01 ))
+					{
+						pred[pred < -36] <- -36;
+						pred[pred > 36] <- 36;
+						pred <- 1.0/(1.0 + exp(-pred));
+					}
+					pred[is.na(pred)] <- 0.5;
+					pred[is.nan(pred)] <- 0.5;
+					names(pred) <- rownames(DataSet);
+				}
 			}
-			pred[is.na(pred)] <- 0.5;
-			pred[is.nan(pred)] <- 0.5;
-			names(pred) <- rownames(DataSet);
 		}
 	}
 	return (pred)
