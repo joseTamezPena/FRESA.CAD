@@ -415,6 +415,7 @@ IDeA <- function(data=NULL,
   
   # This may be debatable. But lets use this as an add hoc value for the estimation of the critical threshold 
   adjunipvalue <- min(c(unipvalue,3*unipvalue/totFeatures)); ## Adjusting for false association at 3 true associations per feature
+#  adjunipvalue <- unipvalue/totFeatures; ## Adjusting for false association 
   
   # Calculate critical correlation threshold
   # Any correlation below this threshold is not significant
