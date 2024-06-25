@@ -726,7 +726,7 @@ IDeA <- function(data=NULL,
             colsd <- apply(as.matrix(refdata[,colused]),2,sd,na.rm = TRUE);
             if (sum(colsd==0) > 0)
             {
-              # We don´t like zero residuals. i.e., we add some minor noise
+              # We do not like zero residuals. i.e., we add some minor noise
               zerovar <- colused[colsd==0];
               for (zcheck in zerovar)
               {

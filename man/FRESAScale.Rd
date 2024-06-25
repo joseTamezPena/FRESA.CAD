@@ -6,7 +6,8 @@
 }
 
 \usage{
-	FRESAScale(data,refFrame=NULL,method=c("Norm","Order","OrderLogit","RankInv","LRankInv"),
+	FRESAScale(data,refFrame=NULL,method=c("Norm","Order",
+	           "OrderLogit","RankInv","LRankInv"),
     refMean=NULL,refDisp=NULL,strata=NA)
 }
 \arguments{
