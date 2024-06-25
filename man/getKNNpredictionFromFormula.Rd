@@ -43,7 +43,6 @@
 	}
 }
 \author{Jose G. Tamez-Pena and Antonio Martinez-Torteya}
-\seealso{\code{\link{predict.fitFRESA},
-				 \link{knn}}}
+\seealso{\code{\link{predict.fitFRESA}}}
 
 \keyword{Model_Inspection}
