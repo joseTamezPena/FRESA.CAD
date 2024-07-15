@@ -26,7 +26,7 @@ RRPlot <-function(riskData=NULL,
   isProbability <- (min(riskData[,2]) >= 0) && (max(riskData[,2]) <= 1.0) && (sd(riskData[,2]) > 0.00001)
   if (is.null(timetoEvent))
   {
-    if (!is.null(riskData[,3]))
+    if (ncol(riskData)>2)
     {
       timetoEvent <- riskData[,3]
     }
@@ -484,6 +484,7 @@ RRPlot <-function(riskData=NULL,
        main=paste("Relative Risk:",title))
     atevent <- isEvent==1
     errbar(SEN[atevent],RR[atevent],URCI[atevent],LRCI[atevent],add=TRUE,pch=0,errbar.col="gray",cex=0.25)
+    abline(h=1,col="red")
     points(SEN,RR,cex=(0.35 + PPV),
          pch=pshape,
          col=colors[1+floor(10*(1.0-SPE))],
