@@ -30,7 +30,8 @@ randomCV <-  function(theData = NULL,
   fullSet <- theData
   if (!is.null(testingSet))
   {
-    fullSet <- rbind(fullSet,testingSet);
+    notintheData <- !(rownames(testingSet) %in% rownames(theData))
+    fullSet <- rbind(fullSet,testingSet[notintheData,]);
   }
   
   survpredict <- function(currentModel,Dataset,TestDataset,selectedFeatures)
@@ -740,8 +741,8 @@ randomCV <-  function(theData = NULL,
     else
     {
       warning("boxplot train failed");
-      medianTrain <- cbind(theData[,theOutcome],rep(0,nrow(theData)));
-      rownames(medianTrain) <- rownames(theData);
+      medianTrain <- cbind(fullSet[,theOutcome],rep(0,nrow(fullSet)));
+      rownames(medianTrain) <- rownames(fullSet);
     }
     
     colnames(medianTrain) <- c("Outcome","Median");
@@ -756,17 +757,17 @@ randomCV <-  function(theData = NULL,
   
   
   #[,theTime],testSet[,theOutcome]
-  medianSurvTest <- data.frame(matrix(NA, ncol = 4, nrow = nrow(theData)))
+  medianSurvTest <- data.frame(matrix(NA, ncol = 4, nrow = nrow(fullSet)))
   colnames(medianSurvTest) <- c("Times","Outcome","LinearPredictorsMedian","RisksMedian");
-  rownames(medianSurvTest) <- rownames(theData)
-  medianSurvTest[,1] = theData[,theTime]
-  medianSurvTest[,2] = theData[,theOutcome]
+  rownames(medianSurvTest) <- rownames(fullSet)
+  medianSurvTest[,1] = fullSet[,theTime]
+  medianSurvTest[,2] = fullSet[,theOutcome]
   
-  medianSurvTrain <- data.frame(matrix(0, ncol = 4, nrow = nrow(theData)))
+  medianSurvTrain <- data.frame(matrix(0, ncol = 4, nrow = nrow(fullSet)))
   colnames(medianSurvTrain) <- c("Times","Outcome","LinearPredictorsMedian","RisksMedian");
-  rownames(medianSurvTrain) <- rownames(theData)
-  medianSurvTrain[,1] = theData[,theTime]
-  medianSurvTrain[,2] = theData[,theOutcome]
+  rownames(medianSurvTrain) <- rownames(fullSet)
+  medianSurvTrain[,1] = fullSet[,theTime]
+  medianSurvTrain[,2] = fullSet[,theOutcome]
   
   # #Surv medians and boxsta
   if (!is.null(survTestPredictions) && length(rownames(survTestPredictions))>3)
