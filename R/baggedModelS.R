@@ -550,10 +550,11 @@ function (object,...)
 		{
 			preddata <- cbind(preddata,predict.fitFRESA(ffit,testData,"linear"));
 		}
-	#	print(colnames(preddata))
+#		print(colnames(preddata))
 		preddata <- as.data.frame(preddata)
 		colnames(preddata) <- attr(object$predfit,"prenames");
-	#	print(colnames(preddata))
+#		print(colnames(preddata))
+#		cat(class(object$predfit))
 		out <- predict(object$predfit,preddata)
 		if (attr(object$predfit,"predtype")=="prob")
 		{

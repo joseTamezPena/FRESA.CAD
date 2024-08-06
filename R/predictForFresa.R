@@ -473,6 +473,7 @@ function (object,...)
 					# else
 					{
 						out <- predict(object$bagging$bagged.model,...);
+#						out <- predict(object$bagging,...);
 						attr(out,"model") <- "bagged";
 						if (object$bagPredictType[1]=="wNN")
 						{

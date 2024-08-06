@@ -13,9 +13,9 @@
 				Transf.control=list(thr=0.8),
 	            Scale="none",
 				Scale.control=list(strata=NA),
-	            fitmethod=e1071::svm,
-				trainIDs=NULL,
 				refNormIDs=NULL,
+				trainIDs=NULL,
+	            fitmethod=e1071::svm,
 	            ...
 	            )
 }
@@ -40,10 +40,10 @@
 	\item{Scale.control}{
 	Scale parameters
 	}
-	\item{Trans}{
+	\item{Transf}{
 	Data transformations: "none","PCA","CCA" or "ILAA",
 	}
-	\item{Trans.control}{
+	\item{Transf.control}{
 	Parameters to the transformation function
 	}
 	\item{fitmethod}{

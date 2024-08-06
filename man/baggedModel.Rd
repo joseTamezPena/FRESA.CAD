@@ -1,5 +1,6 @@
 \name{baggedModel}
 \alias{baggedModel}
+\alias{baggedModelS}
 \title{Get the bagged model from a list of models}
 \description{
 	This function will take the frequency-ranked of variables and the list of models to create a single bagged model
@@ -16,6 +17,12 @@
 				n_bootstrap=1,
 				equifreqCorrection=0
 	            )
+	baggedModelS(modelFormulas,
+                 data,
+                 type=c("LM","LOGIT","COX"),
+                 Outcome=NULL,
+                 timeOutcome=NULL)
+
 }
 \arguments{
 	\item{modelFormulas}{
