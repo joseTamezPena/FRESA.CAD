@@ -473,7 +473,7 @@ RRPlot <-function(riskData=NULL,
   ## Risk Ratio Plot
   if (plotRR)
   {
-    ypmax <- max(c(quantile(URCI,probs=c(0.95),na.rm = TRUE),ymax))
+    ypmax <- max(c(quantile(URCI,probs=c(0.75),na.rm = TRUE),ymax))
 
     par(mfrow=c(1,1))
   
