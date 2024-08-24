@@ -800,6 +800,7 @@ RRPlot <-function(riskData=NULL,
                  prevalence=pre,
                  thr_atP= isRevesed*thr_atP,
                  c.index=cstat,
+                 cenAUC=cenAUC,
                  surfit=surfit,
                  surdif=surdif,
                  LogRankE=LogRankE
