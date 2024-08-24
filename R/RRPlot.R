@@ -247,7 +247,7 @@ RRPlot <-function(riskData=NULL,
     {
       cenAUC <- cenAUC + 0.5*(SEN[idx]+SEN[idx-1])*(SPE[idx]-SPE[idx-1])
     }
-    cat(SEN[idx],",",SPE[idx],"\n");
+#    cat(SEN[idx],",",SPE[idx],"\n");
     idx <- idx + 1;
   }
   idx <- idx - 1;
