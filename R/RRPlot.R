@@ -159,15 +159,15 @@ RRPlot <-function(riskData=NULL,
   }
   else
   {
-#    print(ExpectedPrevalence)
+    print(samplePrevalence)
     if (!is.null(riskTimeInterval) && !is.null(timetoEvent))
     {
-      samplePrevalence <- sum(timetoEvent < riskTimeInterval & riskData[,1]==1)/totobs
+      samplePrevalence <- sum(timetoEvent < (3*riskTimeInterval) & riskData[,1]==1)/sum(timetoEvent < (3*riskTimeInterval))
       pre <- samplePrevalence
     }
     ExpectedPrevalence <- samplePrevalence
   }
-#  print(c(ExpectedPrevalence,ExpectedNoEventsGain))
+  print(c(samplePrevalence,ExpectedNoEventsGain))
   
   minRiskAtEvent <- min(riskData[riskData[,1]==1,2])
   thrsWhitinEvents <- riskData[riskData[,2] >= minRiskAtEvent,2]
@@ -482,7 +482,7 @@ RRPlot <-function(riskData=NULL,
        col=colors[1+floor(10*(1.0-SPE))],
        xlim=c(0,1.15),
 #       ylim=c(1.0,ymax+0.5),
-       ylim=c(1.0,ypmax*1.2),
+       ylim=c(0.0,ypmax*1.2),
 #       log="y",
        main=paste("Relative Risk:",title))
     atevent <- isEvent==1
@@ -723,9 +723,9 @@ RRPlot <-function(riskData=NULL,
         colnames(OERatio$atThrEstimates) <- c("Observed","L.CI","H.CI","Expected","O/E","Low","Upper","pvalue")
         rownames(OERatio$atThrEstimates) <- c("Total",names(values))
         ## Now lets plot
-        colorsAtMin <- 1 + 1*(timed < minTimeCens);
-        leyGMin <- sprintf("Expected > %3.1f",minTimeCens)
-        leyLMin <- sprintf("Expected < %3.1f",minTimeCens)
+        colorsAtMin <- 1 + 1*(cClass>0);
+        leyGMin <- sprintf("Expected > %4.2f",minTimeCens)
+        leyLMin <- sprintf("Expected < %4.2f",minTimeCens)
         if (plotRR)
         {
           orderplot <- order(cClass)

@@ -42,7 +42,7 @@ CalibrationProbPoissonRisk <- function(Riskdata,trim=0.10)
   probGZero[probGZero > 0.999999] <- 0.999999
 
   hazard <- -log(1.00-probGZero)
-  h0 <- mean(hazard[Riskdata$Event==1])
+  h0 <- mean(Riskdata$Event)
 
   index <- log(-log(1.00-probGZero)/h0)
   hazard <- -log(1.00-probGZero)
@@ -119,10 +119,10 @@ CalibrationProbPoissonRisk <- function(Riskdata,trim=0.10)
     }
     cat("(",timeInterval,",",gainAdded,",",meanGain,",",totObs,",",acuHazard,")\n")
   }
-#    cat("(",timeInterval,",",gainAdded,",",meanGain,",",totObs,",",acuHazard,")")
-#  probGZero <- adjustProb(Riskdata$pGZ,totgain)
+  timeInterval <- timeInterval*meanGain;
   nevent <- timeSorted$hazard*timeSorted$Time/timeInterval
   Ahazard <- sum(nevent)
+  cat("(Delta Time:",timeInterval,",Tot:",totObs,", Tot Hazard:",Ahazard,")\n")
 
   result <- list(index=index,
                  probGZero=probGZero,
