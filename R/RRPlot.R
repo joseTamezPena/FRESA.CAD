@@ -247,11 +247,11 @@ RRPlot <-function(riskData=NULL,
     {
       cenAUC <- cenAUC + 0.5*(SEN[idx]+SEN[idx-1])*(SPE[idx]-SPE[idx-1])
     }
-#    cat(SEN[idx],",",SPE[idx],"\n");
+    cat(SEN[idx],",",SPE[idx],"\n");
     idx <- idx + 1;
   }
   idx <- idx - 1;
-  cenAUC <- cenAUC + SEN[1]*SPE[1] + 0.5*SEN[idx]*(1.0-SPE[idx]);
+  cenAUC <- cenAUC + 0.5*(1.0+SEN[1])*SPE[1] + 0.5*SEN[idx]*(1.0-SPE[idx]);
   names(cenAUC) <- NULL
  # print(cenAUC)
   colors <- heat.colors(10)
