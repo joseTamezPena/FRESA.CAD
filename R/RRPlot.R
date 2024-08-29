@@ -723,27 +723,31 @@ RRPlot <-function(riskData=NULL,
         colnames(OERatio$atThrEstimates) <- c("Observed","L.CI","H.CI","Expected","O/E","Low","Upper","pvalue")
         rownames(OERatio$atThrEstimates) <- c("Total",names(values))
         ## Now lets plot
-        colorsAtMin <- 1 + 1*(cClass>0);
-        leyGMin <- sprintf("Expected > %4.2f",minTimeCens)
-        leyLMin <- sprintf("Expected < %4.2f",minTimeCens)
+        colorsAtMin <- 1 + (timed < minTimeCens);
+        leyGMin <- sprintf("Time > %4.2f",minTimeCens)
+        leyLMin <- sprintf("Time < %4.2f",minTimeCens)
         if (plotRR)
         {
           orderplot <- order(cClass)
           pchtypes <- c(1,16,17)
           par(mfrow=c(1,1))
-          plot(timed,Expected,pch=4,type="b",cex=0.5,
+          plot(timed,Expected,
+#                pch=4,
+                type="b",cex=0.5,
              main=paste("Time vs. Events:",title),
              ylab="Events",
              xlab="Time",
-             col=colorsAtMin,
+#             col=colorsAtMin,
+             col=1,
+             pch= 3 + colorsAtMin,
              ylim=c(0,1.05*maxevents),
              xlim=c(0,1.05*maxtime),
              )
           se <- 2*sqrt(Observed)
           errbar(timed,Observed,Observed-se,Observed+se,add=TRUE,pch=0,errbar.col="gray",cex=0.25)
-          points(timed,Expected,pch=4,type="b",cex=0.5,col=colorsAtMin)
+          points(timed,Expected,pch=3+colorsAtMin,type="p",cex=0.5,col=colorsAtMin)
           points(timed[orderplot],Observed[orderplot],pch=pchtypes[1+cClass[orderplot]],col=paletteplot[1+cClass[orderplot]])
-          legend("topleft",legend=c(leyGMin,leyLMin,labelsplot),pch=c(4,4,pchtypes),lty=c(1,1,0,0,0),col=c(1,2,paletteplot),cex=0.80)
+          legend("topleft",legend=c(leyGMin,leyLMin,labelsplot),pch=c(4,5,pchtypes),lty=c(1,1,0,0,0),col=c(1,2,paletteplot),cex=0.80)
         }
       }
         ## Survival plot
