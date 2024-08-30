@@ -208,7 +208,10 @@ RRPlot <-function(riskData=NULL,
     if (LowEvents==0) 
     {
       LowEvents <- 0.1;
-      noMoreLowEventsIdx <- thr
+      if (noMoreLowEventsIdx == minRiskAtEvent)
+      {
+        noMoreLowEventsIdx <- thr
+      }
     }
     HighEvents <- sum(riskData[atHighRisk,1]);
     SEN[idx] <-  HighEvents/numberofEvents;
@@ -432,7 +435,7 @@ RRPlot <-function(riskData=NULL,
   thr_values <- c(thr_atP,
                   at_max_BACC=min(thrsWhitinEvents[BACC==maxBACC]),
                   at_max_RR=min(thrsval[RRval==maxRR]),
-                  atSPE100=noMoreLowEventsIdx)
+                  atSENE100=noMoreLowEventsIdx)
   if (isProbability)
   {
     thr_values <- c(thr_values,at_0.5=0.5)
@@ -450,7 +453,7 @@ RRPlot <-function(riskData=NULL,
   if (isProbability)
   {
     thrPoints$NetBenefit <- netBenefit[thrLoc]
-    rownames(thrPoints) <- c(paste("@",round(atRate,3),sep=":"),"@MAX_BACC","@MAX_RR","@SPE100","p(0.5)")
+    rownames(thrPoints) <- c(paste("@",round(atRate,3),sep=":"),"@MAX_BACC","@MAX_RR","@SEN100","p(0.5)")
   }
   else
   {
