@@ -423,7 +423,7 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 														if (predtype=="linear")
 														{
 #															gvar <- getVar.Res(out,data=EquTrainSet,Outcome=Outcome,type=type,testData=data)
-#															coef_Panalysis <- -log(gvar$FP.value); 
+#															coef_Panalysis <- -log10(gvar$FP.value); 
 															baggingAnalysis$uMS_values[znames] <- baggingAnalysis$uMS_values[znames] + Rwts*gvar$unitestMSE;
 															baggingAnalysis$rMS_values[znames] <- baggingAnalysis$rMS_values[znames] + Rwts*gvar$redtestMSE;
 															baggingAnalysis$NeRI_values[znames] <- baggingAnalysis$NeRI_values[znames] + Rwts*gvar$NeRIs;
@@ -440,7 +440,7 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 														{
 #															gvar <- getVar.Bin(out,data=EquTrainSet,Outcome=Outcome,type=type,testData=data)
 			#												cat("Equ: ",mean(EquTrainSet[,Outcome])," Data: ",mean(data[,Outcome]),"\n");
-#															coef_Panalysis <- -log(1.0-pnorm(gvar$z.IDIs));
+#															coef_Panalysis <- -log10(1.0-pnorm(gvar$z.IDIs));
 															baggingAnalysis$uAcc_values[znames] <- baggingAnalysis$uAcc_values[znames] + Rwts*gvar$uniTestAccuracy;
 															baggingAnalysis$rAcc_values[znames] <- baggingAnalysis$rAcc_values[znames] + Rwts*gvar$redtestAccuracy;
 															baggingAnalysis$uAUC_values[znames] <- baggingAnalysis$uAUC_values[znames] + Rwts*gvar$uniTestAUC;
@@ -518,10 +518,10 @@ function(modelFormulas,data,type=c("LM","LOGIT","COX"),Outcome=NULL,timeOutcome=
 									names(model$coefficients) <- conames;
 #									print(model$coefficients);
 									baggingAnalysis$coefficients <- baggingAnalysis$coefficients/baggingAnalysis$wts;
-									gain <- model$coefficients[names(baggingAnalysis$coefficients)]/baggingAnalysis$coefficients;
+#									gain <- model$coefficients[names(baggingAnalysis$coefficients)]/baggingAnalysis$coefficients;
 									
-									baggingAnalysis$coefstd <- gain*sqrt(abs(baggingAnalysis$coefstd/baggingAnalysis$wts-(baggingAnalysis$coefficients)^2));
-									baggingAnalysis$coefficients <- gain*baggingAnalysis$coefficients;
+#									baggingAnalysis$coefstd <- gain*sqrt(abs(baggingAnalysis$coefstd/baggingAnalysis$wts-(baggingAnalysis$coefficients)^2));
+#									baggingAnalysis$coefficients <- gain*baggingAnalysis$coefficients;
 									
 									coefEvolution <- as.data.frame(coefEvolution);
 									rownames(coefEvolution) <- rnames
