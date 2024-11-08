@@ -677,7 +677,7 @@ univariate_Strata <- function(data,Outcome,pvalue=0.2,limit=0,adjustMethod="BH",
 
 ## Multivariate Ensemble of KS, BISWiMS and LASSO Selection
 
-multivariate_BinEnsemble <- function(data,Outcome,limit = -1,adjustMethod="BH",...)
+multivariate_BinEnsemble <- function(data,Outcome,pvalue=0.2,limit = -1,adjustMethod="BH",...)
 {
   allf <- numeric();
   varcount <- numeric(ncol(data));
@@ -703,11 +703,32 @@ multivariate_BinEnsemble <- function(data,Outcome,limit = -1,adjustMethod="BH",.
   bmodl <- BSWiMS.model(formula(paste(Outcome,"~.")),data,loops=1,elimination.bootstrap.steps=0)
   BSWiMSSelection <- bmodl$selectedfeatures;
   pvalues <- pvalues[unique(c(topKS,lassoSelection,BSWiMSSelection))];
-  pvalues[lassoSelection] <- pvalues[lassoSelection];
-  pvalues[BSWiMSSelection] <- pmin(pvalues[BSWiMSSelection],(1.0-pnorm(summary(bmodl)$coef[BSWiMSSelection,"z.IDI"])));
+  pvalues[lassoSelection] <- 0.25*pvalues[lassoSelection];
+  pvalues[BSWiMSSelection] <- 0.25*pmin(pvalues[BSWiMSSelection],(1.0-pnorm(summary(bmodl)$coef[BSWiMSSelection,"z.IDI"])));
   pvalues <- pvalues[order(pvalues)]
+#  print(pvalues[BSWiMSSelection])
   pvalues <- p.adjust(pvalues,adjustMethod)
-#  print(pvalues)
+#  print(pvalues[BSWiMSSelection])
+
+  
+  allf <- pvalues;
+  adjusptedp <- allf;
+  top <- allf[1];
+  if (top < 0.45)
+  {
+	top <- allf[allf <= 1.01*allf[1]];
+  }
+
+  allf <- allf[allf <= pvalue]; # Removing after adjusting
+  
+  if (length(allf) < 2) 
+  {
+	allf <- c(allf,top[!(names(top) %in% names(allf))]);
+  }
+ 
+   pvalues <- allf;
+
+#  print(pvalues[BSWiMSSelection])
 	top <- pvalues[1:2];
 	if (length(pvalues) < 2)
 	{
@@ -724,6 +745,8 @@ multivariate_BinEnsemble <- function(data,Outcome,limit = -1,adjustMethod="BH",.
 			pvalues <- pvalues[correlated_Remove(data,names(pvalues),...)];
 		}
 	}
+#	 print(pvalues[BSWiMSSelection])
+
 	attr(pvalues,"KS") <- topKS
 	attr(pvalues,"LASSO") <- lassoSelection
 	attr(pvalues,"BSWiMS") <- BSWiMSSelection

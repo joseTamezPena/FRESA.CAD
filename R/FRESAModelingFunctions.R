@@ -1311,7 +1311,10 @@ filteredFit <- function(formula = formula, data=NULL,
 	if ((Scale != "none") && (length(fm) > 1) )
 	{
 		cat("<Scale")
-		scaleparm <- do.call(FRESAScale,c(list(as.data.frame(data[,fm]),method=Scale),Scale.control));
+		scaleparm <- do.call(FRESAScale,c(list(as.data.frame(data[,fm]),
+							refFrame=as.data.frame(data[refNormIDs,fm]),
+							method=Scale),
+							Scale.control));
 		data[,fm] <- as.data.frame(scaleparm$scaledData);
 		scaleparm$scaledData <- NULL;
 		cat(">")

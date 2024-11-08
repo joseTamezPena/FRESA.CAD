@@ -7,7 +7,7 @@
     Returns the top set of features that are associated with the outcome based on Multivariate logistic models: LASSO and BSWiMS
 }
 \usage{
-multivariate_BinEnsemble(data,Outcome,limit=-1,adjustMethod="BH",...)
+multivariate_BinEnsemble(data,Outcome,pvalue=0.2,limit=-1,adjustMethod="BH",...)
 }
 \arguments{
     \item{data}{
@@ -18,6 +18,9 @@ multivariate_BinEnsemble(data,Outcome,limit=-1,adjustMethod="BH",...)
     }
     \item{adjustMethod}{
     The method used by the p.adjust method
+    }
+    \item{pvalue}{
+    The maximum adjusted p-value
     }
     \item{limit}{
     The samples-wise fraction of features to return. 
