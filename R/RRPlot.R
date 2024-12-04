@@ -242,9 +242,21 @@ RRPlot <-function(riskData=NULL,
         RR[idx] <- 1.0;
       }
     }
+    minbenefit <- -0.1;
     if (isProbability)
     {
-      netBenefit[idx] <- (HighEvents - ExpectedNoEventsGain*sum(riskData[atHighRisk,1]==0)*thrsWhitinEvents[idx]/(1.0001-thrsWhitinEvents[idx]))/totobs;
+      if (thrsWhitinEvents[idx]<1.0)
+      {
+        netBenefit[idx] <- (HighEvents - ExpectedNoEventsGain*sum(riskData[atHighRisk,1]==0)*thrsWhitinEvents[idx]/(1.0-thrsWhitinEvents[idx]))/totobs;
+        if (netBenefit[idx] < minbenefit)
+        {
+          netBenefit[idx] <- minbenefit
+        }
+      }
+      else
+      {
+        netBenefit[idx] <- minbenefit
+      }
     }
     if (idx>1)
     {
@@ -256,6 +268,7 @@ RRPlot <-function(riskData=NULL,
   idx <- idx - 1;
   cenAUC <- cenAUC + 0.5*(1.0+SEN[1])*SPE[1] + 0.5*SEN[idx]*(1.0-SPE[idx]);
   names(cenAUC) <- NULL
+#  print(netBenefit)
  # print(cenAUC)
   colors <- heat.colors(10)
   rgbcolors <- rainbow(10)
@@ -359,7 +372,7 @@ RRPlot <-function(riskData=NULL,
     pshape <- 4 + 12*isEvent
     xmax <- min(quantile(thrsWhitinEvents,probs=c(0.95),0.95))
     xmin <- min(quantile(thrsWhitinEvents,probs=c(0.01),0.001))
-    ymin <- min(quantile(netBenefit,probs=c(0.10)),0)
+    ymin <- max(min(quantile(netBenefit,probs=c(0.10)),0),0)
     DCA <- as.data.frame(cbind(Thrs=thrsWhitinEvents,NetBenefit=netBenefit))
     rownames(DCA) <- names(thrsWhitinEvents)
     
