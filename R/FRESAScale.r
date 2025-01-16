@@ -28,6 +28,7 @@ FRESAScale <- function(data,refFrame=NULL,method=c("Norm","Order","OrderLogit","
 #		print(class(refFrame));
 		usedFeatures <- colnames(refFrame);
 		usedFeatures <- usedFeatures[sapply(refFrame,is.numeric)];
+		if (!is.na(strata)) usedFeatures <- usedFeatures[usedFeatures != strata]
 #		print(usedFeatures)
 		outs <- lapply(refFrame[,usedFeatures],table);
 		outl <- numeric(length(outs));
