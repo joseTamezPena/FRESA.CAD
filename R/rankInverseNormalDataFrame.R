@@ -35,11 +35,11 @@ function(variableList,data,referenceframe,strata=NA)
 		{
 			stracondition <- paste (strata,paste('==',sta));
 			strastatement <- paste ("subset(referenceframe,",paste(stracondition,")"));
-#			cat ("Strata:",stracondition,"\n");
+			cat ("Strata:",stracondition,"\n");
 			cstrataref <- eval(parse(text=strastatement));
 			strastatement <- paste ("subset(data,",paste(stracondition,")"));
 			cstrata <- eval(parse(text=strastatement));
-#			cat ("Rows:",nrow(cstrataref),"Rows 2",nrow(cstrata)," \n");
+			cat ("Rows:",nrow(cstrataref),"Rows 2",nrow(cstrata)," \n");
 		}
 		if (!is.null(cstrata))
 		{
