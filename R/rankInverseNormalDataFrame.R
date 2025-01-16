@@ -1,7 +1,7 @@
 rankInverseNormalDataFrame <-
 function(variableList,data,referenceframe,strata=NA) 
 {
-  
+  	zRankInverseFrame <- data
 	if (inherits(variableList,"character"))
 	{
 		colnamesList <- variableList;
@@ -51,9 +51,11 @@ function(variableList,data,referenceframe,strata=NA)
 				nrows <- nrow(cstrata);
 				InverseFrame <- cstrata;
 				idxs <- as.integer(0.01*nrowsCtr); #for outliers smoothing
+				print(table(cstrataref[,strata]))
+				print(table(InverseFrame[,strata]))
 				for (i in 1:size)
 				{ 
-					if (length(table(cstrata[,colnamesList[i]]))>2)
+					if (length(table(cstrataref[,colnamesList[i]]))>2)
 					{
 						SortedCtr[,colnamesList[i]] <- SortedCtr[order(cstrataref[,colnamesList[i]]),colnamesList[i]];
 						minvalue <- SortedCtr[1,colnamesList[i]];
@@ -71,6 +73,7 @@ function(variableList,data,referenceframe,strata=NA)
 						InverseFrame[,colnamesList[i]] <- .Call("rankInverseNormalCpp",nrows,cstrata[,colnamesList[i]],minvalue,maxvalue,SortedCtr[,colnamesList[i]]);
 					}
 				}
+				print(table(InverseFrame[,strata]))
 				if (created == 1) 
 				{
 					zRankInverseFrame <- rbind(zRankInverseFrame,InverseFrame);
