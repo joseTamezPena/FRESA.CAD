@@ -318,7 +318,7 @@ univariate_filter <- function(data=NULL, Outcome=NULL, pvalue=0.2,pvalueMethod=w
 	varlist <-colnames(data);
 	varlist <- varlist[Outcome != varlist];
 	unitPvalues <- rep(1.0,length(varlist));
-	svalues <- rep(1.0,length(varlist));
+	svalues <- rep(0.0,length(varlist));
 	names(unitPvalues) <- varlist;
 
 	outcomes <- as.character(data[,Outcome]);
