@@ -320,17 +320,19 @@ univariate_filter <- function(data=NULL, Outcome=NULL, pvalue=0.2,pvalueMethod=w
 	unitPvalues <- rep(1.0,length(varlist));
 	svalues <- rep(0.0,length(varlist));
 	names(unitPvalues) <- varlist;
+	names(svalues) <- varlist;
 
 	outcomes <- as.character(data[,Outcome]);
 	outlist <- unique(outcomes)
 	pvalue <- pvalue/sqrt(length(outlist) - 1.0)
 	for (oft in outlist[-1])
 	{
-		case <- subset(data,outcomes == oft);
-		control <- subset(data,outcomes != oft);
+		casegroup <- outcomes == oft
+		case <- subset(data,casegroup);
+		control <- subset(data,!casegroup);
 		for (j in varlist) 
 		{
-			tb <- table(data[,j],outcomes == oft)
+			tb <- table(data[,j],casegroup)
 			sval <- 0
 			if (nrow(tb) > 5)
 			{
@@ -341,7 +343,7 @@ univariate_filter <- function(data=NULL, Outcome=NULL, pvalue=0.2,pvalueMethod=w
 			else
 			{
 				pval <- prop.test(tb)
-				sval <- pval$statistic
+				sval <- sqrt(pval$statistic)
 				pval <- pval$p.value
 			}
 			if (inherits(pval, "try-error")) {pval <- 1.0; sval<-0;}
@@ -354,6 +356,8 @@ univariate_filter <- function(data=NULL, Outcome=NULL, pvalue=0.2,pvalueMethod=w
 
   	unitPvalues <- unitPvalues[order(-svalues)];
 	svalues <- svalues[order(-svalues)];
+	svalues <- svalues[order(unitPvalues)];
+  	unitPvalues <- unitPvalues[order(unitPvalues)];
   	unadjusted <- unitPvalues;
 	unitPvalues <- p.adjust(unitPvalues,adjustMethod,n=max(n,length(unitPvalues)));
 	top <- unitPvalues[1];
