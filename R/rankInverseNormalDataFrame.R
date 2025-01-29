@@ -55,7 +55,7 @@ function(variableList,data,referenceframe,strata=NA)
 #				print(table(InverseFrame[,strata]))
 				for (i in 1:size)
 				{ 
-					if (length(table(cstrataref[,colnamesList[i]]))>2)
+					if (length(table(cstrataref[,colnamesList[i]]))>9)
 					{
 						SortedCtr[,colnamesList[i]] <- SortedCtr[order(cstrataref[,colnamesList[i]]),colnamesList[i]];
 						minvalue <- SortedCtr[1,colnamesList[i]];

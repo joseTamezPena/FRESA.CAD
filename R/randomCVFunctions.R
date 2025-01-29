@@ -318,6 +318,7 @@ univariate_filter <- function(data=NULL, Outcome=NULL, pvalue=0.2,pvalueMethod=w
 	varlist <-colnames(data);
 	varlist <- varlist[Outcome != varlist];
 	unitPvalues <- rep(1.0,length(varlist));
+	svalues <- rep(1.0,length(varlist));
 	names(unitPvalues) <- varlist;
 
 	outcomes <- as.character(data[,Outcome]);
@@ -330,22 +331,29 @@ univariate_filter <- function(data=NULL, Outcome=NULL, pvalue=0.2,pvalueMethod=w
 		for (j in varlist) 
 		{
 			tb <- table(data[,j],outcomes == oft)
+			sval <- 0
 			if (nrow(tb) > 5)
 			{
-				 pval <- pvalueMethod(control[,j],case[,j],na.action = na.exclude)$p.value; 
+				 pval <- pvalueMethod(control[,j],case[,j],na.action = na.exclude);
+				 sval <- pval$statistic
+				 pval <- pval$p.value
 			}
 			else
 			{
-				pval <- prop.test(tb)$p.value
+				pval <- prop.test(tb)
+				sval <- pval$statistic
+				pval <- pval$p.value
 			}
 			if (inherits(pval, "try-error")) {pval <- 1.0;}
 			if (is.null(pval)) { pval <- 1.0; }
 			if (is.na(pval)) {pval <- 1.0;}
 			unitPvalues[j] <- min(unitPvalues[j],pval);
+			svalues[j] <- max(svalues[j],sval);
 		}
 	}
 
-  	unitPvalues <- unitPvalues[order(unitPvalues)];
+  	unitPvalues <- unitPvalues[order(-svalues)];
+	svalues <- svalues[order(-svalues)];
   	unadjusted <- unitPvalues;
 	unitPvalues <- p.adjust(unitPvalues,adjustMethod,n=max(n,length(unitPvalues)));
 	top <- unitPvalues[1];
@@ -363,6 +371,7 @@ univariate_filter <- function(data=NULL, Outcome=NULL, pvalue=0.2,pvalueMethod=w
 		unitPvalues <- top;
 	}
 	attr(unitPvalues,"Unadjusted") <- unadjusted;
+	attr(unitPvalues,"statistic") <- svalues;
    return(unitPvalues);
 }
 
