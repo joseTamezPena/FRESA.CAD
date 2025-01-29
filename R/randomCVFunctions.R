@@ -344,9 +344,9 @@ univariate_filter <- function(data=NULL, Outcome=NULL, pvalue=0.2,pvalueMethod=w
 				sval <- pval$statistic
 				pval <- pval$p.value
 			}
-			if (inherits(pval, "try-error")) {pval <- 1.0;}
-			if (is.null(pval)) { pval <- 1.0; }
-			if (is.na(pval)) {pval <- 1.0;}
+			if (inherits(pval, "try-error")) {pval <- 1.0; sval<-0;}
+			if (is.null(pval)) { pval <- 1.0; sval<-0;}
+			if (is.na(pval)) {pval <- 1.0; sval<-0;}
 			unitPvalues[j] <- min(unitPvalues[j],pval);
 			svalues[j] <- max(svalues[j],sval);
 		}
