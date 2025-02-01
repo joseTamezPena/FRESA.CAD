@@ -23,15 +23,12 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 		colnamesList <- as.vector(variableList[,1]);
 	}
 	size = length(colnamesList);
+	strataLabels <- 1
 	if (!is.na(strata)) 
 	{
-		maxStrata = max(referenceframe[,strata],na.rm = TRUE);
-		minStrata = min(referenceframe[,strata],na.rm = TRUE);
-	}
-	else 
-	{
-		maxStrata=1;
-		minStrata=1;
+#		maxStrata = max(referenceframe[,strata],na.rm = TRUE);
+#		minStrata = min(referenceframe[,strata],na.rm = TRUE);
+		strataLabels = unique(referenceframe[,strata])
 	}
 #	cat ("Min Strata:",minStrata,"Max Strata:",maxStrata,"\n");
 
@@ -44,7 +41,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 	AdjustedFrame <- NULL;
 	isContinous <- FALSE;
 	datamodel <- NULL;
-	for (sta in minStrata:maxStrata)
+	for (sta in strataLabels)
 	{
 		if (!is.na(strata))
 		{
@@ -277,7 +274,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 								}
 								else
 								{
-									cstrata[,colnamesList[i]] <- cstrata[,colnamesList[i]] - model$coef[1];
+									cstrata[,colnamesList[i]] <- cstrata[,colnamesList[i]] - avgref;
 								}
 							},
 							RLM = 
