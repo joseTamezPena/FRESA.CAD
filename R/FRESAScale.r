@@ -138,19 +138,19 @@ FRESAScale <- function(data,refFrame=NULL,method=c("Norm","Order","OrderLogit","
 						cstrata[,usedFeatures] <- 4.0*(1.0/(1.0+exp(-iqrsdratio*cstrata[,usedFeatures])) - 0.5)/iqrsdratio;
 					}
 				)
-			data[rownames(cstrata),] <- cstrata
-			if (!is.null(refMean))
-			{	
-				names(refMean) <- usedFeatures;
-				names(refDisp) <- usedFeatures;
+			if (!is.na(strata))
+			{
+				refMean <- NULL
+				refDisp <- NULL
 			}
+			data[rownames(cstrata),] <- cstrata
 		}
 #		data <- data[srownames,]
 	}
-	if (!is.na(strata))
-	{
-		refMean <- NULL
-		refDisp <- NULL
+	if (!is.null(refMean))
+	{	
+		names(refMean) <- usedFeatures;
+		names(refDisp) <- usedFeatures;
 	}
 	scaledData=as.data.frame(data);
 	attr(scaledData,"usedFeatures") <- usedFeatures;
