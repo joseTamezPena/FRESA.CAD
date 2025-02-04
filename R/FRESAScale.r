@@ -42,84 +42,115 @@ FRESAScale <- function(data,refFrame=NULL,method=c("Norm","Order","OrderLogit","
     if (length(usedFeatures) > 0)
 	{
 		method <- match.arg(method);
-		datRefUses <-  as.data.frame(refFrame[,usedFeatures]);
-		colnames(datRefUses) <- usedFeatures;
-		rownames(datRefUses) <- rownames(refFrame);
-		srownames <- rownames(data)
-
-		switch(method,
-				Norm =
-				{
-					if (is.null(refMean))
+#		srownames <- rownames(data)
+		thesta <- c(1)
+		if (!is.na(strata))
+		{
+			thesta <- unique(refFrame[,strata])
+		}
+		for (sta in thesta)
+		{
+			if (!is.na(strata))
+			{
+				stracondition = paste (strata,paste('==',sta));
+				strastatement = paste ("subset(refFrame,",paste(stracondition,")"));
+	#			cat ("Strata:",stracondition,"\n");
+				cstrataref <- eval(parse(text=strastatement));
+				strastatement = paste ("subset(data,",paste(stracondition,")"));
+				cstrata <- eval(parse(text=strastatement));
+	#			cat ("Rows:",nrow(cstrataref),"Rows 2",nrow(cstrata)," \n");
+			}
+			else
+			{
+				cstrataref = refFrame;
+				cstrata = data;
+			}
+			datRefUses <-  as.data.frame(cstrataref[,usedFeatures]);
+			colnames(datRefUses) <- usedFeatures;
+			rownames(datRefUses) <- rownames(cstrataref);
+			switch(method,
+					Norm =
 					{
-						refMean <- apply(datRefUses,2,mean, na.rm = TRUE);
-						refDisp <- apply(datRefUses,2,sd, na.rm = TRUE);
-						refDisp[refDisp == 0] <- 1.0;
-					}
+						if (is.null(refMean))
+						{
+							refMean <- apply(datRefUses,2,mean, na.rm = TRUE);
+							refDisp <- apply(datRefUses,2,sd, na.rm = TRUE);
+							refDisp[refDisp == 0] <- 1.0;
+						}
 
-					meanmat <- matrix(rep(refMean,nrow(data)),nrow=nrow(data),ncol=length(usedFeatures),byrow = TRUE);
-					sdmat <- matrix(rep(refDisp,nrow(data)),nrow=nrow(data),ncol=length(usedFeatures),byrow = TRUE);
-					data[,usedFeatures] <- (data[,usedFeatures]-meanmat)/sdmat;
-				},
-				Order =
-				{
-					if (is.null(refMean))
+						meanmat <- matrix(rep(refMean,nrow(cstrata)),nrow=nrow(cstrata),ncol=length(usedFeatures),byrow = TRUE);
+						sdmat <- matrix(rep(refDisp,nrow(cstrata)),nrow=nrow(cstrata),ncol=length(usedFeatures),byrow = TRUE);
+						cstrata[,usedFeatures] <- (cstrata[,usedFeatures]-meanmat)/sdmat;
+					},
+					Order =
 					{
-						refmin <- apply(datRefUses,2,min, na.rm = TRUE);
-						refmax <- apply(datRefUses,2,max, na.rm = TRUE);
-						refRange <- 0.5*(refmax-refmin);
-						meanRange <- 0.5*(refmax+refmin);
-						refRange[refRange == 0] <- 1.0;
-						refMean <- apply(datRefUses,2,median, na.rm = TRUE);
-						refDisp <- apply(datRefUses,2,IQR, na.rm = TRUE);
-						refMean[refDisp == 0] <- meanRange[refDisp == 0];
-						refDisp[refDisp == 0] <- refRange[refDisp == 0];
-						refDisp <- refDisp/abs(2*qnorm(0.25));
-					}
+						if (is.null(refMean))
+						{
+							refmin <- apply(datRefUses,2,min, na.rm = TRUE);
+							refmax <- apply(datRefUses,2,max, na.rm = TRUE);
+							refRange <- 0.5*(refmax-refmin);
+							meanRange <- 0.5*(refmax+refmin);
+							refRange[refRange == 0] <- 1.0;
+							refMean <- apply(datRefUses,2,median, na.rm = TRUE);
+							refDisp <- apply(datRefUses,2,IQR, na.rm = TRUE);
+							refMean[refDisp == 0] <- meanRange[refDisp == 0];
+							refDisp[refDisp == 0] <- refRange[refDisp == 0];
+							refDisp <- refDisp/abs(2*qnorm(0.25));
+						}
 
-					meanmat <- matrix(rep(refMean,nrow(data)),nrow=nrow(data),ncol=length(usedFeatures),byrow = TRUE);
-					sdmat <- matrix(rep(refDisp,nrow(data)),nrow=nrow(data),ncol=length(usedFeatures),byrow = TRUE);
-					data[,usedFeatures] <- (data[,usedFeatures]-meanmat)/sdmat;
-				},
-				OrderLogit =
-				{
-					if (is.null(refMean))
+						meanmat <- matrix(rep(refMean,nrow(cstrata)),nrow=nrow(cstrata),ncol=length(usedFeatures),byrow = TRUE);
+						sdmat <- matrix(rep(refDisp,nrow(cstrata)),nrow=nrow(cstrata),ncol=length(usedFeatures),byrow = TRUE);
+						cstrata[,usedFeatures] <- (cstrata[,usedFeatures]-meanmat)/sdmat;
+					},
+					OrderLogit =
 					{
-	#					cat("Here");
-						refmin <- apply(datRefUses,2,min, na.rm = TRUE);
-						refmax <- apply(datRefUses,2,max, na.rm = TRUE);
-						refRange <- 0.5*(refmax-refmin);
-						meanRange <- 0.5*(refmax+refmin);
-						refRange[refRange == 0] <- 1.0;
-						refMean <- 0.5*(apply(datRefUses,2,median, na.rm = TRUE) + apply(datRefUses,2,mean,trim = 0.25, na.rm = TRUE));
-						refDisp <- apply(datRefUses,2,IQR, na.rm = TRUE);
-						refMean[refDisp == 0] <- meanRange[refDisp == 0];
-						refDisp[refDisp == 0] <- refRange[refDisp == 0];
-						refDisp <- refDisp/abs(2*qnorm(0.25));
-					}
-					iqrsdratio = 0.5;
+						if (is.null(refMean))
+						{
+		#					cat("Here");
+							refmin <- apply(datRefUses,2,min, na.rm = TRUE);
+							refmax <- apply(datRefUses,2,max, na.rm = TRUE);
+							refRange <- 0.5*(refmax-refmin);
+							meanRange <- 0.5*(refmax+refmin);
+							refRange[refRange == 0] <- 1.0;
+							refMean <- 0.5*(apply(datRefUses,2,median, na.rm = TRUE) + apply(datRefUses,2,mean,trim = 0.25, na.rm = TRUE));
+							refDisp <- apply(datRefUses,2,IQR, na.rm = TRUE);
+							refMean[refDisp == 0] <- meanRange[refDisp == 0];
+							refDisp[refDisp == 0] <- refRange[refDisp == 0];
+							refDisp <- refDisp/abs(2*qnorm(0.25));
+						}
+						iqrsdratio = 0.5;
 
-					meanmat <- matrix(rep(refMean,nrow(data)),nrow=nrow(data),ncol=length(usedFeatures),byrow = TRUE);
-					sdmat <- matrix(rep(refDisp,nrow(data)),nrow=nrow(data),ncol=length(usedFeatures),byrow = TRUE);
-					data[,usedFeatures] <- 4.0*(1.0/(1.0+exp(-iqrsdratio*(data[,usedFeatures]-meanmat)/sdmat)) - 0.5)/iqrsdratio;
-				},
-				RankInv =
-				{
-					data <- rankInverseNormalDataFrame(usedFeatures,data,refFrame,strata); 			
-				},
-				LRankInv =
-				{
-					iqrsdratio = 0.5;
-					data <- rankInverseNormalDataFrame(usedFeatures,data,refFrame,strata);
-					data[,usedFeatures] <- 4.0*(1.0/(1.0+exp(-iqrsdratio*data[,usedFeatures])) - 0.5)/iqrsdratio;
-				}
-			)
-		data <- data[srownames,]
+						meanmat <- matrix(rep(refMean,nrow(cstrata)),nrow=nrow(cstrata),ncol=length(usedFeatures),byrow = TRUE);
+						sdmat <- matrix(rep(refDisp,nrow(cstrata)),nrow=nrow(cstrata),ncol=length(usedFeatures),byrow = TRUE);
+						cstrata[,usedFeatures] <- 4.0*(1.0/(1.0+exp(-iqrsdratio*(cstrata[,usedFeatures]-meanmat)/sdmat)) - 0.5)/iqrsdratio;
+					},
+					RankInv =
+					{
+#						data <- rankInverseNormalDataFrame(usedFeatures,data,refFrame,strata); 			
+						cstrata <- rankInverseNormalDataFrame(usedFeatures,cstrata,cstrataref); 			
+					},
+					LRankInv =
+					{
+						iqrsdratio = 0.5;
+#						data <- rankInverseNormalDataFrame(usedFeatures,data,refFrame,strata);
+#						data[,usedFeatures] <- 4.0*(1.0/(1.0+exp(-iqrsdratio*data[,usedFeatures])) - 0.5)/iqrsdratio;
+						cstrata <- rankInverseNormalDataFrame(usedFeatures,cstrata,cstrataref);
+						cstrata[,usedFeatures] <- 4.0*(1.0/(1.0+exp(-iqrsdratio*cstrata[,usedFeatures])) - 0.5)/iqrsdratio;
+					}
+				)
+			data[rownames(cstrata),] <- cstrata
+		}
+#		data <- data[srownames,]
 		if (!is.null(refMean))
 		{	
 			names(refMean) <- usedFeatures;
 			names(refDisp) <- usedFeatures;
 		}
+	}
+	if (!is.na(strata))
+	{
+		refMean <- NULL
+		refDisp <- NULL
 	}
 	scaledData=as.data.frame(data);
 	attr(scaledData,"usedFeatures") <- usedFeatures;

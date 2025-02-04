@@ -274,7 +274,7 @@ if (!requireNamespace("mda", quietly = TRUE)) {
 								}
 								else
 								{
-									cstrata[,colnamesList[i]] <- cstrata[,colnamesList[i]] - avgref;
+									cstrata[,colnamesList[i]] <- cstrata[,colnamesList[i]] - model$coef[1];
 								}
 							},
 							RLM = 
