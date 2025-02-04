@@ -139,13 +139,13 @@ FRESAScale <- function(data,refFrame=NULL,method=c("Norm","Order","OrderLogit","
 					}
 				)
 			data[rownames(cstrata),] <- cstrata
+			if (!is.null(refMean))
+			{	
+				names(refMean) <- usedFeatures;
+				names(refDisp) <- usedFeatures;
+			}
 		}
 #		data <- data[srownames,]
-		if (!is.null(refMean))
-		{	
-			names(refMean) <- usedFeatures;
-			names(refDisp) <- usedFeatures;
-		}
 	}
 	if (!is.na(strata))
 	{
