@@ -58,13 +58,13 @@ FRESAScale <- function(data,refFrame=NULL,method=c("Norm","Order","OrderLogit","
 				cstrataref <- eval(parse(text=strastatement));
 				strastatement = paste ("subset(data,",paste(stracondition,")"));
 				cstrata <- eval(parse(text=strastatement));
-	#			cat ("Rows:",nrow(cstrataref),"Rows 2",nrow(cstrata)," \n");
 			}
 			else
 			{
 				cstrataref = refFrame;
 				cstrata = data;
 			}
+			cat ("Rows:",nrow(cstrataref),"Rows 2",nrow(cstrata)," \n");
 			datRefUses <-  as.data.frame(cstrataref[,usedFeatures]);
 			colnames(datRefUses) <- usedFeatures;
 			rownames(datRefUses) <- rownames(cstrataref);
