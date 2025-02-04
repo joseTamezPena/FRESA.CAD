@@ -54,7 +54,7 @@ FRESAScale <- function(data,refFrame=NULL,method=c("Norm","Order","OrderLogit","
 			{
 				stracondition = paste (strata,paste('==',sta));
 				strastatement = paste ("subset(refFrame,",paste(stracondition,")"));
-	#			cat ("Strata:",stracondition,"\n");
+				cat ("Strata:",stracondition,"\n");
 				cstrataref <- eval(parse(text=strastatement));
 				strastatement = paste ("subset(data,",paste(stracondition,")"));
 				cstrata <- eval(parse(text=strastatement));
