@@ -1654,12 +1654,11 @@ StrataFit <- function(formula = formula,
 		theclasses <- as.character(unique(data[,strata]))
 		for (dataclass in theclasses)
 		{
-				stracondition = paste (strata,paste('==',dataclass));
-				strastatement = paste ("subset(data,",paste(stracondition,")"));
-				cat ("Strata:",stracondition,"\n");
-				daatastrata <- eval(parse(text=strastatement));
-				fit_target[[i]] <- targetFitMethod(targetformula,daatastrata,...);
-			}	
+			stracondition = paste (strata,paste('==',dataclass));
+			strastatement = paste ("subset(data,",paste(stracondition,")"));
+			cat ("Strata:",stracondition,"\n");
+			daatastrata <- eval(parse(text=strastatement));
+			fit_target[[i]] <- targetFitMethod(targetformula,daatastrata,...);
 		}
 	} 
 	else
