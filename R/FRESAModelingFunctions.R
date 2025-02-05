@@ -1687,7 +1687,7 @@ predict.StrataFit <- function(object,...)
 		predeictset <- (pLS == idx);
 		if (sum(predeictset)>0)
 		{
-			pLS[predeictset] <- predict(object$models[[idx]],testData[predeictset,])
+			pLS[predeictset] <- predict(object$fit_target[[idx]],testData[predeictset,])
 		}
 	}
 	return (pLS);
