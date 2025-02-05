@@ -3,7 +3,7 @@
 \alias{StrataFit_EM}
 \title{Stratified fit of datasets}
 \description{
-	strata-wise fitting of models. The funciton will model the stratas to predict non-labeled data sets}
+	strata-wise fitting of models. The function will model the strata to predict non-labeled data sets}
 \usage{
 StrataFit(formula = formula, 
 			data=NULL, 
