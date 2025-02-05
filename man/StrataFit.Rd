@@ -1,6 +1,5 @@
 \name{StrataFit}
 \alias{StrataFit}
-\alias{StrataFit_EM}
 \title{Stratified fit of datasets}
 \description{
 	strata-wise fitting of models. The function will model the strata to predict non-labeled data sets}

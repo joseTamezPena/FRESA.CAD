@@ -1641,8 +1641,8 @@ StrataFit <- function(formula = formula,
 	{
 		TargetOutcome = dependent[1];
 		strata = dependent[2];
-		strataformula = paste(strata," ~ .");
-		targetformula = paste(TargetOutcome," ~ .");
+		strataformula = formula(paste(strata," ~ ."));
+		targetformula = formula(paste(TargetOutcome," ~ ."));
 		if (is.null(strataFit.control))
 		{
 			fit_strata <- strataFitMethod(strataformula,data);
@@ -1658,7 +1658,7 @@ StrataFit <- function(formula = formula,
 			strastatement = paste ("subset(data,",paste(stracondition,")"));
 			cat ("Strata:",stracondition,"\n");
 			daatastrata <- eval(parse(text=strastatement));
-			fit_target[[i]] <- targetFitMethod(targetformula,daatastrata,...);
+			fit_target[[dataclass]] <- targetFitMethod(targetformula,daatastrata,...);
 		}
 	} 
 	else
@@ -1676,19 +1676,22 @@ predict.StrataFit <- function(object,...)
 {
 	parameters <- list(...);
 	testData <- parameters[[1]];
-	pLS <- predict(object$fit_strata,testData);
-	if (!inherits(pLS,"data.frame"))
+	pLSstra <- predict(object$fit_strata,testData);
+	if (!inherits(pLSstra,"factor"))
 	{
-		pLS <- (pLS>0.5)
+		pLSstra <- (pLSstra>0.5)
 	}
+	pLS <- pLSstra
 	for (idx in object$theclasses)
 	{
-		predeictset <- (pLS == idx);
+		cat(idx,"")
+		predeictset <- (pLSstra == idx);
 		if (sum(predeictset)>0)
 		{
 			pLS[predeictset] <- predict(object$fit_target[[idx]],testData[predeictset,])
 		}
 	}
+	attr(pLS,"strata") <- pLSstra 
 	return (pLS);
 }
 
