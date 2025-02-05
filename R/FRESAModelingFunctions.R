@@ -1625,7 +1625,7 @@ StrataFit <- function(formula = formula,
 									data=NULL, 
 									strataFitMethod=KNN_method, 
 									targetFitMethod=LASSO_1SE,
-									classFit.control=NULL,
+									strataFit.control=NULL,
 									...
 								  )
 {
@@ -1649,7 +1649,7 @@ StrataFit <- function(formula = formula,
 		}
 		else
 		{
-			fit_strata <- do.call(strataFitMethod,c(list(classformula,data,classFit.control))
+			fit_strata <- do.call(strataFitMethod,c(list(classformula,data),classFit.control))
 		}
 		theclasses <- as.character(unique(data[,strata]))
 		for (dataclass in theclasses)
