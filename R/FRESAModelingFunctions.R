@@ -1588,6 +1588,8 @@ ClustClass <- function(formula = formula, data=NULL, filtermethod=univariate_KS,
 	return(result);
 }
 
+
+
 predict.CLUSTER_CLASS <- function(object,...)
 {
 	parameters <- list(...);
@@ -1618,6 +1620,80 @@ predict.CLUSTER_CLASS <- function(object,...)
 	}
 	return (pLS);
 }
+
+StrataFit <- function(formula = formula, 
+									data=NULL, 
+									strataFitMethod=KNN_method, 
+									targetFitMethod=LASSO_1SE,
+									classFit.control=NULL,
+									...
+								  )
+{
+	if (inherits(formula, "character"))
+	{
+		formula <- formula(formula);
+	}
+	dependent <- all.vars(formula)
+	theclasses <- NULL
+	fit_target <- list()
+	fit_strata <- NULL
+	if (length(dependent) > 2)
+	{
+		TargetOutcome = dependent[1];
+		strata = dependent[2];
+		strataformula = paste(strata," ~ .");
+		targetformula = paste(TargetOutcome," ~ .");
+		if (is.null(classFit.control))
+		{
+			fit_strata <- strataFitMethod(classformula,data);
+		}
+		else
+		{
+			fit_strata <- do.call(strataFitMethod,c(list(classformula,data,classFit.control))
+		}
+		theclasses <- as.character(unique(data[,strata]))
+		for (dataclass in theclasses)
+		{
+				stracondition = paste (strata,paste('==',dataclass));
+				strastatement = paste ("subset(data,",paste(stracondition,")"));
+				cat ("Strata:",stracondition,"\n");
+				daatastrata <- eval(parse(text=strastatement));
+				fit_target[[i]] <- targetFitMethod(targetformula,daatastrata,...);
+			}	
+		}
+	} 
+	else
+	{
+		message("Missing Class target in formula: Use(Target|Class)~.\n");
+	}
+	
+	result <- list(fit_strata = fit_strata,fit_target = fit_target,theclasses=theclasses);
+
+	class(result) <- "StrataFit"
+	return(result);
+}
+
+predict.StrataFit <- function(object,...)
+{
+	parameters <- list(...);
+	testData <- parameters[[1]];
+	pLS <- predict(object$fit_strata,testData);
+	if (!inherits(pLS,"data.frame"))
+	{
+		pLS <- (pLS>0.5)
+	}
+	for (idx in object$theclasses)
+	{
+		predeictset <- (pLS == idx);
+		if (sum(predeictset)>0)
+		{
+			pLS[predeictset] <- predict(object$models[[idx]],testData[predeictset,])
+		}
+	}
+	return (pLS);
+}
+
+
 
 GMVEBSWiMS <- function(formula = formula, data=NULL, GMVE.control = list(p.threshold = 0.95,p.samplingthreshold = 0.5), ...)
 {

@@ -1,3 +1,6 @@
+Changes from FRESA.CAD 3.4.9 to FRESA.CAD version 3.5.0
+	-Scaled Method now can be stratified
+	-implemented stratified fit. A function to train data stratas and targets
 Changes from FRESA.CAD 3.4.8 to FRESA.CAD version 3.4.9
 	-CV improvements to handle interdependent testing set
 	-Documentation revisions and missing documentation links
