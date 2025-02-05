@@ -1643,13 +1643,13 @@ StrataFit <- function(formula = formula,
 		strata = dependent[2];
 		strataformula = paste(strata," ~ .");
 		targetformula = paste(TargetOutcome," ~ .");
-		if (is.null(classFit.control))
+		if (is.null(strataFit.control))
 		{
-			fit_strata <- strataFitMethod(classformula,data);
+			fit_strata <- strataFitMethod(strataformula,data);
 		}
 		else
 		{
-			fit_strata <- do.call(strataFitMethod,c(list(classformula,data),classFit.control))
+			fit_strata <- do.call(strataFitMethod,c(list(strataformula,data),strataFit.control))
 		}
 		theclasses <- as.character(unique(data[,strata]))
 		for (dataclass in theclasses)
