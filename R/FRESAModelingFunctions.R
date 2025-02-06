@@ -1690,10 +1690,9 @@ predict.StrataFit <- function(object,...)
 	pLSstra <- as.character(pLSstra)
 	pLS <- rep(0,nrow(testData))
 	names(pLS) <- rownames(testData)
-	print(head(pLS))
 	for (idx in object$theclasses)
 	{
-		cat(idx,"")
+#		cat(idx,"")
 		predeictset <- (pLSstra == idx);
 		if (sum(predeictset)>0)
 		{
