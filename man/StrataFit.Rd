@@ -6,7 +6,7 @@
 \usage{
 StrataFit(formula = formula, 
 			data=NULL, 
-			strataFitMethod=KNN_method, 
+			strataFitMethod=filteredFit, 
 			targetFitMethod=LASSO_1SE,
 			strataFit.control=NULL,
 			...

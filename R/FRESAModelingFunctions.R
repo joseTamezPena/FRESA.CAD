@@ -1623,7 +1623,7 @@ predict.CLUSTER_CLASS <- function(object,...)
 
 StrataFit <- function(formula = formula, 
 									data=NULL, 
-									strataFitMethod=KNN_method, 
+									strataFitMethod=filteredFit, 
 									targetFitMethod=LASSO_1SE,
 									strataFit.control=NULL,
 									...
@@ -1681,7 +1681,10 @@ predict.StrataFit <- function(object,...)
 	{
 		pLSstra <- (pLSstra>0.5)
 	}
-	pLS <- pLSstra
+	pLSstra <- as.character(pLSstra)
+	pLS <- rep(0,nrow(testData))
+	names(pLS) <- rownames(testData)
+	print(head(pLS))
 	for (idx in object$theclasses)
 	{
 		cat(idx,"")
