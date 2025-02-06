@@ -1643,6 +1643,11 @@ StrataFit <- function(formula = formula,
 		strata = dependent[2];
 		strataformula = formula(paste(strata," ~ ."));
 		targetformula = formula(paste(TargetOutcome," ~ ."));
+		theclasses <- as.character(unique(data[,strata]))
+		if (!inherits(data[,strata], "factor"))
+		{
+			data[,strata] <- as.factor(data[,strata])
+		}
 		if (is.null(strataFit.control))
 		{
 			fit_strata <- strataFitMethod(strataformula,data);
@@ -1651,13 +1656,14 @@ StrataFit <- function(formula = formula,
 		{
 			fit_strata <- do.call(strataFitMethod,c(list(strataformula,data),strataFit.control))
 		}
-		theclasses <- as.character(unique(data[,strata]))
+		data[,strata] <- as.character(data[,strata])
 		for (dataclass in theclasses)
 		{
 			stracondition = paste (strata,paste('==',dataclass));
 			strastatement = paste ("subset(data,",paste(stracondition,")"));
 			cat ("Strata:",stracondition,"\n");
 			daatastrata <- eval(parse(text=strastatement));
+			daatastrata[,strata] <- NULL
 			fit_target[[dataclass]] <- targetFitMethod(targetformula,daatastrata,...);
 		}
 	} 
