@@ -1669,7 +1669,6 @@ StrataFit <- function(formula = formula,
 		if (!is.null(fit_strata$formula))
 		{
 			environment(fit_strata$formula) <- globalenv();
-		  	environment(fit_strata$terms) <- globalenv();
 		}
 
 		selectedfeatures <- fit_strata$selectedfeatures
@@ -1686,7 +1685,6 @@ StrataFit <- function(formula = formula,
 			if (!is.null(fit_target[[dataclass]]$formula))
 			{
 				environment(fit_target[[dataclass]]$formula) <- globalenv();
-		  		environment(fit_target[[dataclass]]$terms) <- globalenv();
 			}
 
 		}
