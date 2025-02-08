@@ -1650,7 +1650,7 @@ StrataFit <- function(formula = formula,
 		{
 			strataIDs <- rownames(data)
 		}
-		dataStrata <- data[strataIDs,]
+		dataStrata <- data[rownames(data) %in% strataIDs,]
 		dataStrata[,TargetOutcome] <- NULL
 		
 		if (!inherits(dataStrata[,strata], "factor"))
