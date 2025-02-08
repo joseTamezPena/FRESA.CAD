@@ -1666,6 +1666,9 @@ StrataFit <- function(formula = formula,
 			fit_strata <- do.call(strataFitMethod,c(list(strataformula,dataStrata),strataFit.control))
 		}
 		dataStrata <- NULL
+		environment(fit_strata$formula) <- globalenv();
+	  	environment(fit_strata$terms) <- globalenv();
+
 		selectedfeatures <- fit_strata$selectedfeatures
 		data[,strata] <- as.character(data[,strata])
 		for (dataclass in theclasses)
@@ -1677,6 +1680,9 @@ StrataFit <- function(formula = formula,
 			daatastrata[,strata] <- NULL
 			fit_target[[dataclass]] <- targetFitMethod(targetformula,daatastrata,...);
 			selectedfeatures <- c(selectedfeatures,fit_target[[dataclass]]$selectedfeatures);
+			environment(fit_target[[dataclass]]$formula) <- globalenv();
+	  		environment(fit_target[[dataclass]]$terms) <- globalenv();
+
 		}
 	} 
 	else
