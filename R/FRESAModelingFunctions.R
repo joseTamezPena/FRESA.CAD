@@ -1637,6 +1637,7 @@ StrataFit <- function(formula = formula,
 	theclasses <- NULL
 	fit_target <- list()
 	fit_strata <- NULL
+	selectedfeatures <- NULL
 	if (length(dependent) > 2)
 	{
 		TargetOutcome = dependent[1];
@@ -1656,6 +1657,7 @@ StrataFit <- function(formula = formula,
 		{
 			fit_strata <- do.call(strataFitMethod,c(list(strataformula,data),strataFit.control))
 		}
+		selectedfeatures <- fit_strata$selectedfeatures
 		data[,strata] <- as.character(data[,strata])
 		for (dataclass in theclasses)
 		{
@@ -1665,6 +1667,7 @@ StrataFit <- function(formula = formula,
 			daatastrata <- eval(parse(text=strastatement));
 			daatastrata[,strata] <- NULL
 			fit_target[[dataclass]] <- targetFitMethod(targetformula,daatastrata,...);
+			selectedfeatures <- c(selectedfeatures,fit_target[[dataclass]]$selectedfeatures);
 		}
 	} 
 	else
@@ -1672,7 +1675,10 @@ StrataFit <- function(formula = formula,
 		message("Missing Class target in formula: Use(Target|Class)~.\n");
 	}
 	
-	result <- list(fit_strata = fit_strata,fit_target = fit_target,theclasses=theclasses);
+	result <- list(fit_strata = fit_strata,
+				  fit_target = fit_target,
+				  selectedfeatures = selectedfeatures,
+				  theclasses=theclasses);
 
 	class(result) <- "StrataFit"
 	return(result);
