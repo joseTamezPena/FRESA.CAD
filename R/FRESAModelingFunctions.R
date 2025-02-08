@@ -1626,6 +1626,7 @@ StrataFit <- function(formula = formula,
 									strataFitMethod=filteredFit, 
 									targetFitMethod=LASSO_1SE,
 									strataFit.control=NULL,
+									strataIDs=NULL,
 									...
 								  )
 {
@@ -1645,18 +1646,26 @@ StrataFit <- function(formula = formula,
 		strataformula = formula(paste(strata," ~ ."));
 		targetformula = formula(paste(TargetOutcome," ~ ."));
 		theclasses <- as.character(unique(data[,strata]))
-		if (!inherits(data[,strata], "factor"))
+		if (is.null(strataIDs))
 		{
-			data[,strata] <- as.factor(data[,strata])
+			strataIDs <- rownames(data)
+		}
+		dataStrata <- data[strataIDs,]
+		dataStrata[,TargetOutcome] <- NULL
+		
+		if (!inherits(dataStrata[,strata], "factor"))
+		{
+			dataStrata[,strata] <- as.factor(dataStrata[,strata])
 		}
 		if (is.null(strataFit.control))
 		{
-			fit_strata <- strataFitMethod(strataformula,data);
+			fit_strata <- strataFitMethod(strataformula,dataStrata);
 		}
 		else
 		{
-			fit_strata <- do.call(strataFitMethod,c(list(strataformula,data),strataFit.control))
+			fit_strata <- do.call(strataFitMethod,c(list(strataformula,dataStrata),strataFit.control))
 		}
+		dataStrata <- NULL
 		selectedfeatures <- fit_strata$selectedfeatures
 		data[,strata] <- as.character(data[,strata])
 		for (dataclass in theclasses)
