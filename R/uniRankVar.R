@@ -653,7 +653,7 @@ timeOutcome=NULL)
 						stdCa <- sum(caseZsample[,colnamesList[j]]==1);
 
 						meCo <- sum(controlZsample[,colnamesList[j]]==0);
-						stdCo <- sum(controlZsample[,colnamesList[j]]==0);
+						stdCo <- sum(controlZsample[,colnamesList[j]]==1);
 					}
 				}
 			}
