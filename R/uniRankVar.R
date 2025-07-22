@@ -644,15 +644,16 @@ timeOutcome=NULL)
 				catlist[1] <- colnamesList[j];
 				if (FullAnalysis)
 				{
-					medf = table(datacolumn)[1];
-					stddf = table(datacolumn)[2];
+	
+					medf = sum(datacolumn==0);
+					stddf = sum(datacolumn==1);
 					if (uniType=="Binary")
 					{
-						meCa <- table(caseZsample[,colnamesList[j]])[1];
-						stdCa <- table(caseZsample[,colnamesList[j]])[2];
+						meCa <- sum(caseZsample[,colnamesList[j]]==0);
+						stdCa <- sum(caseZsample[,colnamesList[j]]==1);
 
-						meCo <- table(controlZsample[,colnamesList[j]])[1];
-						stdCo <- table(controlZsample[,colnamesList[j]])[2];
+						meCo <- sum(controlZsample[,colnamesList[j]]==0);
+						stdCo <- sum(controlZsample[,colnamesList[j]]==0);
 					}
 				}
 			}
