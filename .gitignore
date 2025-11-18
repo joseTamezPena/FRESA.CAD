@@ -88,3 +88,4 @@ src-i386/FRESAcommons.cpp
 src-x64/FRESAcommons.cpp
 src/FRESA.CAD.so
 src/symbols.rds
+R/ine.txt
