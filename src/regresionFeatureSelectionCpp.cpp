@@ -263,7 +263,7 @@ extern "C" SEXP bootstrapValidationResCpp(SEXP _fraction,SEXP _loops,SEXP _dataf
 	}	
 	catch(...) 
 	{ 
-		::Rf_error( "c++ exception (unknown reason)" );
+		Rcpp::Rf_stop( "c++ exception (unknown reason)" );
 		return 0;
 	}
 }
@@ -723,7 +723,7 @@ try {   //R_CStackLimit=(uintptr_t)-1;
 	}	
 	catch(...) 
 	{ 
-		::Rf_error( "c++ exception (unknown reason)" );
+		Rcpp::Rf_stop( "c++ exception (unknown reason)" );
 		return 0;
 	}
 
